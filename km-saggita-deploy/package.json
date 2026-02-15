@@ -1,0 +1,10 @@
+{
+  "name": "km-saggita-registration",
+  "version": "1.0.0",
+  "description": "Krav Maga Saggita — system zapisów",
+  "engines": { "node": ">=18" },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "pg": "^8.11.3"
+  }
+}
