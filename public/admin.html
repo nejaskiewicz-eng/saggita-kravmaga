@@ -7,186 +7,125 @@
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600&display=swap');
 :root{
-  --bg:#0f0b0b;
-  --surface:#1c1414;
-  --surface2:#241c1c;
-  --surface3:#2c2222;
-  --border:#3a2828;
-  --border2:#4a3232;
-  --red:#c42000;
-  --red-light:#e83000;
-  --red-bg:rgba(196,32,0,.12);
-  --red-border:rgba(196,32,0,.35);
-  --orange:#e8a500;
-  --orange-bg:rgba(232,165,0,.12);
-  --orange-border:rgba(232,165,0,.35);
-  --green:#2ecc71;
-  --green-bg:rgba(46,204,113,.1);
-  --green-border:rgba(46,204,113,.3);
-  --blue:#4a9fe8;
-  --blue-bg:rgba(74,159,232,.1);
-  --blue-border:rgba(74,159,232,.3);
-  --text:#e8dada;
-  --text-dim:#9a8080;
-  --text-muted:#6a5555;
-  --text-bright:#fff;
-  --sidebar-w:215px;
+  --bg:#0f0b0b;--surface:#1c1414;--surface2:#241c1c;--surface3:#2c2222;
+  --border:#3a2828;--border2:#4a3232;
+  --red:#c42000;--red-l:#e83000;--red-bg:rgba(196,32,0,.12);--red-bdr:rgba(196,32,0,.35);
+  --orange:#e8a500;--or-bg:rgba(232,165,0,.12);--or-bdr:rgba(232,165,0,.35);
+  --green:#2ecc71;--gr-bg:rgba(46,204,113,.1);--gr-bdr:rgba(46,204,113,.3);
+  --blue:#4a9fe8;--bl-bg:rgba(74,159,232,.1);--bl-bdr:rgba(74,159,232,.3);
+  --text:#e8dada;--dim:#9a8080;--muted:#6a5555;--bright:#fff;
+  --sw:215px;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;font-size:14px;line-height:1.5}
 #app{display:flex;height:100vh;overflow:hidden}
-
-/* SIDEBAR */
-#sidebar{width:var(--sidebar-w);min-width:var(--sidebar-w);background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column}
+#sidebar{width:var(--sw);min-width:var(--sw);background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column}
 #sidebar-logo{padding:20px 16px 16px;border-bottom:1px solid var(--border)}
-#sidebar-logo h1{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:19px;letter-spacing:.03em;color:var(--text-bright);line-height:1.1;text-transform:uppercase}
-#sidebar-logo h1 em{color:var(--red-light);font-style:normal}
-#sidebar-logo small{color:var(--text-muted);font-size:10px;text-transform:uppercase;letter-spacing:.1em}
+#sidebar-logo h1{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:19px;letter-spacing:.03em;color:var(--bright);line-height:1.1;text-transform:uppercase}
+#sidebar-logo h1 em{color:var(--red-l);font-style:normal}
+#sidebar-logo small{color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.1em}
 nav{flex:1;padding:8px;overflow-y:auto}
-nav a{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:5px;color:var(--text-dim);font-weight:500;font-size:13px;transition:all .15s;cursor:pointer;margin-bottom:1px;text-decoration:none}
-nav a:hover{color:var(--text-bright);background:var(--surface2)}
-nav a.active{color:var(--text-bright);background:var(--red-bg);border-left:2px solid var(--red-light);padding-left:8px}
+nav a{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:5px;color:var(--dim);font-weight:500;font-size:13px;transition:all .15s;cursor:pointer;margin-bottom:1px;text-decoration:none}
+nav a:hover{color:var(--bright);background:var(--surface2)}
+nav a.active{color:var(--bright);background:var(--red-bg);border-left:2px solid var(--red-l);padding-left:8px}
 .nd{width:4px;height:4px;border-radius:50%;background:var(--border2);flex-shrink:0;transition:background .15s}
-nav a:hover .nd{background:var(--text-dim)}
-nav a.active .nd{background:var(--red-light)}
+nav a:hover .nd{background:var(--dim)}
+nav a.active .nd{background:var(--red-l)}
 .sl{font-size:10px;font-weight:700;letter-spacing:.12em;color:var(--red);padding:14px 10px 4px;text-transform:uppercase;opacity:.7}
-#sidebar-footer{padding:12px;border-top:1px solid var(--border)}
-.ui{font-size:11px;color:var(--text-muted);margin-bottom:8px}
+#sf{padding:12px;border-top:1px solid var(--border)}
+.ui{font-size:11px;color:var(--muted);margin-bottom:8px}
 .ui strong{display:block;color:var(--text);font-size:13px}
-#btn-logout{width:100%;padding:7px;background:transparent;border:1px solid var(--border2);border-radius:4px;color:var(--text-dim);cursor:pointer;font-size:12px;font-family:'Barlow',sans-serif;transition:all .15s}
+#btn-logout{width:100%;padding:7px;background:transparent;border:1px solid var(--border2);border-radius:4px;color:var(--dim);cursor:pointer;font-size:12px;font-family:'Barlow',sans-serif;transition:all .15s}
 #btn-logout:hover{border-color:var(--red);color:var(--red);background:var(--red-bg)}
-
-/* MAIN */
 #main{flex:1;display:flex;flex-direction:column;overflow:hidden}
 #topbar{height:50px;min-height:50px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;gap:16px}
-#topbar h2{font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:800;color:var(--text-bright);text-transform:uppercase;letter-spacing:.05em;flex:1}
+#topbar h2{font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:800;color:var(--bright);text-transform:uppercase;letter-spacing:.05em;flex:1}
 #api-status{font-size:11px;padding:4px 12px;border-radius:4px;font-weight:700;text-transform:uppercase;letter-spacing:.06em}
-#api-status.ok{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
-#api-status.err{background:var(--red-bg);color:var(--red-light);border:1px solid var(--red-border)}
+#api-status.ok{background:var(--gr-bg);color:var(--green);border:1px solid var(--gr-bdr)}
+#api-status.err{background:var(--red-bg);color:var(--red-l);border:1px solid var(--red-bdr)}
 #content{flex:1;overflow-y:auto;padding:24px}
-
-/* STATS */
 .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:28px}
 .sc{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:18px 20px;position:relative;overflow:hidden}
 .sc::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--border2)}
-.sc.accent::before{background:var(--red-light)}
-.sc.green::before{background:var(--green)}
-.sc.orange::before{background:var(--orange)}
-.sc .label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim);margin-bottom:8px}
-.sc .value{font-family:'Barlow Condensed',sans-serif;font-size:42px;font-weight:800;line-height:1;color:var(--text-bright)}
-.sc.accent .value{color:var(--red-light)}
-.sc.green .value{color:var(--green)}
-.sc.orange .value{color:var(--orange)}
-
-/* SECTION */
+.sc.accent::before{background:var(--red-l)}.sc.green::before{background:var(--green)}.sc.orange::before{background:var(--orange)}
+.sc .label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--dim);margin-bottom:8px}
+.sc .value{font-family:'Barlow Condensed',sans-serif;font-size:42px;font-weight:800;line-height:1;color:var(--bright)}
+.sc.accent .value{color:var(--red-l)}.sc.green .value{color:var(--green)}.sc.orange .value{color:var(--orange)}
 .sh{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
-.sh h3{font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;color:var(--text-bright);text-transform:uppercase;letter-spacing:.05em;border-left:3px solid var(--red);padding-left:10px}
-
-/* BUTTONS */
+.sh h3{font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;color:var(--bright);text-transform:uppercase;letter-spacing:.05em;border-left:3px solid var(--red);padding-left:10px}
 .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:5px;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;border:none;font-family:'Barlow',sans-serif;text-transform:uppercase;letter-spacing:.05em;line-height:1}
-.btn-primary{background:var(--red);color:#fff}
-.btn-primary:hover{background:var(--red-light)}
-.btn-secondary{background:var(--surface2);border:1px solid var(--border2);color:var(--text)}
-.btn-secondary:hover{border-color:var(--red);color:var(--text-bright)}
+.btn-primary{background:var(--red);color:#fff}.btn-primary:hover{background:var(--red-l)}
+.btn-secondary{background:var(--surface2);border:1px solid var(--border2);color:var(--text)}.btn-secondary:hover{border-color:var(--red);color:var(--bright)}
 .btn-sm{padding:5px 10px;font-size:11px}
-.bi{padding:5px 10px;background:var(--surface3);border:1px solid var(--border2);border-radius:4px;color:var(--text-dim);cursor:pointer;transition:all .15s;font-size:11px;font-family:'Barlow',sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:.04em;line-height:1.4}
-.bi:hover{border-color:var(--border2);color:var(--text-bright);background:var(--surface2)}
-.bi.del:hover{border-color:var(--red);color:var(--red);background:var(--red-bg)}
-
-/* FILTERS */
+.bi{padding:5px 10px;background:var(--surface3);border:1px solid var(--border2);border-radius:4px;color:var(--dim);cursor:pointer;transition:all .15s;font-size:11px;font-family:'Barlow',sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:.04em;line-height:1.4}
+.bi:hover{color:var(--bright);background:var(--surface2)}.bi.del:hover{border-color:var(--red);color:var(--red);background:var(--red-bg)}
 .fb{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:12px}
 .fb input,.fb select{background:var(--surface2);border:1px solid var(--border2);border-radius:4px;color:var(--text);padding:7px 10px;font-size:13px;font-family:'Barlow',sans-serif;outline:none;transition:border-color .15s}
-.fb input:focus,.fb select:focus{border-color:var(--red)}
-.fb input[type=text]{min-width:220px}
-.fb select{min-width:150px}
-
-/* TABLE */
+.fb input:focus,.fb select:focus{border-color:var(--red)}.fb input[type=text]{min-width:220px}.fb select{min-width:150px}
 .tw{background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden}
 table{width:100%;border-collapse:collapse}
-thead th{background:var(--surface2);padding:11px 14px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--text-dim);white-space:nowrap;border-bottom:2px solid var(--border2)}
+thead th{background:var(--surface2);padding:11px 14px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--dim);white-space:nowrap;border-bottom:2px solid var(--border2)}
 tbody tr{border-top:1px solid var(--border);transition:background .1s}
 tbody tr:hover{background:var(--surface2)}
 tbody td{padding:11px 14px;font-size:13px;vertical-align:middle;color:var(--text)}
 .tda{display:flex;gap:5px}
-
-/* BADGES */
 .badge{display:inline-block;padding:3px 8px;border-radius:4px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;line-height:1.4}
-.bg{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
-.br{background:var(--red-bg);color:#ff6b4a;border:1px solid var(--red-border)}
-.bo{background:var(--orange-bg);color:var(--orange);border:1px solid var(--orange-border)}
-.bx{background:var(--surface3);color:var(--text-dim);border:1px solid var(--border2)}
-.bb{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-border)}
-
-/* CAPACITY */
+.bg{background:var(--gr-bg);color:var(--green);border:1px solid var(--gr-bdr)}
+.br{background:var(--red-bg);color:#ff6b4a;border:1px solid var(--red-bdr)}
+.bo{background:var(--or-bg);color:var(--orange);border:1px solid var(--or-bdr)}
+.bx{background:var(--surface3);color:var(--dim);border:1px solid var(--border2)}
+.bb{background:var(--bl-bg);color:var(--blue);border:1px solid var(--bl-bdr)}
 .cb{width:80px;height:5px;background:var(--surface3);border-radius:3px;display:inline-block;vertical-align:middle;margin-right:7px}
-.cf{height:100%;background:var(--green);border-radius:3px}
-.cf.w{background:var(--orange)}.cf.f{background:var(--red-light)}
-.ct{font-size:12px;color:var(--text-dim)}
-
-/* PAGINATION */
+.cf{height:100%;background:var(--green);border-radius:3px}.cf.w{background:var(--orange)}.cf.f{background:var(--red-l)}
+.ct{font-size:12px;color:var(--dim)}
 .pag{display:flex;align-items:center;gap:10px;margin-top:16px;justify-content:center}
-.pag button{background:var(--surface2);border:1px solid var(--border2);color:var(--text-dim);padding:7px 16px;border-radius:5px;cursor:pointer;font-size:12px;font-family:'Barlow',sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:.05em;transition:all .15s}
-.pag button:hover:not(:disabled){border-color:var(--red);color:var(--text-bright)}
-.pag button:disabled{opacity:.3;cursor:not-allowed}
-.pag .pi{font-size:12px;color:var(--text-dim)}
-
-/* MODAL */
+.pag button{background:var(--surface2);border:1px solid var(--border2);color:var(--dim);padding:7px 16px;border-radius:5px;cursor:pointer;font-size:12px;font-family:'Barlow',sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:.05em;transition:all .15s}
+.pag button:hover:not(:disabled){border-color:var(--red);color:var(--bright)}.pag button:disabled{opacity:.3;cursor:not-allowed}
+.pag .pi{font-size:12px;color:var(--dim)}
 .mo{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(3px)}
-.md{background:var(--surface);border:1px solid var(--border2);border-radius:10px;width:100%;max-width:580px;max-height:90vh;overflow-y:auto;box-shadow:0 32px 80px rgba(0,0,0,.7)}
-.mh{padding:18px 22px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
-.mh h3{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;color:var(--text-bright);text-transform:uppercase;letter-spacing:.05em}
-.mb{padding:20px 22px}
-.mf{padding:14px 22px;border-top:1px solid var(--border);display:flex;gap:10px;justify-content:flex-end;background:var(--surface2)}
-
-/* FORM */
-.fg{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.md{background:var(--surface);border:1px solid var(--border2);border-radius:10px;width:100%;max-width:620px;max-height:92vh;overflow-y:auto;box-shadow:0 32px 80px rgba(0,0,0,.7)}
+.mh{padding:18px 22px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--surface);z-index:1}
+.mh h3{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;color:var(--bright);text-transform:uppercase;letter-spacing:.05em}
+.mb{padding:22px}.mf{padding:14px 22px;border-top:1px solid var(--border);display:flex;gap:10px;justify-content:flex-end;background:var(--surface2);position:sticky;bottom:0}
+/* KARTOTEKA */
+.kart-header{background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:18px 20px;margin-bottom:20px;display:flex;align-items:center;gap:16px}
+.kart-avatar{width:52px;height:52px;border-radius:50%;background:var(--red-bg);border:2px solid var(--red-bdr);display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:22px;color:var(--red-l);flex-shrink:0}
+.kart-name{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;color:var(--bright);text-transform:uppercase}
+.kart-meta{font-size:12px;color:var(--dim);margin-top:3px}
+.kart-badges{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.ksec{border-top:1px solid var(--border);margin-top:18px;padding-top:16px}
+.ksec-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--red);margin-bottom:12px}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .fg .full{grid-column:1 / -1}
 .ff{display:flex;flex-direction:column;gap:6px}
-.ff label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--text-dim)}
-.ff input,.ff select,.ff textarea{background:var(--surface2);border:1px solid var(--border2);border-radius:5px;color:var(--text-bright);padding:9px 11px;font-size:13px;font-family:'Barlow',sans-serif;outline:none;transition:all .15s;width:100%}
+.ff label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--dim)}
+.ff input,.ff select,.ff textarea{background:var(--surface2);border:1px solid var(--border2);border-radius:5px;color:var(--bright);padding:9px 11px;font-size:13px;font-family:'Barlow',sans-serif;outline:none;transition:all .15s;width:100%}
 .ff input:focus,.ff select:focus,.ff textarea:focus{border-color:var(--red);box-shadow:0 0 0 2px var(--red-bg)}
 .ff textarea{resize:vertical;min-height:70px}
 select option{background:#1c1414}
-
-/* LOGIN */
+/* VIEW mode */
+.ff .view-val{font-size:14px;color:var(--bright);font-weight:500;padding:4px 0;border-bottom:1px solid var(--border);min-height:28px}
 #login-screen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:9000}
 .lb{background:var(--surface);border:1px solid var(--border2);border-radius:10px;padding:40px;width:360px;box-shadow:0 40px 100px rgba(0,0,0,.8)}
-.lb .logo{font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:800;color:var(--text-bright);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px}
-.lb .logo em{color:var(--red-light);font-style:normal}
-.lb p{color:var(--text-muted);font-size:11px;text-transform:uppercase;letter-spacing:.1em;margin-bottom:28px}
-.lb label{display:block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--text-dim);margin-bottom:6px}
-.lb input{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:5px;color:var(--text-bright);padding:11px 13px;font-size:14px;font-family:'Barlow',sans-serif;outline:none;transition:all .15s;margin-bottom:14px}
+.lb .logo{font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:800;color:var(--bright);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px}
+.lb .logo em{color:var(--red-l);font-style:normal}
+.lb p{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.1em;margin-bottom:28px}
+.lb label{display:block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--dim);margin-bottom:6px}
+.lb input{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:5px;color:var(--bright);padding:11px 13px;font-size:14px;font-family:'Barlow',sans-serif;outline:none;transition:all .15s;margin-bottom:14px}
 .lb input:focus{border-color:var(--red);box-shadow:0 0 0 2px var(--red-bg)}
 #login-btn{width:100%;padding:12px;background:var(--red);border:none;border-radius:5px;color:#fff;font-weight:700;font-size:15px;font-family:'Barlow Condensed',sans-serif;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;margin-top:4px;transition:background .15s}
-#login-btn:hover{background:var(--red-light)}
+#login-btn:hover{background:var(--red-l)}
 #login-error{color:#ff6b4a;font-size:12px;margin-top:10px;display:none}
-
-/* TOAST */
 #toasts{position:fixed;bottom:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px}
 .toast{padding:12px 18px;border-radius:6px;font-size:13px;font-weight:600;box-shadow:0 8px 32px rgba(0,0,0,.5);max-width:320px;animation:si .2s ease}
-.toast.success{background:var(--green);color:#000}
-.toast.error{background:var(--red-light);color:#fff}
-.toast.info{background:var(--surface2);border:1px solid var(--border2);color:var(--text)}
+.toast.success{background:var(--green);color:#000}.toast.error{background:var(--red-l);color:#fff}.toast.info{background:var(--surface2);border:1px solid var(--border2);color:var(--text)}
 @keyframes si{from{transform:translateX(20px);opacity:0}to{transform:translateX(0);opacity:1}}
-
-/* LOADER */
-.loader{display:flex;align-items:center;justify-content:center;padding:60px;color:var(--text-dim);gap:12px;font-size:13px}
-.spinner{width:20px;height:20px;border:2px solid var(--border2);border-top-color:var(--red-light);border-radius:50%;animation:sp .7s linear infinite}
+.loader{display:flex;align-items:center;justify-content:center;padding:60px;color:var(--dim);gap:12px;font-size:13px}
+.spinner{width:20px;height:20px;border:2px solid var(--border2);border-top-color:var(--red-l);border-radius:50%;animation:sp .7s linear infinite}
 @keyframes sp{to{transform:rotate(360deg)}}
-
-/* DETAIL */
-.dg{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-.di label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--text-dim);display:block;margin-bottom:4px}
-.di .v{font-size:14px;color:var(--text-bright);font-weight:500}
-.di.full{grid-column:1 / -1}
-
-/* EMPTY */
-.empty{padding:60px;text-align:center;color:var(--text-dim)}
-.empty strong{display:block;font-size:16px;color:var(--text);margin-bottom:8px}
-
-/* INFO BOX */
-.ib{background:var(--surface2);border-left:3px solid var(--red);border-radius:0 5px 5px 0;padding:10px 14px;font-size:12px;color:var(--text-dim);margin-bottom:16px;line-height:1.6}
-.ib strong{color:var(--text-bright)}
+.empty{padding:60px;text-align:center;color:var(--dim)}.empty strong{display:block;font-size:16px;color:var(--text);margin-bottom:8px}
+.ib{background:var(--surface2);border-left:3px solid var(--red);border-radius:0 5px 5px 0;padding:10px 14px;font-size:12px;color:var(--dim);margin-bottom:16px;line-height:1.6}
+.ib strong{color:var(--bright)}
 </style>
 </head>
 <body>
@@ -223,7 +162,7 @@ select option{background:#1c1414}
       <div class="sl">Export</div>
       <a id="btn-export"><span class="nd"></span> Pobierz CSV</a>
     </nav>
-    <div id="sidebar-footer">
+    <div id="sf">
       <div class="ui"><small>Zalogowany jako</small><strong id="admin-username">—</strong></div>
       <button id="btn-logout">Wyloguj</button>
     </div>
@@ -246,7 +185,12 @@ const RL=30;
 let rf={};
 const DAYS=['Niedziela','Poniedziałek','Wtorek','Środa','Czwartek','Piątek','Sobota'];
 const CAT={kids:'Dzieci',youth:'Młodzież',adults:'Dorośli',vip:'VIP',women:'Kobiety'};
-const PS={paid:'Opłacony',unpaid:'Nieopłacony',partial:'Częściowy',waived:'Zwolniony'};
+
+// ✅ PEŁNE MAPOWANIE — zawiera też 'pending' z formularza
+const PS={
+  paid:'Opłacony', unpaid:'Nieopłacony', pending:'Oczekujący',
+  partial:'Częściowy', waived:'Zwolniony'
+};
 const RS={new:'Nowy',confirmed:'Potwierdzony',cancelled:'Anulowany',completed:'Zakończony'};
 
 async function aF(path,opts={}){
@@ -254,8 +198,8 @@ async function aF(path,opts={}){
   if(TOKEN)h['Authorization']=`Bearer ${TOKEN}`;
   try{
     const r=await fetch(API+path,{headers:h,...opts});
-    const d=await r.json().catch(()=>({error:'Błąd odpowiedzi'}));
-    if(!r.ok)throw new Error(d.error||`HTTP ${r.status}`);
+    const d=await r.json().catch(()=>({error:'Błąd odpowiedzi serwera'}));
+    if(!r.ok)throw new Error(d.error||`Błąd HTTP ${r.status}`);
     setAS(true);return d;
   }catch(e){setAS(false);throw e;}
 }
@@ -269,17 +213,12 @@ function showApp(){
   try{const u=JSON.parse(atob(TOKEN.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));document.getElementById('admin-username').textContent=u.username||'—';}catch{}
   navigate('dashboard');
 }
-
 document.getElementById('login-btn').addEventListener('click',async()=>{
-  const u=document.getElementById('l-user').value.trim();
-  const p=document.getElementById('l-pass').value;
-  const e=document.getElementById('login-error');
-  e.style.display='none';
+  const u=document.getElementById('l-user').value.trim(),p=document.getElementById('l-pass').value;
+  const e=document.getElementById('login-error');e.style.display='none';
   if(!u||!p){e.textContent='Podaj login i hasło.';e.style.display='block';return;}
-  try{
-    const d=await aF('/login',{method:'POST',body:JSON.stringify({username:u,password:p})});
-    TOKEN=d.token;localStorage.setItem('km_token',TOKEN);showApp();
-  }catch(err){e.textContent=err.message;e.style.display='block';}
+  try{const d=await aF('/login',{method:'POST',body:JSON.stringify({username:u,password:p})});TOKEN=d.token;localStorage.setItem('km_token',TOKEN);showApp();}
+  catch(err){e.textContent=err.message;e.style.display='block';}
 });
 document.getElementById('l-pass').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('login-btn').click();});
 document.getElementById('btn-logout').addEventListener('click',()=>{TOKEN='';localStorage.removeItem('km_token');showLogin();});
@@ -296,8 +235,7 @@ function navigate(view){
 document.querySelectorAll('nav a[data-view]').forEach(a=>a.addEventListener('click',()=>navigate(a.dataset.view)));
 document.getElementById('btn-export').addEventListener('click',()=>window.open(API+'/export','_blank'));
 
-function toast(msg,type='success',ms=3000){const e=document.createElement('div');e.className=`toast ${type}`;e.textContent=msg;document.getElementById('toasts').appendChild(e);setTimeout(()=>e.remove(),ms);}
-
+function toast(msg,type='success',ms=3500){const e=document.createElement('div');e.className=`toast ${type}`;e.textContent=msg;document.getElementById('toasts').appendChild(e);setTimeout(()=>e.remove(),ms);}
 function showModal(title,body,footer){
   closeModal();
   const ov=document.createElement('div');ov.className='mo';ov.id='modal-overlay';
@@ -307,13 +245,16 @@ function showModal(title,body,footer){
 }
 function closeModal(){document.getElementById('modal-overlay')?.remove();}
 
-function fd(v){if(!v)return'—';return new Date(v).toLocaleDateString('pl-PL',{day:'2-digit',month:'2-digit',year:'numeric'});}
-function fdt(v){if(!v)return'—';return new Date(v).toLocaleString('pl-PL',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});}
-function pb(s){const m={paid:'bg',unpaid:'br',partial:'bo',waived:'bx'};return`<span class="badge ${m[s]||'bx'}">${PS[s]||s||'—'}</span>`;}
+function fd(v){if(!v)return'—';try{return new Date(v).toLocaleDateString('pl-PL',{day:'2-digit',month:'2-digit',year:'numeric'});}catch{return v;}}
+function fdt(v){if(!v)return'—';try{return new Date(v).toLocaleString('pl-PL',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});}catch{return v;}}
+function pb(s){const m={paid:'bg',unpaid:'br',pending:'bo',partial:'bo',waived:'bx'};return`<span class="badge ${m[s]||'bx'}">${PS[s]||s||'—'}</span>`;}
 function sb(s){const m={confirmed:'bg',new:'bo',cancelled:'br',completed:'bx'};return`<span class="badge ${m[s]||'bx'}">${RS[s]||s||'—'}</span>`;}
 function capB(r,m){const p=m?Math.min(100,Math.round(r/m*100)):0;const c=p>=100?'f':p>=80?'w':'';return`<span class="cb"><span class="cf ${c}" style="width:${p}%"></span></span><span class="ct">${r}/${m||'?'}</span>`;}
+function initials(fn,ln){return((fn||'?')[0]+(ln||'?')[0]).toUpperCase();}
 
+// ═══════════════════════════════════════════════════════
 // DASHBOARD
+// ═══════════════════════════════════════════════════════
 async function loadDash(){
   const c=document.getElementById('content');
   try{
@@ -329,7 +270,7 @@ async function loadDash(){
     <div class="tw" style="margin-bottom:28px"><table>
       <thead><tr><th>Miasto</th><th>Łącznie</th><th>Opłaceni</th><th>Oczekujący</th><th>Rezerwowa</th></tr></thead>
       <tbody>${(d.byLoc||[]).map(l=>`<tr>
-        <td><strong style="color:var(--text-bright)">${l.city}</strong></td>
+        <td><strong style="color:var(--bright)">${l.city}</strong></td>
         <td><strong>${l.total}</strong></td>
         <td>${pb('paid')} <strong>${l.paid}</strong></td>
         <td>${l.pending}</td><td>${l.waitlist}</td>
@@ -339,7 +280,7 @@ async function loadDash(){
     <div class="tw" style="margin-bottom:28px"><table>
       <thead><tr><th>Miasto</th><th>Grupa</th><th>Obłożenie</th><th></th></tr></thead>
       <tbody>${(d.byGroup||[]).map(g=>`<tr>
-        <td>${g.city}</td><td><strong style="color:var(--text-bright)">${g.name}</strong></td>
+        <td>${g.city}</td><td><strong style="color:var(--bright)">${g.name}</strong></td>
         <td>${capB(g.registered,g.max_capacity)}</td>
         <td><button class="bi" onclick="navigate('groups')">Edytuj</button></td>
       </tr>`).join('')}</tbody>
@@ -348,43 +289,173 @@ async function loadDash(){
     <div class="tw"><table>
       <thead><tr><th>Kursant</th><th>Miasto</th><th>Grupa</th><th>Status</th><th>Płatność</th><th>Data</th><th></th></tr></thead>
       <tbody>${(d.recent||[]).map(r=>`<tr>
-        <td><strong style="color:var(--text-bright)">${r.name}</strong></td>
+        <td><strong style="color:var(--bright)">${r.name}</strong></td>
         <td>${r.city||'—'}</td><td>${r.group_name||'—'}</td>
         <td>${sb(r.status)}</td><td>${pb(r.payment_status)}</td>
-        <td style="color:var(--text-dim);font-size:12px">${fdt(r.created_at)}</td>
-        <td><button class="bi" onclick="viewR(${r.id})">Podgląd</button></td>
+        <td style="color:var(--dim);font-size:12px">${fdt(r.created_at)}</td>
+        <td><button class="bi" onclick="openKartoteka(${r.id})">Kartoteka</button></td>
       </tr>`).join('')}</tbody>
     </table></div>`;
   }catch(e){c.innerHTML=`<div class="empty"><strong>Błąd ładowania</strong>${e.message}</div>`;}
 }
 
-// REGISTRATIONS
+// ═══════════════════════════════════════════════════════
+// KARTOTEKA — pełna karta kursanta (podgląd + edycja)
+// ═══════════════════════════════════════════════════════
+async function openKartoteka(id, mode='view'){
+  let r, groups=[], plans=[];
+  try{
+    [r, {rows:groups}, {rows:plans}] = await Promise.all([
+      aF(`/registration/${id}`),
+      aF('/groups'),
+      aF('/plans'),
+    ]);
+  }catch(e){toast('Błąd pobierania danych: '+e.message,'error');return;}
+
+  const gO=groups.map(g=>`<option value="${g.id}" ${g.id==r.group_id?'selected':''}>${g.city} — ${g.name}</option>`).join('');
+  const pO=`<option value="">— brak karnetu —</option>`+plans.map(p=>`<option value="${p.id}" ${p.id==r.price_plan_id?'selected':''}>${p.name} — ${p.price} zł / ${p.months} mies.</option>`).join('');
+
+  const isEdit = mode==='edit';
+  const fld=(id,val,type='text',opts='')=>isEdit
+    ?`<input id="${id}" type="${type}" value="${val||''}" ${opts}>`
+    :`<div class="view-val">${val||'—'}</div>`;
+  const sel=(id,val,options)=>isEdit
+    ?`<select id="${id}">${options}</select>`
+    :`<div class="view-val">${val||'—'}</div>`;
+  const txt=(id,val)=>isEdit
+    ?`<textarea id="${id}">${val||''}</textarea>`
+    :`<div class="view-val" style="white-space:pre-wrap">${val||'—'}</div>`;
+
+  const payOpts=['paid','unpaid','pending','partial','waived'].map(v=>`<option value="${v}" ${r.payment_status===v?'selected':''}>${PS[v]||v}</option>`).join('');
+  const statOpts=['new','confirmed','cancelled','completed'].map(v=>`<option value="${v}" ${r.status===v?'selected':''}>${RS[v]||v}</option>`).join('');
+  const pmOpts=['cash','transfer','card'].map(v=>`<option value="${v}" ${r.payment_method===v?'selected':''}>${{cash:'Gotówka',transfer:'Przelew',card:'Karta'}[v]||v}</option>`).join('');
+
+  const body=`
+    <div class="kart-header">
+      <div class="kart-avatar">${initials(r.first_name,r.last_name)}</div>
+      <div>
+        <div class="kart-name">${r.first_name} ${r.last_name}</div>
+        <div class="kart-meta">${r.email||'brak email'} · ${r.phone||'brak tel.'} · ${r.city||'brak miasta'}</div>
+        <div class="kart-badges">
+          ${sb(r.status)} ${pb(r.payment_status)}
+          ${r.is_waitlist?'<span class="badge bo">Lista rezerwowa</span>':''}
+          <span class="badge ${r.source==='admin'?'bb':'bx'}">${r.source==='admin'?'Admin':'WWW'}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="ksec">
+      <div class="ksec-title">Dane osobowe</div>
+      <div class="fg">
+        <div class="ff"><label>Imię</label>${fld('k-fn',r.first_name)}</div>
+        <div class="ff"><label>Nazwisko</label>${fld('k-ln',r.last_name)}</div>
+        <div class="ff"><label>Email</label>${fld('k-em',r.email,'email')}</div>
+        <div class="ff"><label>Telefon</label>${fld('k-ph',r.phone)}</div>
+        <div class="ff"><label>Rok urodzenia</label>${fld('k-by',r.birth_year,'number')}</div>
+        <div class="ff"><label>Typ kursanta</label>${isEdit
+          ?`<select id="k-in"><option value="true" ${r.is_new?'selected':''}>Nowy</option><option value="false" ${!r.is_new?'selected':''}>Kontynuacja</option></select>`
+          :`<div class="view-val">${r.is_new?'Nowy kursant':'Kontynuacja'}</div>`}
+        </div>
+      </div>
+    </div>
+
+    <div class="ksec">
+      <div class="ksec-title">Przynależność do grupy</div>
+      <div class="fg">
+        <div class="ff full"><label>Grupa</label>${isEdit?`<select id="k-gr">${gO}</select>`:`<div class="view-val">${r.city?r.city+' — ':''} ${r.group_name||'—'}</div>`}</div>
+        <div class="ff full"><label>Karnet</label>${isEdit?`<select id="k-pl">${pO}</select>`:`<div class="view-val">${r.plan_name||'—'}</div>`}</div>
+        <div class="ff"><label>Data startu</label>${fld('k-sd',r.start_date?r.start_date.slice(0,10):'','date')}</div>
+        <div class="ff"><label>Lista rezerwowa</label>${isEdit
+          ?`<select id="k-wl"><option value="false" ${!r.is_waitlist?'selected':''}>Nie</option><option value="true" ${r.is_waitlist?'selected':''}>Tak</option></select>`
+          :`<div class="view-val">${r.is_waitlist?'Tak':'Nie'}</div>`}
+        </div>
+      </div>
+    </div>
+
+    <div class="ksec">
+      <div class="ksec-title">Płatność</div>
+      <div class="fg">
+        <div class="ff"><label>Status płatności</label>${isEdit?`<select id="k-ps">${payOpts}</select>`:`<div class="view-val">${pb(r.payment_status)}</div>`}</div>
+        <div class="ff"><label>Metoda</label>${isEdit?`<select id="k-pm">${pmOpts}</select>`:`<div class="view-val">${{cash:'Gotówka',transfer:'Przelew',card:'Karta'}[r.payment_method]||r.payment_method||'—'}</div>`}</div>
+        <div class="ff"><label>Kwota (zł)</label>${fld('k-am',r.total_amount,'number')}</div>
+        <div class="ff"><label>Kod ref.</label><div class="view-val" style="font-family:monospace;font-size:12px">${r.payment_ref||'—'}</div></div>
+        <div class="ff"><label>Data opłaty</label><div class="view-val">${fdt(r.paid_at)}</div></div>
+        <div class="ff"><label>Status zapisu</label>${isEdit?`<select id="k-st">${statOpts}</select>`:`<div class="view-val">${sb(r.status)}</div>`}</div>
+      </div>
+    </div>
+
+    <div class="ksec">
+      <div class="ksec-title">Historia i notatki</div>
+      <div class="fg">
+        <div class="ff"><label>Data zapisu</label><div class="view-val">${fdt(r.created_at)}</div></div>
+        <div class="ff"><label>Preferowany czas</label><div class="view-val">${r.preferred_time||'—'}</div></div>
+        <div class="ff full"><label>Notatki admina</label>${txt('k-nt',r.admin_notes)}</div>
+      </div>
+    </div>`;
+
+  const footer=isEdit
+    ?`<button class="btn btn-secondary" onclick="openKartoteka(${id},'view')">Anuluj</button>
+      <button class="btn btn-danger" style="background:var(--red-bg);border:1px solid var(--red-bdr);color:#ff6b4a;border-radius:5px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Barlow',sans-serif;text-transform:uppercase" onclick="delR(${id},'${r.first_name} ${r.last_name}',null)">Usuń</button>
+      <button class="btn btn-primary" onclick="saveKartoteka(${id})">Zapisz zmiany</button>`
+    :`<button class="btn btn-secondary" onclick="closeModal()">Zamknij</button>
+      <button class="btn btn-primary" onclick="openKartoteka(${id},'edit')">Edytuj kartotekę</button>`;
+
+  showModal(`Kartoteka #${id}`, body, footer);
+}
+
+async function saveKartoteka(id){
+  const b={
+    first_name:document.getElementById('k-fn')?.value||undefined,
+    last_name:document.getElementById('k-ln')?.value||undefined,
+    email:document.getElementById('k-em')?.value||null,
+    phone:document.getElementById('k-ph')?.value||null,
+    birth_year:parseInt(document.getElementById('k-by')?.value)||null,
+    is_new:document.getElementById('k-in')?.value==='true',
+    group_id:parseInt(document.getElementById('k-gr')?.value)||null,
+    price_plan_id:parseInt(document.getElementById('k-pl')?.value)||null,
+    start_date:document.getElementById('k-sd')?.value||null,
+    is_waitlist:document.getElementById('k-wl')?.value==='true',
+    payment_status:document.getElementById('k-ps')?.value,
+    payment_method:document.getElementById('k-pm')?.value,
+    total_amount:parseFloat(document.getElementById('k-am')?.value)||0,
+    status:document.getElementById('k-st')?.value,
+    admin_notes:document.getElementById('k-nt')?.value||null,
+  };
+  // usuń undefined
+  Object.keys(b).forEach(k=>{if(b[k]===undefined)delete b[k];});
+  try{
+    await aF(`/registration/${id}`,{method:'PATCH',body:JSON.stringify(b)});
+    toast('Kartoteka zapisana');
+    openKartoteka(id,'view'); // wróć do podglądu
+    if(CV==='web-registrations')fetchR('web');
+    if(CV==='participants')fetchR('admin');
+    if(CV==='dashboard')loadDash();
+  }catch(e){toast('Błąd: '+e.message,'error');}
+}
+
+// ═══════════════════════════════════════════════════════
+// REGISTRATIONS LIST
+// ═══════════════════════════════════════════════════════
 async function loadReg(src){
   const c=document.getElementById('content');
   const isW=src==='web';
   c.innerHTML=`
-    <div class="ib">${isW?'<strong>Zapisy ze strony WWW</strong> — złożone przez formularz na saggita-kravmaga.vercel.app/zapisz-sie.html':'<strong>Baza kursantów</strong> — dodani ręcznie przez administratora, automatycznie ze statusem "Potwierdzony"'}</div>
+    <div class="ib">${isW
+      ?'<strong>Zapisy ze strony WWW</strong> — złożone przez formularz online. Kliknij "Kartoteka" aby potwierdzić i edytować.'
+      :'<strong>Baza kursantów</strong> — dodani ręcznie przez administratora.'
+    }</div>
     <div class="sh"><h3>${isW?'Zapisy ze strony':'Baza kursantów'}</h3>${!isW?`<button class="btn btn-primary" onclick="navigate('add-participant')">+ Dodaj kursanta</button>`:''}</div>
     <div class="fb">
       <input type="text" id="f-s" placeholder="Szukaj imienia, emaila, telefonu…"/>
       <select id="f-st">
-        <option value="">Status: wszystkie</option>
-        <option value="new">Nowy</option>
-        <option value="confirmed">Potwierdzony</option>
-        <option value="cancelled">Anulowany</option>
-        <option value="completed">Zakończony</option>
+        <option value="">Status: wszystkie</option><option value="new">Nowy</option>
+        <option value="confirmed">Potwierdzony</option><option value="cancelled">Anulowany</option><option value="completed">Zakończony</option>
       </select>
       <select id="f-p">
-        <option value="">Płatność: wszystkie</option>
-        <option value="paid">Opłacony</option>
-        <option value="unpaid">Nieopłacony</option>
-        <option value="partial">Częściowy</option>
+        <option value="">Płatność: wszystkie</option><option value="paid">Opłacony</option>
+        <option value="unpaid">Nieopłacony</option><option value="pending">Oczekujący</option><option value="partial">Częściowy</option>
       </select>
-      <select id="f-w">
-        <option value="">Lista: wszystkie</option>
-        <option value="false">Aktywni</option>
-        <option value="true">Rezerwowa</option>
-      </select>
+      <select id="f-w"><option value="">Lista: wszystkie</option><option value="false">Aktywni</option><option value="true">Rezerwowa</option></select>
       <button class="btn btn-secondary btn-sm" onclick="apF('${src}')">Filtruj</button>
       <button class="btn btn-secondary btn-sm" onclick="rstF('${src}')">Reset</button>
     </div>
@@ -403,7 +474,6 @@ function rstF(src){
   ['f-s','f-st','f-p','f-w'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
   fetchR(src);
 }
-
 async function fetchR(src){
   const w=document.getElementById('rtw');if(!w)return;
   w.innerHTML='<div class="loader"><div class="spinner"></div> Ładowanie…</div>';
@@ -411,29 +481,28 @@ async function fetchR(src){
   try{
     const data=await aF('/registrations?'+qs);
     rt=data.total;const rows=data.rows||[];
-    if(!rows.length){w.innerHTML='<div class="empty"><strong>Brak wyników</strong>Zmień filtry lub dodaj kursantów.</div>';return;}
+    if(!rows.length){w.innerHTML='<div class="empty"><strong>Brak wyników</strong></div>';return;}
     w.innerHTML=`
-      <div style="font-size:12px;color:var(--text-dim);margin-bottom:10px">Łącznie: <strong style="color:var(--text-bright)">${rt}</strong></div>
+      <div style="font-size:12px;color:var(--dim);margin-bottom:10px">Łącznie: <strong style="color:var(--bright)">${rt}</strong></div>
       <div class="tw"><table>
         <thead><tr><th>ID</th><th>Kursant</th><th>Kontakt</th><th>Miasto</th><th>Grupa</th><th>Status</th><th>Płatność</th><th>Data</th><th>Akcje</th></tr></thead>
         <tbody>${rows.map(r=>`<tr>
-          <td style="color:var(--text-muted);font-size:11px">#${r.id}</td>
+          <td style="color:var(--muted);font-size:11px">#${r.id}</td>
           <td>
-            <strong style="color:var(--text-bright)">${r.first_name} ${r.last_name}</strong>
+            <strong style="color:var(--bright)">${r.first_name} ${r.last_name}</strong>
             ${r.is_waitlist?'<br><span class="badge bo" style="font-size:9px">rezerwowa</span>':''}
           </td>
           <td style="font-size:12px">
             <span style="color:var(--text)">${r.email||'—'}</span>
-            ${r.phone?`<br><span style="color:var(--text-dim)">${r.phone}</span>`:''}
+            ${r.phone?`<br><span style="color:var(--dim)">${r.phone}</span>`:''}
           </td>
           <td>${r.city||'—'}</td>
-          <td style="font-size:12px;color:var(--text)">${r.group_name||'—'}</td>
+          <td style="font-size:12px">${r.group_name||'—'}</td>
           <td>${sb(r.status)}</td>
           <td>${pb(r.payment_status)}</td>
-          <td style="font-size:11px;color:var(--text-dim)">${fd(r.created_at)}</td>
+          <td style="font-size:11px;color:var(--dim)">${fd(r.created_at)}</td>
           <td><div class="tda">
-            <button class="bi" onclick="viewR(${r.id})">Podgląd</button>
-            <button class="bi" onclick="editR(${r.id})">Edytuj</button>
+            <button class="bi" onclick="openKartoteka(${r.id},'view')">Kartoteka</button>
             <button class="bi del" onclick="delR(${r.id},'${r.first_name} ${r.last_name}','${src}')">Usuń</button>
           </div></td>
         </tr>`).join('')}</tbody>
@@ -446,96 +515,15 @@ async function fetchR(src){
   }catch(e){w.innerHTML=`<div class="empty"><strong>Błąd</strong>${e.message}</div>`;}
 }
 function chP(d,src){ro=Math.max(0,ro+d*RL);fetchR(src);}
-
-async function viewR(id){
-  try{
-    const r=await aF(`/registration/${id}`);
-    showModal(`Zapis #${id} — ${r.first_name} ${r.last_name}`,
-      `<div class="dg">
-        <div class="di"><label>Imię i nazwisko</label><div class="v">${r.first_name} ${r.last_name}</div></div>
-        <div class="di"><label>Email</label><div class="v">${r.email||'—'}</div></div>
-        <div class="di"><label>Telefon</label><div class="v">${r.phone||'—'}</div></div>
-        <div class="di"><label>Rok urodzenia</label><div class="v">${r.birth_year||'—'}</div></div>
-        <div class="di"><label>Miasto</label><div class="v">${r.city||'—'}</div></div>
-        <div class="di"><label>Grupa</label><div class="v">${r.group_name||'—'}</div></div>
-        <div class="di"><label>Karnet</label><div class="v">${r.plan_name||'—'}</div></div>
-        <div class="di"><label>Kwota</label><div class="v">${r.total_amount?r.total_amount+' zł':'—'}</div></div>
-        <div class="di"><label>Metoda płatności</label><div class="v">${r.payment_method||'—'}</div></div>
-        <div class="di"><label>Kod ref.</label><div class="v" style="font-family:monospace;font-size:12px">${r.payment_ref||'—'}</div></div>
-        <div class="di"><label>Status zapisu</label><div class="v">${sb(r.status)}</div></div>
-        <div class="di"><label>Status płatności</label><div class="v">${pb(r.payment_status)}</div></div>
-        <div class="di"><label>Data startu</label><div class="v">${fd(r.start_date)}</div></div>
-        <div class="di"><label>Data zapisu</label><div class="v">${fdt(r.created_at)}</div></div>
-        <div class="di full"><label>Notatki admina</label><div class="v" style="white-space:pre-wrap">${r.admin_notes||'—'}</div></div>
-      </div>`,
-      `<button class="btn btn-secondary" onclick="closeModal()">Zamknij</button>
-       <button class="btn btn-primary" onclick="closeModal();editR(${id})">Edytuj</button>`
-    );
-  }catch(e){toast(e.message,'error');}
-}
-
-async function editR(id){
-  let r,groups=[],plans=[];
-  try{[r,{rows:groups},{rows:plans}]=await Promise.all([aF(`/registration/${id}`),aF('/groups'),aF('/plans')]);}
-  catch(e){toast(e.message,'error');return;}
-  const gO=groups.map(g=>`<option value="${g.id}" ${g.id==r.group_id?'selected':''}>${g.city} — ${g.name}</option>`).join('');
-  const pO=`<option value="">— brak —</option>`+plans.map(p=>`<option value="${p.id}" ${p.id==r.price_plan_id?'selected':''}>${p.name} (${p.months} mies.)</option>`).join('');
-  showModal(`Edycja zapisu #${id}`,
-    `<div class="fg">
-      <div class="ff"><label>Imię</label><input id="e-fn" value="${r.first_name||''}"></div>
-      <div class="ff"><label>Nazwisko</label><input id="e-ln" value="${r.last_name||''}"></div>
-      <div class="ff"><label>Email</label><input id="e-em" type="email" value="${r.email||''}"></div>
-      <div class="ff"><label>Telefon</label><input id="e-ph" value="${r.phone||''}"></div>
-      <div class="ff"><label>Rok urodzenia</label><input id="e-by" type="number" value="${r.birth_year||''}"></div>
-      <div class="ff"><label>Data startu</label><input id="e-sd" type="date" value="${r.start_date?r.start_date.slice(0,10):''}"></div>
-      <div class="ff full"><label>Grupa</label><select id="e-gr">${gO}</select></div>
-      <div class="ff full"><label>Karnet</label><select id="e-pl">${pO}</select></div>
-      <div class="ff"><label>Metoda płatności</label>
-        <select id="e-pm">
-          <option value="cash" ${r.payment_method==='cash'?'selected':''}>Gotówka</option>
-          <option value="transfer" ${r.payment_method==='transfer'?'selected':''}>Przelew</option>
-          <option value="card" ${r.payment_method==='card'?'selected':''}>Karta</option>
-        </select>
-      </div>
-      <div class="ff"><label>Kwota (zł)</label><input id="e-am" type="number" value="${r.total_amount||''}"></div>
-      <div class="ff"><label>Status zapisu</label>
-        <select id="e-st">
-          <option value="new" ${r.status==='new'?'selected':''}>Nowy</option>
-          <option value="confirmed" ${r.status==='confirmed'?'selected':''}>Potwierdzony</option>
-          <option value="cancelled" ${r.status==='cancelled'?'selected':''}>Anulowany</option>
-          <option value="completed" ${r.status==='completed'?'selected':''}>Zakończony</option>
-        </select>
-      </div>
-      <div class="ff"><label>Status płatności</label>
-        <select id="e-ps">
-          <option value="unpaid" ${r.payment_status==='unpaid'?'selected':''}>Nieopłacony</option>
-          <option value="paid" ${r.payment_status==='paid'?'selected':''}>Opłacony</option>
-          <option value="partial" ${r.payment_status==='partial'?'selected':''}>Częściowy</option>
-          <option value="waived" ${r.payment_status==='waived'?'selected':''}>Zwolniony</option>
-        </select>
-      </div>
-      <div class="ff"><label>Lista rezerwowa</label>
-        <select id="e-wl"><option value="false" ${!r.is_waitlist?'selected':''}>Nie</option><option value="true" ${r.is_waitlist?'selected':''}>Tak</option></select>
-      </div>
-      <div class="ff full"><label>Notatki admina</label><textarea id="e-nt">${r.admin_notes||''}</textarea></div>
-    </div>`,
-    `<button class="btn btn-secondary" onclick="closeModal()">Anuluj</button>
-     <button class="btn btn-primary" onclick="saveR(${id})">Zapisz zmiany</button>`
-  );
-}
-
-async function saveR(id){
-  const b={first_name:document.getElementById('e-fn').value,last_name:document.getElementById('e-ln').value,email:document.getElementById('e-em').value||null,phone:document.getElementById('e-ph').value||null,birth_year:parseInt(document.getElementById('e-by').value)||null,start_date:document.getElementById('e-sd').value||null,group_id:parseInt(document.getElementById('e-gr').value)||null,price_plan_id:parseInt(document.getElementById('e-pl').value)||null,payment_method:document.getElementById('e-pm').value,total_amount:parseFloat(document.getElementById('e-am').value)||0,status:document.getElementById('e-st').value,payment_status:document.getElementById('e-ps').value,is_waitlist:document.getElementById('e-wl').value==='true',admin_notes:document.getElementById('e-nt').value||null};
-  try{await aF(`/registration/${id}`,{method:'PATCH',body:JSON.stringify(b)});toast('Zapis zaktualizowany');closeModal();if(CV==='web-registrations')fetchR('web');if(CV==='participants')fetchR('admin');if(CV==='dashboard')loadDash();}
-  catch(e){toast(e.message,'error');}
-}
 async function delR(id,name,src){
   if(!confirm(`Usunąć zapis: ${name}?\n\nOperacja nieodwracalna.`))return;
-  try{await aF(`/registration/${id}`,{method:'DELETE'});toast('Zapis usunięty');fetchR(src);}
+  try{await aF(`/registration/${id}`,{method:'DELETE'});toast('Zapis usunięty');closeModal();if(src)fetchR(src);}
   catch(e){toast(e.message,'error');}
 }
 
+// ═══════════════════════════════════════════════════════
 // ADD PARTICIPANT
+// ═══════════════════════════════════════════════════════
 async function loadAdd(){
   const c=document.getElementById('content');
   let groups=[],plans=[];
@@ -544,7 +532,7 @@ async function loadAdd(){
   const gO=groups.map(g=>`<option value="${g.id}">${g.city} — ${g.name} (${g.registered_count||0}/${g.max_capacity})</option>`).join('');
   const pO=`<option value="">— bez karnetu —</option>`+plans.map(p=>`<option value="${p.id}">${p.name} — ${p.price} zł / ${p.months} mies.</option>`).join('');
   c.innerHTML=`
-    <div class="ib"><strong>Dodany kursant</strong> trafi do zakładki "Baza kursantów" z oznaczeniem źródła "Admin".</div>
+    <div class="ib"><strong>Nowy kursant</strong> — po dodaniu pojawi się w zakładce "Baza kursantów" ze statusem: Potwierdzony.</div>
     <div class="sh"><h3>Dodaj kursanta</h3></div>
     <div class="tw" style="max-width:700px"><div style="padding:24px">
       <div class="fg">
@@ -563,8 +551,8 @@ async function loadAdd(){
         <div class="ff"><label>Status płatności</label>
           <select id="np-ps"><option value="unpaid">Nieopłacony</option><option value="paid">Opłacony</option><option value="waived">Zwolniony</option></select>
         </div>
-        <div class="ff"><label>Typ kursanta</label>
-          <select id="np-in"><option value="true">Nowy</option><option value="false">Kontynuacja</option></select>
+        <div class="ff"><label>Typ</label>
+          <select id="np-in"><option value="true">Nowy kursant</option><option value="false">Kontynuacja</option></select>
         </div>
         <div class="ff full"><label>Notatki</label><textarea id="np-nt" placeholder="Opcjonalne notatki…"></textarea></div>
       </div>
@@ -582,7 +570,9 @@ async function submitAdd(){
   catch(e){toast(e.message,'error');}
 }
 
+// ═══════════════════════════════════════════════════════
 // GROUPS
+// ═══════════════════════════════════════════════════════
 async function loadGroups(){
   const c=document.getElementById('content');
   try{
@@ -593,12 +583,8 @@ async function loadGroups(){
         <thead><tr><th>Miasto</th><th>Nazwa</th><th>Kategoria</th><th>Wiek</th><th>Obłożenie</th><th>Status</th><th>Akcje</th></tr></thead>
         <tbody>${rows.length?rows.map(g=>`<tr>
           <td>${g.city||'—'}</td>
-          <td>
-            <strong style="color:var(--text-bright)">${g.name}</strong>
-            ${g.notes?`<br><small style="color:var(--text-dim);font-size:11px">${g.notes}</small>`:''}
-          </td>
-          <td>${CAT[g.category]||g.category}</td>
-          <td>${g.age_range||'—'}</td>
+          <td><strong style="color:var(--bright)">${g.name}</strong>${g.notes?`<br><small style="color:var(--dim);font-size:11px">${g.notes}</small>`:''}</td>
+          <td>${CAT[g.category]||g.category}</td><td>${g.age_range||'—'}</td>
           <td>${capB(g.registered_count||0,g.max_capacity)}</td>
           <td>${g.active?'<span class="badge bg">Aktywna</span>':'<span class="badge bx">Nieaktywna</span>'}</td>
           <td><div class="tda">
@@ -609,17 +595,13 @@ async function loadGroups(){
       </table></div>`;
   }catch(e){c.innerHTML=`<div class="empty"><strong>Błąd</strong>${e.message}</div>`;}
 }
-
-async function getLoc(selId){
-  try{const {rows}=await aF('/locations');return rows.map(l=>`<option value="${l.id}" ${l.id==selId?'selected':''}>${l.city} — ${l.name}</option>`).join('');}
-  catch{return '';}
-}
+async function getLoc(selId){try{const {rows}=await aF('/locations');return rows.map(l=>`<option value="${l.id}" ${l.id==selId?'selected':''}>${l.city} — ${l.name}</option>`).join('');}catch{return '';}}
 async function showAddG(){
   const lO=await getLoc(null);
   showModal('Nowa grupa',
     `<div class="fg">
       <div class="ff full"><label>Lokalizacja *</label><select id="ng-l">${lO}</select></div>
-      <div class="ff full"><label>Nazwa grupy *</label><input id="ng-n" placeholder="np. Krav Maga Dorośli A"></div>
+      <div class="ff full"><label>Nazwa *</label><input id="ng-n" placeholder="np. Krav Maga Dorośli A"></div>
       <div class="ff"><label>Kategoria</label><select id="ng-c"><option value="adults">Dorośli</option><option value="kids">Dzieci</option><option value="youth">Młodzież</option><option value="women">Kobiety</option><option value="vip">VIP</option></select></div>
       <div class="ff"><label>Wiek</label><input id="ng-a" placeholder="np. 16–99"></div>
       <div class="ff"><label>Maks. miejsc</label><input id="ng-m" type="number" value="20"></div>
@@ -661,7 +643,9 @@ async function delG(id,name){
   catch(e){toast(e.message,'error');}
 }
 
+// ═══════════════════════════════════════════════════════
 // SCHEDULES
+// ═══════════════════════════════════════════════════════
 async function loadSchedules(){
   const c=document.getElementById('content');
   try{
@@ -670,14 +654,14 @@ async function loadSchedules(){
     c.innerHTML=`
       <div class="sh"><h3>Grafik zajęć</h3><button class="btn btn-primary" onclick='showAddS(${JSON.stringify(groups)})'>+ Nowy termin</button></div>
       ${rows.length?[1,2,3,4,5,6,0].filter(d=>byD[d]).map(d=>`
-        <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--red-light);padding:16px 0 8px;border-top:1px solid var(--border);margin-top:4px">${DAYS[d]}</div>
+        <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--red-l);padding:16px 0 8px;border-top:1px solid var(--border);margin-top:4px">${DAYS[d]}</div>
         <div class="tw" style="margin-bottom:16px"><table>
           <thead><tr><th>Godzina</th><th>Miasto</th><th>Grupa</th><th>Adres</th><th>Status</th><th>Akcje</th></tr></thead>
           <tbody>${byD[d].map(s=>`<tr>
-            <td><strong style="color:var(--text-bright)">${s.time_start?s.time_start.slice(0,5):'—'}${s.time_end?' – '+s.time_end.slice(0,5):''}</strong></td>
+            <td><strong style="color:var(--bright)">${s.time_start?s.time_start.slice(0,5):'—'}${s.time_end?' – '+s.time_end.slice(0,5):''}</strong></td>
             <td>${s.city||'—'}</td>
-            <td><span style="color:var(--text-bright)">${s.group_name||'—'}</span> <span class="badge bx">${CAT[s.category]||s.category||''}</span></td>
-            <td style="font-size:12px;color:var(--text-dim)">${s.address||'—'}</td>
+            <td>${s.group_name||'—'} <span class="badge bx">${CAT[s.category]||''}</span></td>
+            <td style="font-size:12px;color:var(--dim)">${s.address||'—'}</td>
             <td>${s.active?'<span class="badge bg">Aktywny</span>':'<span class="badge bx">Nieaktywny</span>'}</td>
             <td><div class="tda">
               <button class="bi" onclick='showEditS(${JSON.stringify(s)},${JSON.stringify(groups)})'>Edytuj</button>
@@ -687,7 +671,6 @@ async function loadSchedules(){
         </table></div>`).join(''):'<div class="empty"><strong>Brak terminów</strong></div>'}`;
   }catch(e){c.innerHTML=`<div class="empty"><strong>Błąd</strong>${e.message}</div>`;}
 }
-
 function sForm(s,groups){
   const gO=groups.map(g=>`<option value="${g.id}" ${s&&g.id==s.group_id?'selected':''}>${g.city} — ${g.name}</option>`).join('');
   const dO=DAYS.map((d,i)=>`<option value="${i}" ${s&&i==s.day_of_week?'selected':''}>${d}</option>`).join('');
@@ -713,7 +696,9 @@ async function submitEditS(id){
 }
 async function delS(id){if(!confirm('Usunąć ten termin?'))return;try{await aF(`/schedules/${id}`,{method:'DELETE'});toast('Termin usunięty');loadSchedules();}catch(e){toast(e.message,'error');}}
 
+// ═══════════════════════════════════════════════════════
 // LOCATIONS
+// ═══════════════════════════════════════════════════════
 async function loadLocations(){
   const c=document.getElementById('content');
   try{
@@ -723,10 +708,10 @@ async function loadLocations(){
       <div class="tw"><table>
         <thead><tr><th>Miasto</th><th>Nazwa</th><th>Adres</th><th>Sala</th><th>Grupy</th><th>Zapisy</th><th>Status</th><th>Akcje</th></tr></thead>
         <tbody>${rows.length?rows.map(l=>`<tr>
-          <td><strong style="color:var(--text-bright)">${l.city}</strong></td>
+          <td><strong style="color:var(--bright)">${l.city}</strong></td>
           <td>${l.name}</td>
-          <td style="font-size:12px;color:var(--text-dim)">${l.address||'—'}</td>
-          <td style="font-size:12px;color:var(--text-dim)">${l.venue||'—'}</td>
+          <td style="font-size:12px;color:var(--dim)">${l.address||'—'}</td>
+          <td style="font-size:12px;color:var(--dim)">${l.venue||'—'}</td>
           <td><span class="badge bb">${l.groups_count}</span></td>
           <td><strong>${l.registrations_count}</strong></td>
           <td>${l.active?'<span class="badge bg">Aktywna</span>':'<span class="badge bx">Nieaktywna</span>'}</td>
