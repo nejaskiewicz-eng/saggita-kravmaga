@@ -85,17 +85,14 @@ async function getBody(req) {
 }
 
 /**
- * Najważniejsza poprawka:
- * - czasem Vercel nie podaje req.query.path dla catch-all
- * - więc robimy fallback z req.url i zdejmujemy prefix /api/admin-api
+ * Vercel catch-all czasem nie podaje req.query.path,
+ * więc robimy fallback z req.url i zdejmujemy prefix /api/admin-api
  */
 function resolveRawPath(req) {
-  // 1) standard (gdy działa)
   const qp = req.query?.path;
   const arr = Array.isArray(qp) ? qp : qp ? [qp] : null;
   if (arr && arr.length) return "/" + arr.join("/");
 
-  // 2) fallback: parsuj z req.url
   try {
     const full = new URL(req.url, "https://local");
     const pathname = full.pathname || "";
@@ -104,11 +101,16 @@ function resolveRawPath(req) {
       const rest = pathname.slice(prefix.length) || "/";
       return rest.startsWith("/") ? rest : "/" + rest;
     }
-    // gdyby kiedyś było inaczej
     return pathname || "/";
   } catch {
     return "/";
   }
+}
+
+// Bezpieczne liczby do LIMIT/OFFSET
+function toInt(v, fallback) {
+  const x = parseInt(String(v ?? ""), 10);
+  return Number.isFinite(x) ? x : fallback;
 }
 
 module.exports = async (req, res) => {
@@ -116,13 +118,12 @@ module.exports = async (req, res) => {
   if (req.method === "OPTIONS") return res.status(204).send("");
 
   const pool = getPool();
-  const raw = resolveRawPath(req); // <-- TU
+  const raw = resolveRawPath(req);
   const method = req.method;
 
   try {
     // ── GET /status (BEZ LOGOWANIA) ───────────────────────────────
     if (raw === "/status" && method === "GET") {
-      // szybki test DB + czy jest admin
       const [{ rows: [{ now }] }, { rows: [{ cnt }] }] = await Promise.all([
         pool.query("SELECT NOW()::text AS now"),
         pool.query("SELECT COUNT(*)::int AS cnt FROM admin_users"),
@@ -131,10 +132,7 @@ module.exports = async (req, res) => {
         ok: true,
         server_time: now,
         admin_users: cnt,
-        note:
-          cnt > 0
-            ? "Admin istnieje → użyj /login."
-            : "Brak admina → zrób /setup (POST).",
+        note: cnt > 0 ? "Admin istnieje → użyj /login." : "Brak admina → zrób /setup (POST).",
       });
     }
 
@@ -149,10 +147,10 @@ module.exports = async (req, res) => {
       }
 
       const hash = await bcrypt.hash(String(password), 12);
-      await pool.query(
-        "INSERT INTO admin_users (username, password_hash) VALUES ($1, $2)",
-        [String(username).trim(), hash]
-      );
+      await pool.query("INSERT INTO admin_users (username, password_hash) VALUES ($1, $2)", [
+        String(username).trim(),
+        hash,
+      ]);
 
       return res.status(201).json({
         success: true,
@@ -165,10 +163,9 @@ module.exports = async (req, res) => {
       const { username, password } = await getBody(req);
       if (!username || !password) return bad(res, "Podaj login i hasło");
 
-      const { rows } = await pool.query(
-        "SELECT * FROM admin_users WHERE username = $1",
-        [String(username).trim()]
-      );
+      const { rows } = await pool.query("SELECT * FROM admin_users WHERE username = $1", [
+        String(username).trim(),
+      ]);
       if (!rows.length) return bad(res, "Nieprawidłowe dane logowania", 401);
 
       const valid = await bcrypt.compare(String(password), rows[0].password_hash);
@@ -178,21 +175,30 @@ module.exports = async (req, res) => {
       return res.status(200).json({ token, username: rows[0].username });
     }
 
-    // ── AUTH GUARD (RESZTA WYMAGA TOKENA) ─────────────────────────
+    // ── AUTH GUARD ───────────────────────────────────────────────
     const payload = verifyToken(getToken(req));
     if (!payload) return unauth(res);
 
     // ── GET /stats ───────────────────────────────────────────────
+    // ✅ nie używamy v_stats (bo u Ciebie go nie ma) – liczymy staty "w locie"
     if (raw === "/stats" && method === "GET") {
       const [{ rows: [totals] }, { rows: byLoc }, { rows: recent }, { rows: byGroup }] =
         await Promise.all([
-          pool.query("SELECT * FROM v_stats"),
           pool.query(`
-            SELECT l.city, l.slug, l.id AS loc_id,
-              COUNT(r.id)                                          AS total,
-              COUNT(r.id) FILTER (WHERE r.payment_status = 'paid') AS paid,
-              COUNT(r.id) FILTER (WHERE r.status = 'new')          AS pending,
-              COUNT(r.id) FILTER (WHERE r.is_waitlist = true)      AS waitlist
+            SELECT
+              COUNT(*)::int AS total,
+              COUNT(*) FILTER (WHERE payment_status = 'paid')::int AS paid,
+              COUNT(*) FILTER (WHERE status = 'new')::int AS pending,
+              COUNT(*) FILTER (WHERE is_waitlist = true)::int AS waitlist
+            FROM registrations
+            WHERE status != 'cancelled'
+          `),
+          pool.query(`
+            SELECT l.id AS loc_id, l.city, l.slug,
+              COUNT(r.id)::int                                          AS total,
+              COUNT(r.id) FILTER (WHERE r.payment_status = 'paid')::int AS paid,
+              COUNT(r.id) FILTER (WHERE r.status = 'new')::int          AS pending,
+              COUNT(r.id) FILTER (WHERE r.is_waitlist = true)::int      AS waitlist
             FROM locations l
             LEFT JOIN groups g ON g.location_id = l.id
             LEFT JOIN registrations r ON r.group_id = g.id AND r.status != 'cancelled'
@@ -209,8 +215,8 @@ module.exports = async (req, res) => {
             ORDER BY r.created_at DESC LIMIT 8
           `),
           pool.query(`
-            SELECT g.name, l.city, g.max_capacity,
-              COUNT(r.id) FILTER (WHERE r.status != 'cancelled' AND r.is_waitlist = false) AS registered
+            SELECT g.id, g.name, l.city, g.max_capacity,
+              COUNT(r.id) FILTER (WHERE r.status != 'cancelled' AND r.is_waitlist = false)::int AS registered
             FROM groups g
             LEFT JOIN locations l ON g.location_id = l.id
             LEFT JOIN registrations r ON r.group_id = g.id
@@ -242,8 +248,8 @@ module.exports = async (req, res) => {
         pi++;
       }
 
-      const limit = Math.min(parseInt(q.limit || "50", 10), 200);
-      const offset = parseInt(q.offset || "0", 10);
+      const limit = Math.min(toInt(q.limit, 50), 200);
+      const offset = Math.max(toInt(q.offset, 0), 0);
       const orderBy = q.sort === "amount" ? "r.total_amount DESC" : "r.created_at DESC";
       const whereStr = where.join(" AND ");
 
@@ -263,10 +269,10 @@ module.exports = async (req, res) => {
           LEFT JOIN price_plans p ON r.price_plan_id = p.id
           WHERE ${whereStr}
           ORDER BY ${orderBy}
-          LIMIT ${limits(limit)} OFFSET ${offset}
+          LIMIT ${limit} OFFSET ${offset}
         `, params),
         pool.query(`
-          SELECT COUNT(*) AS total
+          SELECT COUNT(*)::int AS total
           FROM registrations r
           LEFT JOIN groups g    ON r.group_id     = g.id
           LEFT JOIN locations l ON g.location_id  = l.id
@@ -280,10 +286,22 @@ module.exports = async (req, res) => {
     // ── GET /registration/:id ────────────────────────────────────
     if (raw.match(/^\/registration\/\d+$/) && method === "GET") {
       const id = raw.split("/")[2];
-      const { rows: [reg] } = await pool.query(
-        "SELECT * FROM v_registrations WHERE id = $1",
-        [id]
-      );
+
+      // Jeśli nie masz v_registrations, to też by wybuchło.
+      // Zrobimy wersję bez view:
+      const { rows: [reg] } = await pool.query(`
+        SELECT
+          r.*,
+          g.name AS group_name, g.category,
+          l.city, l.slug AS location_slug, l.address AS location_address,
+          p.name AS plan_name
+        FROM registrations r
+        LEFT JOIN groups g ON r.group_id = g.id
+        LEFT JOIN locations l ON g.location_id = l.id
+        LEFT JOIN price_plans p ON r.price_plan_id = p.id
+        WHERE r.id = $1
+      `, [id]);
+
       if (!reg) return bad(res, "Nie znaleziono zapisu", 404);
       return res.status(200).json(reg);
     }
@@ -309,10 +327,7 @@ module.exports = async (req, res) => {
       if (!set.length) return bad(res, "Brak pól do aktualizacji");
 
       vals.push(id);
-      await pool.query(
-        `UPDATE registrations SET ${set.join(", ")} WHERE id = $${pi}`,
-        vals
-      );
+      await pool.query(`UPDATE registrations SET ${set.join(", ")} WHERE id = $${pi}`, vals);
 
       return res.status(200).json({ success: true });
     }
@@ -368,7 +383,7 @@ module.exports = async (req, res) => {
       res.setHeader("Content-Type", "text/csv; charset=utf-8");
       res.setHeader("Content-Disposition", `attachment; filename="km-zapisy-${date}.csv"`);
 
-      return res.status(200).send("\uFEFF" + csvRows);
+      return res.status(200).send("\uFEFF" + csvRows); // BOM dla Excela
     }
 
     return bad(res, "Nie znaleziono ścieżki", 404);
@@ -377,254 +392,3 @@ module.exports = async (req, res) => {
     return res.status(500).json({ error: "Błąd serwera: " + e.message });
   }
 };
-
-// małe zabezpieczenie przed wstrzyknięciem w LIMIT (tylko liczba)
-function RSl(n) {
-  const x = parseInt(n, 10);
-  return Number.isFinite(x) ? x : 50;
-}
-function RSh(n) {
-  const x = parseInt(n, 10);
-  return Number.isFinite(x) ? x : 0;
-}
-function RSt(n) {
-  const x = parseInt(n, 10);
-  return Number.isFinite(x) ? x : 50;
-}
-function RSo(n) {
-  const x = parseInt(n, 10);
-  return Number.isFinite(x) ? x : 0;
-}
-function RSa(n) {
-  const x = parseInt(n, 10);
-  return Number.isFinite(x) ? x : 50;
-}
-function RSb(n) {
-  const x = parseInt(n, 10);
-  return Number.isFinite(x) ? x : 0;
-}
-function RSx(n) {
-  const x = parseInt(n, 10);
-  return Number.isFinite(x) ? x : 50;
-}
-function RSy(n) {
-  const x = parseInt(n, 10);
-  return Number.isFinite(x) ? x : 0;
-}
-function RSz(n) {
-  const x = parseInt(n, 10);
-  return Number.isFinite(x) ? x : 50;
-}
-function RS0(n) {
-  const x = parseInt(n, 10);
-  return Number.isFinite(x) ? x : 0;
-}
-function RS1(n) {
-  const x = parseInt(n, 10);
-  return Number.isFinite(x) ? x : 50;
-}
-function RS2(n) {
-  const x = parseInt(n, 10);
-  return Number.isFinite(x) ? x : 0;
-}
-function RS3(n) {
-  const x = parseInt(n, 10);
-  return Number.isFinite(x) ? x : 50;
-}
-function RS4(n) {
-  const x = parseInt(n, 10);
-  return Number.isFinite(x) ? x : 0;
-}
-function RS5(n) {
-  const x = parseInt(n, 10);
-  return Number.isFinite(x) ? x : 50;
-}
-function RS6(n) {
-  const x = parseInt(n, 10);
-  return Number.isFinite(x) ? x : 0;
-}
-function RS7(n) {
-  const x = parseInt(n, 10);
-  return Number.isFinite(x) ? x : 50;
-}
-function RS8(n) {
-  const x = parseInt(n, 10);
-  return Number.isFinite(x) ? x : 0;
-}
-function RS9(n) {
-  const x = parseInt(n, 10);
-  return Number.isFinite(x) ? x : 50;
-}
-function RSA(n) {
-  const x = parseInt(n, 10);
-  return Number.isFinite(x) ? x : 0;
-}
-function RSB(n) {
-  const x = parseInt(n, 10);
-  return Number.isFinite(x) ? x : 50;
-}
-function RSC(n) {
-  const x = parseInt(n, 10);
-  return Number.isFinite(x) ? x : 0;
-}
-function RSD(n) {
-  const x = parseInt(n, 10);
-  return Number.isFinite(x) ? x : 50;
-}
-function RSE(n) {
-  const x = parseInt(n, 10);
-  return Number.isFinite(x) ? x : 0;
-}
-function RSF(n) {
-  const x = parseInt(n, 10);
-  return Number.isFinite(x) ? x : 50;
-}
-function RSG(n) {
-  const x = parseInt(n, 10);
-  return Number.isFinite(x) ? x : 0;
-}
-function RSH(n) {
-  const x = parseInt(n, 10);
-  return Number.isFinite(x) ? x : 50;
-}
-function RSI(n) {
-  const x = parseInt(n, 10);
-  return Number.isFinite(x) ? x : 0;
-}
-function RSJ(n) {
-  const x = parseInt(n, 10);
-  return Number.isFinite(x) ? x : 50;
-}
-function RSK(n) {
-  const x = parseInt(n, 10);
-  return Number.isFinite(x) ? x : 0;
-}
-function RSL(n) {
-  const x = parseInt(n, 10);
-  return Number.isFinite(x) ? x : 50;
-}
-function RSM(n) {
-  const x = parseInt(n, 10);
-  return Number.isFinite(x) ? x : 0;
-}
-function RSN(n) {
-  const x = parseInt(n, 10);
-  return Number.isFinite(x) ? x : 50;
-}
-function RSO(n) {
-  const x = parseInt(n, 10);
-  return Number.isFinite(x) ? x : 0;
-}
-function RSP(n) {
-  const x = parseInt(n, 10);
-  return Number.isFinite(x) ? x : 50;
-}
-function RSQ(n) {
-  const x = parseInt(n, 10);
-  return Number.isFinite(x) ? x : 0;
-}
-function RSR(n) {
-  const x = parseInt(n, 10);
-  return Number.isFinite(x) ? x : 50;
-}
-function RSS(n) {
-  const x = parseInt(n, 10);
-  return Number.isFinite(x) ? x : 0;
-}
-function RST(n) {
-  const x = parseInt(n, 10);
-  return Number.isFinite(x) ? x : 50;
-}
-function RSU(n) {
-  const x = parseInt(n, 10);
-  return Number.isFinite(x) ? x : 0;
-}
-function RSV(n) {
-  const x = parseInt(n, 10);
-  return Number.isFinite(x) ? x : 50;
-}
-function RSW(n) {
-  const x = parseInt(n, 10);
-  return Number.isFinite(x) ? x : 0;
-}
-function RSX(n) {
-  const x = parseInt(n, 10);
-  return Number.isFinite(x) ? x : 50;
-}
-function RSY(n) {
-  const x = parseInt(n, 10);
-  return Number.isFinite(x) ? x : 0;
-}
-function RSZ(n) {
-  const x = parseInt(n, 10);
-  return Number.isFinite(x) ? x : 50;
-}
-
-// (u Ciebie wcześniej było: LIMIT ${limit} OFFSET ${offset}
-// ja zostawiam liczby, ale możesz uprościć: LIMIT ${limit} OFFSET ${offset}
-function Limits(n) {
-  const x = parseInt(n, 10);
-  return Number.isFinite(x) ? x : 50;
-}
-function Limits2(n) {
-  const x = parseInt(n, 10);
-  return Number.isFinite(x) ? x : 0;
-}
-function Limits3(n) {
-  const x = parseInt(n, 10);
-  return Number.isFinite(x) ? x : 50;
-}
-function Limits4(n) {
-  const x = parseInt(n, 10);
-  return Number.isFinite(x) ? x : 0;
-}
-function Limits5(n) {
-  const x = parseInt(n, 10);
-  return Number.isFinite(x) ? x : 50;
-}
-function Limits6(n) {
-  const x = parseInt(n, 10);
-  return Number.isFinite(x) ? x : 0;
-}
-function Limits7(n) {
-  const x = parseInt(n, 10);
-  return Number.isFinite(x) ? x : 50;
-}
-function Limits8(n) {
-  const x = parseInt(n, 10);
-  return Number.isFinite(x) ? x : 0;
-}
-function Limits9(n) {
-  const x = parseInt(n, 10);
-  return Number.isFinite(x) ? x : 50;
-}
-function LimitsA(n) {
-  const x = parseInt(n, 10);
-  return Number.isFinite(x) ? x : 0;
-}
-function LimitsB(n) {
-  const x = parseInt(n, 10);
-  return Number.isFinite(x) ? x : 50;
-}
-function LimitsC(n) {
-  const x = parseInt(n, 10);
-  return Number.isFinite(x) ? x : 0;
-}
-function LimitsD(n) {
-  const x = parseInt(n, 10);
-  return Number.isFinite(x) ? x : 50;
-}
-function LimitsE(n) {
-  const x = parseInt(n, 10);
-  return Number.isFinite(x) ? x : 0;
-}
-function LimitsF(n) {
-  const x = parseInt(n, 10);
-  return Number.isFinite(x) ? x : 50;
-}
-
-// realnie wystarczy to:
-function Limits(n) {
-  const x = parseInt(n, 10);
-  return Number.isFinite(x) ? x : 50;
-}
