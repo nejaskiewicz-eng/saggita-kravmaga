@@ -460,7 +460,7 @@ a{text-decoration:none;color:inherit}
 </main>
 
 <script>
-const API = '/.netlify/functions/api';
+const API = '/api';
 
 // ── State ─────────────────────────────────────────────────────────
 let allData = [];
@@ -617,13 +617,16 @@ function buildPanels() {
           slot.appendChild(btnEl);
 
           if (!isClosed) {
-            const handler = () => selectSlot(
-              loc.id, loc.city, group.id, group.name,
-              sched.id, sched.day_name, sched.time_label,
-              isFull
-            );
+            const handler = (ev) => {
+              window._lastSlotEl = ev.currentTarget;
+              selectSlot(
+                loc.id, loc.city, group.id, group.name,
+                sched.id, sched.day_name, sched.time_label,
+                isFull
+              );
+            };
             slot.addEventListener('click', handler);
-            slot.addEventListener('keydown', e => { if(e.key === 'Enter' || e.key === ' ') handler(); });
+            slot.addEventListener('keydown', e => { if(e.key === 'Enter' || e.key === ' ') handler(e); });
           }
 
           slotsWrap.appendChild(slot);
@@ -643,8 +646,8 @@ function buildPanels() {
 function selectSlot(locId, cityName, groupId, groupName, schedId, dayName, timeLabel, isWaitlist) {
   // Odznacz poprzednie
   document.querySelectorAll('.slot.selected').forEach(s => s.classList.remove('selected'));
-  // Zaznacz kliknięty
-  event?.currentTarget?.classList.add('selected');
+  // Zaznacz kliknięty (jeśli znamy element)
+  if (window._lastSlotEl) window._lastSlotEl.classList.add('selected');
 
   selectedGroup = groupId;
   selectedSchedule = schedId;
