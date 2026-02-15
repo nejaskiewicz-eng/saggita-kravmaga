@@ -222,7 +222,7 @@ module.exports = async (req, res) => {
             LEFT JOIN registrations r ON r.group_id = g.id
             WHERE g.active = true
             GROUP BY g.id, g.name, l.city, g.max_capacity
-            ORDER BY l.id, g.id
+            ORDER BY l.city, g.id
           `),
         ]);
 
