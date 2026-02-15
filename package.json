@@ -1,7 +1,7 @@
 {
-  "name": "saggita-kravmaga",
-  "private": true,
   "dependencies": {
-    "pg": "^8.12.0"
+    "pg": "^8.11.3",
+    "bcryptjs": "^2.4.3"
   }
 }
+
