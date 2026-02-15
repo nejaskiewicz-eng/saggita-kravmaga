@@ -1,8 +1,7 @@
 {
-"name": "saggita-kravmaga",
-"version": "1.0.0",
-"private": true,
-"dependencies": {
-"pg": "^8.11.5"
-}
+  "name": "saggita-kravmaga",
+  "private": true,
+  "dependencies": {
+    "pg": "^8.12.0"
+  }
 }
