@@ -352,6 +352,27 @@ module.exports = async (req, res) => {
     // ══════════════════════════════════════════════════════════════════════
     // GROUP — edycja PATCH
     // ══════════════════════════════════════════════════════════════════════
+    // GROUPS — podgląd jednej grupy
+    if (raw.match(/^\/groups\/\d+$/) && method === "GET") {
+      const id = raw.split("/")[2];
+      const { rows: [g] } = await pool.query(`
+        SELECT
+          g.*,
+          l.city,
+          l.name AS location_name,
+          l.slug AS location_slug,
+          COUNT(r.id) FILTER (WHERE r.status != 'cancelled' AND r.is_waitlist = false)::int AS registered_count,
+          COUNT(r.id) FILTER (WHERE r.status != 'cancelled' AND r.is_waitlist = true)::int  AS waitlist_count
+        FROM groups g
+        LEFT JOIN locations l ON l.id = g.location_id
+        LEFT JOIN registrations r ON r.group_id = g.id
+        WHERE g.id = $1
+        GROUP BY g.id, l.id
+      `, [id]);
+      if (!g) return bad(res, "Nie znaleziono grupy", 404);
+      return res.status(200).json(g);
+    }
+
     if (raw.match(/^\/groups\/\d+$/) && method === "PATCH") {
       const id = raw.split("/")[2];
       const b = await getBody(req);
