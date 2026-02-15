@@ -2,6 +2,7 @@
 const bcrypt = require("bcryptjs");
 const crypto = require("crypto");
 const { getPool } = require("../_db");
+const participantsHandler = require("./participants");
 
 const SECRET = process.env.JWT_SECRET; // ustaw w Vercel!
 
@@ -287,13 +288,11 @@ module.exports = async (req, res) => {
     if (raw.match(/^\/registration\/\d+$/) && method === "GET") {
       const id = raw.split("/")[2];
 
-      // Jeśli nie masz v_registrations, to też by wybuchło.
-      // Zrobimy wersję bez view:
       const { rows: [reg] } = await pool.query(`
         SELECT
           r.*,
-          g.name AS group_name, g.category,
-          l.city, l.slug AS location_slug, l.address AS location_address,
+          g.name AS group_name, g.category, g.max_capacity,
+          l.city, l.slug AS location_slug,
           p.name AS plan_name
         FROM registrations r
         LEFT JOIN groups g ON r.group_id = g.id
@@ -305,6 +304,7 @@ module.exports = async (req, res) => {
       if (!reg) return bad(res, "Nie znaleziono zapisu", 404);
       return res.status(200).json(reg);
     }
+
 
     // ── PATCH /registration/:id ──────────────────────────────────
     if (raw.match(/^\/registration\/\d+$/) && method === "PATCH") {
