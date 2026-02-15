@@ -43,10 +43,7 @@ function verifyToken(token) {
 }
 
 function getToken(req) {
-  const auth =
-    req.headers.authorization ||
-    req.headers.Authorization ||
-    "";
+  const auth = req.headers.authorization || req.headers.Authorization || "";
   return String(auth).replace("Bearer ", "").trim();
 }
 
@@ -68,15 +65,12 @@ async function readRawBody(req) {
 }
 
 async function getBody(req) {
-  // Vercel często daje req.body jako obiekt — wtedy jest OK
   if (req.body && typeof req.body === "object") return req.body;
 
-  // Czasem req.body bywa stringiem/bufferem — próbujemy parsować
   if (typeof req.body === "string") {
     try { return JSON.parse(req.body || "{}"); } catch { return {}; }
   }
 
-  // A czasem body nie jest ustawione → czytamy stream
   try {
     const raw = await readRawBody(req);
     if (!raw) return {};
@@ -95,12 +89,13 @@ module.exports = async (req, res) => {
   // /api/admin-api/...
   const qp = req.query?.path;
   const pathArr = Array.isArray(qp) ? qp : (qp ? [qp] : []);
-  const raw = "/" + pathArr.join("/"); // "/login", "/stats", "/registration/12"
+  const first = (pathArr[0] || "").toString(); // "login", "setup", "stats", ...
+  const raw = "/" + pathArr.join("/");         // "/registration/12" itd.
   const method = req.method;
 
   try {
-    // ── POST /login ──────────────────────────────────────────────
-    if (raw === "/login" && method === "POST") {
+    // ── PUBLIC: POST /login ──────────────────────────────────────
+    if (first === "login" && method === "POST") {
       const { username, password } = await getBody(req);
       if (!username || !password) return bad(res, "Podaj login i hasło");
 
@@ -117,8 +112,8 @@ module.exports = async (req, res) => {
       return res.status(200).json({ token, username: rows[0].username });
     }
 
-    // ── POST /setup ──────────────────────────────────────────────
-    if (raw === "/setup" && method === "POST") {
+    // ── PUBLIC: POST /setup ──────────────────────────────────────
+    if (first === "setup" && method === "POST") {
       const { rows: [{ cnt }] } = await pool.query("SELECT COUNT(*) AS cnt FROM admin_users");
       if (parseInt(cnt, 10) > 0) return bad(res, "Konto admina już istnieje. Użyj /login.", 403);
 
@@ -139,12 +134,12 @@ module.exports = async (req, res) => {
       });
     }
 
-    // ── AUTH GUARD ───────────────────────────────────────────────
+    // ── AUTH GUARD (dla reszty) ───────────────────────────────────
     const payload = verifyToken(getToken(req));
     if (!payload) return unauth(res);
 
     // ── GET /stats ───────────────────────────────────────────────
-    if (raw === "/stats" && method === "GET") {
+    if (first === "stats" && method === "GET") {
       const [{ rows: [totals] }, { rows: byLoc }, { rows: recent }, { rows: byGroup }] =
         await Promise.all([
           pool.query("SELECT * FROM v_stats"),
@@ -185,7 +180,7 @@ module.exports = async (req, res) => {
     }
 
     // ── GET /registrations ───────────────────────────────────────
-    if (raw === "/registrations" && method === "GET") {
+    if (first === "registrations" && method === "GET") {
       const q = req.query || {};
       const where = ["1=1"];
       const params = [];
@@ -238,18 +233,14 @@ module.exports = async (req, res) => {
       return res.status(200).json({ rows, total: parseInt(total, 10), limit, offset });
     }
 
-    // ── GET /registration/:id ────────────────────────────────────
+    // ── GET/PATCH /registration/:id ───────────────────────────────
     if (raw.match(/^\/registration\/\d+$/) && method === "GET") {
       const id = raw.split("/")[2];
-      const { rows: [reg] } = await pool.query(
-        "SELECT * FROM v_registrations WHERE id = $1",
-        [id]
-      );
+      const { rows: [reg] } = await pool.query("SELECT * FROM v_registrations WHERE id = $1", [id]);
       if (!reg) return bad(res, "Nie znaleziono zapisu", 404);
       return res.status(200).json(reg);
     }
 
-    // ── PATCH /registration/:id ──────────────────────────────────
     if (raw.match(/^\/registration\/\d+$/) && method === "PATCH") {
       const id = raw.split("/")[2];
       const updates = await getBody(req);
@@ -270,16 +261,12 @@ module.exports = async (req, res) => {
       if (!set.length) return bad(res, "Brak pól do aktualizacji");
 
       vals.push(id);
-      await pool.query(
-        `UPDATE registrations SET ${set.join(", ")} WHERE id = $${pi}`,
-        vals
-      );
-
+      await pool.query(`UPDATE registrations SET ${set.join(", ")} WHERE id = $${pi}`, vals);
       return res.status(200).json({ success: true });
     }
 
     // ── GET /export ──────────────────────────────────────────────
-    if (raw === "/export" && method === "GET") {
+    if (first === "export" && method === "GET") {
       const { rows } = await pool.query(`
         SELECT
           r.id, r.created_at, r.first_name, r.last_name,
@@ -329,7 +316,7 @@ module.exports = async (req, res) => {
       res.setHeader("Content-Type", "text/csv; charset=utf-8");
       res.setHeader("Content-Disposition", `attachment; filename="km-zapisy-${date}.csv"`);
 
-      return res.status(200).send("\uFEFF" + csvRows); // BOM dla Excela
+      return res.status(200).send("\uFEFF" + csvRows);
     }
 
     return bad(res, "Nie znaleziono ścieżki", 404);
