@@ -6,7 +6,6 @@ const { getPool } = require("../_db");
 const SECRET = process.env.JWT_SECRET; // ustaw w Vercel!
 
 function cors(res) {
-  // jeśli chcesz bezpieczniej: zamiast "*" wpisz swój domenowy origin
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, PATCH, OPTIONS");
@@ -44,9 +43,11 @@ function verifyToken(token) {
 }
 
 function getToken(req) {
-  return String(req.headers.authorization || "")
-    .replace("Bearer ", "")
-    .trim();
+  const auth =
+    req.headers.authorization ||
+    req.headers.Authorization ||
+    "";
+  return String(auth).replace("Bearer ", "").trim();
 }
 
 function unauth(res) {
@@ -57,11 +58,29 @@ function bad(res, msg, code = 400) {
   return res.status(code).json({ error: msg });
 }
 
+async function readRawBody(req) {
+  return new Promise((resolve, reject) => {
+    let data = "";
+    req.on("data", (chunk) => (data += chunk));
+    req.on("end", () => resolve(data));
+    req.on("error", reject);
+  });
+}
+
 async function getBody(req) {
-  // Vercel zwykle parsuje JSON sam, ale zostawiamy też fallback
+  // Vercel często daje req.body jako obiekt — wtedy jest OK
   if (req.body && typeof req.body === "object") return req.body;
+
+  // Czasem req.body bywa stringiem/bufferem — próbujemy parsować
+  if (typeof req.body === "string") {
+    try { return JSON.parse(req.body || "{}"); } catch { return {}; }
+  }
+
+  // A czasem body nie jest ustawione → czytamy stream
   try {
-    return JSON.parse(req.body || "{}");
+    const raw = await readRawBody(req);
+    if (!raw) return {};
+    return JSON.parse(raw);
   } catch {
     return {};
   }
@@ -73,10 +92,10 @@ module.exports = async (req, res) => {
 
   const pool = getPool();
 
-  // ścieżka po /api/admin-api/...
-  // np. /api/admin-api/registration/12 -> req.query.path = ["registration","12"]
-  const pathArr = Array.isArray(req.query.path) ? req.query.path : [];
-  const raw = "/" + pathArr.join("/"); // np "/login", "/stats", "/registration/12"
+  // /api/admin-api/...
+  const qp = req.query?.path;
+  const pathArr = Array.isArray(qp) ? qp : (qp ? [qp] : []);
+  const raw = "/" + pathArr.join("/"); // "/login", "/stats", "/registration/12"
   const method = req.method;
 
   try {
@@ -85,7 +104,10 @@ module.exports = async (req, res) => {
       const { username, password } = await getBody(req);
       if (!username || !password) return bad(res, "Podaj login i hasło");
 
-      const { rows } = await pool.query("SELECT * FROM admin_users WHERE username = $1", [String(username).trim()]);
+      const { rows } = await pool.query(
+        "SELECT * FROM admin_users WHERE username = $1",
+        [String(username).trim()]
+      );
       if (!rows.length) return bad(res, "Nieprawidłowe dane logowania", 401);
 
       const valid = await bcrypt.compare(String(password), rows[0].password_hash);
@@ -106,56 +128,60 @@ module.exports = async (req, res) => {
       }
 
       const hash = await bcrypt.hash(String(password), 12);
-      await pool.query("INSERT INTO admin_users (username, password_hash) VALUES ($1, $2)", [
-        String(username).trim(),
-        hash,
-      ]);
+      await pool.query(
+        "INSERT INTO admin_users (username, password_hash) VALUES ($1, $2)",
+        [String(username).trim(), hash]
+      );
 
-      return res.status(201).json({ success: true, message: "Konto admina utworzone. Możesz się zalogować." });
+      return res.status(201).json({
+        success: true,
+        message: "Konto admina utworzone. Możesz się zalogować.",
+      });
     }
 
-    // ── AUTH GUARD (dla reszty) ───────────────────────────────────
+    // ── AUTH GUARD ───────────────────────────────────────────────
     const payload = verifyToken(getToken(req));
     if (!payload) return unauth(res);
 
     // ── GET /stats ───────────────────────────────────────────────
     if (raw === "/stats" && method === "GET") {
-      const [{ rows: [totals] }, { rows: byLoc }, { rows: recent }, { rows: byGroup }] = await Promise.all([
-        pool.query("SELECT * FROM v_stats"),
-        pool.query(`
-          SELECT l.city, l.slug, l.id AS loc_id,
-            COUNT(r.id)                                          AS total,
-            COUNT(r.id) FILTER (WHERE r.payment_status = 'paid') AS paid,
-            COUNT(r.id) FILTER (WHERE r.status = 'new')          AS pending,
-            COUNT(r.id) FILTER (WHERE r.is_waitlist = true)      AS waitlist
-          FROM locations l
-          LEFT JOIN groups g ON g.location_id = l.id
-          LEFT JOIN registrations r ON r.group_id = g.id AND r.status != 'cancelled'
-          GROUP BY l.id, l.city, l.slug
-          ORDER BY l.id
-        `),
-        pool.query(`
-          SELECT r.id, r.first_name || ' ' || r.last_name AS name,
-                 r.email, r.payment_status, r.status, r.created_at,
-                 l.city, g.name AS group_name
-          FROM registrations r
-          LEFT JOIN groups g ON r.group_id = g.id
-          LEFT JOIN locations l ON g.location_id = l.id
-          ORDER BY r.created_at DESC LIMIT 8
-        `),
-        pool.query(`
-          SELECT g.name, l.city, g.max_capacity,
-            COUNT(r.id) FILTER (WHERE r.status != 'cancelled' AND r.is_waitlist = false) AS registered
-          FROM groups g
-          LEFT JOIN locations l ON g.location_id = l.id
-          LEFT JOIN registrations r ON r.group_id = g.id
-          WHERE g.active = true
-          GROUP BY g.id, g.name, l.city, g.max_capacity
-          ORDER BY l.id, g.id
-        `),
-      ]);
+      const [{ rows: [totals] }, { rows: byLoc }, { rows: recent }, { rows: byGroup }] =
+        await Promise.all([
+          pool.query("SELECT * FROM v_stats"),
+          pool.query(`
+            SELECT l.city, l.slug, l.id AS loc_id,
+              COUNT(r.id)                                          AS total,
+              COUNT(r.id) FILTER (WHERE r.payment_status = 'paid') AS paid,
+              COUNT(r.id) FILTER (WHERE r.status = 'new')          AS pending,
+              COUNT(r.id) FILTER (WHERE r.is_waitlist = true)      AS waitlist
+            FROM locations l
+            LEFT JOIN groups g ON g.location_id = l.id
+            LEFT JOIN registrations r ON r.group_id = g.id AND r.status != 'cancelled'
+            GROUP BY l.id, l.city, l.slug
+            ORDER BY l.id
+          `),
+          pool.query(`
+            SELECT r.id, r.first_name || ' ' || r.last_name AS name,
+                   r.email, r.payment_status, r.status, r.created_at,
+                   l.city, g.name AS group_name
+            FROM registrations r
+            LEFT JOIN groups g ON r.group_id = g.id
+            LEFT JOIN locations l ON g.location_id = l.id
+            ORDER BY r.created_at DESC LIMIT 8
+          `),
+          pool.query(`
+            SELECT g.name, l.city, g.max_capacity,
+              COUNT(r.id) FILTER (WHERE r.status != 'cancelled' AND r.is_waitlist = false) AS registered
+            FROM groups g
+            LEFT JOIN locations l ON g.location_id = l.id
+            LEFT JOIN registrations r ON r.group_id = g.id
+            WHERE g.active = true
+            GROUP BY g.id, g.name, l.city, g.max_capacity
+            ORDER BY l.id, g.id
+          `),
+        ]);
 
-      return res.status(200).json({ ...totals, byLoc, recent, byGroup });
+      return res.status(200).json({ ...(totals || {}), byLoc, recent, byGroup });
     }
 
     // ── GET /registrations ───────────────────────────────────────
@@ -215,7 +241,10 @@ module.exports = async (req, res) => {
     // ── GET /registration/:id ────────────────────────────────────
     if (raw.match(/^\/registration\/\d+$/) && method === "GET") {
       const id = raw.split("/")[2];
-      const { rows: [reg] } = await pool.query("SELECT * FROM v_registrations WHERE id = $1", [id]);
+      const { rows: [reg] } = await pool.query(
+        "SELECT * FROM v_registrations WHERE id = $1",
+        [id]
+      );
       if (!reg) return bad(res, "Nie znaleziono zapisu", 404);
       return res.status(200).json(reg);
     }
@@ -241,7 +270,11 @@ module.exports = async (req, res) => {
       if (!set.length) return bad(res, "Brak pól do aktualizacji");
 
       vals.push(id);
-      await pool.query(`UPDATE registrations SET ${set.join(", ")} WHERE id = $${pi}`, vals);
+      await pool.query(
+        `UPDATE registrations SET ${set.join(", ")} WHERE id = $${pi}`,
+        vals
+      );
+
       return res.status(200).json({ success: true });
     }
 
@@ -296,8 +329,7 @@ module.exports = async (req, res) => {
       res.setHeader("Content-Type", "text/csv; charset=utf-8");
       res.setHeader("Content-Disposition", `attachment; filename="km-zapisy-${date}.csv"`);
 
-      // BOM dla Excela:
-      return res.status(200).send("\uFEFF" + csvRows);
+      return res.status(200).send("\uFEFF" + csvRows); // BOM dla Excela
     }
 
     return bad(res, "Nie znaleziono ścieżki", 404);
