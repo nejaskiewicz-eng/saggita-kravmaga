@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <title>Panel admina</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background:#0b0b0b;
+      color:white;
+      padding:40px;
+    }
+    input,button {
+      padding:10px;
+      margin:5px;
+      border-radius:6px;
+      border:none;
+    }
+    button {
+      background:#e11;
+      color:white;
+      cursor:pointer;
+    }
+    .box {
+      background:#161616;
+      padding:20px;
+      border-radius:12px;
+      margin-bottom:20px;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Panel admina – Krav Maga</h1>
+
+<div id="login" class="box">
+  <h2>Logowanie</h2>
+  <input id="user" placeholder="login">
+  <input id="pass" type="password" placeholder="hasło">
+  <button onclick="login()">Zaloguj</button>
+</div>
+
+<div id="panel" style="display:none">
+
+  <div class="box">
+    <h2>Statystyki</h2>
+    <pre id="stats"></pre>
+  </div>
+
+  <div class="box">
+    <h2>Ostatnie zapisy</h2>
+    <pre id="recent"></pre>
+  </div>
+
+</div>
+
+<script>
+const API = "https://saggita-kravmaga.vercel.app/api/admin-api";
+
+async function login() {
+  const res = await fetch(API + "/login", {
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      username:document.getElementById("user").value,
+      password:document.getElementById("pass").value
+    })
+  });
+
+  const data = await res.json();
+  if(!data.token){
+    alert("Błąd logowania");
+    return;
+  }
+
+  localStorage.setItem("token", data.token);
+  loadPanel();
+}
+
+async function loadPanel(){
+  document.getElementById("login").style.display="none";
+  document.getElementById("panel").style.display="block";
+
+  const token = localStorage.getItem("token");
+
+  const res = await fetch(API + "/stats", {
+    headers:{ "Authorization":"Bearer " + token }
+  });
+
+  const data = await res.json();
+
+  document.getElementById("stats").innerText =
+    "Zapisy: " + data.total +
+    "\nOpłacone: " + data.paid +
+    "\nOczekujące: " + data.pending;
+
+  document.getElementById("recent").innerText =
+    JSON.stringify(data.recent, null, 2);
+}
+
+if(localStorage.getItem("token")){
+  loadPanel();
+}
+</script>
+
+</body>
+</html>
