@@ -62,7 +62,9 @@
         return;
       }
 
+      // ✅ WAŻNE: admin.html czyta km_token
       localStorage.setItem('km_token', data.token);
+
       m.textContent = 'OK. Przenoszę do panelu...';
       location.href = '/admin';
     }catch(err){
