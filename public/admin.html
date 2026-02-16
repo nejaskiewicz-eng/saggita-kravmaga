@@ -306,7 +306,7 @@ async function openKartoteka(id, mode='view'){
   let r, groups=[], plans=[];
   try{
     [r, {rows:groups}, {rows:plans}] = await Promise.all([
-     aF(`/registrations`/${id}?_=${Date.now()}`),
+     aF(`/registrations/${id}?_=${Date.now()}`),
       aF('/groups'),
       aF('/plans'),
     ]);
