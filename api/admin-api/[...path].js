@@ -213,7 +213,7 @@ module.exports = async (req, res) => {
     // ══════════════════════════════════════════════════════════════════════
     // REGISTRATION — pojedynczy zapis GET
     // ══════════════════════════════════════════════════════════════════════
-    if (raw.match(/^\/registration\/\d+/) && method === "GET") {
+    if (raw.match(/^\/registration\/\d+$/) || raw.match(/^\/registrations\/\d+$/)) {
       const id = raw.split("/")[2];
       const { rows: [reg] } = await pool.query(`
         SELECT r.*,
