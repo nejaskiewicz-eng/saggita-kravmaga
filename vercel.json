@@ -1,6 +1,35 @@
 {
+  "version": 2,
+  "functions": {
+    "api/**/*.js": {
+      "memory": 512,
+      "maxDuration": 10
+    }
+  },
   "rewrites": [
-    { "source": "/admin", "destination": "/admin.html" },
-    { "source": "/admin-login", "destination": "/admin-login.html" }
+    { "source": "/api/schedule",                     "destination": "/api/catalog" },
+    { "source": "/api/prices",                       "destination": "/api/catalog?_r=prices" },
+    { "source": "/api/register",                     "destination": "/api/register" },
+    { "source": "/api/payment-document",             "destination": "/api/registration/action" },
+    { "source": "/api/registration/action",          "destination": "/api/registration/action" },
+
+    { "source": "/api/admin-api/login",              "destination": "/api/admin-api/login" },
+    { "source": "/api/admin-api/stats",              "destination": "/api/admin-api/stats" },
+    { "source": "/api/admin-api/export",             "destination": "/api/admin-api/export" },
+    { "source": "/api/admin-api/plans/:path*",       "destination": "/api/admin-api/plans" },
+    { "source": "/api/admin-api/plans",              "destination": "/api/admin-api/plans" },
+
+    { "source": "/api/admin-api/registrations/:id",  "destination": "/api/admin-api/registrations/[id]" },
+    { "source": "/api/admin-api/registrations",      "destination": "/api/admin-api/registrations/[id]" },
+
+    { "source": "/api/admin-api/groups/:id/members", "destination": "/api/admin-api/groups/[id]" },
+    { "source": "/api/admin-api/groups/:id",         "destination": "/api/admin-api/groups/[id]" },
+    { "source": "/api/admin-api/groups",             "destination": "/api/admin-api/groups/index" },
+
+    { "source": "/api/admin-api/schedules/:id",      "destination": "/api/admin-api/schedules/index" },
+    { "source": "/api/admin-api/schedules",          "destination": "/api/admin-api/schedules/index" },
+
+    { "source": "/api/admin-api/locations/:path*",   "destination": "/api/admin-api/locations/index" },
+    { "source": "/api/admin-api/locations",          "destination": "/api/admin-api/locations/index" }
   ]
 }

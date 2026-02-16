@@ -1,142 +1,102 @@
-// /api/registration/action.js
-import { getPool } from "../_lib/db.js";
-import { getResend, getMailFrom, asTextEmail } from "../_lib/mail.js";
+// api/registration/action.js  — Funkcja #3 (łączy action + payment-document)
+// POST /api/registration/action    { payment_ref, action } → rejestruje wybór
+// GET  /api/payment-document?payment_ref=X → dokument HTML do wydruku/pobrania
+const { getPool } = require('../_lib/db');
 
-function addBusinessDays(date, days) {
-  const d = new Date(date);
-  let added = 0;
-  while (added < days) {
-    d.setDate(d.getDate() + 1);
-    const day = d.getDay(); // 0=nd, 6=sob
-    if (day !== 0 && day !== 6) added++;
+const BANK_ACCOUNT = process.env.BANK_ACCOUNT || 'PL00 0000 0000 0000 0000 0000 0000';
+const BANK_NAME    = process.env.BANK_NAME    || 'Akademia Obrony Saggita';
+
+module.exports = async (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  if (req.method === 'OPTIONS') return res.status(204).end();
+
+  const pool = getPool();
+
+  // ── GET: dokument płatniczy ───────────────────────────────────
+  if (req.method === 'GET') {
+    const { payment_ref } = req.query;
+    if (!payment_ref) return res.status(400).json({ error: 'Brak payment_ref' });
+
+    try {
+      const { rows: [r] } = await pool.query(`
+        SELECT reg.*, g.name AS group_name, l.city, pp.name AS plan_name
+        FROM registrations reg
+        LEFT JOIN groups g ON g.id = reg.group_id
+        LEFT JOIN locations l ON l.id = reg.location_id
+        LEFT JOIN price_plans pp ON pp.id = reg.price_plan_id
+        WHERE reg.payment_ref = $1
+      `, [payment_ref]);
+
+      if (!r) return res.status(404).json({ error: 'Nie znaleziono zapisu.' });
+
+      const date = new Date().toLocaleDateString('pl-PL');
+      const amount = parseFloat(r.total_amount || 0).toFixed(2);
+
+      const html = `<!DOCTYPE html><html lang="pl"><head><meta charset="UTF-8">
+<style>body{font-family:Arial,sans-serif;margin:40px;color:#111;font-size:14px}
+h1{font-size:22px;border-bottom:2px solid #c42000;padding-bottom:8px;margin-bottom:20px}
+.logo{font-size:18px;font-weight:bold;color:#c42000;margin-bottom:4px}
+table{width:100%;border-collapse:collapse;margin-top:16px}
+td{padding:8px 10px;border:1px solid #ddd}td:first-child{font-weight:bold;width:200px;background:#f8f8f8}
+.ref{font-size:20px;font-weight:bold;letter-spacing:2px;color:#c42000;margin:16px 0}
+.note{margin-top:24px;padding:12px;border:1px solid #ddd;background:#fffbe6;font-size:13px}
+.footer{margin-top:40px;font-size:12px;color:#666;border-top:1px solid #ddd;padding-top:12px}
+</style></head><body>
+<div class="logo">Akademia Obrony Saggita — Krav Maga</div>
+<p style="color:#666;font-size:12px">Dokument wygenerowany: ${date}</p>
+<h1>Dokument płatniczy</h1>
+<p class="ref">Kod: ${r.payment_ref}</p>
+<table>
+<tr><td>Imię i nazwisko</td><td>${r.first_name} ${r.last_name}</td></tr>
+<tr><td>Email</td><td>${r.email||'—'}</td></tr>
+<tr><td>Telefon</td><td>${r.phone||'—'}</td></tr>
+<tr><td>Miasto</td><td>${r.city||'—'}</td></tr>
+<tr><td>Grupa</td><td>${r.group_name||'—'}</td></tr>
+<tr><td>Karnet</td><td>${r.plan_name||'—'}</td></tr>
+<tr><td>Kwota do wpłaty</td><td><strong>${amount} zł</strong></td></tr>
+</table>
+<h2 style="margin-top:24px;font-size:16px">Dane do przelewu</h2>
+<table>
+<tr><td>Numer konta</td><td>${BANK_ACCOUNT}</td></tr>
+<tr><td>Odbiorca</td><td>${BANK_NAME}</td></tr>
+<tr><td>Tytuł przelewu</td><td><strong>${r.payment_ref} — ${r.first_name} ${r.last_name}</strong></td></tr>
+<tr><td>Kwota</td><td><strong>${amount} zł</strong></td></tr>
+</table>
+<div class="note"><strong>Ważne:</strong> Przelew w ciągu <strong>3 dni roboczych</strong>.
+Po tym terminie rezerwacja przepada.<br>
+Kontakt: <strong>biuro@akademiaobrony.pl</strong> · <strong>510 930 460</strong></div>
+<div class="footer">Akademia Obrony Saggita | biuro@akademiaobrony.pl | 510 930 460</div>
+<script>window.onload=()=>window.print();</script>
+</body></html>`;
+
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      res.setHeader('Content-Disposition', `inline; filename="platnosc-${payment_ref}.html"`);
+      return res.status(200).send(html);
+    } catch (e) {
+      return res.status(500).json({ error: e.message });
+    }
   }
-  return d;
-}
 
-function formatPL(d) {
-  const dd = String(d.getDate()).padStart(2, "0");
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  const yyyy = d.getFullYear();
-  return `${dd}.${mm}.${yyyy}`;
-}
-
-export default async function handler(req, res) {
-  if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
-
-  try {
-    const { payment_ref, action } = req.body || {};
-    if (!payment_ref || typeof payment_ref !== "string") {
-      return res.status(400).json({ error: "Brak payment_ref." });
+  // ── POST: zapis akcji finalizacji ────────────────────────────
+  if (req.method === 'POST') {
+    try {
+      const { payment_ref, action } = req.body || {};
+      if (!payment_ref) return res.status(400).json({ error: 'Brak payment_ref' });
+      if (!['pay_online','download_doc'].includes(action)) {
+        return res.status(400).json({ error: 'Nieprawidłowa akcja' });
+      }
+      const { rowCount } = await pool.query(
+        `UPDATE registrations SET finalize_action=$1, finalized_at=NOW(), updated_at=NOW()
+         WHERE payment_ref=$2`, [action, payment_ref]
+      );
+      if (!rowCount) return res.status(404).json({ error: 'Nie znaleziono zapisu.' });
+      return res.status(200).json({ success: true, action });
+    } catch (e) {
+      return res.status(500).json({ error: e.message });
     }
-    if (!["pay_online", "download_doc"].includes(action)) {
-      return res.status(400).json({ error: "Nieprawidłowa akcja." });
-    }
-
-    const pool = getPool();
-
-    // 1) Pobierz zapis po payment_ref
-    // Uwaga: zakładam tabelę "registrations" z kolumną payment_ref
-    const r1 = await pool.query(
-      `SELECT
-         id, payment_ref, first_name, last_name, email,
-         total_amount, bank_account, bank_name, transfer_title,
-         is_waitlist, created_at
-       FROM registrations
-       WHERE payment_ref = $1
-       LIMIT 1`,
-      [payment_ref]
-    );
-
-    if (!r1.rows.length) {
-      return res.status(404).json({ error: "Nie znaleziono zapisu o takim kodzie." });
-    }
-
-    const reg = r1.rows[0];
-
-    // 2) Zapisz akcję w bazie (żeby było wiadomo co wybrał kursant)
-    await pool.query(
-      `UPDATE registrations
-       SET action = $2, action_at = NOW()
-       WHERE payment_ref = $1`,
-      [payment_ref, action]
-    );
-
-    // 3) Wyślij maila zależnie od akcji
-    const resend = getResend();
-    const from = getMailFrom();
-
-    const fullName = `${reg.first_name || ""} ${reg.last_name || ""}`.trim();
-    const amount = reg.total_amount != null ? Number(reg.total_amount).toFixed(2) : null;
-
-    const dueDate = formatPL(addBusinessDays(new Date(), 3));
-
-    if (!reg.email) {
-      return res.status(400).json({ error: "Brak email w zapisie – nie mogę wysłać potwierdzenia." });
-    }
-
-    if (action === "pay_online") {
-      // Potwierdzenie zapisu na szkolenie
-      const mail = asTextEmail({
-        subject: "Potwierdzenie zapisu — Krav Maga Saggita",
-        lines: [
-          `Cześć ${reg.first_name || ""},`,
-          "",
-          "Dziękujemy — Twój zapis został przyjęty.",
-          "",
-          `Kod zgłoszenia: ${reg.payment_ref}`,
-          fullName ? `Uczestnik: ${fullName}` : null,
-          amount ? `Kwota: ${amount} zł` : null,
-          "",
-          "Płatność online jest w trakcie podpinania (na razie przycisk jest placeholderem).",
-          "Jeśli chcesz zapłacić przelewem, użyj danych z potwierdzenia na stronie.",
-          "",
-          "W razie pytań:",
-          "biuro@akademiaobrony.pl · 510 930 460",
-        ],
-      });
-
-      await resend.emails.send({
-        from,
-        to: reg.email,
-        subject: mail.subject,
-        text: mail.text,
-      });
-
-      return res.status(200).json({ ok: true });
-    }
-
-    // action === "download_doc"
-    // Potwierdzenie rezerwacji + informacja o 3 dniach roboczych
-    const mail = asTextEmail({
-      subject: "Rezerwacja miejsca — oczekujemy na wpłatę (3 dni robocze)",
-      lines: [
-        `Cześć ${reg.first_name || ""},`,
-        "",
-        "Twoja rezerwacja miejsca została przyjęta.",
-        "",
-        `Kod zgłoszenia: ${reg.payment_ref}`,
-        fullName ? `Uczestnik: ${fullName}` : null,
-        amount ? `Kwota: ${amount} zł` : null,
-        "",
-        `Na opłatę masz 3 dni robocze (do ${dueDate}).`,
-        "Po tym czasie rezerwacja przepada.",
-        "",
-        "Dokument płatniczy możesz pobrać ze strony (przycisk „Pobierz dokument płatniczy”).",
-        "",
-        "W razie pytań:",
-        "biuro@akademiaobrony.pl · 510 930 460",
-      ],
-    });
-
-    await resend.emails.send({
-      from,
-      to: reg.email,
-      subject: mail.subject,
-      text: mail.text,
-    });
-
-    return res.status(200).json({ ok: true, due_date: dueDate });
-  } catch (e) {
-    return res.status(500).json({ error: e?.message || "Błąd serwera." });
   }
-}
+
+  return res.status(405).json({ error: 'Method not allowed' });
+};

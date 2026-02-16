@@ -1,8 +1,13 @@
 {
+  "name": "saggita-kravmaga",
+  "version": "1.0.0",
+  "description": "Krav Maga Saggita — system zapisów i panel admina",
+  "private": true,
   "dependencies": {
-    "pg": "^8.11.3",
     "bcryptjs": "^2.4.3",
-    "pdfkit": "^0.15.0",
-    "resend": "^4.0.0"
+    "pg": "^8.11.3"
+  },
+  "engines": {
+    "node": "18.x"
   }
 }
