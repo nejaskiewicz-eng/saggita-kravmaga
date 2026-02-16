@@ -646,6 +646,53 @@ body::before{
   padding:60px;text-align:center;
   font-weight:800;font-size:.88rem;color:var(--muted);
 }
+  /* ── CONFIRM ACTIONS ── */
+.confirm-actions{
+  margin-top:18px;
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  align-items:center;
+}
+
+.btn-confirm{
+  border:none;
+  cursor:pointer;
+  font-family:'Open Sans',sans-serif;
+  font-weight:800;
+  font-size:.80rem;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  padding:12px 18px;
+  transition:transform 200ms ease, filter 200ms ease, border-color 200ms ease, background 200ms ease;
+}
+
+.btn-confirm:hover{transform:translateY(-2px);filter:brightness(1.08);}
+.btn-confirm:disabled{opacity:.55;cursor:not-allowed;transform:none;filter:none;}
+
+.btn-confirm--primary{
+  background:linear-gradient(180deg,rgba(178,25,0,0.98),rgba(80,8,0,0.95));
+  color:#fff;
+  box-shadow:0 10px 48px rgba(178,25,0,0.22);
+}
+
+.btn-confirm--ghost{
+  background:transparent;
+  color:rgba(255,255,255,0.90);
+  border:1px solid rgba(255,255,255,0.22);
+}
+
+.btn-confirm--ghost:hover{
+  border-color:rgba(178,25,0,0.65);
+  background:rgba(178,25,0,0.06);
+}
+
+.confirm-hint{
+  font-weight:600;
+  font-size:.78rem;
+  color:rgba(255,255,255,0.55);
+}
+
 </style>
 </head>
 
@@ -771,6 +818,19 @@ body::before{
     <p class="confirm-box__text" id="confirmText">Dziękujemy za zapis! Skontaktujemy się w celu potwierdzenia miejsca.</p>
     <div class="confirm-box__ref" id="confirmRef"></div>
     <div class="confirm-box__transfer" id="confirmTransfer" style="display:none"></div>
+      <div class="confirm-actions" id="confirmActions" style="display:none">
+    <button type="button" class="btn-confirm btn-confirm--primary" id="btnPayOnline">
+      Zapłać online →
+    </button>
+
+    <button type="button" class="btn-confirm btn-confirm--ghost" id="btnPayDoc">
+      Pobierz dokument płatniczy
+    </button>
+
+    <div class="confirm-hint" id="confirmHint">
+      Wybierz sposób finalizacji. Możesz też wrócić później — kod zostaje ten sam.
+    </div>
+  </div>
     <p class="confirm-box__note">Zachowaj powyższy kod — przyda Ci się do sprawdzenia statusu zapisu oraz jako tytuł przelewu.<br>W razie pytań: <strong>biuro@akademiaobrony.pl</strong> · <strong>510 930 460</strong></p>
   </div>
 
@@ -1142,6 +1202,24 @@ function showConfirmation(data, first, last) {
     : `Dziękujemy za zapis, ${first}! Twoje zgłoszenie zostało przyjęte. Skontaktujemy się, aby potwierdzić miejsce w grupie.`;
 
   document.getElementById('confirmRef').textContent = data.payment_ref;
+  // Pokaż przyciski akcji
+  const actions = document.getElementById('confirmActions');
+  actions.style.display = 'flex';
+
+  // Podepnij akcje pod aktualny zapis
+  window.__regRef = data.payment_ref; // użyjemy jako identyfikatora
+  window.__regEmail = data.email || document.getElementById('f_email')?.value?.trim() || null;
+
+  // Zapłać online (placeholder)
+  document.getElementById('btnPayOnline').onclick = async () => {
+    await finalizeAction('pay_online');
+    alert('Płatność online będzie podpięta w kolejnym kroku. Na razie to placeholder 🙂');
+  };
+
+  // Pobierz dokument płatniczy
+  document.getElementById('btnPayDoc').onclick = async () => {
+    await finalizeAction('download_doc', true);
+  };
 
   if (!isWaitlist && data.total_amount) {
     const div = document.getElementById('confirmTransfer');
@@ -1159,6 +1237,67 @@ function showConfirmation(data, first, last) {
 
   box.classList.add('visible');
   box.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+async function finalizeAction(action, downloadDoc=false){
+  if(!window.__regRef) return;
+
+  const btnPay = document.getElementById('btnPayOnline');
+  const btnDoc = document.getElementById('btnPayDoc');
+  btnPay.disabled = true;
+  btnDoc.disabled = true;
+
+  try{
+    // 1) Powiedz backendowi: jaka akcja została wybrana -> backend wysyła maila odpowiedniego typu
+    const res = await fetch(`${API}/registration/action`, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        payment_ref: window.__regRef,
+        action
+      })
+    });
+
+    const data = await res.json();
+    if(!res.ok) throw new Error(data.error || 'Błąd akcji.');
+
+    // 2) Jeśli akcja to pobranie dokumentu -> pobierz PDF
+    if(downloadDoc){
+      await downloadPaymentDoc(window.__regRef);
+    }
+  }catch(e){
+    alert(e.message || 'Coś poszło nie tak. Spróbuj ponownie.');
+  }finally{
+    btnPay.disabled = false;
+    btnDoc.disabled = false;
+  }
+}
+
+async function downloadPaymentDoc(paymentRef){
+  // endpoint zwraca PDF
+  const res = await fetch(`${API}/payment-document?payment_ref=${encodeURIComponent(paymentRef)}`, {
+    method:'GET'
+  });
+
+  if(!res.ok){
+    let err = 'Nie udało się pobrać dokumentu.';
+    try{
+      const j = await res.json();
+      err = j.error || err;
+    }catch(_){}
+    throw new Error(err);
+  }
+
+  const blob = await res.blob();
+  const url = window.URL.createObjectURL(blob);
+
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `dokument-platniczy-${paymentRef}.pdf`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+
+  window.URL.revokeObjectURL(url);
 }
 
 init();
