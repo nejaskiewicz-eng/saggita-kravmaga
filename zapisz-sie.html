@@ -433,6 +433,12 @@ a{text-decoration:none;color:inherit}
   padding:60px;text-align:center;
   font-weight:700;font-size:.88rem;color:var(--text-muted);
 }
+   /* KILL SWITCH — wymuś tło i wyłącz czerwone naloty */
+html, body { background:#141414 !important; }
+.pg-header { background:transparent !important; border-bottom:1px solid rgba(255,255,255,0.10) !important; }
+.group-card__head { background:rgba(0,0,0,0.26) !important; border-bottom:1px solid rgba(255,255,255,0.10) !important; }
+.group-card { background:rgba(255,255,255,0.02) !important; border-color:rgba(255,255,255,0.14) !important; }
+
 </style>
 </head>
 
