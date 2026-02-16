@@ -594,8 +594,8 @@ async function loadGroups(){
           <td>${g.active?'<span class="badge bg">Aktywna</span>':'<span class="badge bx">Nieaktywna</span>'}</td>
           <td><div class="tda">
             <button class="bi" onclick='showEditG(${JSON.stringify(g)})'>Edytuj</button>
-            <button class="bi del" onclick="delG(${g.id},'${g.name.replace(/'/g,"\\'")}')">Usuń</button>
-          </div></td> <button class="bi" onclick="openGroupMembers(${g.id},'${g.name.replace(/'/g,"\\'")}')">Ludzie</button>
+            <button class="bi del" onclick="delG(${g.id},'${g.name.replace(/'/g,"\\'")}')">Usuń</button><button class="bi" onclick="openGroupMembers(${g.id},'${g.name.replace(/'/g,"\\'")}')">Ludzie</button>
+          </div></td> 
         </tr>`).join(''):`<tr><td colspan="7"><div class="empty"><strong>Brak grup</strong></div></td></tr>`}</tbody>
       </table></div>`;
   }catch(e){c.innerHTML=`<div class="empty"><strong>Błąd</strong>${e.message}</div>`;}
