@@ -576,14 +576,120 @@ html, body { background:#141414 !important; }
 </main>
 
 <script>
-/* =========================================================
-   FIX: terminy nie pokazują się, bo API zwraca day_name=null i time_label=null.
-   W tej wersji wyliczamy je z day_of_week + time_start/time_end.
-   Dodatkowo: lepsze błędy fetch i obsługa różnych kształtów JSON.
-   ========================================================= */
+/**
+ * ZAPISZ-SIE — stabilne pobieranie grafiku:
+ * - obsługuje /api/schedule (nested: locations->groups->schedules)
+ * - obsługuje /api/admin-api/schedules (flat: lista terminów)
+ * - normalizuje dane i dopiero buduje UI
+ */
 
-// Ustaw na Twoją domenę backendu (Vercel). Zostaw bez końcowego slasha.
-const API = 'https://saggita-kravmaga.vercel.app/api';
+const API_BASE = 'https://saggita-kravmaga.vercel.app';
+const API = `${API_BASE}/api`;
+
+const SCHEDULE_SOURCES = [
+  `${API}/schedule`,
+  `${API}/admin-api/schedules`,
+];
+
+const GROUPS_SOURCES = [
+  `${API}/groups`,
+  `${API}/admin-api/groups`,
+];
+
+const LOCATIONS_SOURCES = [
+  `${API}/locations`,
+  `${API}/admin-api/locations`,
+];
+
+function qs(sel, root=document){ return root.querySelector(sel); }
+function qsa(sel, root=document){ return Array.from(root.querySelectorAll(sel)); }
+
+async function fetchJson(url){
+  const res = await fetch(url, { cache: 'no-store' });
+  const text = await res.text();
+  let data;
+  try { data = text ? JSON.parse(text) : null; }
+  catch(e){ throw new Error(`Nieprawidłowy JSON z ${url}: ${text.slice(0,120)}`); }
+  if(!res.ok) throw new Error(`HTTP ${res.status} z ${url}: ${data?.error || text.slice(0,120)}`);
+  return data;
+}
+
+async function fetchFirstOk(urls){
+  let lastErr = null;
+  for(const url of urls){
+    try { return await fetchJson(url); }
+    catch(e){ lastErr = e; }
+  }
+  throw lastErr || new Error('Brak działającego źródła danych');
+}
+
+// ── Normalizacja danych ───────────────────────────────────────────
+const PL_DAY = {1:'Poniedziałek',2:'Wtorek',3:'Środa',4:'Czwartek',5:'Piątek',6:'Sobota',7:'Niedziela',0:'Niedziela'};
+const hhmm = (t) => (t && typeof t === 'string') ? t.slice(0,5) : '';
+
+function looksNested(x){
+  return Array.isArray(x) && x[0] && Array.isArray(x[0].groups);
+}
+
+function normalizeSchedulesPayload(payload){
+  // /admin-api/schedules może zwrócić {rows:[...]} albo [...]. My chcemy [...]
+  if(Array.isArray(payload)) return payload;
+  if(Array.isArray(payload?.rows)) return payload.rows;
+  return [];
+}
+
+function buildNestedFromFlat({ locations, groups, schedules }){
+  const locMap = new Map((locations||[]).map(l => [l.id, { ...l, groups: [] }]));
+  const groupMap = new Map((groups||[]).map(g => [g.id, { ...g, schedules: [] }]));
+
+  // powiąż grupy z lokalizacjami
+  for(const g of (groups||[])){
+    const loc = locMap.get(g.location_id);
+    const gg = groupMap.get(g.id);
+    if(loc && gg) loc.groups.push(gg);
+  }
+
+  // dorzuć schedules do grup
+  for(const s of (schedules||[])){
+    if (s.active === false) continue;
+    const g = groupMap.get(s.group_id);
+    if(!g) continue;
+
+    const day_name = s.day_name || PL_DAY[s.day_of_week] || '—';
+    const time_label = s.time_label || (
+      hhmm(s.time_start) ? `${hhmm(s.time_start)}${hhmm(s.time_end) ? `–${hhmm(s.time_end)}` : ''}` : 'Termin do ustalenia'
+    );
+
+    g.schedules.push({
+      id: s.id,
+      group_id: s.group_id,
+      day_of_week: s.day_of_week,
+      day_name,
+      time_start: s.time_start,
+      time_end: s.time_end,
+      time_label,
+      address: s.address || null,
+      active: s.active !== false,
+    });
+  }
+
+  // sortowanie
+  const locs = Array.from(locMap.values())
+    .sort((a,b)=>(a.city||'').localeCompare(b.city||'', 'pl'));
+
+  for(const loc of locs){
+    loc.groups = (loc.groups||[])
+      .filter(g => g && g.active !== false)
+      .sort((a,b)=>(a.name||'').localeCompare(b.name||'', 'pl'));
+
+    for(const g of loc.groups){
+      g.schedules = (g.schedules||[])
+        .sort((a,b)=> (a.day_of_week - b.day_of_week) || String(a.time_start||'').localeCompare(String(b.time_start||'')));
+    }
+  }
+
+  return locs;
+}
 
 // ── State ─────────────────────────────────────────────────────────
 let allData = [];
@@ -592,146 +698,14 @@ let selectedGroup = null;
 let selectedSchedule = null;
 let selectedLocation = null;
 
-// ── Helpers ───────────────────────────────────────────────────────
-const PL_DAYS = {
-  1: 'Poniedziałek',
-  2: 'Wtorek',
-  3: 'Środa',
-  4: 'Czwartek',
-  5: 'Piątek',
-  6: 'Sobota',
-  7: 'Niedziela'
-};
-
-function hhmm(timeStr){
-  if(!timeStr || typeof timeStr !== 'string') return null;
-  // "18:30:00" -> "18:30"
-  const m = timeStr.match(/^(\d{2}:\d{2})/);
-  return m ? m[1] : timeStr;
-}
-
-function normalizeScheduleItem(s){
-  const dayName = (s.day_name && String(s.day_name).trim()) ? s.day_name : (PL_DAYS[s.day_of_week] || '—');
-  const labelFromTimes = (hhmm(s.time_start) && hhmm(s.time_end)) ? `${hhmm(s.time_start)}–${hhmm(s.time_end)}` : null;
-  const timeLabel = (s.time_label && String(s.time_label).trim()) ? s.time_label : (labelFromTimes || 'Termin do ustalenia');
-  return { ...s, day_name: dayName, time_label: timeLabel };
-}
-
-function normalizeData(raw){
-  // obsłuż: tablica albo {data:[...]} albo inne
-  const arr = Array.isArray(raw) ? raw : (Array.isArray(raw?.data) ? raw.data : []);
-  return arr.map(loc => ({
-    ...loc,
-    groups: (loc.groups || []).map(g => ({
-      ...g,
-      schedules: (g.schedules || []).map(normalizeScheduleItem)
-    }))
-  }));
-}
-
-async function fetchJson(url){
-  const res = await fetch(url, { credentials: 'omit' });
-  const ct = res.headers.get('content-type') || '';
-  const text = await res.text();
-
-  if (!res.ok) {
-    // pokaż fragment odpowiedzi (np. błąd CORS/500)
-    throw new Error(`HTTP ${res.status} ${res.statusText} • ${text.slice(0,180)}`);
-  }
-  if (!ct.includes('application/json')) {
-    throw new Error(`Oczekiwano JSON, dostałam: ${ct || 'brak content-type'} • ${text.slice(0,180)}`);
-  }
-  try { return JSON.parse(text); }
-  catch { throw new Error(`Niepoprawny JSON • ${text.slice(0,180)}`); }
-}
-
-function renderFatal(msg){
-  document.getElementById('locPanels').innerHTML =
-    `<div class="loading-overlay" style="color:#ffb2a6">
-      Błąd ładowania grafiku.<br><br>
-      <span style="color:rgba(255,255,255,.65);font-weight:600">${msg}</span>
-     </div>`;
-}
-// ── Helpers: zawsze wylicz day_name i time_label (żeby nie było null, null) ──
-const PL_DAYS = {
-  1: 'Poniedziałek',
-  2: 'Wtorek',
-  3: 'Środa',
-  4: 'Czwartek',
-  5: 'Piątek',
-  6: 'Sobota',
-  7: 'Niedziela',
-  0: 'Niedziela',
-};
-
-function hhmm(t){
-  if (!t || typeof t !== 'string') return null;
-  return t.length >= 5 ? t.slice(0,5) : t;
-}
-
-function computeDayName(day_of_week){
-  if (day_of_week == null) return '—';
-  return PL_DAYS[day_of_week] || '—';
-}
-
-function computeTimeLabel(time_start, time_end){
-  const ts = hhmm(time_start);
-  const te = hhmm(time_end);
-  if (ts && te) return `${ts}–${te}`;
-  if (ts && !te) return ts;
-  return 'Termin do ustalenia';
-}
-
-function normalizeScheduleObject(s){
-  const day_name = s.day_name || computeDayName(s.day_of_week);
-  const time_label = s.time_label || computeTimeLabel(s.time_start, s.time_end);
-  return { ...s, day_name, time_label };
-}
-
-function normalizeAllData(data){
-  // data ma być: locations[] -> groups[] -> schedules[]
-  if (!Array.isArray(data)) return [];
-  return data.map(loc => ({
-    ...loc,
-    groups: Array.isArray(loc.groups) ? loc.groups.map(g => ({
-      ...g,
-      schedules: Array.isArray(g.schedules) ? g.schedules.map(normalizeScheduleObject) : []
-    })) : []
-  }));
-}
-
-// ── Init ──────────────────────────────────────────────────────────
-async function init() {
-  try {
-  const [schedRaw, pricesRaw] = await Promise.all([
-  fetchJson(`${API}/schedule`, { cache: 'no-store' }),
-  fetchJson(`${API}/prices`, { cache: 'no-store' }),
-]);
-
-allData = normalizeAllData(schedRaw);
-allPrices = pricesRaw;
-
-    if (!allData.length) {
-      renderFatal('API zwróciło pustą listę lokalizacji. Sprawdź /api/schedule w Network → Response.');
-      return;
-    }
-
-    buildTabs();
-    buildPanels();
-    // domyślnie aktywuj pierwszą lokalizację poprawnie po id
-    switchTab(allData[0].id);
-  } catch(e) {
-    renderFatal(e.message || 'Nieznany błąd.');
-  }
-}
-
-// ── Tabs ──────────────────────────────────────────────────────────
+// ── UI: Tabs ─────────────────────────────────────────────────────
 function buildTabs() {
   const nav = document.getElementById('locTabs');
   nav.innerHTML = '';
 
   allData.forEach((loc, i) => {
     const btn = document.createElement('button');
+    btn.type = 'button';
     btn.className = 'loc-tab' + (i === 0 ? ' active' : '');
     btn.textContent = loc.city || loc.name || `Lokalizacja ${loc.id}`;
     btn.setAttribute('role','tab');
@@ -742,17 +716,15 @@ function buildTabs() {
 }
 
 function switchTab(locId) {
-  document.querySelectorAll('.loc-tab').forEach((btn, idx) => {
-    const active = allData[idx] && allData[idx].id === locId;
+  qsa('.loc-tab').forEach((btn, i) => {
+    const active = allData[i]?.id === locId;
     btn.classList.toggle('active', active);
     btn.setAttribute('aria-selected', active ? 'true' : 'false');
   });
-  document.querySelectorAll('.loc-panel').forEach(p => {
-    p.classList.toggle('active', Number(p.dataset.locId) === Number(locId));
-  });
+  qsa('.loc-panel').forEach(p => p.classList.toggle('active', p.dataset.locId == locId));
 }
 
-// ── Panels ────────────────────────────────────────────────────────
+// ── UI: Panels ───────────────────────────────────────────────────
 function buildPanels() {
   const container = document.getElementById('locPanels');
   container.innerHTML = '';
@@ -762,8 +734,9 @@ function buildPanels() {
     panel.className = 'loc-panel' + (locIdx === 0 ? ' active' : '');
     panel.dataset.locId = loc.id;
 
-    if (!loc.groups || !loc.groups.length) {
-      panel.innerHTML = '<p style="color:var(--text-muted);padding:24px 0;font-weight:600">Brak grup dla tej lokalizacji.</p>';
+    const groups = Array.isArray(loc.groups) ? loc.groups : [];
+    if (!groups.length) {
+      panel.innerHTML = '<p style="color:rgba(255,255,255,0.56);padding:24px 0;font-weight:600">Brak grup dla tej lokalizacji.</p>';
       container.appendChild(panel);
       return;
     }
@@ -771,15 +744,15 @@ function buildPanels() {
     const grid = document.createElement('div');
     grid.className = 'sched-grid';
 
-    loc.groups.forEach(group => {
-      const isVIP    = group.category === 'vip';
-      const isClosed = group.notes && String(group.notes).toLowerCase().includes('zamknięty');
-      const isFull   = Number(group.available) <= 0 && !isClosed;
+    groups.forEach(group => {
+      const isVIP = group.category === 'vip';
+      const notes = (group.notes || '').toLowerCase();
+      const isClosed = notes.includes('zamknięty') || notes.includes('zamkniety');
+      const isFull = (group.available != null ? group.available <= 0 : false) && !isClosed;
 
       const card = document.createElement('div');
       card.className = 'group-card';
 
-      // Head
       const head = document.createElement('div');
       head.className = 'group-card__head';
 
@@ -808,12 +781,12 @@ function buildPanels() {
         b.className = 'badge badge--warn';
         b.textContent = 'Lista rezerwowa';
         meta.appendChild(b);
-      } else if (Number(group.available) <= 3) {
+      } else if (typeof group.available === 'number' && group.available <= 3) {
         const b = document.createElement('span');
         b.className = 'badge badge--warn';
         b.textContent = `Ostatnie ${group.available} miejsc`;
         meta.appendChild(b);
-      } else {
+      } else if (typeof group.available === 'number') {
         const b = document.createElement('span');
         b.className = 'badge badge--red';
         b.textContent = `${group.available} wolnych miejsc`;
@@ -823,71 +796,75 @@ function buildPanels() {
       head.appendChild(meta);
       card.appendChild(head);
 
-      // Slots or VIP info
       if (isVIP) {
         const info = document.createElement('div');
         info.className = 'vip-info';
-        info.innerHTML = `<strong>${group.notes || 'Zajęcia indywidualne.'}</strong><br>Skontaktuj się z nami, aby ustalić termin:<br>📞 510 930 460 &nbsp;·&nbsp; ✉ biuro@akademiaobrony.pl<br><br>Możesz też zapisać się na listę rezerwową — podaj preferowany termin.`;
+        info.innerHTML = `<strong>${group.notes || 'Zajęcia indywidualne.'}</strong><br>
+          Skontaktuj się z nami, aby ustalić termin:<br>📞 510 930 460 · ✉ biuro@akademiaobrony.pl<br><br>
+          Możesz też zapisać się na listę rezerwową — podaj preferowany termin.`;
         card.appendChild(info);
 
         const vipBtn = document.createElement('div');
         vipBtn.style.cssText = 'padding:0 18px 18px';
-        vipBtn.innerHTML = `<button class="slot__btn" style="font-size:.72rem;padding:10px 18px;cursor:pointer;font-weight:900;letter-spacing:.12em;text-transform:uppercase;" type="button">Zapisz się na listę rezerwową →</button>`;
-        vipBtn.querySelector('button').addEventListener('click', () => {
-          selectSlot(loc.id, loc.city, group.id, group.name, null, null, null, true);
-        });
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'slot__btn';
+        b.style.cssText = 'font-size:.72rem;padding:10px 18px;cursor:pointer;font-weight:900;letter-spacing:.12em;text-transform:uppercase;';
+        b.textContent = 'Zapisz się na listę rezerwową →';
+        b.addEventListener('click', () => selectSlot(loc.id, loc.city, group.id, group.name, null, null, null, true));
+        vipBtn.appendChild(b);
         card.appendChild(vipBtn);
 
-      } else if (group.schedules && group.schedules.length) {
-        const slotsWrap = document.createElement('div');
-        slotsWrap.className = 'group-card__slots';
-
-        group.schedules.forEach(sched => {
-
-  const dayName = sched.day_name || '—';
-  const timeLabel = sched.time_label || 'Termin do ustalenia';
-
-          const slot = document.createElement('div');
-          slot.className = 'slot' + (isClosed ? ' slot--closed' : '');
-          slot.setAttribute('role', isClosed ? 'presentation' : 'button');
-          if (!isClosed) slot.setAttribute('tabindex', '0');
-
-          const left = document.createElement('div');
-          left.innerHTML = `
-            <div class="slot__day">${sched.day_name || '—'}</div>
-            <div class="slot__time">${sched.time_label || 'Termin do ustalenia'}</div>
-            ${(sched.address || loc.address) ? `<div class="slot__addr">${sched.address || loc.address}</div>` : ''}
-          `;
-
-          const btnEl = document.createElement('div');
-          btnEl.className = 'slot__btn';
-          btnEl.textContent = isClosed ? 'Zamknięty' : (isFull ? 'Lista rez.' : 'Zapisuję się');
-
-          slot.appendChild(left);
-          slot.appendChild(btnEl);
-
-          if (!isClosed) {
-            const handler = (ev) => {
-              window._lastSlotEl = ev.currentTarget;
-              selectSlot(
-  loc.id, loc.city, group.id, group.name,
-  sched.id, dayName, timeLabel,
-  isFull
-);
-            };
-            slot.addEventListener('click', handler);
-            slot.addEventListener('keydown', e => { if(e.key === 'Enter' || e.key === ' ') handler(e); });
-          }
-
-          slotsWrap.appendChild(slot);
-        });
-
-        card.appendChild(slotsWrap);
       } else {
-        const empty = document.createElement('div');
-        empty.className = 'vip-info';
-        empty.innerHTML = `<strong>Brak terminów w grafiku.</strong><br>Jeśli to błąd, sprawdź w panelu admin czy harmonogram dla tej grupy jest aktywny.`;
-        card.appendChild(empty);
+        const schedules = Array.isArray(group.schedules) ? group.schedules : [];
+
+        // jeżeli brak terminów — pokaż czytelną informację zamiast pustki
+        if(!schedules.length){
+          const empty = document.createElement('div');
+          empty.className = 'vip-info';
+          empty.innerHTML = `<strong>Brak dodanych terminów</strong><br>Jeśli widzisz je w panelu admin, to znaczy, że endpoint, z którego korzysta ta strona, nie zwraca ich w tym formacie.`;
+          card.appendChild(empty);
+        } else {
+          const slotsWrap = document.createElement('div');
+          slotsWrap.className = 'group-card__slots';
+
+          schedules.forEach(sched => {
+            const dayName = sched.day_name || PL_DAY[sched.day_of_week] || '—';
+            const timeLabel = sched.time_label || (hhmm(sched.time_start) ? `${hhmm(sched.time_start)}${hhmm(sched.time_end) ? `–${hhmm(sched.time_end)}` : ''}` : 'Termin do ustalenia');
+
+            const slot = document.createElement('div');
+            slot.className = 'slot' + (isClosed ? ' slot--closed' : '');
+            slot.setAttribute('role', isClosed ? 'presentation' : 'button');
+            if (!isClosed) slot.setAttribute('tabindex', '0');
+
+            const left = document.createElement('div');
+            left.innerHTML = `
+              <div class="slot__day">${dayName}</div>
+              <div class="slot__time">${timeLabel}</div>
+              ${sched.address ? `<div class="slot__addr">${sched.address}</div>` : ''}
+            `;
+
+            const btnEl = document.createElement('div');
+            btnEl.className = 'slot__btn';
+            btnEl.textContent = isClosed ? 'Zamknięty' : (isFull ? 'Lista rez.' : 'Zapisuję się');
+
+            slot.appendChild(left);
+            slot.appendChild(btnEl);
+
+            if (!isClosed) {
+              const handler = (ev) => {
+                window._lastSlotEl = ev.currentTarget;
+                selectSlot(loc.id, loc.city, group.id, group.name, sched.id, dayName, timeLabel, isFull);
+              };
+              slot.addEventListener('click', handler);
+              slot.addEventListener('keydown', e => { if(e.key === 'Enter' || e.key === ' ') handler(e); });
+            }
+
+            slotsWrap.appendChild(slot);
+          });
+
+          card.appendChild(slotsWrap);
+        }
       }
 
       grid.appendChild(card);
@@ -898,9 +875,9 @@ function buildPanels() {
   });
 }
 
-// ── Select slot → reveal form ─────────────────────────────────────
+// ── Select slot ──────────────────────────────────────────────────
 function selectSlot(locId, cityName, groupId, groupName, schedId, dayName, timeLabel, isWaitlist) {
-  document.querySelectorAll('.slot.selected').forEach(s => s.classList.remove('selected'));
+  qsa('.slot.selected').forEach(s => s.classList.remove('selected'));
   if (window._lastSlotEl) window._lastSlotEl.classList.add('selected');
 
   selectedGroup = groupId;
@@ -908,19 +885,16 @@ function selectSlot(locId, cityName, groupId, groupName, schedId, dayName, timeL
   selectedLocation = locId;
 
   const isVIP = schedId === null;
-  const waitlistFlag = isWaitlist || false;
-
-  const safeDay = dayName || '—';
-  const safeTime = timeLabel || 'Termin do ustalenia';
+  const waitlistFlag = !!isWaitlist;
 
   const infoText = isVIP
     ? `${cityName} · ${groupName} (lista rezerwowa)`
-    : `${cityName} · ${groupName} · ${safeDay}, ${safeTime}${waitlistFlag ? ' (lista rezerwowa)' : ''}`;
-  document.getElementById('slotInfoText').textContent = infoText;
+    : `${cityName} · ${groupName} · ${dayName}, ${timeLabel}${waitlistFlag ? ' (lista rezerwowa)' : ''}`;
 
+  document.getElementById('slotInfoText').textContent = infoText;
   document.getElementById('preferredTimeField').style.display = isVIP ? 'block' : 'none';
 
-  const group = allData.flatMap(l => l.groups).find(g => g.id === groupId);
+  const group = allData.flatMap(l => l.groups || []).find(g => g.id === groupId);
   buildPriceOptions(group?.category || 'adults');
 
   const section = document.getElementById('formSection');
@@ -928,27 +902,22 @@ function selectSlot(locId, cityName, groupId, groupName, schedId, dayName, timeL
   section.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-// ── Price options ─────────────────────────────────────────────────
+// ── Prices ───────────────────────────────────────────────────────
 function buildPriceOptions(category) {
   const container = document.getElementById('priceOptions');
   container.innerHTML = '';
 
   const isNew = document.getElementById('f_new')?.value !== 'false';
+  const cats = category === 'kids' ? ['kids'] : category === 'vip' ? ['adults','discount'] : ['adults','discount','service'];
 
-  const cats = category === 'kids'
-    ? ['kids']
-    : category === 'vip'
-    ? ['adults', 'discount']
-    : ['adults', 'discount', 'service'];
-
-  const relevant = allPrices.filter(p => cats.includes(p.category));
+  const relevant = (allPrices || []).filter(p => cats.includes(p.category));
   if (!relevant.length) {
-    container.innerHTML = '<p style="color:var(--text-muted);font-size:.82rem">Brak planów cennikowych dla tej grupy.</p>';
+    container.innerHTML = '<p style="color:rgba(255,255,255,0.56);font-size:.82rem">Brak planów cennikowych dla tej grupy.</p>';
     return;
   }
 
   relevant.forEach((plan, i) => {
-    const total = parseFloat(plan.price) + (isNew ? parseFloat(plan.signup_fee || 0) : 0);
+    const total = parseFloat(plan.price || 0) + (isNew ? parseFloat(plan.signup_fee || 0) : 0);
     const monthLabel = plan.months ? `${plan.months} mies.` : 'jednorazowo';
 
     const card = document.createElement('label');
@@ -958,18 +927,21 @@ function buildPriceOptions(category) {
     input.type = 'radio';
     input.name = 'price_plan';
     input.value = plan.id;
+
     if (i === 0) { input.checked = true; card.classList.add('selected'); }
 
     card.innerHTML = `
       <div class="price-card__name">${String(plan.name || '').replace(' — ', '<br>')}</div>
-      <div class="price-card__price">${Number.isFinite(total) ? total.toFixed(0) : '—'} zł</div>
-      <div class="price-card__extra">${monthLabel}${isNew && Number(plan.signup_fee) > 0 ? ` (w tym ${plan.signup_fee} zł wpisowe)` : ''}${plan.description ? '<br>' + plan.description : ''}</div>
+      <div class="price-card__price">${Number.isFinite(total) ? total.toFixed(0) : '0'} zł</div>
+      <div class="price-card__extra">${monthLabel}${isNew && Number(plan.signup_fee||0) > 0 ? ` (w tym ${plan.signup_fee} zł wpisowe)` : ''}${plan.description ? '<br>' + plan.description : ''}</div>
     `;
     card.prepend(input);
+
     card.addEventListener('click', () => {
-      document.querySelectorAll('.price-card').forEach(c => c.classList.remove('selected'));
+      qsa('.price-card').forEach(c => c.classList.remove('selected'));
       card.classList.add('selected');
     });
+
     container.appendChild(card);
   });
 }
@@ -977,13 +949,13 @@ function buildPriceOptions(category) {
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('f_new')?.addEventListener('change', () => {
     if (selectedGroup !== null) {
-      const group = allData.flatMap(l => l.groups).find(g => g.id === selectedGroup);
+      const group = allData.flatMap(l => l.groups || []).find(g => g.id === selectedGroup);
       buildPriceOptions(group?.category || 'adults');
     }
   });
 });
 
-// ── Form submit ───────────────────────────────────────────────────
+// ── Submit ───────────────────────────────────────────────────────
 document.getElementById('regForm').addEventListener('submit', async (e) => {
   e.preventDefault();
 
@@ -995,14 +967,13 @@ document.getElementById('regForm').addEventListener('submit', async (e) => {
   msg.className = 'form-msg';
   msg.textContent = '';
 
-  if (!selectedGroup) {
-    showMsg('Wybierz termin zajęć z grafiku powyżej.', 'error'); return;
-  }
+  if (!selectedGroup) { showMsg('Wybierz termin zajęć z grafiku powyżej.', 'error'); return; }
 
   const first = document.getElementById('f_first').value.trim();
   const last  = document.getElementById('f_last').value.trim();
   const email = document.getElementById('f_email').value.trim();
   const phone = document.getElementById('f_phone').value.trim();
+
   if (!first || !last) { showMsg('Wpisz imię i nazwisko.', 'error'); return; }
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showMsg('Podaj prawidłowy adres e-mail.', 'error'); return; }
   if (!phone) { showMsg('Podaj numer telefonu.', 'error'); return; }
@@ -1029,8 +1000,8 @@ document.getElementById('regForm').addEventListener('submit', async (e) => {
       start_date: document.getElementById('f_date').value || null,
       payment_method: document.getElementById('f_pay').value,
       preferred_time: document.getElementById('f_ptime').value.trim() || null,
-      consent_data: document.getElementById('f_consent_data').checked,
-      consent_rules: document.getElementById('f_consent_rules').checked,
+      consent_data: true,
+      consent_rules: true,
     };
 
     const res = await fetch(`${API}/register`, {
@@ -1039,9 +1010,8 @@ document.getElementById('regForm').addEventListener('submit', async (e) => {
       body: JSON.stringify(body),
     });
 
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) { showMsg(data.error || `Błąd zapisu (HTTP ${res.status}). Spróbuj ponownie.`, 'error'); return; }
-
+    const data = await res.json();
+    if (!res.ok) { showMsg(data.error || 'Błąd zapisu. Spróbuj ponownie.', 'error'); return; }
     showConfirmation(data, first, last);
 
   } catch(err) {
@@ -1081,13 +1051,58 @@ function showConfirmation(data, first, last) {
       <div><span class="lbl">Odbiorca</span><br><span class="val">${data.bank_name || ''}</span></div>
       <div><span class="lbl">Tytuł przelewu</span><br><span class="val">${data.transfer_title || ''}</span></div>
       <br>
-      <small style="color:var(--text-muted)">Przelew wyślij najpóźniej do ostatniego dnia poprzedzającego miesiąc rozliczeniowy.</small>
+      <small style="color:rgba(255,255,255,0.56)">Przelew wyślij najpóźniej do ostatniego dnia poprzedzającego miesiąc rozliczeniowy.</small>
     `;
     div.style.display = 'block';
   }
 
   box.classList.add('visible');
   box.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ── Init ─────────────────────────────────────────────────────────
+async function init() {
+  const container = document.getElementById('locPanels');
+  container.innerHTML = '<div class="loading-overlay">Ładowanie grafiku…</div>';
+
+  try {
+    const [schedPayload, pricesPayload] = await Promise.all([
+      fetchFirstOk(SCHEDULE_SOURCES),
+      fetchFirstOk([`${API}/prices`]),
+    ]);
+
+    allPrices = Array.isArray(pricesPayload) ? pricesPayload : (Array.isArray(pricesPayload?.rows) ? pricesPayload.rows : []);
+
+    if (looksNested(schedPayload)) {
+      allData = schedPayload;
+    } else {
+      const flatSchedules = normalizeSchedulesPayload(schedPayload);
+      const [locations, groups] = await Promise.all([
+        fetchFirstOk(LOCATIONS_SOURCES),
+        fetchFirstOk(GROUPS_SOURCES),
+      ]);
+
+      const locArr = Array.isArray(locations) ? locations : (Array.isArray(locations?.rows) ? locations.rows : []);
+      const grpArr = Array.isArray(groups) ? groups : (Array.isArray(groups?.rows) ? groups.rows : []);
+
+      allData = buildNestedFromFlat({
+        locations: locArr,
+        groups: grpArr,
+        schedules: flatSchedules,
+      });
+    }
+
+    buildTabs();
+    buildPanels();
+    if (allData?.[0]?.id) switchTab(allData[0].id);
+
+  } catch(e) {
+    container.innerHTML = `<div class="loading-overlay" style="color:#ffb2a6">
+      Błąd ładowania grafiku.<br><br>
+      <span style="color:rgba(255,255,255,.65);font-weight:600">${e.message || e}</span>
+    </div>`;
+    console.error(e);
+  }
 }
 
 init();
