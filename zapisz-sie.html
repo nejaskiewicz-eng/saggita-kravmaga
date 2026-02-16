@@ -433,7 +433,8 @@ a{text-decoration:none;color:inherit}
   padding:60px;text-align:center;
   font-weight:700;font-size:.88rem;color:var(--text-muted);
 }
-/* KILL SWITCH — wymuś tło i wyłącz czerwone naloty */
+
+/* KILL SWITCH */
 html, body { background:#141414 !important; }
 .pg-header { background:transparent !important; border-bottom:1px solid rgba(255,255,255,0.10) !important; }
 .group-card__head { background:rgba(0,0,0,0.26) !important; border-bottom:1px solid rgba(255,255,255,0.10) !important; }
@@ -453,7 +454,6 @@ html, body { background:#141414 !important; }
 </header>
 
 <main class="wrap">
-
   <nav class="loc-tabs" id="locTabs" aria-label="Lokalizacje" role="tablist"></nav>
 
   <div id="locPanels">
@@ -576,6 +576,13 @@ html, body { background:#141414 !important; }
 </main>
 
 <script>
+/* =========================================================
+   FIX: terminy nie pokazują się, bo API zwraca day_name=null i time_label=null.
+   W tej wersji wyliczamy je z day_of_week + time_start/time_end.
+   Dodatkowo: lepsze błędy fetch i obsługa różnych kształtów JSON.
+   ========================================================= */
+
+// Ustaw na Twoją domenę backendu (Vercel). Zostaw bez końcowego slasha.
 const API = 'https://saggita-kravmaga.vercel.app/api';
 
 // ── State ─────────────────────────────────────────────────────────
@@ -586,7 +593,7 @@ let selectedSchedule = null;
 let selectedLocation = null;
 
 // ── Helpers ───────────────────────────────────────────────────────
-const DAYS_PL = {
+const PL_DAYS = {
   1: 'Poniedziałek',
   2: 'Wtorek',
   3: 'Środa',
@@ -596,72 +603,78 @@ const DAYS_PL = {
   7: 'Niedziela'
 };
 
-function pad2(n){ return String(n).padStart(2,'0'); }
-
-function formatTimeRange(timeStart, timeEnd){
-  // API daje np. "18:30:00"
-  const ts = (timeStart || '').slice(0,5);
-  const te = (timeEnd || '').slice(0,5);
-  if (ts && te) return `${ts}–${te}`;
-  if (ts) return ts;
-  return 'Termin do ustalenia';
+function hhmm(timeStr){
+  if(!timeStr || typeof timeStr !== 'string') return null;
+  // "18:30:00" -> "18:30"
+  const m = timeStr.match(/^(\d{2}:\d{2})/);
+  return m ? m[1] : timeStr;
 }
 
-function computeScheduleLabels(s){
-  // Uzupełnij brakujące day_name/time_label na froncie
-  const dayName = s.day_name && String(s.day_name).trim()
-    ? s.day_name
-    : (DAYS_PL[s.day_of_week] || '—');
+function normalizeScheduleItem(s){
+  const dayName = (s.day_name && String(s.day_name).trim()) ? s.day_name : (PL_DAYS[s.day_of_week] || '—');
+  const labelFromTimes = (hhmm(s.time_start) && hhmm(s.time_end)) ? `${hhmm(s.time_start)}–${hhmm(s.time_end)}` : null;
+  const timeLabel = (s.time_label && String(s.time_label).trim()) ? s.time_label : (labelFromTimes || 'Termin do ustalenia');
+  return { ...s, day_name: dayName, time_label: timeLabel };
+}
 
-  const timeLabel = s.time_label && String(s.time_label).trim()
-    ? s.time_label
-    : formatTimeRange(s.time_start, s.time_end);
-
-  return { dayName, timeLabel };
+function normalizeData(raw){
+  // obsłuż: tablica albo {data:[...]} albo inne
+  const arr = Array.isArray(raw) ? raw : (Array.isArray(raw?.data) ? raw.data : []);
+  return arr.map(loc => ({
+    ...loc,
+    groups: (loc.groups || []).map(g => ({
+      ...g,
+      schedules: (g.schedules || []).map(normalizeScheduleItem)
+    }))
+  }));
 }
 
 async function fetchJson(url){
-  const res = await fetch(url, { headers: { 'Accept': 'application/json' }});
-  if(!res.ok){
-    let details = '';
-    try {
-      const t = await res.text();
-      details = t ? t.slice(0,240) : '';
-    } catch(_) {}
-    throw new Error(`HTTP ${res.status} ${res.statusText}${details ? ' · ' + details : ''}`);
-  }
+  const res = await fetch(url, { credentials: 'omit' });
   const ct = res.headers.get('content-type') || '';
-  if(!ct.includes('application/json')){
-    const t = await res.text().catch(()=>'');
-    throw new Error(`Nie-JSON z API: ${t ? t.slice(0,240) : 'brak treści'}`);
+  const text = await res.text();
+
+  if (!res.ok) {
+    // pokaż fragment odpowiedzi (np. błąd CORS/500)
+    throw new Error(`HTTP ${res.status} ${res.statusText} • ${text.slice(0,180)}`);
   }
-  return res.json();
+  if (!ct.includes('application/json')) {
+    throw new Error(`Oczekiwano JSON, dostałam: ${ct || 'brak content-type'} • ${text.slice(0,180)}`);
+  }
+  try { return JSON.parse(text); }
+  catch { throw new Error(`Niepoprawny JSON • ${text.slice(0,180)}`); }
+}
+
+function renderFatal(msg){
+  document.getElementById('locPanels').innerHTML =
+    `<div class="loading-overlay" style="color:#ffb2a6">
+      Błąd ładowania grafiku.<br><br>
+      <span style="color:rgba(255,255,255,.65);font-weight:600">${msg}</span>
+     </div>`;
 }
 
 // ── Init ──────────────────────────────────────────────────────────
 async function init() {
   try {
-    const [sched, prices] = await Promise.all([
+    const [schedRaw, pricesRaw] = await Promise.all([
       fetchJson(`${API}/schedule`),
-      fetchJson(`${API}/prices`)
+      fetchJson(`${API}/prices`),
     ]);
 
-    // Hardening: oczekujemy tablic
-    allData = Array.isArray(sched) ? sched : [];
-    allPrices = Array.isArray(prices) ? prices : [];
+    allData = normalizeData(schedRaw);
+    allPrices = Array.isArray(pricesRaw) ? pricesRaw : (Array.isArray(pricesRaw?.data) ? pricesRaw.data : []);
 
     if (!allData.length) {
-      throw new Error('Brak danych grafiku (pusta odpowiedź).');
+      renderFatal('API zwróciło pustą listę lokalizacji. Sprawdź /api/schedule w Network → Response.');
+      return;
     }
 
     buildTabs();
     buildPanels();
+    // domyślnie aktywuj pierwszą lokalizację poprawnie po id
+    switchTab(allData[0].id);
   } catch(e) {
-    document.getElementById('locPanels').innerHTML =
-      `<div class="loading-overlay" style="color:#ffb2a6">
-        Błąd ładowania grafiku. Spróbuj odświeżyć stronę.<br>
-        <small style="opacity:.8;display:block;margin-top:10px">${String(e.message || e)}</small>
-      </div>`;
+    renderFatal(e.message || 'Nieznany błąd.');
   }
 }
 
@@ -669,11 +682,11 @@ async function init() {
 function buildTabs() {
   const nav = document.getElementById('locTabs');
   nav.innerHTML = '';
+
   allData.forEach((loc, i) => {
     const btn = document.createElement('button');
-    btn.type = 'button';
     btn.className = 'loc-tab' + (i === 0 ? ' active' : '');
-    btn.textContent = loc.city || loc.name || `Lokalizacja ${i+1}`;
+    btn.textContent = loc.city || loc.name || `Lokalizacja ${loc.id}`;
     btn.setAttribute('role','tab');
     btn.setAttribute('aria-selected', i === 0 ? 'true' : 'false');
     btn.addEventListener('click', () => switchTab(loc.id));
@@ -682,13 +695,13 @@ function buildTabs() {
 }
 
 function switchTab(locId) {
-  document.querySelectorAll('.loc-tab').forEach((btn, i) => {
-    const active = allData[i]?.id === locId;
+  document.querySelectorAll('.loc-tab').forEach((btn, idx) => {
+    const active = allData[idx] && allData[idx].id === locId;
     btn.classList.toggle('active', active);
     btn.setAttribute('aria-selected', active ? 'true' : 'false');
   });
   document.querySelectorAll('.loc-panel').forEach(p => {
-    p.classList.toggle('active', p.dataset.locId == locId);
+    p.classList.toggle('active', Number(p.dataset.locId) === Number(locId));
   });
 }
 
@@ -712,13 +725,14 @@ function buildPanels() {
     grid.className = 'sched-grid';
 
     loc.groups.forEach(group => {
-      const isVIP = group.category === 'vip';
-      const isClosed = !!(group.notes && group.notes.toLowerCase().includes('zamknięty'));
-      const isFull = (Number(group.available) <= 0) && !isClosed;
+      const isVIP    = group.category === 'vip';
+      const isClosed = group.notes && String(group.notes).toLowerCase().includes('zamknięty');
+      const isFull   = Number(group.available) <= 0 && !isClosed;
 
       const card = document.createElement('div');
       card.className = 'group-card';
 
+      // Head
       const head = document.createElement('div');
       head.className = 'group-card__head';
 
@@ -762,6 +776,7 @@ function buildPanels() {
       head.appendChild(meta);
       card.appendChild(head);
 
+      // Slots or VIP info
       if (isVIP) {
         const info = document.createElement('div');
         info.className = 'vip-info';
@@ -770,25 +785,17 @@ function buildPanels() {
 
         const vipBtn = document.createElement('div');
         vipBtn.style.cssText = 'padding:0 18px 18px';
-        const b = document.createElement('button');
-        b.type = 'button';
-        b.className = 'slot__btn';
-        b.style.cssText = 'font-size:.72rem;padding:10px 18px;cursor:pointer;font-weight:900;letter-spacing:.12em;text-transform:uppercase;';
-        b.textContent = 'Zapisz się na listę rezerwową →';
-        b.addEventListener('click', () => {
-          window._lastSlotEl = null; // VIP nie ma slotu w siatce
-          selectSlot(loc.id, (loc.city || loc.name || ''), group.id, (group.name || ''), null, null, null, true);
+        vipBtn.innerHTML = `<button class="slot__btn" style="font-size:.72rem;padding:10px 18px;cursor:pointer;font-weight:900;letter-spacing:.12em;text-transform:uppercase;" type="button">Zapisz się na listę rezerwową →</button>`;
+        vipBtn.querySelector('button').addEventListener('click', () => {
+          selectSlot(loc.id, loc.city, group.id, group.name, null, null, null, true);
         });
-        vipBtn.appendChild(b);
         card.appendChild(vipBtn);
 
       } else if (group.schedules && group.schedules.length) {
         const slotsWrap = document.createElement('div');
         slotsWrap.className = 'group-card__slots';
 
-        group.schedules.forEach(schedRaw => {
-          const { dayName, timeLabel } = computeScheduleLabels(schedRaw);
-
+        group.schedules.forEach(sched => {
           const slot = document.createElement('div');
           slot.className = 'slot' + (isClosed ? ' slot--closed' : '');
           slot.setAttribute('role', isClosed ? 'presentation' : 'button');
@@ -796,9 +803,9 @@ function buildPanels() {
 
           const left = document.createElement('div');
           left.innerHTML = `
-            <div class="slot__day">${dayName}</div>
-            <div class="slot__time">${timeLabel}</div>
-            ${schedRaw.address ? `<div class="slot__addr">${schedRaw.address}</div>` : ''}
+            <div class="slot__day">${sched.day_name || '—'}</div>
+            <div class="slot__time">${sched.time_label || 'Termin do ustalenia'}</div>
+            ${(sched.address || loc.address) ? `<div class="slot__addr">${sched.address || loc.address}</div>` : ''}
           `;
 
           const btnEl = document.createElement('div');
@@ -812,13 +819,8 @@ function buildPanels() {
             const handler = (ev) => {
               window._lastSlotEl = ev.currentTarget;
               selectSlot(
-                loc.id,
-                (loc.city || loc.name || ''),
-                group.id,
-                (group.name || ''),
-                schedRaw.id,
-                dayName,
-                timeLabel,
+                loc.id, loc.city, group.id, group.name,
+                sched.id, sched.day_name, sched.time_label,
                 isFull
               );
             };
@@ -830,11 +832,10 @@ function buildPanels() {
         });
 
         card.appendChild(slotsWrap);
-
       } else {
         const empty = document.createElement('div');
         empty.className = 'vip-info';
-        empty.innerHTML = `<strong>Brak terminów w grafiku.</strong><br>Jeśli to błąd, daj nam znać: 📞 510 930 460 · ✉ biuro@akademiaobrony.pl`;
+        empty.innerHTML = `<strong>Brak terminów w grafiku.</strong><br>Jeśli to błąd, sprawdź w panelu admin czy harmonogram dla tej grupy jest aktywny.`;
         card.appendChild(empty);
       }
 
@@ -855,22 +856,20 @@ function selectSlot(locId, cityName, groupId, groupName, schedId, dayName, timeL
   selectedSchedule = schedId;
   selectedLocation = locId;
 
-  const isVIP = (schedId === null);
-  const waitlistFlag = !!isWaitlist;
+  const isVIP = schedId === null;
+  const waitlistFlag = isWaitlist || false;
 
-  let infoText = '';
-  if (isVIP) {
-    infoText = `${cityName} · ${groupName} (lista rezerwowa)`;
-  } else {
-    const safeDay = dayName || '—';
-    const safeTime = timeLabel || '—';
-    infoText = `${cityName} · ${groupName} · ${safeDay}, ${safeTime}${waitlistFlag ? ' (lista rezerwowa)' : ''}`;
-  }
+  const safeDay = dayName || '—';
+  const safeTime = timeLabel || 'Termin do ustalenia';
 
+  const infoText = isVIP
+    ? `${cityName} · ${groupName} (lista rezerwowa)`
+    : `${cityName} · ${groupName} · ${safeDay}, ${safeTime}${waitlistFlag ? ' (lista rezerwowa)' : ''}`;
   document.getElementById('slotInfoText').textContent = infoText;
+
   document.getElementById('preferredTimeField').style.display = isVIP ? 'block' : 'none';
 
-  const group = allData.flatMap(l => (l.groups || [])).find(g => g.id === groupId);
+  const group = allData.flatMap(l => l.groups).find(g => g.id === groupId);
   buildPriceOptions(group?.category || 'adults');
 
   const section = document.getElementById('formSection');
@@ -898,10 +897,7 @@ function buildPriceOptions(category) {
   }
 
   relevant.forEach((plan, i) => {
-    const base = parseFloat(plan.price || 0);
-    const fee = isNew ? parseFloat(plan.signup_fee || 0) : 0;
-    const total = base + fee;
-
+    const total = parseFloat(plan.price) + (isNew ? parseFloat(plan.signup_fee || 0) : 0);
     const monthLabel = plan.months ? `${plan.months} mies.` : 'jednorazowo';
 
     const card = document.createElement('label');
@@ -911,25 +907,18 @@ function buildPriceOptions(category) {
     input.type = 'radio';
     input.name = 'price_plan';
     input.value = plan.id;
-
     if (i === 0) { input.checked = true; card.classList.add('selected'); }
 
     card.innerHTML = `
       <div class="price-card__name">${String(plan.name || '').replace(' — ', '<br>')}</div>
       <div class="price-card__price">${Number.isFinite(total) ? total.toFixed(0) : '—'} zł</div>
-      <div class="price-card__extra">
-        ${monthLabel}
-        ${isNew && fee > 0 ? ` (w tym ${fee.toFixed(0)} zł wpisowe)` : ''}
-        ${plan.description ? '<br>' + plan.description : ''}
-      </div>
+      <div class="price-card__extra">${monthLabel}${isNew && Number(plan.signup_fee) > 0 ? ` (w tym ${plan.signup_fee} zł wpisowe)` : ''}${plan.description ? '<br>' + plan.description : ''}</div>
     `;
     card.prepend(input);
-
     card.addEventListener('click', () => {
       document.querySelectorAll('.price-card').forEach(c => c.classList.remove('selected'));
       card.classList.add('selected');
     });
-
     container.appendChild(card);
   });
 }
@@ -937,7 +926,7 @@ function buildPriceOptions(category) {
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('f_new')?.addEventListener('change', () => {
     if (selectedGroup !== null) {
-      const group = allData.flatMap(l => (l.groups || [])).find(g => g.id === selectedGroup);
+      const group = allData.flatMap(l => l.groups).find(g => g.id === selectedGroup);
       buildPriceOptions(group?.category || 'adults');
     }
   });
@@ -947,11 +936,13 @@ document.addEventListener('DOMContentLoaded', () => {
 document.getElementById('regForm').addEventListener('submit', async (e) => {
   e.preventDefault();
 
+  const msg = document.getElementById('formMsg');
   const btn = document.getElementById('submitBtn');
   const spinner = document.getElementById('submitSpinner');
   const label = document.getElementById('submitLabel');
 
-  clearMsg();
+  msg.className = 'form-msg';
+  msg.textContent = '';
 
   if (!selectedGroup) {
     showMsg('Wybierz termin zajęć z grafiku powyżej.', 'error'); return;
@@ -961,7 +952,6 @@ document.getElementById('regForm').addEventListener('submit', async (e) => {
   const last  = document.getElementById('f_last').value.trim();
   const email = document.getElementById('f_email').value.trim();
   const phone = document.getElementById('f_phone').value.trim();
-
   if (!first || !last) { showMsg('Wpisz imię i nazwisko.', 'error'); return; }
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showMsg('Podaj prawidłowy adres e-mail.', 'error'); return; }
   if (!phone) { showMsg('Podaj numer telefonu.', 'error'); return; }
@@ -975,18 +965,16 @@ document.getElementById('regForm').addEventListener('submit', async (e) => {
   label.textContent = 'Wysyłam…';
 
   try {
-    const birth = document.getElementById('f_birth').value ? parseInt(document.getElementById('f_birth').value, 10) : null;
-
     const body = {
       first_name: first,
       last_name: last,
       email,
       phone,
-      birth_year: Number.isFinite(birth) ? birth : null,
+      birth_year: document.getElementById('f_birth').value ? parseInt(document.getElementById('f_birth').value) : null,
       is_new: document.getElementById('f_new').value !== 'false',
       group_id: selectedGroup,
-      schedule_id: selectedSchedule, // null dla VIP
-      price_plan_id: selectedPrice ? parseInt(selectedPrice.value, 10) : null,
+      schedule_id: selectedSchedule,
+      price_plan_id: selectedPrice ? parseInt(selectedPrice.value) : null,
       start_date: document.getElementById('f_date').value || null,
       payment_method: document.getElementById('f_pay').value,
       preferred_time: document.getElementById('f_ptime').value.trim() || null,
@@ -996,23 +984,17 @@ document.getElementById('regForm').addEventListener('submit', async (e) => {
 
     const res = await fetch(`${API}/register`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     });
 
-    // jeśli backend zwróci HTML przy błędzie, nie wybuchaj
-    const ct = res.headers.get('content-type') || '';
-    const payload = ct.includes('application/json') ? await res.json() : { error: await res.text() };
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) { showMsg(data.error || `Błąd zapisu (HTTP ${res.status}). Spróbuj ponownie.`, 'error'); return; }
 
-    if (!res.ok) {
-      showMsg(payload.error || 'Błąd zapisu. Spróbuj ponownie.', 'error');
-      return;
-    }
-
-    showConfirmation(payload, first, last);
+    showConfirmation(data, first, last);
 
   } catch(err) {
-    showMsg(`Błąd połączenia. ${String(err.message || err)}`, 'error');
+    showMsg('Błąd połączenia. Sprawdź internet i spróbuj ponownie.', 'error');
   } finally {
     btn.disabled = false;
     spinner.style.display = 'none';
@@ -1020,46 +1002,33 @@ document.getElementById('regForm').addEventListener('submit', async (e) => {
   }
 });
 
-function clearMsg(){
-  const msg = document.getElementById('formMsg');
-  msg.className = 'form-msg';
-  msg.textContent = '';
-  msg.style.display = 'none';
-}
-
 function showMsg(text, type) {
   const msg = document.getElementById('formMsg');
   msg.textContent = text;
   msg.className = 'form-msg ' + type;
-  msg.style.display = 'block';
   msg.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
 function showConfirmation(data, first, last) {
-  const formSection = document.getElementById('formSection');
-  formSection.classList.remove('visible');
-  formSection.style.display = 'none';
+  document.getElementById('formSection').style.display = 'none';
 
   const box = document.getElementById('confirmBox');
-  const isWaitlist = !!data.is_waitlist;
+  const isWaitlist = data.is_waitlist;
 
   document.getElementById('confirmText').textContent = isWaitlist
     ? `Twój zapis na listę rezerwową został przyjęty, ${first}. Skontaktujemy się, gdy pojawi się wolne miejsce.`
     : `Dziękujemy za zapis, ${first}! Twoje zgłoszenie zostało przyjęte. Skontaktujemy się, aby potwierdzić miejsce w grupie.`;
 
-  document.getElementById('confirmRef').textContent = data.payment_ref || '—';
-
-  const div = document.getElementById('confirmTransfer');
-  div.style.display = 'none';
-  div.innerHTML = '';
+  document.getElementById('confirmRef').textContent = data.payment_ref || '';
 
   if (!isWaitlist && data.total_amount) {
+    const div = document.getElementById('confirmTransfer');
     div.innerHTML = `
       <div><span class="lbl">Kwota do wpłaty</span><br><span class="val" style="font-size:1.4rem;font-weight:900;color:var(--accent)">${parseFloat(data.total_amount).toFixed(2)} zł</span></div>
       <br>
-      <div><span class="lbl">Numer konta</span><br><span class="val">${data.bank_account || '—'}</span></div>
-      <div><span class="lbl">Odbiorca</span><br><span class="val">${data.bank_name || '—'}</span></div>
-      <div><span class="lbl">Tytuł przelewu</span><br><span class="val">${data.transfer_title || (data.payment_ref || '—')}</span></div>
+      <div><span class="lbl">Numer konta</span><br><span class="val">${data.bank_account || ''}</span></div>
+      <div><span class="lbl">Odbiorca</span><br><span class="val">${data.bank_name || ''}</span></div>
+      <div><span class="lbl">Tytuł przelewu</span><br><span class="val">${data.transfer_title || ''}</span></div>
       <br>
       <small style="color:var(--text-muted)">Przelew wyślij najpóźniej do ostatniego dnia poprzedzającego miesiąc rozliczeniowy.</small>
     `;
