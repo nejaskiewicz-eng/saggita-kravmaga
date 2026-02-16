@@ -68,7 +68,7 @@ thead th{background:var(--surface2);padding:11px 14px;text-align:left;font-size:
 tbody tr{border-top:1px solid var(--border);transition:background .1s}
 tbody tr:hover{background:var(--surface2)}
 tbody td{padding:11px 14px;font-size:13px;vertical-align:middle;color:var(--text)}
-.tda{display:flex;gap:5px}
+.tda{display:flex;gap:5px;flex-wrap:wrap}
 .badge{display:inline-block;padding:3px 8px;border-radius:4px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;line-height:1.4}
 .bg{background:var(--gr-bg);color:var(--green);border:1px solid var(--gr-bdr)}
 .br{background:var(--red-bg);color:#ff6b4a;border:1px solid var(--red-bdr)}
@@ -83,7 +83,7 @@ tbody td{padding:11px 14px;font-size:13px;vertical-align:middle;color:var(--text
 .pag button:hover:not(:disabled){border-color:var(--red);color:var(--bright)}.pag button:disabled{opacity:.3;cursor:not-allowed}
 .pag .pi{font-size:12px;color:var(--dim)}
 .mo{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(3px)}
-.md{background:var(--surface);border:1px solid var(--border2);border-radius:10px;width:100%;max-width:620px;max-height:92vh;overflow-y:auto;box-shadow:0 32px 80px rgba(0,0,0,.7)}
+.md{background:var(--surface);border:1px solid var(--border2);border-radius:10px;width:100%;max-width:720px;max-height:92vh;overflow-y:auto;box-shadow:0 32px 80px rgba(0,0,0,.7)}
 .mh{padding:18px 22px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--surface);z-index:1}
 .mh h3{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;color:var(--bright);text-transform:uppercase;letter-spacing:.05em}
 .mb{padding:22px}.mf{padding:14px 22px;border-top:1px solid var(--border);display:flex;gap:10px;justify-content:flex-end;background:var(--surface2);position:sticky;bottom:0}
@@ -178,7 +178,7 @@ select option{background:#1c1414}
 <div id="toasts"></div>
 
 <script>
-const API='/api/admin-api/';
+const API='/api/admin-api'; // BEZ końcowego /
 let TOKEN=localStorage.getItem('km_token')||'';
 let CV='dashboard',ro=0,rt=0;
 const RL=30;
@@ -186,7 +186,7 @@ let rf={};
 const DAYS=['Niedziela','Poniedziałek','Wtorek','Środa','Czwartek','Piątek','Sobota'];
 const CAT={kids:'Dzieci',youth:'Młodzież',adults:'Dorośli',vip:'VIP',women:'Kobiety'};
 
-// ✅ PEŁNE MAPOWANIE — zawiera też 'pending' z formularza
+// ✅ PEŁNE MAPOWANIE
 const PS={
   paid:'Opłacony', unpaid:'Nieopłacony', pending:'Oczekujący',
   partial:'Częściowy', waived:'Zwolniony'
@@ -196,8 +196,11 @@ const RS={new:'Nowy',confirmed:'Potwierdzony',cancelled:'Anulowany',completed:'Z
 async function aF(path,opts={}){
   const h={'Content-Type':'application/json'};
   if(TOKEN)h['Authorization']=`Bearer ${TOKEN}`;
+
+  const url = API + (path.startsWith('/') ? path : '/' + path);
+
   try{
-    const r=await fetch(API+path,{headers:h,...opts});
+    const r=await fetch(url,{headers:h,...opts});
     const d=await r.json().catch(()=>({error:'Błąd odpowiedzi serwera'}));
     if(!r.ok)throw new Error(d.error||`Błąd HTTP ${r.status}`);
     setAS(true);return d;
@@ -210,15 +213,20 @@ function showLogin(){document.getElementById('login-screen').style.display='flex
 function showApp(){
   document.getElementById('login-screen').style.display='none';
   document.getElementById('app').style.display='flex';
-  try{const u=JSON.parse(atob(TOKEN.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));document.getElementById('admin-username').textContent=u.username||'—';}catch{}
+  try{
+    const u=JSON.parse(atob(TOKEN.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));
+    document.getElementById('admin-username').textContent=u.username||'—';
+  }catch{}
   navigate('dashboard');
 }
 document.getElementById('login-btn').addEventListener('click',async()=>{
   const u=document.getElementById('l-user').value.trim(),p=document.getElementById('l-pass').value;
   const e=document.getElementById('login-error');e.style.display='none';
   if(!u||!p){e.textContent='Podaj login i hasło.';e.style.display='block';return;}
-  try{const d=await aF('/login',{method:'POST',body:JSON.stringify({username:u,password:p})});TOKEN=d.token;localStorage.setItem('km_token',TOKEN);showApp();}
-  catch(err){e.textContent=err.message;e.style.display='block';}
+  try{
+    const d=await aF('/login',{method:'POST',body:JSON.stringify({username:u,password:p})});
+    TOKEN=d.token;localStorage.setItem('km_token',TOKEN);showApp();
+  }catch(err){e.textContent=err.message;e.style.display='block';}
 });
 document.getElementById('l-pass').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('login-btn').click();});
 document.getElementById('btn-logout').addEventListener('click',()=>{TOKEN='';localStorage.removeItem('km_token');showLogin();});
@@ -266,6 +274,7 @@ async function loadDash(){
       <div class="sc orange"><div class="label">Oczekujący</div><div class="value">${d.pending||0}</div></div>
       <div class="sc"><div class="label">Lista rezerwowa</div><div class="value">${d.waitlist||0}</div></div>
     </div>
+
     <div class="sh"><h3>Obłożenie lokalizacji</h3></div>
     <div class="tw" style="margin-bottom:28px"><table>
       <thead><tr><th>Miasto</th><th>Łącznie</th><th>Opłaceni</th><th>Oczekujący</th><th>Rezerwowa</th></tr></thead>
@@ -276,6 +285,7 @@ async function loadDash(){
         <td>${l.pending}</td><td>${l.waitlist}</td>
       </tr>`).join('')}</tbody>
     </table></div>
+
     <div class="sh"><h3>Obłożenie grup</h3></div>
     <div class="tw" style="margin-bottom:28px"><table>
       <thead><tr><th>Miasto</th><th>Grupa</th><th>Obłożenie</th><th></th></tr></thead>
@@ -285,6 +295,7 @@ async function loadDash(){
         <td><button class="bi" onclick="navigate('groups')">Edytuj</button></td>
       </tr>`).join('')}</tbody>
     </table></div>
+
     <div class="sh"><h3>Ostatnie zapisy</h3></div>
     <div class="tw"><table>
       <thead><tr><th>Kursant</th><th>Miasto</th><th>Grupa</th><th>Status</th><th>Płatność</th><th>Data</th><th></th></tr></thead>
@@ -293,20 +304,20 @@ async function loadDash(){
         <td>${r.city||'—'}</td><td>${r.group_name||'—'}</td>
         <td>${sb(r.status)}</td><td>${pb(r.payment_status)}</td>
         <td style="color:var(--dim);font-size:12px">${fdt(r.created_at)}</td>
-        <td><button class="bi" onclick="openKartoteka(${r.id})">Kartoteka</button></td>
+        <td><button class="bi" onclick="openKartoteka(${r.id},'view')">Kartoteka</button></td>
       </tr>`).join('')}</tbody>
     </table></div>`;
   }catch(e){c.innerHTML=`<div class="empty"><strong>Błąd ładowania</strong>${e.message}</div>`;}
 }
 
 // ═══════════════════════════════════════════════════════
-// KARTOTEKA — pełna karta kursanta (podgląd + edycja)
+// KARTOTEKA
 // ═══════════════════════════════════════════════════════
 async function openKartoteka(id, mode='view'){
   let r, groups=[], plans=[];
   try{
     [r, {rows:groups}, {rows:plans}] = await Promise.all([
-     aF(`/registrations/${id}?_=${Date.now()}`),
+      aF(`/registrations/${id}?_=${Date.now()}`),
       aF('/groups'),
       aF('/plans'),
     ]);
@@ -318,9 +329,6 @@ async function openKartoteka(id, mode='view'){
   const isEdit = mode==='edit';
   const fld=(id,val,type='text',opts='')=>isEdit
     ?`<input id="${id}" type="${type}" value="${val||''}" ${opts}>`
-    :`<div class="view-val">${val||'—'}</div>`;
-  const sel=(id,val,options)=>isEdit
-    ?`<select id="${id}">${options}</select>`
     :`<div class="view-val">${val||'—'}</div>`;
   const txt=(id,val)=>isEdit
     ?`<textarea id="${id}">${val||''}</textarea>`
@@ -421,12 +429,11 @@ async function saveKartoteka(id){
     status:document.getElementById('k-st')?.value,
     admin_notes:document.getElementById('k-nt')?.value||null,
   };
-  // usuń undefined
   Object.keys(b).forEach(k=>{if(b[k]===undefined)delete b[k];});
   try{
     await aF(`/registrations/${id}?_=${Date.now()}`,{method:'PATCH',body:JSON.stringify(b)});
     toast('Kartoteka zapisana');
-    openKartoteka(id,'view'); // wróć do podglądu
+    openKartoteka(id,'view');
     if(CV==='web-registrations')fetchR('web');
     if(CV==='participants')fetchR('admin');
     if(CV==='dashboard')loadDash();
@@ -452,13 +459,13 @@ async function loadReg(src){
         <option value="confirmed">Potwierdzony</option><option value="cancelled">Anulowany</option><option value="completed">Zakończony</option>
       </select>
       <select id="f-p">
-  <option value="">Płatność: wszystkie</option>
-  <option value="paid">Opłacony</option>
-  <option value="unpaid">Nieopłacony</option>
-  <option value="pending">Oczekujący</option>
-  <option value="partial">Częściowy</option>
-  <option value="waived">Zwolniony</option>
-</select>
+        <option value="">Płatność: wszystkie</option>
+        <option value="paid">Opłacony</option>
+        <option value="unpaid">Nieopłacony</option>
+        <option value="pending">Oczekujący</option>
+        <option value="partial">Częściowy</option>
+        <option value="waived">Zwolniony</option>
+      </select>
       <select id="f-w"><option value="">Lista: wszystkie</option><option value="false">Aktywni</option><option value="true">Rezerwowa</option></select>
       <button class="btn btn-secondary btn-sm" onclick="apF('${src}')">Filtruj</button>
       <button class="btn btn-secondary btn-sm" onclick="rstF('${src}')">Reset</button>
@@ -468,7 +475,6 @@ async function loadReg(src){
   ro=0;rf={source:src};
   await fetchR(src);
 }
-
 function apF(src){
   rf={source:src,search:document.getElementById('f-s')?.value||'',status:document.getElementById('f-st')?.value||'',payment_status:document.getElementById('f-p')?.value||'',waitlist:document.getElementById('f-w')?.value||''};
   Object.keys(rf).forEach(k=>{if(!rf[k])delete rf[k];});rf.source=src;ro=0;fetchR(src);
@@ -506,10 +512,9 @@ async function fetchR(src){
           <td>${pb(r.payment_status)}</td>
           <td style="font-size:11px;color:var(--dim)">${fd(r.created_at)}</td>
           <td><div class="tda">
-  <button class="bi" onclick="openGroupMembers(${g.id}, '${g.name.replace(/'/g,"\\'")}')">Kursanci</button>
-  <button class="bi" onclick='showEditG(${JSON.stringify(g)})'>Edytuj</button>
-  <button class="bi del" onclick="delG(${g.id},'${g.name.replace(/'/g,"\\'")}')">Usuń</button>
-</div></td>
+            <button class="bi" onclick="openKartoteka(${r.id},'view')">Kartoteka</button>
+            <button class="bi del" onclick="delR(${r.id},'${r.first_name} ${r.last_name}','${src}')">Usuń</button>
+          </div></td>
         </tr>`).join('')}</tbody>
       </table></div>
       <div class="pag">
@@ -570,7 +575,21 @@ async function loadAdd(){
 async function submitAdd(){
   const fn=document.getElementById('np-fn').value.trim(),ln=document.getElementById('np-ln').value.trim(),gid=document.getElementById('np-gr').value;
   if(!fn||!ln||!gid){toast('Imię, nazwisko i grupa są wymagane','error');return;}
-  const b={first_name:fn,last_name:ln,email:document.getElementById('np-em').value||null,phone:document.getElementById('np-ph').value||null,birth_year:parseInt(document.getElementById('np-by').value)||null,start_date:document.getElementById('np-sd').value||null,group_id:parseInt(gid),price_plan_id:parseInt(document.getElementById('np-pl').value)||null,payment_method:document.getElementById('np-pm').value,total_amount:parseFloat(document.getElementById('np-am').value)||0,payment_status:document.getElementById('np-ps').value,is_new:document.getElementById('np-in').value==='true',admin_notes:document.getElementById('np-nt').value||null,status:'confirmed'};
+  const b={
+    first_name:fn,last_name:ln,
+    email:document.getElementById('np-em').value||null,
+    phone:document.getElementById('np-ph').value||null,
+    birth_year:parseInt(document.getElementById('np-by').value)||null,
+    start_date:document.getElementById('np-sd').value||null,
+    group_id:parseInt(gid),
+    price_plan_id:parseInt(document.getElementById('np-pl').value)||null,
+    payment_method:document.getElementById('np-pm').value,
+    total_amount:parseFloat(document.getElementById('np-am').value)||0,
+    payment_status:document.getElementById('np-ps').value,
+    is_new:document.getElementById('np-in').value==='true',
+    admin_notes:document.getElementById('np-nt').value||null,
+    status:'confirmed'
+  };
   try{const d=await aF('/participant',{method:'POST',body:JSON.stringify(b)});toast(`Dodano: ${d.name}`);navigate('participants');}
   catch(e){toast(e.message,'error');}
 }
@@ -593,9 +612,10 @@ async function loadGroups(){
           <td>${capB(g.registered_count||0,g.max_capacity)}</td>
           <td>${g.active?'<span class="badge bg">Aktywna</span>':'<span class="badge bx">Nieaktywna</span>'}</td>
           <td><div class="tda">
+            <button class="bi" onclick="openGroupMembers(${g.id},'${(g.name||'').replace(/'/g,"\\'")}')">Ludzie</button>
             <button class="bi" onclick='showEditG(${JSON.stringify(g)})'>Edytuj</button>
-            <button class="bi del" onclick="delG(${g.id},'${g.name.replace(/'/g,"\\'")}')">Usuń</button><button class="bi" onclick="openGroupMembers(${g.id},'${g.name.replace(/'/g,"\\'")}')">Ludzie</button>
-          </div></td> 
+            <button class="bi del" onclick="delG(${g.id},'${(g.name||'').replace(/'/g,"\\'")}')">Usuń</button>
+          </div></td>
         </tr>`).join(''):`<tr><td colspan="7"><div class="empty"><strong>Brak grup</strong></div></td></tr>`}</tbody>
       </table></div>`;
   }catch(e){c.innerHTML=`<div class="empty"><strong>Błąd</strong>${e.message}</div>`;}
@@ -619,8 +639,17 @@ async function showAddG(){
 async function submitAddG(){
   const n=document.getElementById('ng-n').value.trim(),l=document.getElementById('ng-l').value;
   if(!n||!l){toast('Nazwa i lokalizacja są wymagane','error');return;}
-  try{await aF('/groups',{method:'POST',body:JSON.stringify({name:n,location_id:parseInt(l),category:document.getElementById('ng-c').value,age_range:document.getElementById('ng-a').value||null,max_capacity:parseInt(document.getElementById('ng-m').value)||20,active:document.getElementById('ng-ac').value==='true',notes:document.getElementById('ng-nt').value||null})});toast('Grupa dodana');closeModal();loadGroups();}
-  catch(e){toast(e.message,'error');}
+  try{
+    await aF('/groups',{method:'POST',body:JSON.stringify({
+      name:n,location_id:parseInt(l),
+      category:document.getElementById('ng-c').value,
+      age_range:document.getElementById('ng-a').value||null,
+      max_capacity:parseInt(document.getElementById('ng-m').value)||20,
+      active:document.getElementById('ng-ac').value==='true',
+      notes:document.getElementById('ng-nt').value||null
+    })});
+    toast('Grupa dodana');closeModal();loadGroups();
+  }catch(e){toast(e.message,'error');}
 }
 async function showEditG(g){
   const lO=await getLoc(g.location_id);
@@ -639,8 +668,18 @@ async function showEditG(g){
 }
 async function submitEditG(id){
   const n=document.getElementById('eg-n').value.trim();if(!n){toast('Nazwa jest wymagana','error');return;}
-  try{await aF(`/groups/${id}`,{method:'PATCH',body:JSON.stringify({name:n,location_id:parseInt(document.getElementById('eg-l').value),category:document.getElementById('eg-c').value,age_range:document.getElementById('eg-a').value||null,max_capacity:parseInt(document.getElementById('eg-m').value)||20,active:document.getElementById('eg-ac').value==='true',notes:document.getElementById('eg-nt').value||null})});toast('Grupa zaktualizowana');closeModal();loadGroups();}
-  catch(e){toast(e.message,'error');}
+  try{
+    await aF(`/groups/${id}`,{method:'PATCH',body:JSON.stringify({
+      name:n,
+      location_id:parseInt(document.getElementById('eg-l').value),
+      category:document.getElementById('eg-c').value,
+      age_range:document.getElementById('eg-a').value||null,
+      max_capacity:parseInt(document.getElementById('eg-m').value)||20,
+      active:document.getElementById('eg-ac').value==='true',
+      notes:document.getElementById('eg-nt').value||null
+    })});
+    toast('Grupa zaktualizowana');closeModal();loadGroups();
+  }catch(e){toast(e.message,'error');}
 }
 async function delG(id,name){
   if(!confirm(`Usunąć grupę "${name}"?\nGrupa musi być pusta.`))return;
@@ -748,12 +787,19 @@ async function submitEditL(id){
   catch(e){toast(e.message,'error');}
 }
 
-checkLogin();
-  async function openGroupMembers(groupId, groupName){
+// ═══════════════════════════════════════════════════════
+// GROUP MEMBERS (LUDZIE W GRUPIE)
+// ═══════════════════════════════════════════════════════
+let _gm = { id: null, name: '' };
+
+async function openGroupMembers(groupId, groupName){
+  _gm = { id: groupId, name: groupName || '' };
+
   try{
     const { rows } = await aF(`/groups/${groupId}/members`);
+
     const body = `
-      <div class="ib"><strong>${groupName}</strong> — kursanci przypisani do grupy.</div>
+      <div class="ib"><strong>${_gm.name || 'Grupa'}</strong> — kursanci przypisani do grupy.</div>
 
       <div class="fb" style="margin-bottom:12px">
         <input type="text" id="gm-search" placeholder="Dodaj kursanta: wpisz imię/email/tel i Enter…"/>
@@ -762,30 +808,35 @@ checkLogin();
 
       <div id="gm-results" style="margin-bottom:14px"></div>
 
-     <div class="tw"><table>
-  <thead>
-    <tr>
-      <th>ID</th><th>Kursant</th><th>Kontakt</th><th>Status</th><th>Płatność</th><th>Akcje</th>
-    </tr>
-  </thead>
-  <tbody>
-    ${rows.length ? rows.map(r=>`
-      <tr>
-        <td style="color:var(--muted);font-size:11px">#${r.id}</td>
-        <td><strong style="color:var(--bright)">${r.first_name} ${r.last_name}</strong></td>
-        <td style="font-size:12px">${r.email||'—'}${r.phone?`<br><span style="color:var(--dim)">${r.phone}</span>`:''}</td>
-        <td>${sb(r.status)}</td>
-        <td>${pb(r.payment_status)}</td>
-        <td>
-          <div class="tw"><table> <thead><tr><th>ID</th><th>Kursant</th><th>Kontakt</th><th>Status</th><th>Płatność</th><th>Akcje</th></tr></thead> <tbody> ${rows.length ? rows.map(r=> <tr> <td style="color:var(--muted);font-size:11px">#${r.id}</td> <td><strong style="color:var(--bright)">${r.first_name} ${r.last_name}</strong></td> <td style="font-size:12px">${r.email||'—'}${r.phone?<br><span style="color:var(--dim)">${r.phone}</span>:''}</td> <td>${sb(r.status)}</td> <td>${pb(r.payment_status)}</td> <td> <div class="tda"> <button class="bi" onclick="openKartoteka(${r.id},'view')">Kartoteka</button> <button class="bi del" onclick="gmRemoveFromGroup(${groupId},${r.id})">Usuń z grupy</button> </div>
+      <div class="tw"><table>
+        <thead>
+          <tr><th>ID</th><th>Kursant</th><th>Kontakt</th><th>Status</th><th>Płatność</th><th>Akcje</th></tr>
+        </thead>
+        <tbody>
+          ${rows.length ? rows.map(r=>`
+            <tr>
+              <td style="color:var(--muted);font-size:11px">#${r.id}</td>
+              <td><strong style="color:var(--bright)">${r.first_name} ${r.last_name}</strong></td>
+              <td style="font-size:12px">
+                ${r.email||'—'}${r.phone?`<br><span style="color:var(--dim)">${r.phone}</span>`:''}
+              </td>
+              <td>${sb(r.status)}</td>
+              <td>${pb(r.payment_status)}</td>
+              <td>
+                <div class="tda">
+                  <button class="bi" onclick="openKartoteka(${r.id},'view')">Kartoteka</button>
+                  <button class="bi del" onclick="gmRemoveFromGroup(${groupId},${r.id})">Usuń z grupy</button>
+                </div>
               </td>
             </tr>
           `).join('') : `<tr><td colspan="6"><div class="empty"><strong>Brak kursantów w tej grupie</strong></div></td></tr>`}
         </tbody>
       </table></div>
     `;
-    showModal(`Kursanci — ${groupName}`, body, `<button class="btn btn-secondary" onclick="closeModal()">Zamknij</button>`);
+
+    showModal(`Kursanci — ${_gm.name || ''}`, body, `<button class="btn btn-secondary" onclick="closeModal()">Zamknij</button>`);
     document.getElementById('gm-search')?.addEventListener('keydown',e=>{ if(e.key==='Enter') gmFind(groupId); });
+
   }catch(e){
     toast('Błąd: '+e.message,'error');
   }
@@ -796,7 +847,7 @@ async function gmRemoveFromGroup(groupId, regId){
   try{
     await aF(`/registrations/${regId}`, { method:'PATCH', body: JSON.stringify({ group_id: null }) });
     toast('Usunięto z grupy');
-    openGroupMembers(groupId,'');
+    openGroupMembers(groupId, _gm.name);
   }catch(e){
     toast('Błąd: '+e.message,'error');
   }
@@ -810,7 +861,6 @@ async function gmFind(groupId){
   box.innerHTML = `<div class="loader"><div class="spinner"></div> Szukam…</div>`;
 
   try{
-    // wykorzystujemy istniejące /registrations?search=...
     const data = await aF(`/registrations?` + new URLSearchParams({ search:q, limit: 10, offset: 0 }).toString());
     const rows = data.rows || [];
 
@@ -822,7 +872,9 @@ async function gmFind(groupId){
             <tr>
               <td style="color:var(--muted);font-size:11px">#${r.id}</td>
               <td><strong style="color:var(--bright)">${r.first_name} ${r.last_name}</strong></td>
-              <td style="font-size:12px">${r.email||'—'}${r.phone?`<br><span style="color:var(--dim)">${r.phone}</span>`:''}</td>
+              <td style="font-size:12px">
+                ${r.email||'—'}${r.phone?`<br><span style="color:var(--dim)">${r.phone}</span>`:''}
+              </td>
               <td>
                 <div class="tda">
                   <button class="bi" onclick="gmAddToGroup(${groupId},${r.id})">Dodaj do grupy</button>
@@ -843,12 +895,13 @@ async function gmAddToGroup(groupId, regId){
   try{
     await aF(`/registrations/${regId}`, { method:'PATCH', body: JSON.stringify({ group_id: groupId }) });
     toast('Dodano do grupy');
-    openGroupMembers(groupId,'');
+    openGroupMembers(groupId, _gm.name);
   }catch(e){
     toast('Błąd: '+e.message,'error');
   }
 }
 
+checkLogin();
 </script>
 </body>
 </html>
