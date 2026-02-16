@@ -759,7 +759,10 @@ async function loadLocations(){
           <td><span class="badge bb">${l.groups_count}</span></td>
           <td><strong>${l.registrations_count}</strong></td>
           <td>${l.active?'<span class="badge bg">Aktywna</span>':'<span class="badge bx">Nieaktywna</span>'}</td>
-          <td><button class="bi" onclick='showEditL(${JSON.stringify(l)})'>Edytuj</button></td>
+          <td><div class="tda">
+  <button class="bi" onclick='showEditL(${JSON.stringify(l)})'>Edytuj</button>
+  <button class="bi" onclick='openLocationManage(${JSON.stringify(l)})'>Grupy i grafik</button>
+</div></td>
         </tr>`).join(''):`<tr><td colspan="8"><div class="empty"><strong>Brak lokalizacji</strong></div></td></tr>`}</tbody>
       </table></div>`;
   }catch(e){c.innerHTML=`<div class="empty"><strong>Błąd</strong>${e.message}</div>`;}
@@ -898,6 +901,213 @@ async function gmAddToGroup(groupId, regId){
     openGroupMembers(groupId, _gm.name);
   }catch(e){
     toast('Błąd: '+e.message,'error');
+  }
+}
+let _lm = { loc: null };
+
+async function openLocationManage(loc){
+  _lm.loc = loc;
+  await lmRender();
+}
+
+async function lmRender(){
+  const loc = _lm.loc;
+  if(!loc) return;
+
+  try{
+    const [{rows:groups},{rows:schedules}] = await Promise.all([aF('/groups'), aF('/schedules')]);
+
+    const inLoc = groups.filter(g=>g.location_id==loc.id);
+    const outLoc = groups.filter(g=>g.location_id!=loc.id);
+
+    const schedInLoc = schedules.filter(s => inLoc.some(g => g.id == s.group_id));
+
+    const body = `
+      <div class="ib"><strong>${loc.city} — ${loc.name}</strong><br/>Tu podpinasz grupy do lokalizacji i ustawiasz grafik dla grup w tej lokalizacji.</div>
+
+      <div class="ksec">
+        <div class="ksec-title">Grupy w tej lokalizacji</div>
+        <div class="tw"><table>
+          <thead><tr><th>Nazwa</th><th>Kategoria</th><th>Obłożenie</th><th>Akcje</th></tr></thead>
+          <tbody>
+            ${inLoc.length ? inLoc.map(g=>`
+              <tr>
+                <td><strong style="color:var(--bright)">${g.name}</strong></td>
+                <td>${CAT[g.category]||g.category}</td>
+                <td>${capB(g.registered_count||0,g.max_capacity)}</td>
+                <td><div class="tda">
+                  <button class="bi" onclick="showEditG(${JSON.stringify(g)})">Edytuj grupę</button>
+                  <button class="bi del" onclick="lmMoveGroup(${g.id}, null)">Odepnij</button>
+                </div></td>
+              </tr>
+            `).join('') : `<tr><td colspan="4"><div class="empty"><strong>Brak grup</strong></div></td></tr>`}
+          </tbody>
+        </table></div>
+      </div>
+
+      <div class="ksec">
+        <div class="ksec-title">Podepnij istniejącą grupę do lokalizacji</div>
+        <div class="fb" style="margin-bottom:10px">
+          <select id="lm-pick" style="min-width:320px">
+            <option value="">— wybierz grupę —</option>
+            ${outLoc.map(g=>`<option value="${g.id}">${g.city||'—'} — ${g.name}</option>`).join('')}
+          </select>
+          <button class="btn btn-secondary btn-sm" onclick="lmAttachPicked()">Podepnij</button>
+          <button class="btn btn-secondary btn-sm" onclick="showAddG()">+ Nowa grupa</button>
+        </div>
+        <div style="font-size:12px;color:var(--dim)">Nowa grupa: dodaj ją normalnie, potem podepnij tutaj (albo od razu wybierz lokalizację w formularzu grupy).</div>
+      </div>
+
+      <div class="ksec">
+        <div class="ksec-title">Grafik zajęć (dla grup z tej lokalizacji)</div>
+
+        <div class="sh" style="margin-top:6px">
+          <h3 style="border-left:3px solid var(--red);padding-left:10px">Terminy</h3>
+          <button class="btn btn-primary" onclick='lmAddSchedule()'>+ Nowy termin</button>
+        </div>
+
+        <div class="tw"><table>
+          <thead><tr><th>Dzień</th><th>Godzina</th><th>Grupa</th><th>Adres</th><th>Status</th><th>Akcje</th></tr></thead>
+          <tbody>
+            ${schedInLoc.length ? schedInLoc.map(s=>`
+              <tr>
+                <td>${DAYS[s.day_of_week]||s.day_of_week}</td>
+                <td><strong style="color:var(--bright)">${s.time_start?s.time_start.slice(0,5):'—'}${s.time_end?' – '+s.time_end.slice(0,5):''}</strong></td>
+                <td>${s.group_name||'—'} <span class="badge bx">${CAT[s.category]||''}</span></td>
+                <td style="font-size:12px;color:var(--dim)">${s.address||'—'}</td>
+                <td>${s.active?'<span class="badge bg">Aktywny</span>':'<span class="badge bx">Nieaktywny</span>'}</td>
+                <td><div class="tda">
+                  <button class="bi" onclick='lmEditSchedule(${JSON.stringify(s)})'>Edytuj</button>
+                  <button class="bi del" onclick="lmDelSchedule(${s.id})">Usuń</button>
+                </div></td>
+              </tr>
+            `).join('') : `<tr><td colspan="6"><div class="empty"><strong>Brak terminów dla tej lokalizacji</strong></div></td></tr>`}
+          </tbody>
+        </table></div>
+      </div>
+    `;
+
+    showModal(
+      `Lokalizacja — ${loc.city}`,
+      body,
+      `<button class="btn btn-secondary" onclick="closeModal()">Zamknij</button>`
+    );
+
+  }catch(e){
+    toast('Błąd: '+e.message,'error');
+  }
+}
+
+async function lmAttachPicked(){
+  const loc = _lm.loc;
+  const gid = parseInt(document.getElementById('lm-pick')?.value || '0', 10);
+  if(!gid){ toast('Wybierz grupę','error'); return; }
+  await lmMoveGroup(gid, loc.id);
+}
+
+async function lmMoveGroup(groupId, locationId){
+  try{
+    await aF(`/groups/${groupId}`, { method:'PATCH', body: JSON.stringify({ location_id: locationId }) });
+    toast(locationId ? 'Grupa podpięta' : 'Grupa odpięta');
+    await lmRender();
+    if(CV==='groups') loadGroups();
+    if(CV==='locations') loadLocations();
+  }catch(e){
+    toast('Błąd: '+e.message,'error');
+  }
+}
+
+async function lmAddSchedule(){
+  try{
+    const loc = _lm.loc;
+    const { rows:groups } = await aF('/groups');
+    const inLoc = groups.filter(g=>g.location_id==loc.id);
+
+    if(!inLoc.length){ toast('Najpierw podepnij grupę do lokalizacji','error'); return; }
+
+    showModal(
+      'Nowy termin (ta lokalizacja)',
+      sForm(null, inLoc),
+      `<button class="btn btn-secondary" onclick="closeModal()">Anuluj</button>
+       <button class="btn btn-primary" onclick="lmSubmitAddSchedule()">Dodaj termin</button>`
+    );
+  }catch(e){
+    toast('Błąd: '+e.message,'error');
+  }
+}
+
+async function lmSubmitAddSchedule(){
+  const gid=document.getElementById('sf-g').value;
+  if(!gid){toast('Wybierz grupę','error');return;}
+  try{
+    await aF('/schedules',{
+      method:'POST',
+      body:JSON.stringify({
+        group_id:parseInt(gid),
+        day_of_week:parseInt(document.getElementById('sf-d').value),
+        time_start:document.getElementById('sf-ts').value||null,
+        time_end:document.getElementById('sf-te').value||null,
+        address:document.getElementById('sf-a').value||null,
+        active:document.getElementById('sf-ac').value==='true'
+      })
+    });
+    toast('Termin dodany');
+    closeModal();
+    await lmRender();
+    if(CV==='schedules') loadSchedules();
+  }catch(e){
+    toast(e.message,'error');
+  }
+}
+
+async function lmEditSchedule(s){
+  try{
+    const loc = _lm.loc;
+    const { rows:groups } = await aF('/groups');
+    const inLoc = groups.filter(g=>g.location_id==loc.id);
+
+    showModal(
+      'Edycja terminu (ta lokalizacja)',
+      sForm(s, inLoc),
+      `<button class="btn btn-secondary" onclick="closeModal()">Anuluj</button>
+       <button class="btn btn-primary" onclick="lmSubmitEditSchedule(${s.id})">Zapisz</button>`
+    );
+  }catch(e){
+    toast(e.message,'error');
+  }
+}
+
+async function lmSubmitEditSchedule(id){
+  try{
+    await aF(`/schedules/${id}`,{
+      method:'PATCH',
+      body:JSON.stringify({
+        group_id:parseInt(document.getElementById('sf-g').value),
+        day_of_week:parseInt(document.getElementById('sf-d').value),
+        time_start:document.getElementById('sf-ts').value||null,
+        time_end:document.getElementById('sf-te').value||null,
+        address:document.getElementById('sf-a').value||null,
+        active:document.getElementById('sf-ac').value==='true'
+      })
+    });
+    toast('Termin zaktualizowany');
+    closeModal();
+    await lmRender();
+    if(CV==='schedules') loadSchedules();
+  }catch(e){
+    toast(e.message,'error');
+  }
+}
+
+async function lmDelSchedule(id){
+  if(!confirm('Usunąć ten termin?')) return;
+  try{
+    await aF(`/schedules/${id}`,{method:'DELETE'});
+    toast('Termin usunięty');
+    await lmRender();
+    if(CV==='schedules') loadSchedules();
+  }catch(e){
+    toast(e.message,'error');
   }
 }
 
