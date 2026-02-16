@@ -159,8 +159,7 @@ body::before{
 .badge--closed{color:#888;border-color:rgba(255,255,255,0.12);background:rgba(0,0,0,0.28);}
 
 /* ─────────────────────────────────────────────────────────────
-   WOW SCHEDULE: DESKTOP = HORIZONTAL, MOBILE = VERTICAL
-   (NAPRAWIONE: brak duplikatów, timeline jest flex)
+   SLOTS SHELL (background & accents)
    ───────────────────────────────────────────────────────────── */
 
 .group-card__slots{
@@ -191,163 +190,169 @@ body::before{
   opacity:.9;
 }
 
-/* TIMELINE (bazowo) */
-.timeline{
+/* ─────────────────────────────────────────
+   WEEKLY CALENDAR (WOW)
+   Desktop: columns = days (tylko użyte)
+   Mobile: stacked day sections
+   ───────────────────────────────────────── */
+
+.weekcal{
   position:relative;
-  display:flex;
-  gap:12px;
-  padding:6px 0 0;
-  align-items:stretch;
-}
-.timeline::before{
-  content:'';
-  position:absolute;
-  left:0; right:0; top:28px;
-  height:2px;
-  background:linear-gradient(90deg,
-    rgba(var(--accent-rgb),0.00),
-    rgba(var(--accent-rgb),0.55),
-    rgba(var(--accent-rgb),0.00)
-  );
-  pointer-events:none;
-  opacity:.9;
+  padding:0;
 }
 
-/* SLOT (kafelek) */
-.slot{
+.weekcal::before{
+  content:'';
+  position:absolute; inset:0;
+  background:
+    radial-gradient(420px 220px at 12% 30%, rgba(var(--accent-rgb),0.10), transparent 60%),
+    radial-gradient(520px 260px at 82% 40%, rgba(255,255,255,0.06), transparent 65%),
+    linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px),
+    linear-gradient(0deg, rgba(255,255,255,0.05) 1px, transparent 1px);
+  background-size:auto, auto, 80px 1px, 1px 64px;
+  opacity:.18;
+  pointer-events:none;
+}
+
+.weekcal__grid{
   position:relative;
-  min-width:280px;
-  flex:0 0 280px;
-  background:rgba(0,0,0,0.26);
+  display:grid;
+  gap:12px;
+  align-items:stretch;
+}
+
+/* desktop: kolumny dni */
+@media(min-width:860px){
+  .weekcal__grid{
+    grid-template-columns:repeat(var(--days, 3), 1fr);
+  }
+}
+
+.weekcal__day{
   border:1px solid rgba(255,255,255,0.10);
-  padding:14px 14px 14px 14px;
+  background:rgba(0,0,0,0.22);
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+  min-height:120px;
+}
+
+.weekcal__dayHead{
+  padding:12px 12px;
+  border-bottom:1px solid rgba(255,255,255,0.08);
+  background:rgba(0,0,0,0.26);
+  font-family:'Montserrat',sans-serif;
+  font-weight:700;
+  font-size:.72rem;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+  color:rgba(255,255,255,0.88);
+  position:relative;
+}
+
+.weekcal__dayHead::after{
+  content:'';
+  position:absolute; left:0; right:0; bottom:0; height:2px;
+  background:linear-gradient(90deg, rgba(var(--accent-rgb),0.75), transparent 70%);
+  opacity:.65;
+}
+
+.weekcal__dayBody{
+  padding:12px 12px 14px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  flex:1;
+}
+
+.weekcal__slot{
+  position:relative;
+  border:1px solid rgba(255,255,255,0.12);
+  background:rgba(0,0,0,0.28);
+  padding:12px 12px 12px 12px;
   cursor:pointer;
   transition:transform 180ms ease, border-color 180ms ease, background 180ms ease;
   overflow:hidden;
 }
 
-/* “kropka” na linii */
-.slot::before{
+.weekcal__slot::before{
   content:'';
-  position:absolute;
-  top:20px;
-  left:14px;
-  width:14px;height:14px;border-radius:50%;
-  background:rgba(0,0,0,0.55);
-  border:2px solid rgba(var(--accent-rgb),0.85);
-  box-shadow:0 0 0 6px rgba(var(--accent-rgb),0.10);
+  position:absolute; inset:-50px -70px auto auto;
+  width:190px; height:190px;
+  background:linear-gradient(135deg, rgba(var(--accent-rgb),0.22), transparent 65%);
+  transform:rotate(10deg);
+  opacity:.55;
 }
-.slot:hover{
+
+.weekcal__slot:hover{
   transform:translateY(-2px);
   border-color:rgba(var(--accent-rgb),0.55);
   background:rgba(var(--accent-rgb),0.06);
 }
-.slot:hover::before{box-shadow:0 0 0 7px rgba(var(--accent-rgb),0.14);}
-.slot.selected{
+
+.weekcal__slot.selected{
   border-color:rgba(var(--accent-rgb),0.85);
   background:rgba(var(--accent-rgb),0.10);
-  box-shadow:var(--glow);
-}
-.slot.selected::before{
-  background:var(--accent);
-  border-color:rgba(255,255,255,0.20);
-  box-shadow:0 0 0 8px rgba(var(--accent-rgb),0.18);
+  box-shadow:0 12px 60px rgba(var(--accent-rgb),0.14);
 }
 
-/* zamknięte */
-.slot--closed{cursor:default;opacity:.55;}
-.slot--closed:hover{transform:none;border-color:rgba(255,255,255,0.10);background:rgba(0,0,0,0.26);}
-.slot--closed::before{border-color:rgba(255,255,255,0.22);box-shadow:none;}
-
-/* wnętrze */
-.slot__top{
-  padding-left:28px;
-  display:flex;
-  align-items:flex-start;
-  justify-content:space-between;
-  gap:10px;
-}
-.slot__day{
-  font-family:'Montserrat',sans-serif;font-weight:700;
-  font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;
-  color:rgba(255,255,255,0.92);
-}
-.slot__time{
+.weekcal__time{
   font-weight:800;
-  font-size:1.12rem;
-  color:rgba(255,255,255,0.96);
-  margin-top:4px;
+  font-size:1.06rem;
+  color:#fff;
 }
-.slot__time em{font-style:normal;color:var(--accent);}
-.slot__addr{
+.weekcal__time em{font-style:normal;color:var(--accent);}
+
+.weekcal__addr{
   margin-top:8px;
-  font-weight:700;font-size:.74rem;
+  font-weight:700;
+  font-size:.74rem;
   color:var(--muted);
   line-height:1.35;
   max-width:34ch;
 }
 
-.slot__btn{
-  flex-shrink:0;
-  font-weight:800;font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;
+.weekcal__btn{
+  margin-top:10px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:800;
+  font-size:.62rem;
+  letter-spacing:.14em;
+  text-transform:uppercase;
   color:rgba(255,255,255,0.88);
   border:1px solid rgba(255,255,255,0.18);
   padding:8px 10px;
   background:rgba(0,0,0,0.24);
   transition:background 180ms ease, border-color 180ms ease, color 180ms ease;
+  width:max-content;
   white-space:nowrap;
 }
-.slot:hover .slot__btn{
+.weekcal__slot:hover .weekcal__btn{
   border-color:rgba(var(--accent-rgb),0.65);
   background:rgba(var(--accent-rgb),0.12);
   color:#fff;
 }
-.slot.selected .slot__btn{
+.weekcal__slot.selected .weekcal__btn{
   border-color:rgba(var(--accent-rgb),0.90);
   background:rgba(var(--accent-rgb),0.18);
   color:#fff;
 }
 
-/* desktop: poziomy scroll */
-@media(min-width:860px){
-  .timeline{
-    overflow-x:auto;
-    scroll-snap-type:x mandatory;
-    padding-bottom:10px;
-  }
-  .slot{scroll-snap-align:start;}
-  .timeline::-webkit-scrollbar{height:10px}
-  .timeline::-webkit-scrollbar-track{background:rgba(255,255,255,0.04)}
-  .timeline::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.14)}
-  .timeline::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,0.18)}
+.weekcal__slot.weekcal__slot--closed{
+  cursor:default;
+  opacity:.55;
+}
+.weekcal__slot.weekcal__slot--closed:hover{
+  transform:none;
+  border-color:rgba(255,255,255,0.12);
+  background:rgba(0,0,0,0.28);
 }
 
-/* mobile: pionowo */
+/* mobile: dzień jako sekcja, sloty pod spodem (grid sam się układa) */
 @media(max-width:859px){
-  .timeline{
-    flex-direction:column;
-    gap:10px;
-    padding:6px 0 0;
-  }
-  .timeline::before{
-    left:20px; right:auto;
-    top:0; bottom:0;
-    width:2px; height:auto;
-    background:linear-gradient(180deg,
-      rgba(var(--accent-rgb),0.00),
-      rgba(var(--accent-rgb),0.55),
-      rgba(var(--accent-rgb),0.00)
-    );
-  }
-  .slot{
-    min-width:unset;
-    flex:1 1 auto;
-  }
-  .slot::before{
-    top:18px;
-    left:14px;
-  }
-  .slot__top{padding-left:28px;}
+  .weekcal__grid{grid-template-columns:1fr;}
 }
 
 /* VIP info */
@@ -896,46 +901,102 @@ function buildPanels() {
 
       } else if (group.schedules && group.schedules.length) {
 
-        const timeline = document.createElement('div');
-        timeline.className = 'timeline';
+        // ── WEEKLY CALENDAR (instead of timeline) ──
+        const weekcal = document.createElement('div');
+        weekcal.className = 'weekcal';
 
-        group.schedules.forEach(sched => {
-          const slot = document.createElement('div');
-          slot.className = 'slot' + (isClosed ? ' slot--closed' : '');
-          slot.setAttribute('role', isClosed ? 'presentation' : 'button');
-          if (!isClosed) slot.setAttribute('tabindex', '0');
+        const calGrid = document.createElement('div');
+        calGrid.className = 'weekcal__grid';
 
-          const day = (sched.day_name || '—').toUpperCase();
-          const time = sched.time_label || 'Termin do ustalenia';
+        // mapowanie PL -> klucz dnia
+        const dayMap = {
+          'poniedziałek':'pon','pon':'pon',
+          'wtorek':'wto','wto':'wto',
+          'środa':'śro','sroda':'śro','śr':'śro','sro':'śro',
+          'czwartek':'czw','czw':'czw',
+          'piątek':'pią','piatek':'pią','pt':'pią',
+          'sobota':'sob','sob':'sob',
+          'niedziela':'nie','nd':'nie','nie':'nie'
+        };
+        const dayLabel = { pon:'PON', wto:'WTO', śro:'ŚRO', czw:'CZW', pią:'PIĄ', sob:'SOB', nie:'NIE' };
+        const dayOrder = ['pon','wto','śro','czw','pią','sob','nie'];
 
-          slot.innerHTML = `
-            <div class="slot__top">
-              <div>
-                <div class="slot__day">${day}</div>
-                <div class="slot__time"><em>${time}</em></div>
-                ${sched.address ? `<div class="slot__addr">${sched.address}</div>` : ''}
-              </div>
-              <div class="slot__btn">${isClosed ? 'Zamknięty' : (isFull ? 'Lista rez.' : 'Zapisuję się')}</div>
-            </div>
-          `;
-
-          if (!isClosed) {
-            const handler = (ev) => {
-              window._lastSlotEl = ev.currentTarget;
-              selectSlot(
-                loc.id, loc.city, group.id, group.name,
-                sched.id, sched.day_name, sched.time_label,
-                isFull
-              );
-            };
-            slot.addEventListener('click', handler);
-            slot.addEventListener('keydown', e => { if(e.key === 'Enter' || e.key === ' ') handler(e); });
-          }
-
-          timeline.appendChild(slot);
+        // grupowanie terminów po dniu
+        const buckets = {};
+        (group.schedules || []).forEach(s => {
+          const raw = (s.day_name || '').toLowerCase().trim();
+          const key = dayMap[raw] || raw.slice(0,3) || '—';
+          if(!buckets[key]) buckets[key] = [];
+          buckets[key].push(s);
         });
 
-        slotsShell.appendChild(timeline);
+        // tylko dni, które faktycznie mają terminy
+        const usedDays = dayOrder.filter(d => buckets[d]?.length).concat(
+          Object.keys(buckets).filter(d => !dayOrder.includes(d))
+        );
+
+        calGrid.style.setProperty('--days', String(Math.max(1, usedDays.length)));
+
+        usedDays.forEach(dayKey => {
+          const dayCol = document.createElement('div');
+          dayCol.className = 'weekcal__day';
+
+          const head = document.createElement('div');
+          head.className = 'weekcal__dayHead';
+          head.textContent = (dayLabel[dayKey] || (dayKey || 'Dzień').toUpperCase());
+
+          const body = document.createElement('div');
+          body.className = 'weekcal__dayBody';
+
+          // sortowanie po godzinie
+          const sorted = (buckets[dayKey] || []).slice().sort((a,b)=>{
+            const ta = (a.time_label || '').match(/\d{1,2}:\d{2}/)?.[0] || '';
+            const tb = (b.time_label || '').match(/\d{1,2}:\d{2}/)?.[0] || '';
+            return ta.localeCompare(tb);
+          });
+
+          sorted.forEach(sched => {
+            const slot = document.createElement('div');
+            slot.className = 'weekcal__slot' + (isClosed ? ' weekcal__slot--closed' : '');
+            slot.setAttribute('role', isClosed ? 'presentation' : 'button');
+            if (!isClosed) slot.setAttribute('tabindex','0');
+
+            const time = sched.time_label || 'Termin do ustalenia';
+
+            slot.innerHTML = `
+              <div class="weekcal__time"><em>${time}</em></div>
+              ${sched.address ? `<div class="weekcal__addr">${sched.address}</div>` : ''}
+              <div class="weekcal__btn">${isClosed ? 'Zamknięty' : (isFull ? 'Lista rez.' : 'Zapisuję się')}</div>
+            `;
+
+            if (!isClosed) {
+              const handler = (ev) => {
+                window._lastSlotEl = ev.currentTarget;
+
+                // zaznaczenie tylko jednego slotu w kalendarzu
+                document.querySelectorAll('.weekcal__slot.selected').forEach(x => x.classList.remove('selected'));
+                ev.currentTarget.classList.add('selected');
+
+                selectSlot(
+                  loc.id, loc.city, group.id, group.name,
+                  sched.id, sched.day_name, sched.time_label,
+                  isFull
+                );
+              };
+              slot.addEventListener('click', handler);
+              slot.addEventListener('keydown', e => { if(e.key === 'Enter' || e.key === ' ') handler(e); });
+            }
+
+            body.appendChild(slot);
+          });
+
+          dayCol.appendChild(head);
+          dayCol.appendChild(body);
+          calGrid.appendChild(dayCol);
+        });
+
+        weekcal.appendChild(calGrid);
+        slotsShell.appendChild(weekcal);
 
       } else {
         slotsShell.innerHTML = `<div class="vip-info"><strong>Brak dostępnych terminów.</strong><br>Skontaktuj się z nami, a dopasujemy grupę.</div>`;
@@ -952,7 +1013,8 @@ function buildPanels() {
 
 // ── Select slot → reveal form ─────────────────────────────────────
 function selectSlot(locId, cityName, groupId, groupName, schedId, dayName, timeLabel, isWaitlist) {
-  document.querySelectorAll('.slot.selected').forEach(s => s.classList.remove('selected'));
+  // usuń zaznaczenie zarówno ze starego .slot jak i nowego .weekcal__slot
+  document.querySelectorAll('.slot.selected, .weekcal__slot.selected').forEach(s => s.classList.remove('selected'));
   if (window._lastSlotEl) window._lastSlotEl.classList.add('selected');
 
   selectedGroup = groupId;
