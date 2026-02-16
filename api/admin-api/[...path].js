@@ -1,6 +1,6 @@
 // api/admin-api/[...path].js
 const jwt = require("jsonwebtoken");
-const { getPool } = require("../_db"); // uwaga: masz api/_db.js (CommonJS)
+const { getPool } = require("../_db"); // api/_db.js
 
 function cors(res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -23,17 +23,13 @@ async function readJson(req) {
   });
 }
 
-function unauthorized(res) {
-  return res.status(401).json({ error: "Brak autoryzacji." });
-}
-
 function getToken(req) {
   const h = req.headers.authorization || "";
   const m = h.match(/^Bearer\s+(.+)$/i);
   return m ? m[1] : "";
 }
 
-function requireAuth(req, res) {
+function requireAuth(req) {
   const token = getToken(req);
   if (!token) return null;
 
@@ -62,17 +58,11 @@ module.exports = async (req, res) => {
   cors(res);
   if (req.method === "OPTIONS") return res.status(204).send("");
 
-  const pool = getPool();
-
-  // ścieżka po /api/admin-api/
-  const pathArr = (req.query.path || []);
+  const pathArr = req.query.path || [];
   const path = Array.isArray(pathArr) ? pathArr.join("/") : String(pathArr || "");
   const seg = path ? path.split("/") : [];
 
-  // -----------------------------
-  // PUBLIC: LOGIN
-  // POST /api/admin-api/login
-  // -----------------------------
+  // ✅ LOGIN NIE DOTYKA BAZY
   if (req.method === "POST" && seg[0] === "login") {
     const body = await readJson(req);
     const username = (body.username || "").toString().trim();
@@ -83,7 +73,9 @@ module.exports = async (req, res) => {
     const secret = (process.env.JWT_SECRET || process.env.ADMIN_JWT_SECRET || "").toString();
 
     if (!u || !p || !secret) {
-      return res.status(500).json({ error: "Brak konfiguracji ADMIN_USER / ADMIN_PASS / JWT_SECRET." });
+      return res.status(500).json({
+        error: "Brak konfiguracji ADMIN_USER / ADMIN_PASS / JWT_SECRET w Vercelu.",
+      });
     }
 
     if (username !== u || password !== p) {
@@ -94,13 +86,20 @@ module.exports = async (req, res) => {
     return res.status(200).json({ token });
   }
 
-  // Wszystko inne wymaga tokena
-  const user = requireAuth(req, res);
-  if (!user) return unauthorized(res);
+  // ✅ RESZTA wymaga tokena
+  const user = requireAuth(req);
+  if (!user) return res.status(401).json({ error: "Brak autoryzacji." });
 
-  // -----------------------------
+  // ✅ BAZĘ OTWIERAMY DOPIERO TERAZ (po loginie)
+  let pool;
+  try {
+    pool = getPool();
+  } catch (e) {
+    console.error("[admin-api] getPool failed:", e);
+    return res.status(500).json({ error: "Błąd połączenia z bazą (DATABASE_URL)." });
+  }
+
   // GET /stats
-  // -----------------------------
   if (req.method === "GET" && seg[0] === "stats") {
     try {
       const [{ rows: totalR }, { rows: byLoc }, { rows: byGroup }, { rows: recent }] = await Promise.all([
@@ -127,7 +126,8 @@ module.exports = async (req, res) => {
 
         pool.query(`
           SELECT l.city, g.id, g.name, g.max_capacity,
-                 COUNT(r.id) FILTER (WHERE r.status NOT IN ('cancelled') AND r.is_waitlist=false)::int AS registered
+                 COUNT(r.id) FILTER (WHERE r.status NOT IN ('cancelled') AND r.is_waitlist=false)::int AS registered,
+                 g.max_capacity
             FROM groups g
             JOIN locations l ON l.id = g.location_id
             LEFT JOIN registrations r ON r.group_id = g.id
@@ -159,7 +159,13 @@ module.exports = async (req, res) => {
         pending: t.pending,
         waitlist: t.waitlist,
         byLoc,
-        byGroup,
+        byGroup: (byGroup || []).map(g => ({
+          city: g.city,
+          id: g.id,
+          name: g.name,
+          max_capacity: g.max_capacity,
+          registered: g.registered
+        })),
         recent,
       });
     } catch (e) {
@@ -168,9 +174,7 @@ module.exports = async (req, res) => {
     }
   }
 
-  // -----------------------------
   // GET /locations
-  // -----------------------------
   if (req.method === "GET" && seg[0] === "locations") {
     try {
       const { rows } = await pool.query(`
@@ -234,9 +238,7 @@ module.exports = async (req, res) => {
     }
   }
 
-  // -----------------------------
   // GET /groups
-  // -----------------------------
   if (req.method === "GET" && seg[0] === "groups" && !seg[1]) {
     try {
       const { rows } = await pool.query(`
@@ -316,7 +318,7 @@ module.exports = async (req, res) => {
     }
   }
 
-  // DELETE /groups/:id (tylko pusta)
+  // DELETE /groups/:id
   if (req.method === "DELETE" && seg[0] === "groups" && seg[1] && !seg[2]) {
     const id = asInt(seg[1]);
     try {
@@ -355,9 +357,7 @@ module.exports = async (req, res) => {
     }
   }
 
-  // -----------------------------
   // GET /schedules
-  // -----------------------------
   if (req.method === "GET" && seg[0] === "schedules" && !seg[1]) {
     try {
       const { rows } = await pool.query(`
@@ -382,7 +382,7 @@ module.exports = async (req, res) => {
   if (req.method === "POST" && seg[0] === "schedules" && !seg[1]) {
     const body = await readJson(req);
     try {
-      if (!body.group_id && body.group_id !== 0) return res.status(400).json({ error: "Brak group_id." });
+      if (body.group_id == null) return res.status(400).json({ error: "Brak group_id." });
 
       await pool.query(
         `INSERT INTO schedules (group_id,day_of_week,time_start,time_end,address,active)
@@ -447,9 +447,7 @@ module.exports = async (req, res) => {
     }
   }
 
-  // -----------------------------
-  // GET /plans  (price_plans)
-  // -----------------------------
+  // GET /plans
   if (req.method === "GET" && seg[0] === "plans") {
     try {
       const { rows } = await pool.query(`SELECT * FROM price_plans WHERE active=true ORDER BY sort_order`);
@@ -460,10 +458,7 @@ module.exports = async (req, res) => {
     }
   }
 
-  // -----------------------------
-  // REGISTRATIONS LIST
-  // GET /registrations?...
-  // -----------------------------
+  // GET /registrations
   if (req.method === "GET" && seg[0] === "registrations" && !seg[1]) {
     try {
       const q = req.query || {};
@@ -517,7 +512,7 @@ module.exports = async (req, res) => {
     }
   }
 
-  // GET /registrations/:id  (kartoteka)
+  // GET /registrations/:id
   if (req.method === "GET" && seg[0] === "registrations" && seg[1]) {
     const id = asInt(seg[1]);
     try {
@@ -584,7 +579,7 @@ module.exports = async (req, res) => {
           body.phone ?? null,
           body.birth_year ?? null,
           typeof body.is_new === "boolean" ? body.is_new : null,
-          body.group_id === undefined ? null : body.group_id, // pozwala ustawić null
+          body.group_id === undefined ? null : body.group_id,
           body.schedule_id === undefined ? null : body.schedule_id,
           body.price_plan_id === undefined ? null : body.price_plan_id,
           body.start_date ?? null,
@@ -615,9 +610,7 @@ module.exports = async (req, res) => {
     }
   }
 
-  // -----------------------------
-  // POST /participant (dodany przez admina)
-  // -----------------------------
+  // POST /participant
   if (req.method === "POST" && seg[0] === "participant") {
     const body = await readJson(req);
     try {
@@ -663,9 +656,7 @@ module.exports = async (req, res) => {
     }
   }
 
-  // -----------------------------
-  // GET /export  (CSV)
-  // -----------------------------
+  // GET /export
   if (req.method === "GET" && seg[0] === "export") {
     try {
       const { rows } = await pool.query(`
@@ -701,6 +692,5 @@ module.exports = async (req, res) => {
     }
   }
 
-  // Fallback
   return res.status(404).json({ error: "Nieznany endpoint." });
 };
