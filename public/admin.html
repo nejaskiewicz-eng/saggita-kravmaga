@@ -594,7 +594,7 @@ async function loadGroups(){
           <td><div class="tda">
             <button class="bi" onclick='showEditG(${JSON.stringify(g)})'>Edytuj</button>
             <button class="bi del" onclick="delG(${g.id},'${g.name.replace(/'/g,"\\'")}')">Usuń</button>
-          </div></td>
+          </div></td> <button class="bi" onclick="openGroup(${g.id})">Ludzie</button>
         </tr>`).join(''):`<tr><td colspan="7"><div class="empty"><strong>Brak grup</strong></div></td></tr>`}</tbody>
       </table></div>`;
   }catch(e){c.innerHTML=`<div class="empty"><strong>Błąd</strong>${e.message}</div>`;}
@@ -748,6 +748,105 @@ async function submitEditL(id){
 }
 
 checkLogin();
+  async function openGroupMembers(groupId, groupName){
+  try{
+    const { rows } = await aF(`/groups/${groupId}/members`);
+    const body = `
+      <div class="ib"><strong>${groupName}</strong> — kursanci przypisani do grupy.</div>
+
+      <div class="fb" style="margin-bottom:12px">
+        <input type="text" id="gm-search" placeholder="Dodaj kursanta: wpisz imię/email/tel i Enter…"/>
+        <button class="btn btn-secondary btn-sm" onclick="gmFind(${groupId})">Szukaj</button>
+      </div>
+
+      <div id="gm-results" style="margin-bottom:14px"></div>
+
+      <div class="tw"><table>
+        <thead><tr><th>ID</th><th>Kursant</th><th>Kontakt</th><th>Status</th><th>Płatność</th><th>Akcje</th></tr></thead>
+        <tbody>
+          ${rows.length ? rows.map(r=>`
+            <tr>
+              <td style="color:var(--muted);font-size:11px">#${r.id}</td>
+              <td><strong style="color:var(--bright)">${r.first_name} ${r.last_name}</strong></td>
+              <td style="font-size:12px">${r.email||'—'}${r.phone?`<br><span style="color:var(--dim)">${r.phone}</span>`:''}</td>
+              <td>${sb(r.status)}</td>
+              <td>${pb(r.payment_status)}</td>
+              <td>
+                <div class="tda">
+                  <button class="bi" onclick="openKartoteka(${r.id},'view')">Kartoteka</button>
+                  <button class="bi del" onclick="gmRemoveFromGroup(${groupId},${r.id})">Usuń z grupy</button>
+                </div>
+              </td>
+            </tr>
+          `).join('') : `<tr><td colspan="6"><div class="empty"><strong>Brak kursantów w tej grupie</strong></div></td></tr>`}
+        </tbody>
+      </table></div>
+    `;
+    showModal(`Kursanci — ${groupName}`, body, `<button class="btn btn-secondary" onclick="closeModal()">Zamknij</button>`);
+    document.getElementById('gm-search')?.addEventListener('keydown',e=>{ if(e.key==='Enter') gmFind(groupId); });
+  }catch(e){
+    toast('Błąd: '+e.message,'error');
+  }
+}
+
+async function gmRemoveFromGroup(groupId, regId){
+  if(!confirm('Usunąć kursanta z tej grupy?')) return;
+  try{
+    await aF(`/registrations/${regId}`, { method:'PATCH', body: JSON.stringify({ group_id: null }) });
+    toast('Usunięto z grupy');
+    openGroupMembers(groupId,'');
+  }catch(e){
+    toast('Błąd: '+e.message,'error');
+  }
+}
+
+async function gmFind(groupId){
+  const q = (document.getElementById('gm-search')?.value || '').trim();
+  if(!q){ toast('Wpisz frazę','error'); return; }
+
+  const box = document.getElementById('gm-results');
+  box.innerHTML = `<div class="loader"><div class="spinner"></div> Szukam…</div>`;
+
+  try{
+    // wykorzystujemy istniejące /registrations?search=...
+    const data = await aF(`/registrations?` + new URLSearchParams({ search:q, limit: 10, offset: 0 }).toString());
+    const rows = data.rows || [];
+
+    box.innerHTML = rows.length ? `
+      <div class="tw"><table>
+        <thead><tr><th>ID</th><th>Kursant</th><th>Kontakt</th><th>Akcje</th></tr></thead>
+        <tbody>
+          ${rows.map(r=>`
+            <tr>
+              <td style="color:var(--muted);font-size:11px">#${r.id}</td>
+              <td><strong style="color:var(--bright)">${r.first_name} ${r.last_name}</strong></td>
+              <td style="font-size:12px">${r.email||'—'}${r.phone?`<br><span style="color:var(--dim)">${r.phone}</span>`:''}</td>
+              <td>
+                <div class="tda">
+                  <button class="bi" onclick="gmAddToGroup(${groupId},${r.id})">Dodaj do grupy</button>
+                  <button class="bi" onclick="openKartoteka(${r.id},'view')">Kartoteka</button>
+                </div>
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table></div>
+    ` : `<div class="empty"><strong>Brak wyników</strong></div>`;
+  }catch(e){
+    box.innerHTML = `<div class="empty"><strong>Błąd</strong>${e.message}</div>`;
+  }
+}
+
+async function gmAddToGroup(groupId, regId){
+  try{
+    await aF(`/registrations/${regId}`, { method:'PATCH', body: JSON.stringify({ group_id: groupId }) });
+    toast('Dodano do grupy');
+    openGroupMembers(groupId,'');
+  }catch(e){
+    toast('Błąd: '+e.message,'error');
+  }
+}
+
 </script>
 </body>
 </html>
