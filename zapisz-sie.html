@@ -703,13 +703,13 @@ function normalizeAllData(data){
 // ── Init ──────────────────────────────────────────────────────────
 async function init() {
   try {
-    const [schedRaw, pricesRaw] = await Promise.all([
-      fetchJson(`${API}/admin-api/schedules`),
-      fetchJson(`${API}/prices`),
-    ]);
+  const [schedRaw, pricesRaw] = await Promise.all([
+  fetchJson(`${API}/schedule`, { cache: 'no-store' }),
+  fetchJson(`${API}/prices`, { cache: 'no-store' }),
+]);
 
-    allData = normalizeData(schedRaw);
-    allPrices = Array.isArray(pricesRaw) ? pricesRaw : (Array.isArray(pricesRaw?.data) ? pricesRaw.data : []);
+allData = normalizeAllData(schedRaw);
+allPrices = pricesRaw;
 
     if (!allData.length) {
       renderFatal('API zwróciło pustą listę lokalizacji. Sprawdź /api/schedule w Network → Response.');
