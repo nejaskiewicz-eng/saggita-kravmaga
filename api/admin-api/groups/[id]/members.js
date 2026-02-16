@@ -14,18 +14,19 @@ module.exports = async (req, res) => {
     if (method === "GET") {
       const { rows } = await pool.query(
         `
-        SELECT r.id, r.first_name, r.last_name, r.email, r.phone,
-               r.status, r.payment_status, r.is_waitlist, r.created_at
-        FROM registrations r
-        WHERE r.group_id = $1
-        ORDER BY r.created_at DESC
+        SELECT id, first_name, last_name, email, phone, status, payment_status, is_waitlist, created_at
+        FROM registrations
+        WHERE group_id = $1
+        ORDER BY created_at DESC
         `,
         [id]
       );
+
       return res.status(200).json({ rows });
     }
 
     return res.status(405).json({ error: "Method not allowed" });
+
   } catch (e) {
     console.error(e);
     return res.status(500).json({ error: e.message });
