@@ -762,21 +762,30 @@ checkLogin();
 
       <div id="gm-results" style="margin-bottom:14px"></div>
 
-      <div class="tw"><table>
-        <thead><tr><th>ID</th><th>Kursant</th><th>Kontakt</th><th>Status</th><th>Płatność</th><th>Akcje</th></tr></thead>
-        <tbody>
-          ${rows.length ? rows.map(r=>`
-            <tr>
-              <td style="color:var(--muted);font-size:11px">#${r.id}</td>
-              <td><strong style="color:var(--bright)">${r.first_name} ${r.last_name}</strong></td>
-              <td style="font-size:12px">${r.email||'—'}${r.phone?`<br><span style="color:var(--dim)">${r.phone}</span>`:''}</td>
-              <td>${sb(r.status)}</td>
-              <td>${pb(r.payment_status)}</td>
-              <td>
-                <div class="tda">
-                  <button class="bi" onclick="openKartoteka(${r.id},'view')">Kartoteka</button>
-                  <button class="bi del" onclick="gmRemoveFromGroup(${groupId},${r.id})">Usuń z grupy</button>
-                </div>
+     <div class="tw"><table>
+  <thead>
+    <tr>
+      <th>ID</th><th>Kursant</th><th>Kontakt</th><th>Status</th><th>Płatność</th><th>Akcje</th>
+    </tr>
+  </thead>
+  <tbody>
+    ${rows.length ? rows.map(r=>`
+      <tr>
+        <td style="color:var(--muted);font-size:11px">#${r.id}</td>
+        <td><strong style="color:var(--bright)">${r.first_name} ${r.last_name}</strong></td>
+        <td style="font-size:12px">${r.email||'—'}${r.phone?`<br><span style="color:var(--dim)">${r.phone}</span>`:''}</td>
+        <td>${sb(r.status)}</td>
+        <td>${pb(r.payment_status)}</td>
+        <td>
+          <div class="tda">
+            <button class="bi" onclick="openKartoteka(${r.id},'view')">Kartoteka</button>
+            <button class="bi del" onclick="gmRemoveFromGroup(${groupId},${r.id})">Usuń z grupy</button>
+          </div>
+        </td>
+      </tr>
+    `).join('') : `<tr><td colspan="6"><div class="empty"><strong>Brak kursantów w tej grupie</strong></div></td></tr>`}
+  </tbody>
+</table></div>
               </td>
             </tr>
           `).join('') : `<tr><td colspan="6"><div class="empty"><strong>Brak kursantów w tej grupie</strong></div></td></tr>`}
