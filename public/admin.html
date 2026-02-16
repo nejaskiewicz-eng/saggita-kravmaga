@@ -452,10 +452,13 @@ async function loadReg(src){
         <option value="confirmed">Potwierdzony</option><option value="cancelled">Anulowany</option><option value="completed">Zakończony</option>
       </select>
       <select id="f-p">
-        <option value="">Płatność: wszystkie</option><option value="paid">Opłacony</option>
-        
-            <option value="pending" ${r.payment_status==='pending'?'selected':''}>Oczekujący</option><option value="pending">Oczekujący</option><option value="partial">Częściowy</option>
-      </select>
+  <option value="">Płatność: wszystkie</option>
+  <option value="paid">Opłacony</option>
+  <option value="unpaid">Nieopłacony</option>
+  <option value="pending">Oczekujący</option>
+  <option value="partial">Częściowy</option>
+  <option value="waived">Zwolniony</option>
+</select>
       <select id="f-w"><option value="">Lista: wszystkie</option><option value="false">Aktywni</option><option value="true">Rezerwowa</option></select>
       <button class="btn btn-secondary btn-sm" onclick="apF('${src}')">Filtruj</button>
       <button class="btn btn-secondary btn-sm" onclick="rstF('${src}')">Reset</button>
