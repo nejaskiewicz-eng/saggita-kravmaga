@@ -657,7 +657,7 @@ function renderFatal(msg){
 async function init() {
   try {
     const [schedRaw, pricesRaw] = await Promise.all([
-      fetchJson(`${API}/schedule`),
+      fetchJson(`${API}/admin-api/schedules`),
       fetchJson(`${API}/prices`),
     ]);
 
