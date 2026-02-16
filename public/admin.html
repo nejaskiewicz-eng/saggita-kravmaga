@@ -316,12 +316,24 @@ async function loadDash(){
 async function openKartoteka(id, mode='view'){
   let r, groups=[], plans=[];
   try{
-    [r, {rows:groups}, {rows:plans}] = await Promise.all([
-      aF(`/registrations/${id}?_=${Date.now()}`),
-      aF('/groups'),
-      aF('/plans'),
-    ]);
+    [r, {rows:locations}, {rows:groups}, {rows:schedules}, {rows:plans}] = await Promise.all([
+  aF(`/registrations/${id}?_=${Date.now()}`),
+  aF('/locations'),
+  aF('/groups'),
+  aF('/schedules'),
+  aF('/plans'),
+]);
   }catch(e){toast('Błąd pobierania danych: '+e.message,'error');return;}
+const locOpts = locations.map(l => 
+  `<option value="${l.id}" ${l.id==r.location_id?'selected':''}>${l.city} — ${l.name}</option>`
+).join('');
+
+function schedLabel(s){
+  const day = DAYS[s.day_of_week] || s.day_of_week;
+  const ts = s.time_start ? s.time_start.slice(0,5) : '';
+  const te = s.time_end ? s.time_end.slice(0,5) : '';
+  return `${day} ${ts}${te?`–${te}`:''}${s.address?` · ${s.address}`:''}`;
+}
 
   const gO=groups.map(g=>`<option value="${g.id}" ${g.id==r.group_id?'selected':''}>${g.city} — ${g.name}</option>`).join('');
   const pO=`<option value="">— brak karnetu —</option>`+plans.map(p=>`<option value="${p.id}" ${p.id==r.price_plan_id?'selected':''}>${p.name} — ${p.price} zł / ${p.months} mies.</option>`).join('');
@@ -368,17 +380,57 @@ async function openKartoteka(id, mode='view'){
     </div>
 
     <div class="ksec">
-      <div class="ksec-title">Przynależność do grupy</div>
-      <div class="fg">
-        <div class="ff full"><label>Grupa</label>${isEdit?`<select id="k-gr">${gO}</select>`:`<div class="view-val">${r.city?r.city+' — ':''} ${r.group_name||'—'}</div>`}</div>
-        <div class="ff full"><label>Karnet</label>${isEdit?`<select id="k-pl">${pO}</select>`:`<div class="view-val">${r.plan_name||'—'}</div>`}</div>
-        <div class="ff"><label>Data startu</label>${fld('k-sd',r.start_date?r.start_date.slice(0,10):'','date')}</div>
-        <div class="ff"><label>Lista rezerwowa</label>${isEdit
-          ?`<select id="k-wl"><option value="false" ${!r.is_waitlist?'selected':''}>Nie</option><option value="true" ${r.is_waitlist?'selected':''}>Tak</option></select>`
-          :`<div class="view-val">${r.is_waitlist?'Tak':'Nie'}</div>`}
-        </div>
-      </div>
+  <div class="ksec-title">Organizacja treningu</div>
+  <div class="fg">
+
+    <div class="ff full">
+      <label>Lokalizacja</label>
+      ${isEdit
+        ? `<select id="k-loc">${locOpts}</select>`
+        : `<div class="view-val">${r.city ? `${r.city} — ${r.location_name||''}` : '—'}</div>`
+      }
     </div>
+
+    <div class="ff full">
+      <label>Grupa</label>
+      ${isEdit
+        ? `<select id="k-gr"></select>`
+        : `<div class="view-val">${r.city ? `${r.city} — ` : ''}${r.group_name||'—'}</div>`
+      }
+    </div>
+
+    <div class="ff full">
+      <label>Dzień i godzina z grafiku</label>
+      ${isEdit
+        ? `<select id="k-sc"><option value="">— wybierz termin —</option></select>`
+        : `<div class="view-val">${r.schedule_id ? `${DAYS[r.schedule_day]||''} ${String(r.schedule_time_start||'').slice(0,5)}${r.schedule_time_end?`–${String(r.schedule_time_end).slice(0,5)}`:''}` : '—'}</div>`
+      }
+    </div>
+
+    <div class="ff full">
+      <label>Karnet</label>
+      ${isEdit
+        ? `<select id="k-pl">${pO}</select>`
+        : `<div class="view-val">${r.plan_name||'—'}</div>`
+      }
+    </div>
+
+    <div class="ff">
+      <label>Data startu</label>
+      ${fld('k-sd',r.start_date?r.start_date.slice(0,10):'','date')}
+    </div>
+
+    <div class="ff">
+      <label>Lista rezerwowa</label>
+      ${isEdit
+        ? `<select id="k-wl"><option value="false" ${!r.is_waitlist?'selected':''}>Nie</option><option value="true" ${r.is_waitlist?'selected':''}>Tak</option></select>`
+        : `<div class="view-val">${r.is_waitlist?'Tak':'Nie'}</div>`
+      }
+    </div>
+
+  </div>
+</div>
+
 
     <div class="ksec">
       <div class="ksec-title">Płatność</div>
@@ -410,6 +462,35 @@ async function openKartoteka(id, mode='view'){
 
   showModal(`Kartoteka #${id}`, body, footer);
 }
+if(mode==='edit'){
+  const elLoc = document.getElementById('k-loc');
+  const elGr  = document.getElementById('k-gr');
+  const elSc  = document.getElementById('k-sc');
+
+  function rebuildGroups(){
+    const locId = parseInt(elLoc.value);
+    const gList = groups.filter(g => parseInt(g.location_id) === locId);
+    elGr.innerHTML = gList.map(g => `<option value="${g.id}">${g.city} — ${g.name}</option>`).join('');
+    // ustaw grupę z kartoteki jeśli pasuje do lokacji, inaczej pierwszą
+    const wanted = parseInt(r.group_id||0);
+    if(gList.some(g=>g.id==wanted)) elGr.value = String(wanted);
+    rebuildSchedules();
+  }
+
+  function rebuildSchedules(){
+    const gid = parseInt(elGr.value||0);
+    const sList = schedules.filter(s => parseInt(s.group_id) === gid);
+    elSc.innerHTML = `<option value="">— wybierz termin —</option>` + sList.map(s =>
+      `<option value="${s.id}">${schedLabel(s)}</option>`
+    ).join('');
+    if(r.schedule_id && sList.some(s=>s.id==r.schedule_id)) elSc.value = String(r.schedule_id);
+  }
+
+  elLoc.addEventListener('change', rebuildGroups);
+  elGr.addEventListener('change', rebuildSchedules);
+
+  rebuildGroups();
+}
 
 async function saveKartoteka(id){
   const b={
@@ -420,6 +501,7 @@ async function saveKartoteka(id){
     birth_year:parseInt(document.getElementById('k-by')?.value)||null,
     is_new:document.getElementById('k-in')?.value==='true',
     group_id:parseInt(document.getElementById('k-gr')?.value)||null,
+    schedule_id:parseInt(document.getElementById('k-sc')?.value)||null,
     price_plan_id:parseInt(document.getElementById('k-pl')?.value)||null,
     start_date:document.getElementById('k-sd')?.value||null,
     is_waitlist:document.getElementById('k-wl')?.value==='true',
