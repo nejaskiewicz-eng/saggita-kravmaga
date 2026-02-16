@@ -1,708 +1,706 @@
 // api/admin-api/[...path].js
-const bcrypt = require("bcryptjs");
-const crypto = require("crypto");
-const { getPool } = require("../_db");
-
-const SECRET = process.env.JWT_SECRET;
+const jwt = require("jsonwebtoken");
+const { getPool } = require("../_db"); // uwaga: masz api/_db.js (CommonJS)
 
 function cors(res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
-  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
+  res.setHeader("Access-Control-Allow-Methods", "GET,POST,PATCH,DELETE,OPTIONS");
 }
 
-function signToken(payload) {
-  if (!SECRET) throw new Error("Brak JWT_SECRET w ENV");
-  const h = Buffer.from(JSON.stringify({ alg: "HS256", typ: "JWT" })).toString("base64url");
-  const b = Buffer.from(JSON.stringify({ ...payload, iat: Date.now(), exp: Date.now() + 24 * 60 * 60 * 1000 })).toString("base64url");
-  const sig = crypto.createHmac("sha256", SECRET).update(`${h}.${b}`).digest("base64url");
-  return `${h}.${b}.${sig}`;
+async function readJson(req) {
+  if (req.body && typeof req.body === "object") return req.body;
+  return new Promise((resolve) => {
+    let data = "";
+    req.on("data", (c) => (data += c));
+    req.on("end", () => {
+      try {
+        resolve(data ? JSON.parse(data) : {});
+      } catch {
+        resolve({});
+      }
+    });
+  });
 }
 
-function verifyToken(token) {
-  try {
-    if (!SECRET) return null;
-    const [h, b, sig] = (token || "").split(".");
-    if (!h || !b || !sig) return null;
-    const expected = crypto.createHmac("sha256", SECRET).update(`${h}.${b}`).digest("base64url");
-    if (sig !== expected) return null;
-    const p = JSON.parse(Buffer.from(b, "base64url").toString());
-    if (p.exp < Date.now()) return null;
-    return p;
-  } catch { return null; }
+function unauthorized(res) {
+  return res.status(401).json({ error: "Brak autoryzacji." });
 }
 
 function getToken(req) {
-  const auth = req.headers.authorization || req.headers.Authorization || "";
-  return String(auth).replace(/^Bearer\s+/i, "").trim();
+  const h = req.headers.authorization || "";
+  const m = h.match(/^Bearer\s+(.+)$/i);
+  return m ? m[1] : "";
 }
 
-function unauth(res) { return res.status(401).json({ error: "Brak autoryzacji. Zaloguj się ponownie." }); }
-function bad(res, msg, code = 400) { return res.status(code).json({ error: msg }); }
+function requireAuth(req, res) {
+  const token = getToken(req);
+  if (!token) return null;
 
-async function getBody(req) {
-  if (req.body && typeof req.body === "object") return req.body;
-  if (typeof req.body === "string") { try { return JSON.parse(req.body || "{}"); } catch { return {}; } }
+  const secret = process.env.JWT_SECRET || process.env.ADMIN_JWT_SECRET;
+  if (!secret) return null;
+
   try {
-    const raw = await new Promise((resolve, reject) => {
-      let d = ""; req.on("data", c => d += c); req.on("end", () => resolve(d)); req.on("error", reject);
-    });
-    return raw ? JSON.parse(raw) : {};
-  } catch { return {}; }
+    return jwt.verify(token, secret);
+  } catch {
+    return null;
+  }
 }
 
-function resolveRawPath(req) {
-  const qp = req.query?.path;
-  const arr = Array.isArray(qp) ? qp : qp ? [qp] : null;
-  if (arr && arr.length) return "/" + arr.join("/");
-  try {
-    const full = new URL(req.url, "https://local");
-    const pathname = full.pathname || "";
-    const prefix = "/api/admin-api";
-    if (pathname.startsWith(prefix)) {
-      const rest = pathname.slice(prefix.length) || "/";
-      return rest.startsWith("/") ? rest : "/" + rest;
-    }
-    return pathname || "/";
-  } catch { return "/"; }
+function asInt(v) {
+  const n = parseInt(v, 10);
+  return Number.isFinite(n) ? n : null;
 }
 
-function toInt(v, fallback) { const x = parseInt(String(v ?? ""), 10); return Number.isFinite(x) ? x : fallback; }
+function csvEscape(v) {
+  const s = (v ?? "").toString();
+  if (/[",\n\r;]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
+  return s;
+}
 
 module.exports = async (req, res) => {
   cors(res);
   if (req.method === "OPTIONS") return res.status(204).send("");
 
   const pool = getPool();
-  const raw = resolveRawPath(req);
-  const method = req.method;
 
-  try {
-    // ─── GET /status (public) ──────────────────────────────────────────────
-    if (raw === "/status" && method === "GET") {
-      const [{ rows: [{ now }] }, { rows: [{ cnt }] }] = await Promise.all([
-        pool.query("SELECT NOW()::text AS now"),
-        pool.query("SELECT COUNT(*)::int AS cnt FROM admin_users"),
-      ]);
-      return res.status(200).json({ ok: true, server_time: now, admin_users: cnt, note: cnt > 0 ? "Admin istnieje → użyj /login." : "Brak admina → zrób /setup (POST)." });
+  // ścieżka po /api/admin-api/
+  const pathArr = (req.query.path || []);
+  const path = Array.isArray(pathArr) ? pathArr.join("/") : String(pathArr || "");
+  const seg = path ? path.split("/") : [];
+
+  // -----------------------------
+  // PUBLIC: LOGIN
+  // POST /api/admin-api/login
+  // -----------------------------
+  if (req.method === "POST" && seg[0] === "login") {
+    const body = await readJson(req);
+    const username = (body.username || "").toString().trim();
+    const password = (body.password || "").toString();
+
+    const u = (process.env.ADMIN_USER || "").toString();
+    const p = (process.env.ADMIN_PASS || "").toString();
+    const secret = (process.env.JWT_SECRET || process.env.ADMIN_JWT_SECRET || "").toString();
+
+    if (!u || !p || !secret) {
+      return res.status(500).json({ error: "Brak konfiguracji ADMIN_USER / ADMIN_PASS / JWT_SECRET." });
     }
 
-    // ─── POST /setup (public) ──────────────────────────────────────────────
-    if (raw === "/setup" && method === "POST") {
-      const { rows: [{ cnt }] } = await pool.query("SELECT COUNT(*)::int AS cnt FROM admin_users");
-      if (parseInt(cnt, 10) > 0) return bad(res, "Konto admina już istnieje. Użyj /login.", 403);
-      const { username, password } = await getBody(req);
-      if (!String(username || "").trim() || !password || String(password).length < 8) return bad(res, "Username i hasło (min. 8 znaków) są wymagane");
-      const hash = await bcrypt.hash(String(password), 12);
-      await pool.query("INSERT INTO admin_users (username, password_hash) VALUES ($1, $2)", [String(username).trim(), hash]);
-      return res.status(201).json({ success: true, message: "Konto admina utworzone." });
+    if (username !== u || password !== p) {
+      return res.status(401).json({ error: "Nieprawidłowy login lub hasło." });
     }
 
-    // ─── POST /login (public) ──────────────────────────────────────────────
-    if (raw === "/login" && method === "POST") {
-      const { username, password } = await getBody(req);
-      if (!username || !password) return bad(res, "Podaj login i hasło");
-      const { rows } = await pool.query("SELECT * FROM admin_users WHERE username = $1", [String(username).trim()]);
-      if (!rows.length) return bad(res, "Nieprawidłowe dane logowania", 401);
-      const valid = await bcrypt.compare(String(password), rows[0].password_hash);
-      if (!valid) return bad(res, "Nieprawidłowe dane logowania", 401);
-      const token = signToken({ id: rows[0].id, username: rows[0].username });
-      return res.status(200).json({ token, username: rows[0].username });
-    }
+    const token = jwt.sign({ username }, secret, { expiresIn: "12h" });
+    return res.status(200).json({ token });
+  }
 
-    // ─── AUTH GUARD ────────────────────────────────────────────────────────
-    const payload = verifyToken(getToken(req));
-    if (!payload) return unauth(res);
+  // Wszystko inne wymaga tokena
+  const user = requireAuth(req, res);
+  if (!user) return unauthorized(res);
 
-    // ══════════════════════════════════════════════════════════════════════
-    // STATS
-    // ══════════════════════════════════════════════════════════════════════
-    if (raw === "/stats" && method === "GET") {
-      const [{ rows: [totals] }, { rows: byLoc }, { rows: recent }, { rows: byGroup }] = await Promise.all([
+  // -----------------------------
+  // GET /stats
+  // -----------------------------
+  if (req.method === "GET" && seg[0] === "stats") {
+    try {
+      const [{ rows: totalR }, { rows: byLoc }, { rows: byGroup }, { rows: recent }] = await Promise.all([
+        pool.query(`SELECT COUNT(*)::int AS total,
+                           COUNT(*) FILTER (WHERE payment_status='paid')::int AS paid,
+                           COUNT(*) FILTER (WHERE payment_status='pending')::int AS pending,
+                           COUNT(*) FILTER (WHERE is_waitlist=true)::int AS waitlist
+                      FROM registrations
+                     WHERE status NOT IN ('cancelled')`),
+
         pool.query(`
-          SELECT
-            COUNT(*)::int AS total,
-            COUNT(*) FILTER (WHERE payment_status = 'paid')::int AS paid,
-            COUNT(*) FILTER (WHERE status = 'new')::int AS pending,
-            COUNT(*) FILTER (WHERE is_waitlist = true)::int AS waitlist
-          FROM registrations WHERE status != 'cancelled'
+          SELECT l.city,
+                 COUNT(r.id)::int AS total,
+                 COUNT(r.id) FILTER (WHERE r.payment_status='paid')::int AS paid,
+                 COUNT(r.id) FILTER (WHERE r.payment_status='pending')::int AS pending,
+                 COUNT(r.id) FILTER (WHERE r.is_waitlist=true)::int AS waitlist
+            FROM locations l
+            LEFT JOIN groups g ON g.location_id = l.id
+            LEFT JOIN registrations r ON r.group_id = g.id AND r.status NOT IN ('cancelled')
+           WHERE l.active = true
+           GROUP BY l.city
+           ORDER BY l.city
         `),
+
         pool.query(`
-          SELECT l.id AS loc_id, l.city, l.slug,
-            COUNT(r.id)::int AS total,
-            COUNT(r.id) FILTER (WHERE r.payment_status = 'paid')::int AS paid,
-            COUNT(r.id) FILTER (WHERE r.status = 'new')::int AS pending,
-            COUNT(r.id) FILTER (WHERE r.is_waitlist = true)::int AS waitlist
-          FROM locations l
-          LEFT JOIN groups g ON g.location_id = l.id
-          LEFT JOIN registrations r ON r.group_id = g.id AND r.status != 'cancelled'
-          GROUP BY l.id, l.city, l.slug ORDER BY l.id
+          SELECT l.city, g.id, g.name, g.max_capacity,
+                 COUNT(r.id) FILTER (WHERE r.status NOT IN ('cancelled') AND r.is_waitlist=false)::int AS registered
+            FROM groups g
+            JOIN locations l ON l.id = g.location_id
+            LEFT JOIN registrations r ON r.group_id = g.id
+           WHERE g.active = true AND l.active = true
+           GROUP BY l.city, g.id, g.name, g.max_capacity
+           ORDER BY l.city, g.name
         `),
+
         pool.query(`
-          SELECT r.id, r.first_name || ' ' || r.last_name AS name,
-                 r.email, r.payment_status, r.status, r.created_at,
-                 r.source, l.city, g.name AS group_name
-          FROM registrations r
-          LEFT JOIN groups g ON r.group_id = g.id
-          LEFT JOIN locations l ON g.location_id = l.id
-          ORDER BY r.created_at DESC LIMIT 8
-        `),
-        pool.query(`
-          SELECT g.id, g.name, l.city, g.max_capacity,
-            COUNT(r.id) FILTER (WHERE r.status != 'cancelled' AND r.is_waitlist = false)::int AS registered
-          FROM groups g
-          LEFT JOIN locations l ON g.location_id = l.id
-          LEFT JOIN registrations r ON r.group_id = g.id
-          WHERE g.active = true
-          GROUP BY g.id, g.name, l.city, g.max_capacity ORDER BY l.city, g.id
-        `),
-      ]);
-      return res.status(200).json({ ...(totals || {}), byLoc, recent, byGroup });
-    }
-
-    // ══════════════════════════════════════════════════════════════════════
-    // REGISTRATIONS — lista
-    // ══════════════════════════════════════════════════════════════════════
-    if (raw === "/registrations" && method === "GET") {
-      const q = req.query || {};
-      const where = ["1=1"];
-      const params = [];
-      let pi = 1;
-
-      if (q.status)         { where.push(`r.status = $${pi++}`); params.push(q.status); }
-      if (q.payment_status) { where.push(`r.payment_status = $${pi++}`); params.push(q.payment_status); }
-      if (q.location)       { where.push(`l.slug = $${pi++}`); params.push(q.location); }
-      if (q.category)       { where.push(`g.category = $${pi++}`); params.push(q.category); }
-      if (q.source)         { where.push(`r.source = $${pi++}`); params.push(q.source); }
-      if (q.waitlist === "true")  where.push("r.is_waitlist = true");
-      if (q.waitlist === "false") where.push("r.is_waitlist = false");
-      if (q.search) {
-        where.push(`(r.first_name ILIKE $${pi} OR r.last_name ILIKE $${pi} OR r.email ILIKE $${pi} OR r.payment_ref ILIKE $${pi} OR r.phone ILIKE $${pi})`);
-        params.push(`%${q.search}%`); pi++;
-      }
-
-      const limit   = Math.min(toInt(q.limit, 50), 200);
-      const offset  = Math.max(toInt(q.offset, 0), 0);
-      const orderBy = q.sort === "amount" ? "r.total_amount DESC" : "r.created_at DESC";
-      const whereStr = where.join(" AND ");
-
-      const [{ rows }, { rows: [{ total }] }] = await Promise.all([
-        pool.query(`
-          SELECT r.id, r.created_at, r.first_name, r.last_name, r.email, r.phone,
-                 r.payment_ref, r.payment_status, r.status, r.total_amount,
-                 r.is_waitlist, r.is_new, r.start_date, r.source,
-                 g.name AS group_name, g.category,
-                 l.city, l.slug AS location_slug,
-                 p.name AS plan_name
-          FROM registrations r
-          LEFT JOIN groups g ON r.group_id = g.id
-          LEFT JOIN locations l ON g.location_id = l.id
-          LEFT JOIN price_plans p ON r.price_plan_id = p.id
-          WHERE ${whereStr} ORDER BY ${orderBy} LIMIT ${limit} OFFSET ${offset}
-        `, params),
-        pool.query(`
-          SELECT COUNT(*)::int AS total FROM registrations r
-          LEFT JOIN groups g ON r.group_id = g.id
-          LEFT JOIN locations l ON g.location_id = l.id
-          WHERE ${whereStr}
-        `, params),
-      ]);
-      return res.status(200).json({ rows, total: parseInt(total, 10), limit, offset });
-    }
-
-    // ══════════════════════════════════════════════════════════════════════
-    // REGISTRATION — pojedynczy zapis GET
-    // ══════════════════════════════════════════════════════════════════════
-    if (raw.match(/^\/registration\/\d+$/) || raw.match(/^\/registrations\/\d+$/)) {
-      const id = raw.split("/")[2];
-      const { rows: [reg] } = await pool.query(`
-        SELECT r.*,
-               g.name AS group_name, g.category, g.max_capacity,
-               l.city, l.slug AS location_slug, l.name AS location_name,
-               p.name AS plan_name
-        FROM registrations r
-        LEFT JOIN groups g ON r.group_id = g.id
-        LEFT JOIN locations l ON g.location_id = l.id
-        LEFT JOIN price_plans p ON r.price_plan_id = p.id
-        WHERE r.id = $1
-      `, [id]);
-      if (!reg) return bad(res, "Nie znaleziono zapisu", 404);
-      return res.status(200).json(reg);
-    }
-
-    // ══════════════════════════════════════════════════════════════════════
-    // REGISTRATION — edycja PATCH (rozszerzona)
-    // ══════════════════════════════════════════════════════════════════════
-    if (raw.match(/^\/registration\/\d+/) && method === "PATCH") {
-      const id = raw.split("/")[2];
-      const updates = await getBody(req);
-
-      const ALLOWED = [
-        "status", "payment_status", "admin_notes", "is_waitlist", "start_date",
-        "first_name", "last_name", "email", "phone", "birth_year",
-        "group_id", "price_plan_id", "payment_method", "total_amount",
-        "is_new", "preferred_time", "source"
-      ];
-      const set = [];
-      const vals = [];
-      let pi = 1;
-
-      for (const key of ALLOWED) {
-        if (key in updates) { set.push(`${key} = $${pi++}`); vals.push(updates[key]); }
-      }
-      if (updates.payment_status === "paid" && !("paid_at" in updates)) set.push("paid_at = NOW()");
-      if (!set.length) return bad(res, "Brak pól do aktualizacji");
-
-      vals.push(id);
-      await pool.query(`UPDATE registrations SET ${set.join(", ")} WHERE id = $${pi}`, vals);
-      return res.status(200).json({ success: true });
-    }
-
-    // ══════════════════════════════════════════════════════════════════════
-    // REGISTRATION — usuwanie DELETE
-    // ══════════════════════════════════════════════════════════════════════
-    if (raw.match(/^\/registration\/\d+/) && method === "DELETE") {
-      const id = raw.split("/")[2];
-      const { rowCount } = await pool.query("DELETE FROM registrations WHERE id = $1", [id]);
-      if (!rowCount) return bad(res, "Nie znaleziono zapisu", 404);
-      return res.status(200).json({ success: true });
-    }
-
-    // ══════════════════════════════════════════════════════════════════════
-    // PARTICIPANT — dodaj nowego kursanta (admin)
-    // ══════════════════════════════════════════════════════════════════════
-    if (raw === "/participant" && method === "POST") {
-      const b = await getBody(req);
-      const required = ["first_name", "last_name", "group_id"];
-      for (const f of required) {
-        if (!b[f]) return bad(res, `Pole ${f} jest wymagane`);
-      }
-
-      const { rows: [reg] } = await pool.query(`
-        INSERT INTO registrations (
-          group_id, schedule_id, price_plan_id,
-          first_name, last_name, email, phone, birth_year,
-          is_new, start_date, payment_method, total_amount,
-          payment_status, status, is_waitlist,
-          preferred_time, consent_data, consent_rules,
-          admin_notes, source
-        ) VALUES (
-          $1, $2, $3,
-          $4, $5, $6, $7, $8,
-          $9, $10, $11, $12,
-          $13, $14, $15,
-          $16, $17, $18,
-          $19, 'admin'
-        ) RETURNING id, first_name, last_name
-      `, [
-        b.group_id,
-        b.schedule_id || null,
-        b.price_plan_id || null,
-        b.first_name,
-        b.last_name,
-        b.email || null,
-        b.phone || null,
-        b.birth_year || null,
-        b.is_new !== undefined ? b.is_new : true,
-        b.start_date || null,
-        b.payment_method || 'cash',
-        b.total_amount || 0,
-        b.payment_status || 'unpaid',
-        b.status || 'confirmed',
-        b.is_waitlist || false,
-        b.preferred_time || null,
-        true,
-        true,
-        b.admin_notes || null,
-      ]);
-      return res.status(201).json({ success: true, id: reg.id, name: reg.first_name + " " + reg.last_name });
-    }
-      // ══════════════════════════════════════════════════════════════════════
-      // PARTICIPANTS — baza kursantów (CRUD)
-      // ══════════════════════════════════════════════════════════════════════
-
-      // LISTA
-      if (raw === "/participants" && method === "GET") {
-        const q = req.query || {};
-        const where = ["1=1"];
-        const params = [];
-        let pi = 1;
-
-        if (q.search) {
-          where.push(`(p.first_name ILIKE $${pi} OR p.last_name ILIKE $${pi} OR p.email ILIKE $${pi} OR p.phone ILIKE $${pi})`);
-          params.push(`%${q.search}%`); pi++;
-        }
-        if (q.status) { where.push(`p.status = $${pi++}`); params.push(q.status); }
-        if (q.source) { where.push(`p.source = $${pi++}`); params.push(q.source); }
-
-        const limit  = Math.min(toInt(q.limit, 50), 200);
-        const offset = Math.max(toInt(q.offset, 0), 0);
-        const whereStr = where.join(" AND ");
-
-        const [{ rows }, { rows: [{ total }] }] = await Promise.all([
-          pool.query(`
-            SELECT
-              p.*,
-              gm.group_id,
-              gm.is_waitlist,
-              g.name AS group_name,
-              l.city,
-              l.slug AS location_slug,
-              l.name AS location_name
-            FROM participants p
-            LEFT JOIN group_members gm ON gm.participant_id = p.id
-            LEFT JOIN groups g ON g.id = gm.group_id
+          SELECT r.id,
+                 (r.first_name || ' ' || r.last_name) AS name,
+                 l.city,
+                 g.name AS group_name,
+                 r.status,
+                 r.payment_status,
+                 r.created_at
+            FROM registrations r
+            LEFT JOIN groups g ON g.id = r.group_id
             LEFT JOIN locations l ON l.id = g.location_id
-            WHERE ${whereStr}
-            ORDER BY p.id DESC
-            LIMIT ${limit} OFFSET ${offset}
-          `, params),
-          pool.query(`SELECT COUNT(*)::int AS total FROM participants p WHERE ${whereStr}`, params),
-        ]);
+           ORDER BY r.created_at DESC
+           LIMIT 10
+        `),
+      ]);
 
-        return res.status(200).json({ rows, total: parseInt(total, 10), limit, offset });
-      }
-
-      // DODAJ
-      if (raw === "/participants" && method === "POST") {
-        const b = await getBody(req);
-
-        const first_name = String(b.first_name || "").trim();
-        const last_name  = String(b.last_name || "").trim();
-        const email      = String(b.email || "").trim() || null;
-        const phone      = String(b.phone || "").trim() || null;
-
-        if (!first_name || !last_name) return bad(res, "Imię i nazwisko są wymagane");
-
-        const source = String(b.source || "admin").trim();
-        const status = String(b.status || "active").trim();
-        const notes  = String(b.notes || "").trim() || null;
-
-        const group_id = b.group_id != null ? parseInt(b.group_id, 10) : null;
-        const is_waitlist = b.is_waitlist === true;
-
-        const { rows: [p] } = await pool.query(
-          `INSERT INTO participants (first_name, last_name, email, phone, source, status, notes)
-           VALUES ($1,$2,$3,$4,$5,$6,$7)
-           RETURNING *`,
-          [first_name, last_name, email, phone, source, status, notes]
-        );
-
-        if (group_id) {
-          await pool.query(
-            `INSERT INTO group_members (participant_id, group_id, is_waitlist)
-             VALUES ($1,$2,$3)
-             ON CONFLICT (participant_id) DO UPDATE SET group_id = EXCLUDED.group_id, is_waitlist = EXCLUDED.is_waitlist`,
-            [p.id, group_id, is_waitlist]
-          );
-        }
-
-        return res.status(201).json({ success: true, participant: p });
-      }
-
-      // JEDEN
-      if (raw.match(/^\/participants\/\d+$/) && method === "GET") {
-        const id = raw.split("/")[2];
-        const { rows: [p] } = await pool.query(`
-          SELECT
-            p.*,
-            gm.group_id,
-            gm.is_waitlist,
-            g.name AS group_name,
-            l.city,
-            l.slug AS location_slug,
-            l.name AS location_name
-          FROM participants p
-          LEFT JOIN group_members gm ON gm.participant_id = p.id
-          LEFT JOIN groups g ON g.id = gm.group_id
-          LEFT JOIN locations l ON l.id = g.location_id
-          WHERE p.id = $1
-        `, [id]);
-
-        if (!p) return bad(res, "Nie znaleziono kursanta", 404);
-        return res.status(200).json(p);
-      }
-
-      // EDYCJA
-      if (raw.match(/^\/participants\/\d+$/) && method === "PATCH") {
-        const id = raw.split("/")[2];
-        const u = await getBody(req);
-
-        const ALLOWED = ["first_name","last_name","email","phone","source","status","notes"];
-        const set = [];
-        const vals = [];
-        let pi = 1;
-
-        for (const key of ALLOWED) {
-          if (key in u) { set.push(`${key} = $${pi++}`); vals.push(u[key]); }
-        }
-
-        if (set.length) {
-          vals.push(id);
-          await pool.query(`UPDATE participants SET ${set.join(", ")} WHERE id = $${pi}`, vals);
-        }
-
-        if ("group_id" in u || "is_waitlist" in u) {
-          const group_id = u.group_id != null ? parseInt(u.group_id, 10) : null;
-          const is_waitlist = u.is_waitlist === true;
-
-          if (group_id) {
-            await pool.query(
-              `INSERT INTO group_members (participant_id, group_id, is_waitlist)
-               VALUES ($1,$2,$3)
-               ON CONFLICT (participant_id) DO UPDATE SET group_id = EXCLUDED.group_id, is_waitlist = EXCLUDED.is_waitlist`,
-              [id, group_id, is_waitlist]
-            );
-          } else {
-            await pool.query(`DELETE FROM group_members WHERE participant_id = $1`, [id]);
-          }
-        }
-
-        return res.status(200).json({ success: true });
-      }
-
-      // USUŃ
-      if (raw.match(/^\/participants\/\d+$/) && method === "DELETE") {
-        const id = raw.split("/")[2];
-        await pool.query(`DELETE FROM group_members WHERE participant_id = $1`, [id]);
-        const { rowCount } = await pool.query(`DELETE FROM participants WHERE id = $1`, [id]);
-        if (!rowCount) return bad(res, "Nie znaleziono kursanta", 404);
-        return res.status(200).json({ success: true });
-      }
-
-    // ══════════════════════════════════════════════════════════════════════
-    // GROUPS — lista
-    // ══════════════════════════════════════════════════════════════════════
-    if (raw === "/groups" && method === "GET") {
-      const { rows } = await pool.query(`
-        SELECT g.*,
-               l.city, l.name AS location_name, l.slug AS location_slug,
-               COUNT(r.id) FILTER (WHERE r.status != 'cancelled' AND r.is_waitlist = false)::int AS registered_count,
-               COUNT(r.id) FILTER (WHERE r.is_waitlist = true)::int AS waitlist_count
-        FROM groups g
-        LEFT JOIN locations l ON g.location_id = l.id
-        LEFT JOIN registrations r ON r.group_id = g.id
-        GROUP BY g.id, l.id, l.city, l.name, l.slug
-        ORDER BY l.city, g.category, g.name
-      `);
-      return res.status(200).json({ rows });
+      const t = totalR[0] || { total: 0, paid: 0, pending: 0, waitlist: 0 };
+      return res.status(200).json({
+        total: t.total,
+        paid: t.paid,
+        pending: t.pending,
+        waitlist: t.waitlist,
+        byLoc,
+        byGroup,
+        recent,
+      });
+    } catch (e) {
+      console.error("[admin-api/stats]", e);
+      return res.status(500).json({ error: "Błąd statystyk." });
     }
+  }
 
-    // ══════════════════════════════════════════════════════════════════════
-    // GROUP — dodaj
-    // ══════════════════════════════════════════════════════════════════════
-    if (raw === "/groups" && method === "POST") {
-      const b = await getBody(req);
-      if (!b.name || !b.location_id) return bad(res, "Pola name i location_id są wymagane");
-      const { rows: [g] } = await pool.query(`
-        INSERT INTO groups (location_id, name, category, age_range, max_capacity, active, notes)
-        VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id
-      `, [b.location_id, b.name, b.category || 'adults', b.age_range || null, b.max_capacity || 20, b.active !== false, b.notes || null]);
-      return res.status(201).json({ success: true, id: g.id });
-    }
-
-    // ══════════════════════════════════════════════════════════════════════
-    // GROUP — edycja PATCH
-    // ══════════════════════════════════════════════════════════════════════
-    // GROUPS — podgląd jednej grupy
-    if (raw.match(/^\/groups\/\d+$/) && method === "GET") {
-      const id = raw.split("/")[2];
-      const { rows: [g] } = await pool.query(`
-        SELECT
-          g.*,
-          l.city,
-          l.name AS location_name,
-          l.slug AS location_slug,
-          COUNT(r.id) FILTER (WHERE r.status != 'cancelled' AND r.is_waitlist = false)::int AS registered_count,
-          COUNT(r.id) FILTER (WHERE r.status != 'cancelled' AND r.is_waitlist = true)::int  AS waitlist_count
-        FROM groups g
-        LEFT JOIN locations l ON l.id = g.location_id
-        LEFT JOIN registrations r ON r.group_id = g.id
-        WHERE g.id = $1
-        GROUP BY g.id, l.id
-      `, [id]);
-      if (!g) return bad(res, "Nie znaleziono grupy", 404);
-      return res.status(200).json(g);
-    }
-
-    if (raw.match(/^\/groups\/\d+$/) && method === "PATCH") {
-      const id = raw.split("/")[2];
-      const b = await getBody(req);
-      const ALLOWED = ["name", "category", "age_range", "max_capacity", "active", "notes", "location_id"];
-      const set = []; const vals = []; let pi = 1;
-      for (const key of ALLOWED) { if (key in b) { set.push(`${key} = $${pi++}`); vals.push(b[key]); } }
-      if (!set.length) return bad(res, "Brak pól do aktualizacji");
-      vals.push(id);
-      await pool.query(`UPDATE groups SET ${set.join(", ")} WHERE id = $${pi}`, vals);
-      return res.status(200).json({ success: true });
-    }
-
-    // ══════════════════════════════════════════════════════════════════════
-    // GROUP — usuń DELETE
-    // ══════════════════════════════════════════════════════════════════════
-    if (raw.match(/^\/groups\/\d+$/) && method === "DELETE") {
-      const id = raw.split("/")[2];
-      const { rows: [{ cnt }] } = await pool.query(
-        "SELECT COUNT(*)::int AS cnt FROM registrations WHERE group_id = $1 AND status != 'cancelled'", [id]
-      );
-      if (parseInt(cnt) > 0) return bad(res, `Nie można usunąć — grupa ma ${cnt} aktywnych zapisów.`, 409);
-      await pool.query("DELETE FROM schedules WHERE group_id = $1", [id]);
-      const { rowCount } = await pool.query("DELETE FROM groups WHERE id = $1", [id]);
-      if (!rowCount) return bad(res, "Nie znaleziono grupy", 404);
-      return res.status(200).json({ success: true });
-    }
-
-    // ══════════════════════════════════════════════════════════════════════
-    // SCHEDULES — lista
-    // ══════════════════════════════════════════════════════════════════════
-    if (raw === "/schedules" && method === "GET") {
-      const { rows } = await pool.query(`
-        SELECT s.*, g.name AS group_name, g.category, l.city, l.slug AS location_slug
-        FROM schedules s
-        LEFT JOIN groups g ON s.group_id = g.id
-        LEFT JOIN locations l ON g.location_id = l.id
-        ORDER BY l.city, s.day_of_week, s.time_start
-      `);
-      return res.status(200).json({ rows });
-    }
-
-    // ══════════════════════════════════════════════════════════════════════
-    // SCHEDULE — dodaj
-    // ══════════════════════════════════════════════════════════════════════
-    if (raw === "/schedules" && method === "POST") {
-      const b = await getBody(req);
-      if (!b.group_id || b.day_of_week === undefined) return bad(res, "Pola group_id i day_of_week są wymagane");
-      const { rows: [s] } = await pool.query(`
-        INSERT INTO schedules (group_id, day_of_week, time_start, time_end, address, active)
-        VALUES ($1, $2, $3, $4, $5, $6) RETURNING id
-      `, [b.group_id, b.day_of_week, b.time_start || null, b.time_end || null, b.address || null, b.active !== false]);
-      return res.status(201).json({ success: true, id: s.id });
-    }
-
-    // ══════════════════════════════════════════════════════════════════════
-    // SCHEDULE — edycja PATCH
-    // ══════════════════════════════════════════════════════════════════════
-    if (raw.match(/^\/schedules\/\d+$/) && method === "PATCH") {
-      const id = raw.split("/")[2];
-      const b = await getBody(req);
-      const ALLOWED = ["group_id", "day_of_week", "time_start", "time_end", "address", "active"];
-      const set = []; const vals = []; let pi = 1;
-      for (const key of ALLOWED) { if (key in b) { set.push(`${key} = $${pi++}`); vals.push(b[key]); } }
-      if (!set.length) return bad(res, "Brak pól do aktualizacji");
-      vals.push(id);
-      await pool.query(`UPDATE schedules SET ${set.join(", ")} WHERE id = $${pi}`, vals);
-      return res.status(200).json({ success: true });
-    }
-
-    // ══════════════════════════════════════════════════════════════════════
-    // SCHEDULE — usuń DELETE
-    // ══════════════════════════════════════════════════════════════════════
-    if (raw.match(/^\/schedules\/\d+$/) && method === "DELETE") {
-      const id = raw.split("/")[2];
-      await pool.query("UPDATE registrations SET schedule_id = NULL WHERE schedule_id = $1", [id]);
-      const { rowCount } = await pool.query("DELETE FROM schedules WHERE id = $1", [id]);
-      if (!rowCount) return bad(res, "Nie znaleziono terminu", 404);
-      return res.status(200).json({ success: true });
-    }
-
-    // ══════════════════════════════════════════════════════════════════════
-    // LOCATIONS — lista
-    // ══════════════════════════════════════════════════════════════════════
-    if (raw === "/locations" && method === "GET") {
+  // -----------------------------
+  // GET /locations
+  // -----------------------------
+  if (req.method === "GET" && seg[0] === "locations") {
+    try {
       const { rows } = await pool.query(`
         SELECT l.*,
-          COUNT(DISTINCT g.id)::int AS groups_count,
-          COUNT(r.id) FILTER (WHERE r.status != 'cancelled')::int AS registrations_count
-        FROM locations l
-        LEFT JOIN groups g ON g.location_id = l.id
-        LEFT JOIN registrations r ON r.group_id = g.id
-        GROUP BY l.id ORDER BY l.city
+               (SELECT COUNT(*) FROM groups g WHERE g.location_id=l.id)::int AS groups_count,
+               (SELECT COUNT(*)
+                  FROM registrations r
+                  JOIN groups g ON g.id=r.group_id
+                 WHERE g.location_id=l.id AND r.status NOT IN ('cancelled'))::int AS registrations_count
+          FROM locations l
+         ORDER BY l.id
       `);
       return res.status(200).json({ rows });
+    } catch (e) {
+      console.error("[admin-api/locations]", e);
+      return res.status(500).json({ error: "Błąd pobierania lokalizacji." });
     }
-
-    // ══════════════════════════════════════════════════════════════════════
-    // LOCATION — dodaj
-    // ══════════════════════════════════════════════════════════════════════
-    if (raw === "/locations" && method === "POST") {
-      const b = await getBody(req);
-      if (!b.name || !b.city || !b.slug) return bad(res, "Pola name, city i slug są wymagane");
-      const { rows: [l] } = await pool.query(`
-        INSERT INTO locations (slug, name, city, address, venue, active)
-        VALUES ($1, $2, $3, $4, $5, $6) RETURNING id
-      `, [b.slug, b.name, b.city, b.address || null, b.venue || null, b.active !== false]);
-      return res.status(201).json({ success: true, id: l.id });
-    }
-
-    // ══════════════════════════════════════════════════════════════════════
-    // LOCATION — edycja PATCH
-    // ══════════════════════════════════════════════════════════════════════
-    if (raw.match(/^\/locations\/\d+$/) && method === "PATCH") {
-      const id = raw.split("/")[2];
-      const b = await getBody(req);
-      const ALLOWED = ["slug", "name", "city", "address", "venue", "active"];
-      const set = []; const vals = []; let pi = 1;
-      for (const key of ALLOWED) { if (key in b) { set.push(`${key} = $${pi++}`); vals.push(b[key]); } }
-      if (!set.length) return bad(res, "Brak pól do aktualizacji");
-      vals.push(id);
-      await pool.query(`UPDATE locations SET ${set.join(", ")} WHERE id = $${pi}`, vals);
-      return res.status(200).json({ success: true });
-    }
-
-    // ══════════════════════════════════════════════════════════════════════
-    // PRICE PLANS — lista
-    // ══════════════════════════════════════════════════════════════════════
-    if (raw === "/plans" && method === "GET") {
-      const { rows } = await pool.query(`SELECT * FROM price_plans ORDER BY sort_order, category, months`);
-      return res.status(200).json({ rows });
-    }
-
-    // ══════════════════════════════════════════════════════════════════════
-    // EXPORT CSV
-    // ══════════════════════════════════════════════════════════════════════
-    if (raw === "/export" && method === "GET") {
-      const { rows } = await pool.query(`
-        SELECT
-          r.id, r.created_at, r.first_name, r.last_name,
-          r.email, r.phone, r.birth_year,
-          CASE WHEN r.is_new THEN 'nowy' ELSE 'kontynuacja' END AS typ,
-          COALESCE(r.source, 'web') AS źródło,
-          l.city AS lokalizacja, g.name AS grupa, g.category AS kategoria,
-          r.start_date AS data_startu, p.name AS karnet,
-          r.total_amount AS kwota, r.payment_method AS metoda,
-          r.payment_status AS status_platnosci, r.payment_ref AS kod_ref,
-          r.paid_at AS data_zaplaty, r.status AS status_zapisu,
-          CASE WHEN r.is_waitlist THEN 'tak' ELSE 'nie' END AS lista_rezerwowa,
-          r.admin_notes AS notatki_admina
-        FROM registrations r
-        LEFT JOIN groups g ON r.group_id = g.id
-        LEFT JOIN locations l ON g.location_id = l.id
-        LEFT JOIN price_plans p ON r.price_plan_id = p.id
-        ORDER BY r.created_at DESC LIMIT 5000
-      `);
-
-      if (!rows.length) { res.setHeader("Content-Type", "text/csv; charset=utf-8"); return res.status(200).send("Brak danych"); }
-      const keys = Object.keys(rows[0]);
-      const csvRows = [
-        keys.join(";"),
-        ...rows.map(r => keys.map(k => {
-          const v = r[k];
-          if (v === null || v === undefined) return "";
-          if (v instanceof Date) return v.toISOString().replace("T", " ").slice(0, 19);
-          const s = String(v).replace(/"/g, '""');
-          return /[;\n"]/.test(s) ? `"${s}"` : s;
-        }).join(";"))
-      ].join("\r\n");
-
-      const date = new Date().toISOString().slice(0, 10);
-      res.setHeader("Content-Type", "text/csv; charset=utf-8");
-      res.setHeader("Content-Disposition", `attachment; filename="km-zapisy-${date}.csv"`);
-      return res.status(200).send("\uFEFF" + csvRows);
-    }
-
-    return bad(res, "Nie znaleziono ścieżki", 404);
-  } catch (e) {
-    console.error("[ADMIN]", raw, method, e);
-    return res.status(500).json({ error: "Błąd serwera: " + e.message });
   }
+
+  // POST /locations
+  if (req.method === "POST" && seg[0] === "locations") {
+    const body = await readJson(req);
+    try {
+      const { city, slug, name, address, venue, active } = body || {};
+      if (!city || !slug || !name) return res.status(400).json({ error: "Miasto, slug i nazwa są wymagane." });
+
+      await pool.query(
+        `INSERT INTO locations (city,slug,name,address,venue,active)
+         VALUES ($1,$2,$3,$4,$5,$6)`,
+        [city, slug, name, address || null, venue || null, active !== false]
+      );
+
+      return res.status(201).json({ ok: true });
+    } catch (e) {
+      console.error("[admin-api/locations POST]", e);
+      return res.status(500).json({ error: "Błąd dodawania lokalizacji." });
+    }
+  }
+
+  // PATCH /locations/:id
+  if (req.method === "PATCH" && seg[0] === "locations" && seg[1]) {
+    const id = asInt(seg[1]);
+    const body = await readJson(req);
+    try {
+      await pool.query(
+        `UPDATE locations
+            SET city=COALESCE($2,city),
+                slug=COALESCE($3,slug),
+                name=COALESCE($4,name),
+                address=$5,
+                venue=$6,
+                active=COALESCE($7,active)
+          WHERE id=$1`,
+        [id, body.city || null, body.slug || null, body.name || null, body.address ?? null, body.venue ?? null,
+          typeof body.active === "boolean" ? body.active : null]
+      );
+      return res.status(200).json({ ok: true });
+    } catch (e) {
+      console.error("[admin-api/locations PATCH]", e);
+      return res.status(500).json({ error: "Błąd aktualizacji lokalizacji." });
+    }
+  }
+
+  // -----------------------------
+  // GET /groups
+  // -----------------------------
+  if (req.method === "GET" && seg[0] === "groups" && !seg[1]) {
+    try {
+      const { rows } = await pool.query(`
+        SELECT g.*,
+               l.city,
+               (SELECT COUNT(*)
+                  FROM registrations r
+                 WHERE r.group_id=g.id AND r.status NOT IN ('cancelled') AND r.is_waitlist=false)::int AS registered_count
+          FROM groups g
+          LEFT JOIN locations l ON l.id=g.location_id
+         ORDER BY l.city NULLS LAST, g.id
+      `);
+      return res.status(200).json({ rows });
+    } catch (e) {
+      console.error("[admin-api/groups]", e);
+      return res.status(500).json({ error: "Błąd pobierania grup." });
+    }
+  }
+
+  // POST /groups
+  if (req.method === "POST" && seg[0] === "groups" && !seg[1]) {
+    const body = await readJson(req);
+    try {
+      if (!body.name || !body.location_id) return res.status(400).json({ error: "Nazwa i lokalizacja są wymagane." });
+
+      await pool.query(
+        `INSERT INTO groups (location_id,name,category,age_range,max_capacity,active,notes)
+         VALUES ($1,$2,$3,$4,$5,$6,$7)`,
+        [
+          asInt(body.location_id),
+          body.name,
+          body.category || "adults",
+          body.age_range || null,
+          asInt(body.max_capacity) || 20,
+          body.active !== false,
+          body.notes || null,
+        ]
+      );
+
+      return res.status(201).json({ ok: true });
+    } catch (e) {
+      console.error("[admin-api/groups POST]", e);
+      return res.status(500).json({ error: "Błąd dodawania grupy." });
+    }
+  }
+
+  // PATCH /groups/:id
+  if (req.method === "PATCH" && seg[0] === "groups" && seg[1] && !seg[2]) {
+    const id = asInt(seg[1]);
+    const body = await readJson(req);
+    try {
+      await pool.query(
+        `UPDATE groups
+            SET location_id=$2,
+                name=COALESCE($3,name),
+                category=COALESCE($4,category),
+                age_range=$5,
+                max_capacity=COALESCE($6,max_capacity),
+                active=COALESCE($7,active),
+                notes=$8
+          WHERE id=$1`,
+        [
+          id,
+          body.location_id === null ? null : asInt(body.location_id),
+          body.name || null,
+          body.category || null,
+          body.age_range ?? null,
+          body.max_capacity != null ? asInt(body.max_capacity) : null,
+          typeof body.active === "boolean" ? body.active : null,
+          body.notes ?? null,
+        ]
+      );
+      return res.status(200).json({ ok: true });
+    } catch (e) {
+      console.error("[admin-api/groups PATCH]", e);
+      return res.status(500).json({ error: "Błąd aktualizacji grupy." });
+    }
+  }
+
+  // DELETE /groups/:id (tylko pusta)
+  if (req.method === "DELETE" && seg[0] === "groups" && seg[1] && !seg[2]) {
+    const id = asInt(seg[1]);
+    try {
+      const { rows } = await pool.query(
+        `SELECT COUNT(*)::int AS cnt
+           FROM registrations
+          WHERE group_id=$1 AND status NOT IN ('cancelled')`,
+        [id]
+      );
+      if ((rows[0]?.cnt || 0) > 0) return res.status(400).json({ error: "Nie można usunąć grupy z zapisami." });
+
+      await pool.query(`DELETE FROM schedules WHERE group_id=$1`, [id]);
+      await pool.query(`DELETE FROM groups WHERE id=$1`, [id]);
+      return res.status(200).json({ ok: true });
+    } catch (e) {
+      console.error("[admin-api/groups DELETE]", e);
+      return res.status(500).json({ error: "Błąd usuwania grupy." });
+    }
+  }
+
+  // GET /groups/:id/members
+  if (req.method === "GET" && seg[0] === "groups" && seg[1] && seg[2] === "members") {
+    const gid = asInt(seg[1]);
+    try {
+      const { rows } = await pool.query(
+        `SELECT id, first_name, last_name, email, phone, status, payment_status
+           FROM registrations
+          WHERE group_id=$1 AND status NOT IN ('cancelled')
+          ORDER BY created_at DESC`,
+        [gid]
+      );
+      return res.status(200).json({ rows });
+    } catch (e) {
+      console.error("[admin-api/groups members]", e);
+      return res.status(500).json({ error: "Błąd pobierania kursantów grupy." });
+    }
+  }
+
+  // -----------------------------
+  // GET /schedules
+  // -----------------------------
+  if (req.method === "GET" && seg[0] === "schedules" && !seg[1]) {
+    try {
+      const { rows } = await pool.query(`
+        SELECT s.*,
+               g.name AS group_name,
+               g.category,
+               g.id AS group_id,
+               l.city
+          FROM schedules s
+          LEFT JOIN groups g ON g.id=s.group_id
+          LEFT JOIN locations l ON l.id=g.location_id
+         ORDER BY s.day_of_week NULLS LAST, s.time_start
+      `);
+      return res.status(200).json({ rows });
+    } catch (e) {
+      console.error("[admin-api/schedules]", e);
+      return res.status(500).json({ error: "Błąd pobierania grafiku." });
+    }
+  }
+
+  // POST /schedules
+  if (req.method === "POST" && seg[0] === "schedules" && !seg[1]) {
+    const body = await readJson(req);
+    try {
+      if (!body.group_id && body.group_id !== 0) return res.status(400).json({ error: "Brak group_id." });
+
+      await pool.query(
+        `INSERT INTO schedules (group_id,day_of_week,time_start,time_end,address,active)
+         VALUES ($1,$2,$3,$4,$5,$6)`,
+        [
+          asInt(body.group_id),
+          asInt(body.day_of_week),
+          body.time_start || null,
+          body.time_end || null,
+          body.address || null,
+          body.active !== false,
+        ]
+      );
+
+      return res.status(201).json({ ok: true });
+    } catch (e) {
+      console.error("[admin-api/schedules POST]", e);
+      return res.status(500).json({ error: "Błąd dodawania terminu." });
+    }
+  }
+
+  // PATCH /schedules/:id
+  if (req.method === "PATCH" && seg[0] === "schedules" && seg[1]) {
+    const id = asInt(seg[1]);
+    const body = await readJson(req);
+    try {
+      await pool.query(
+        `UPDATE schedules
+            SET group_id=COALESCE($2,group_id),
+                day_of_week=COALESCE($3,day_of_week),
+                time_start=$4,
+                time_end=$5,
+                address=$6,
+                active=COALESCE($7,active)
+          WHERE id=$1`,
+        [
+          id,
+          body.group_id != null ? asInt(body.group_id) : null,
+          body.day_of_week != null ? asInt(body.day_of_week) : null,
+          body.time_start ?? null,
+          body.time_end ?? null,
+          body.address ?? null,
+          typeof body.active === "boolean" ? body.active : null,
+        ]
+      );
+      return res.status(200).json({ ok: true });
+    } catch (e) {
+      console.error("[admin-api/schedules PATCH]", e);
+      return res.status(500).json({ error: "Błąd aktualizacji terminu." });
+    }
+  }
+
+  // DELETE /schedules/:id
+  if (req.method === "DELETE" && seg[0] === "schedules" && seg[1]) {
+    const id = asInt(seg[1]);
+    try {
+      await pool.query(`DELETE FROM schedules WHERE id=$1`, [id]);
+      return res.status(200).json({ ok: true });
+    } catch (e) {
+      console.error("[admin-api/schedules DELETE]", e);
+      return res.status(500).json({ error: "Błąd usuwania terminu." });
+    }
+  }
+
+  // -----------------------------
+  // GET /plans  (price_plans)
+  // -----------------------------
+  if (req.method === "GET" && seg[0] === "plans") {
+    try {
+      const { rows } = await pool.query(`SELECT * FROM price_plans WHERE active=true ORDER BY sort_order`);
+      return res.status(200).json({ rows });
+    } catch (e) {
+      console.error("[admin-api/plans]", e);
+      return res.status(500).json({ error: "Błąd pobierania planów." });
+    }
+  }
+
+  // -----------------------------
+  // REGISTRATIONS LIST
+  // GET /registrations?...
+  // -----------------------------
+  if (req.method === "GET" && seg[0] === "registrations" && !seg[1]) {
+    try {
+      const q = req.query || {};
+      const limit = Math.min(200, Math.max(1, asInt(q.limit) || 30));
+      const offset = Math.max(0, asInt(q.offset) || 0);
+
+      const where = [];
+      const params = [];
+      let i = 1;
+
+      if (q.source) { where.push(`r.source = $${i++}`); params.push(q.source); }
+      if (q.status) { where.push(`r.status = $${i++}`); params.push(q.status); }
+      if (q.payment_status) { where.push(`r.payment_status = $${i++}`); params.push(q.payment_status); }
+      if (q.waitlist === "true") where.push(`r.is_waitlist = true`);
+      if (q.waitlist === "false") where.push(`r.is_waitlist = false`);
+
+      if (q.search) {
+        where.push(`(
+          LOWER(r.first_name) LIKE $${i} OR LOWER(r.last_name) LIKE $${i}
+          OR LOWER(r.email) LIKE $${i} OR r.phone LIKE $${i}
+        )`);
+        params.push(`%${String(q.search).toLowerCase()}%`);
+        i++;
+      }
+
+      const whereSql = where.length ? `WHERE ${where.join(" AND ")}` : "";
+
+      const { rows: cntR } = await pool.query(`SELECT COUNT(*)::int AS total FROM registrations r ${whereSql}`, params);
+      const total = cntR[0]?.total || 0;
+
+      const { rows } = await pool.query(
+        `
+        SELECT r.id, r.first_name, r.last_name, r.email, r.phone, r.created_at,
+               r.status, r.payment_status, r.is_waitlist, r.source,
+               l.city,
+               g.name AS group_name
+          FROM registrations r
+          LEFT JOIN groups g ON g.id=r.group_id
+          LEFT JOIN locations l ON l.id=g.location_id
+          ${whereSql}
+         ORDER BY r.created_at DESC
+         LIMIT ${limit} OFFSET ${offset}
+        `,
+        params
+      );
+
+      return res.status(200).json({ total, rows });
+    } catch (e) {
+      console.error("[admin-api/registrations]", e);
+      return res.status(500).json({ error: "Błąd listy zapisów." });
+    }
+  }
+
+  // GET /registrations/:id  (kartoteka)
+  if (req.method === "GET" && seg[0] === "registrations" && seg[1]) {
+    const id = asInt(seg[1]);
+    try {
+      const { rows } = await pool.query(
+        `
+        SELECT r.*,
+               l.id AS location_id,
+               l.city,
+               l.name AS location_name,
+               g.name AS group_name,
+               s.day_of_week AS schedule_day,
+               s.time_start AS schedule_time_start,
+               s.time_end AS schedule_time_end,
+               p.name AS plan_name
+          FROM registrations r
+          LEFT JOIN groups g ON g.id=r.group_id
+          LEFT JOIN locations l ON l.id=g.location_id
+          LEFT JOIN schedules s ON s.id=r.schedule_id
+          LEFT JOIN price_plans p ON p.id=r.price_plan_id
+         WHERE r.id=$1
+         LIMIT 1
+        `,
+        [id]
+      );
+      if (!rows.length) return res.status(404).json({ error: "Nie znaleziono." });
+      return res.status(200).json(rows[0]);
+    } catch (e) {
+      console.error("[admin-api/registration one]", e);
+      return res.status(500).json({ error: "Błąd kartoteki." });
+    }
+  }
+
+  // PATCH /registrations/:id
+  if (req.method === "PATCH" && seg[0] === "registrations" && seg[1]) {
+    const id = asInt(seg[1]);
+    const body = await readJson(req);
+    try {
+      await pool.query(
+        `
+        UPDATE registrations
+           SET first_name=COALESCE($2,first_name),
+               last_name=COALESCE($3,last_name),
+               email=$4,
+               phone=$5,
+               birth_year=$6,
+               is_new=COALESCE($7,is_new),
+               group_id=$8,
+               schedule_id=$9,
+               price_plan_id=$10,
+               start_date=$11,
+               is_waitlist=COALESCE($12,is_waitlist),
+               payment_status=COALESCE($13,payment_status),
+               payment_method=COALESCE($14,payment_method),
+               total_amount=COALESCE($15,total_amount),
+               status=COALESCE($16,status),
+               admin_notes=$17
+         WHERE id=$1
+        `,
+        [
+          id,
+          body.first_name || null,
+          body.last_name || null,
+          body.email ?? null,
+          body.phone ?? null,
+          body.birth_year ?? null,
+          typeof body.is_new === "boolean" ? body.is_new : null,
+          body.group_id === undefined ? null : body.group_id, // pozwala ustawić null
+          body.schedule_id === undefined ? null : body.schedule_id,
+          body.price_plan_id === undefined ? null : body.price_plan_id,
+          body.start_date ?? null,
+          typeof body.is_waitlist === "boolean" ? body.is_waitlist : null,
+          body.payment_status || null,
+          body.payment_method || null,
+          body.total_amount != null ? Number(body.total_amount) : null,
+          body.status || null,
+          body.admin_notes ?? null,
+        ]
+      );
+      return res.status(200).json({ ok: true });
+    } catch (e) {
+      console.error("[admin-api/registrations PATCH]", e);
+      return res.status(500).json({ error: "Błąd zapisu kartoteki." });
+    }
+  }
+
+  // DELETE /registrations/:id
+  if (req.method === "DELETE" && seg[0] === "registrations" && seg[1]) {
+    const id = asInt(seg[1]);
+    try {
+      await pool.query(`UPDATE registrations SET status='cancelled' WHERE id=$1`, [id]);
+      return res.status(200).json({ ok: true });
+    } catch (e) {
+      console.error("[admin-api/registrations DELETE]", e);
+      return res.status(500).json({ error: "Błąd usuwania." });
+    }
+  }
+
+  // -----------------------------
+  // POST /participant (dodany przez admina)
+  // -----------------------------
+  if (req.method === "POST" && seg[0] === "participant") {
+    const body = await readJson(req);
+    try {
+      if (!body.first_name || !body.last_name || !body.group_id) {
+        return res.status(400).json({ error: "Imię, nazwisko i grupa są wymagane." });
+      }
+
+      const { rows: [r] } = await pool.query(
+        `
+        INSERT INTO registrations (
+          group_id, price_plan_id,
+          first_name, last_name, email, phone, birth_year,
+          is_new, start_date,
+          payment_method, total_amount, payment_status,
+          status, admin_notes,
+          source, is_waitlist
+        )
+        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,'admin',false)
+        RETURNING id, first_name, last_name
+        `,
+        [
+          asInt(body.group_id),
+          body.price_plan_id ? asInt(body.price_plan_id) : null,
+          body.first_name,
+          body.last_name,
+          body.email ?? null,
+          body.phone ?? null,
+          body.birth_year ?? null,
+          typeof body.is_new === "boolean" ? body.is_new : true,
+          body.start_date ?? null,
+          body.payment_method || "cash",
+          body.total_amount != null ? Number(body.total_amount) : 0,
+          body.payment_status || "unpaid",
+          body.status || "confirmed",
+          body.admin_notes ?? null,
+        ]
+      );
+
+      return res.status(201).json({ ok: true, id: r.id, name: `${r.first_name} ${r.last_name}` });
+    } catch (e) {
+      console.error("[admin-api/participant POST]", e);
+      return res.status(500).json({ error: "Błąd dodawania kursanta." });
+    }
+  }
+
+  // -----------------------------
+  // GET /export  (CSV)
+  // -----------------------------
+  if (req.method === "GET" && seg[0] === "export") {
+    try {
+      const { rows } = await pool.query(`
+        SELECT r.id, r.first_name, r.last_name, r.email, r.phone,
+               l.city,
+               g.name AS group_name,
+               r.status, r.payment_status, r.payment_method,
+               r.total_amount, r.payment_ref,
+               r.is_waitlist, r.created_at
+          FROM registrations r
+          LEFT JOIN groups g ON g.id=r.group_id
+          LEFT JOIN locations l ON l.id=g.location_id
+         ORDER BY r.created_at DESC
+      `);
+
+      const header = [
+        "id","first_name","last_name","email","phone","city","group_name",
+        "status","payment_status","payment_method","total_amount","payment_ref",
+        "is_waitlist","created_at"
+      ];
+
+      const lines = [
+        header.join(";"),
+        ...rows.map((r) => header.map((k) => csvEscape(r[k])).join(";")),
+      ];
+
+      res.setHeader("Content-Type", "text/csv; charset=utf-8");
+      res.setHeader("Content-Disposition", `attachment; filename="saggita-export.csv"`);
+      return res.status(200).send("\uFEFF" + lines.join("\n"));
+    } catch (e) {
+      console.error("[admin-api/export]", e);
+      return res.status(500).json({ error: "Błąd eksportu." });
+    }
+  }
+
+  // Fallback
+  return res.status(404).json({ error: "Nieznany endpoint." });
 };
