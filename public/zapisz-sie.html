@@ -49,7 +49,7 @@ body::before{
 /* ── WRAP ── */
 .wrap{width:min(1200px,94vw);margin:0 auto;}
 
-/* ── PAGE HEADER (LESS RED, MORE PREMIUM) ── */
+/* ── PAGE HEADER ── */
 .pg-header{
   padding:56px 0 32px;
   border-bottom:1px solid var(--border);
@@ -159,17 +159,10 @@ body::before{
 .badge--closed{color:#888;border-color:rgba(255,255,255,0.12);background:rgba(0,0,0,0.28);}
 
 /* ─────────────────────────────────────────────────────────────
-   WOW SCHEDULE: DESKTOP = HORIZONTAL TIMELINE
-   MOBILE = VERTICAL TIMELINE
+   WOW SCHEDULE: DESKTOP = HORIZONTAL, MOBILE = VERTICAL
+   (NAPRAWIONE: brak duplikatów, timeline jest flex)
    ───────────────────────────────────────────────────────────── */
 
-.group-card__slots{
-  position:relative;
-  padding:18px 18px 22px;
-  overflow:hidden;
-}
-
-/* ── SLOTS WRAP (NO EMPTY SPACE) ── */
 .group-card__slots{
   position:relative;
   padding:18px 18px 22px;
@@ -177,7 +170,7 @@ body::before{
   overflow:hidden;
 }
 
-/* delikatne “życie” w tle, żeby nie było pustki */
+/* delikatne “życie” w tle */
 .group-card__slots::before{
   content:'';
   position:absolute; inset:0;
@@ -190,7 +183,7 @@ body::before{
   pointer-events:none;
 }
 
-/* mocny, ale cienki akcent na górze sekcji */
+/* cienki akcent na górze sekcji */
 .group-card__slots::after{
   content:'';
   position:absolute; left:0; right:0; top:0; height:2px;
@@ -198,133 +191,42 @@ body::before{
   opacity:.9;
 }
 
-/* najważniejsze: GRID, który wypełnia szerokość */
-.slots-grid{
-  position:relative;
-  display:grid;
-  grid-template-columns:repeat(auto-fit, minmax(320px, 1fr));
-  gap:14px;
-}
-
-/* karta terminu */
-.slot{
-  position:relative;
-  background:rgba(0,0,0,0.28);
-  border:1px solid rgba(255,255,255,0.12);
-  padding:16px 16px 14px;
-  cursor:pointer;
-  transition:transform 180ms ease, border-color 180ms ease, background 180ms ease;
-  overflow:hidden;
-}
-
-/* ukośny “ruch” w tle kafla */
-.slot::before{
-  content:'';
-  position:absolute; inset:-40px -60px auto auto;
-  width:180px; height:180px;
-  background:linear-gradient(135deg, rgba(var(--accent-rgb),0.22), transparent 65%);
-  transform:rotate(8deg);
-  opacity:.55;
-}
-
-.slot:hover{
-  transform:translateY(-2px);
-  border-color:rgba(var(--accent-rgb),0.55);
-  background:rgba(var(--accent-rgb),0.06);
-}
-
-.slot.selected{
-  border-color:rgba(var(--accent-rgb),0.85);
-  background:rgba(var(--accent-rgb),0.10);
-  box-shadow:0 12px 60px rgba(var(--accent-rgb),0.14);
-}
-
-/* wersja zamknięta */
-.slot--closed{cursor:default;opacity:.55;}
-.slot--closed:hover{transform:none;border-color:rgba(255,255,255,0.12);background:rgba(0,0,0,0.28);}
-
-/* layout środka */
-.slot__row{
+/* TIMELINE (bazowo) */
+.timeline{
   position:relative;
   display:flex;
-  align-items:flex-start;
-  justify-content:space-between;
   gap:12px;
+  padding:6px 0 0;
+  align-items:stretch;
+}
+.timeline::before{
+  content:'';
+  position:absolute;
+  left:0; right:0; top:28px;
+  height:2px;
+  background:linear-gradient(90deg,
+    rgba(var(--accent-rgb),0.00),
+    rgba(var(--accent-rgb),0.55),
+    rgba(var(--accent-rgb),0.00)
+  );
+  pointer-events:none;
+  opacity:.9;
 }
 
-.slot__day{
-  font-family:'Montserrat',sans-serif;
-  font-weight:700;
-  font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;
-  color:rgba(255,255,255,0.92);
-}
-
-.slot__time{
-  font-weight:900;
-  font-size:1.18rem;
-  margin-top:6px;
-  color:#fff;
-}
-.slot__time em{font-style:normal;color:var(--accent);}
-
-.slot__addr{
-  margin-top:10px;
-  font-weight:700;font-size:.76rem;
-  color:var(--muted);
-  line-height:1.35;
-  max-width:34ch;
-}
-
-.slot__btn{
-  flex-shrink:0;
-  font-weight:900;font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;
-  color:rgba(255,255,255,0.88);
-  border:1px solid rgba(255,255,255,0.18);
-  padding:9px 12px;
-  background:rgba(0,0,0,0.22);
-  transition:background 180ms ease, border-color 180ms ease, color 180ms ease;
-  white-space:nowrap;
-}
-.slot:hover .slot__btn{
-  border-color:rgba(var(--accent-rgb),0.65);
-  background:rgba(var(--accent-rgb),0.12);
-  color:#fff;
-}
-.slot.selected .slot__btn{
-  border-color:rgba(var(--accent-rgb),0.90);
-  background:rgba(var(--accent-rgb),0.18);
-  color:#fff;
-}
-
-/* mobile: większa czytelność */
-@media(max-width:520px){
-  .slots-grid{grid-template-columns:1fr;}
-  .slot__btn{padding:10px 12px;}
-}
-
-/* slot as node */
+/* SLOT (kafelek) */
 .slot{
   position:relative;
-  min-width:260px;
-  flex:0 0 260px;
+  min-width:280px;
+  flex:0 0 280px;
   background:rgba(0,0,0,0.26);
   border:1px solid rgba(255,255,255,0.10);
   padding:14px 14px 14px 14px;
   cursor:pointer;
   transition:transform 180ms ease, border-color 180ms ease, background 180ms ease;
-}
-.slot:hover{
-  transform:translateY(-2px);
-  border-color:rgba(var(--accent-rgb),0.55);
-  background:rgba(var(--accent-rgb),0.06);
-}
-.slot.selected{
-  border-color:rgba(var(--accent-rgb),0.85);
-  background:rgba(var(--accent-rgb),0.10);
-  box-shadow:var(--glow);
+  overflow:hidden;
 }
 
-/* dot on the line */
+/* “kropka” na linii */
 .slot::before{
   content:'';
   position:absolute;
@@ -335,13 +237,29 @@ body::before{
   border:2px solid rgba(var(--accent-rgb),0.85);
   box-shadow:0 0 0 6px rgba(var(--accent-rgb),0.10);
 }
+.slot:hover{
+  transform:translateY(-2px);
+  border-color:rgba(var(--accent-rgb),0.55);
+  background:rgba(var(--accent-rgb),0.06);
+}
 .slot:hover::before{box-shadow:0 0 0 7px rgba(var(--accent-rgb),0.14);}
-.slot.selected::before{background:var(--accent);border-color:rgba(255,255,255,0.20);box-shadow:0 0 0 8px rgba(var(--accent-rgb),0.18);}
+.slot.selected{
+  border-color:rgba(var(--accent-rgb),0.85);
+  background:rgba(var(--accent-rgb),0.10);
+  box-shadow:var(--glow);
+}
+.slot.selected::before{
+  background:var(--accent);
+  border-color:rgba(255,255,255,0.20);
+  box-shadow:0 0 0 8px rgba(var(--accent-rgb),0.18);
+}
 
+/* zamknięte */
 .slot--closed{cursor:default;opacity:.55;}
 .slot--closed:hover{transform:none;border-color:rgba(255,255,255,0.10);background:rgba(0,0,0,0.26);}
 .slot--closed::before{border-color:rgba(255,255,255,0.22);box-shadow:none;}
 
+/* wnętrze */
 .slot__top{
   padding-left:28px;
   display:flex;
@@ -355,24 +273,23 @@ body::before{
   color:rgba(255,255,255,0.92);
 }
 .slot__time{
-  font-weight:900;font-size:1.12rem;
+  font-weight:800;
+  font-size:1.12rem;
   color:rgba(255,255,255,0.96);
   margin-top:4px;
 }
-.slot__time em{
-  font-style:normal;
-  color:var(--accent);
-}
+.slot__time em{font-style:normal;color:var(--accent);}
 .slot__addr{
   margin-top:8px;
   font-weight:700;font-size:.74rem;
   color:var(--muted);
   line-height:1.35;
+  max-width:34ch;
 }
 
 .slot__btn{
   flex-shrink:0;
-  font-weight:900;font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;
+  font-weight:800;font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;
   color:rgba(255,255,255,0.88);
   border:1px solid rgba(255,255,255,0.18);
   padding:8px 10px;
@@ -391,7 +308,7 @@ body::before{
   color:#fff;
 }
 
-/* desktop horizontal can scroll if many slots */
+/* desktop: poziomy scroll */
 @media(min-width:860px){
   .timeline{
     overflow-x:auto;
@@ -405,7 +322,7 @@ body::before{
   .timeline::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,0.18)}
 }
 
-/* mobile: vertical timeline */
+/* mobile: pionowo */
 @media(max-width:859px){
   .timeline{
     flex-direction:column;
@@ -425,7 +342,6 @@ body::before{
   .slot{
     min-width:unset;
     flex:1 1 auto;
-    padding-left:16px;
   }
   .slot::before{
     top:18px;
@@ -473,7 +389,7 @@ body::before{
   padding:12px 16px;margin-bottom:22px;
   display:flex;align-items:center;gap:14px;flex-wrap:wrap;
 }
-.selected-slot-info__label{font-weight:900;font-size:.66rem;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,0.70);}
+.selected-slot-info__label{font-weight:800;font-size:.66rem;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,0.70);}
 .selected-slot-info__val{font-weight:800;font-size:.92rem;color:#fff;}
 
 .form-grid{
@@ -486,7 +402,7 @@ body::before{
 .form-field{display:flex;flex-direction:column;gap:6px;}
 .form-field--full{grid-column:1/-1;}
 .form-label{
-  font-weight:900;font-size:.66rem;letter-spacing:.16em;text-transform:uppercase;
+  font-weight:800;font-size:.66rem;letter-spacing:.16em;text-transform:uppercase;
   color:rgba(255,255,255,0.70);
 }
 .form-label span{color:var(--accent);}
@@ -547,7 +463,7 @@ body::before{
   box-shadow:var(--glow);
 }
 .price-card input{position:absolute;opacity:0;pointer-events:none;}
-.price-card__name{font-weight:900;font-size:.78rem;color:#fff;margin-bottom:4px;}
+.price-card__name{font-weight:800;font-size:.78rem;color:#fff;margin-bottom:4px;}
 .price-card__price{font-family:'Montserrat',sans-serif;font-weight:700;font-size:1.35rem;color:#fff;}
 .price-card__price em{font-style:normal;color:var(--accent);}
 .price-card__extra{font-weight:700;font-size:.68rem;color:var(--muted);margin-top:2px;}
@@ -573,7 +489,7 @@ body::before{
 .btn-submit{
   background:linear-gradient(180deg, rgba(var(--accent-rgb),0.95), rgba(82,10,0,0.92));
   color:#fff;border:none;
-  font-family:'Open Sans',sans-serif;font-weight:900;
+  font-family:'Open Sans',sans-serif;font-weight:800;
   font-size:.82rem;letter-spacing:.08em;text-transform:uppercase;
   padding:14px 28px;cursor:pointer;
   transition:filter 180ms ease, transform 180ms ease;
@@ -624,7 +540,7 @@ body::before{
   font-size:.90rem;
   line-height:2;
 }
-.confirm-box__transfer .lbl{font-weight:900;font-size:.64rem;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,0.72);}
+.confirm-box__transfer .lbl{font-weight:800;font-size:.64rem;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,0.72);}
 .confirm-box__transfer .val{font-weight:800;color:#fff;}
 .confirm-box__ref{
   display:inline-block;
@@ -637,16 +553,7 @@ body::before{
   color:rgba(255,255,255,0.45);line-height:1.65;
 }
 
-/* ── SPINNER ── */
-.spinner{display:none;width:22px;height:22px;border:2px solid rgba(255,255,255,0.20);border-top-color:#fff;border-radius:50%;animation:spin 600ms linear infinite;}
-@keyframes spin{to{transform:rotate(360deg)}}
-
-/* ── LOADING STATE ── */
-.loading-overlay{
-  padding:60px;text-align:center;
-  font-weight:800;font-size:.88rem;color:var(--muted);
-}
-  /* ── CONFIRM ACTIONS ── */
+/* ── CONFIRM ACTIONS ── */
 .confirm-actions{
   margin-top:18px;
   display:flex;
@@ -654,7 +561,6 @@ body::before{
   flex-wrap:wrap;
   align-items:center;
 }
-
 .btn-confirm{
   border:none;
   cursor:pointer;
@@ -666,33 +572,37 @@ body::before{
   padding:12px 18px;
   transition:transform 200ms ease, filter 200ms ease, border-color 200ms ease, background 200ms ease;
 }
-
 .btn-confirm:hover{transform:translateY(-2px);filter:brightness(1.08);}
 .btn-confirm:disabled{opacity:.55;cursor:not-allowed;transform:none;filter:none;}
-
 .btn-confirm--primary{
   background:linear-gradient(180deg,rgba(178,25,0,0.98),rgba(80,8,0,0.95));
   color:#fff;
   box-shadow:0 10px 48px rgba(178,25,0,0.22);
 }
-
 .btn-confirm--ghost{
   background:transparent;
   color:rgba(255,255,255,0.90);
   border:1px solid rgba(255,255,255,0.22);
 }
-
 .btn-confirm--ghost:hover{
   border-color:rgba(178,25,0,0.65);
   background:rgba(178,25,0,0.06);
 }
-
 .confirm-hint{
   font-weight:600;
   font-size:.78rem;
   color:rgba(255,255,255,0.55);
 }
 
+/* ── SPINNER ── */
+.spinner{display:none;width:22px;height:22px;border:2px solid rgba(255,255,255,0.20);border-top-color:#fff;border-radius:50%;animation:spin 600ms linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── LOADING STATE ── */
+.loading-overlay{
+  padding:60px;text-align:center;
+  font-weight:800;font-size:.88rem;color:var(--muted);
+}
 </style>
 </head>
 
@@ -817,21 +727,27 @@ body::before{
     <h2 class="confirm-box__h2">Zapis<em> przyjęty</em></h2>
     <p class="confirm-box__text" id="confirmText">Dziękujemy za zapis! Skontaktujemy się w celu potwierdzenia miejsca.</p>
     <div class="confirm-box__ref" id="confirmRef"></div>
+
     <div class="confirm-box__transfer" id="confirmTransfer" style="display:none"></div>
-      <div class="confirm-actions" id="confirmActions" style="display:none">
-    <button type="button" class="btn-confirm btn-confirm--primary" id="btnPayOnline">
-      Zapłać online →
-    </button>
 
-    <button type="button" class="btn-confirm btn-confirm--ghost" id="btnPayDoc">
-      Pobierz dokument płatniczy
-    </button>
+    <div class="confirm-actions" id="confirmActions" style="display:none">
+      <button type="button" class="btn-confirm btn-confirm--primary" id="btnPayOnline">
+        Zapłać online →
+      </button>
 
-    <div class="confirm-hint" id="confirmHint">
-      Wybierz sposób finalizacji. Możesz też wrócić później — kod zostaje ten sam.
+      <button type="button" class="btn-confirm btn-confirm--ghost" id="btnPayDoc">
+        Pobierz dokument płatniczy
+      </button>
+
+      <div class="confirm-hint" id="confirmHint">
+        Wybierz sposób finalizacji. Możesz też wrócić później — kod zostaje ten sam.
+      </div>
     </div>
-  </div>
-    <p class="confirm-box__note">Zachowaj powyższy kod — przyda Ci się do sprawdzenia statusu zapisu oraz jako tytuł przelewu.<br>W razie pytań: <strong>biuro@akademiaobrony.pl</strong> · <strong>510 930 460</strong></p>
+
+    <p class="confirm-box__note">
+      Zachowaj powyższy kod — przyda Ci się do sprawdzenia statusu zapisu oraz jako tytuł przelewu.<br>
+      W razie pytań: <strong>biuro@akademiaobrony.pl</strong> · <strong>510 930 460</strong>
+    </p>
   </div>
 
 </main>
@@ -960,7 +876,7 @@ function buildPanels() {
       head.appendChild(meta);
       card.appendChild(head);
 
-      // Slots or VIP info
+      // Slots shell
       const slotsShell = document.createElement('div');
       slotsShell.className = 'group-card__slots';
 
@@ -977,6 +893,7 @@ function buildPanels() {
             Zapisz się na listę rezerwową →
           </button>`;
         slotsShell.appendChild(vipBtn);
+
       } else if (group.schedules && group.schedules.length) {
 
         const timeline = document.createElement('div');
@@ -1019,6 +936,7 @@ function buildPanels() {
         });
 
         slotsShell.appendChild(timeline);
+
       } else {
         slotsShell.innerHTML = `<div class="vip-info"><strong>Brak dostępnych terminów.</strong><br>Skontaktuj się z nami, a dopasujemy grupę.</div>`;
       }
@@ -1202,29 +1120,37 @@ function showConfirmation(data, first, last) {
     : `Dziękujemy za zapis, ${first}! Twoje zgłoszenie zostało przyjęte. Skontaktujemy się, aby potwierdzić miejsce w grupie.`;
 
   document.getElementById('confirmRef').textContent = data.payment_ref;
-  // Pokaż przyciski akcji
-  const actions = document.getElementById('confirmActions');
-  actions.style.display = 'flex';
 
-  // Podepnij akcje pod aktualny zapis
-  window.__regRef = data.payment_ref; // użyjemy jako identyfikatora
+  // pokaż akcje
+  const btnWrap = document.getElementById('confirmActions');
+  if (btnWrap) btnWrap.style.display = 'flex';
+
+  // zapamiętaj ref (dla backendu/pdf)
+  window.__regRef = data.payment_ref;
   window.__regEmail = data.email || document.getElementById('f_email')?.value?.trim() || null;
 
-  // Zapłać online (placeholder)
-  document.getElementById('btnPayOnline').onclick = async () => {
-    await finalizeAction('pay_online');
-    alert('Płatność online będzie podpięta w kolejnym kroku. Na razie to placeholder 🙂');
-  };
+  // podepnij akcje
+  const btnPayOnline = document.getElementById('btnPayOnline');
+  const btnPayDoc = document.getElementById('btnPayDoc');
 
-  // Pobierz dokument płatniczy
-  document.getElementById('btnPayDoc').onclick = async () => {
-    await finalizeAction('download_doc', true);
-  };
+  if (btnPayOnline) {
+    btnPayOnline.onclick = async () => {
+      await finalizeAction('pay_online');
+      alert('Płatność online będzie podpięta w kolejnym kroku. Na razie to placeholder 🙂');
+    };
+  }
 
+  if (btnPayDoc) {
+    btnPayDoc.onclick = async () => {
+      await finalizeAction('download_doc', true);
+    };
+  }
+
+  // dane przelewu
   if (!isWaitlist && data.total_amount) {
     const div = document.getElementById('confirmTransfer');
     div.innerHTML = `
-      <div><span class="lbl">Kwota do wpłaty</span><br><span class="val" style="font-size:1.4rem;font-weight:900;color:#fff">${parseFloat(data.total_amount).toFixed(2)} zł</span></div>
+      <div><span class="lbl">Kwota do wpłaty</span><br><span class="val" style="font-size:1.4rem;font-weight:800;color:#fff">${parseFloat(data.total_amount).toFixed(2)} zł</span></div>
       <br>
       <div><span class="lbl">Numer konta</span><br><span class="val">${data.bank_account}</span></div>
       <div><span class="lbl">Odbiorca</span><br><span class="val">${data.bank_name}</span></div>
@@ -1238,16 +1164,17 @@ function showConfirmation(data, first, last) {
   box.classList.add('visible');
   box.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
+
 async function finalizeAction(action, downloadDoc=false){
   if(!window.__regRef) return;
 
   const btnPay = document.getElementById('btnPayOnline');
   const btnDoc = document.getElementById('btnPayDoc');
-  btnPay.disabled = true;
-  btnDoc.disabled = true;
+  if(btnPay) btnPay.disabled = true;
+  if(btnDoc) btnDoc.disabled = true;
 
   try{
-    // 1) Powiedz backendowi: jaka akcja została wybrana -> backend wysyła maila odpowiedniego typu
+    // backend: rejestruje akcję + wysyła mail
     const res = await fetch(`${API}/registration/action`, {
       method:'POST',
       headers:{'Content-Type':'application/json'},
@@ -1260,20 +1187,19 @@ async function finalizeAction(action, downloadDoc=false){
     const data = await res.json();
     if(!res.ok) throw new Error(data.error || 'Błąd akcji.');
 
-    // 2) Jeśli akcja to pobranie dokumentu -> pobierz PDF
+    // pobranie PDF
     if(downloadDoc){
       await downloadPaymentDoc(window.__regRef);
     }
   }catch(e){
     alert(e.message || 'Coś poszło nie tak. Spróbuj ponownie.');
   }finally{
-    btnPay.disabled = false;
-    btnDoc.disabled = false;
+    if(btnPay) btnPay.disabled = false;
+    if(btnDoc) btnDoc.disabled = false;
   }
 }
 
 async function downloadPaymentDoc(paymentRef){
-  // endpoint zwraca PDF
   const res = await fetch(`${API}/payment-document?payment_ref=${encodeURIComponent(paymentRef)}`, {
     method:'GET'
   });
