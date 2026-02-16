@@ -843,6 +843,10 @@ function buildPanels() {
         slotsWrap.className = 'group-card__slots';
 
         group.schedules.forEach(sched => {
+
+  const dayName = sched.day_name || '—';
+  const timeLabel = sched.time_label || 'Termin do ustalenia';
+
           const slot = document.createElement('div');
           slot.className = 'slot' + (isClosed ? ' slot--closed' : '');
           slot.setAttribute('role', isClosed ? 'presentation' : 'button');
@@ -866,10 +870,10 @@ function buildPanels() {
             const handler = (ev) => {
               window._lastSlotEl = ev.currentTarget;
               selectSlot(
-                loc.id, loc.city, group.id, group.name,
-                sched.id, sched.day_name, sched.time_label,
-                isFull
-              );
+  loc.id, loc.city, group.id, group.name,
+  sched.id, dayName, timeLabel,
+  isFull
+);
             };
             slot.addEventListener('click', handler);
             slot.addEventListener('keydown', e => { if(e.key === 'Enter' || e.key === ' ') handler(e); });
