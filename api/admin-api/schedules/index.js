@@ -3,6 +3,7 @@
 // POST   /api/admin-api/schedules           → nowy termin
 // PATCH  /api/admin-api/schedules?id=X      → edycja terminu
 // DELETE /api/admin-api/schedules?id=X      → usunięcie terminu
+
 const { getPool } = require('../../_lib/db');
 const { requireAuth } = require('../../_lib/auth');
 
@@ -30,7 +31,9 @@ module.exports = async (req, res) => {
         LEFT JOIN locations l ON l.id = g.location_id
         ORDER BY l.city, g.name, s.day_of_week, s.time_start
       `);
-      return res.status(200).json({ rows });
+
+      // Zwracaj tablicę, nie { rows }, bo frontendowi łatwiej to konsumować
+      return res.status(200).json(rows);
     } catch (e) {
       return res.status(500).json({ error: e.message });
     }
@@ -42,18 +45,26 @@ module.exports = async (req, res) => {
       const b = req.body || {};
       if (!b.group_id) return res.status(400).json({ error: 'Brak group_id.' });
 
-      // Wylicz day_name z day_of_week jeśli nie podano
       const day_name = b.day_name || (b.day_of_week != null ? DAY_NAMES[b.day_of_week] : null);
-      // Wylicz time_label jeśli nie podano
       const time_label = b.time_label ||
         (b.time_start ? `${b.time_start}${b.time_end ? `–${b.time_end}` : ''}` : null);
 
       const { rows: [s] } = await pool.query(
         `INSERT INTO schedules (group_id, day_of_week, day_name, time_start, time_end, time_label, address, active)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *`,
-        [b.group_id, b.day_of_week, day_name, b.time_start||null, b.time_end||null,
-         time_label, b.address||null, b.active!==false]
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
+         RETURNING *`,
+        [
+          b.group_id,
+          b.day_of_week,
+          day_name,
+          b.time_start || null,
+          b.time_end || null,
+          time_label,
+          b.address || null,
+          b.active !== false
+        ]
       );
+
       return res.status(201).json(s);
     } catch (e) {
       return res.status(500).json({ error: e.message });
@@ -65,8 +76,6 @@ module.exports = async (req, res) => {
     try {
       const b = req.body || {};
       const ALLOWED = ['group_id','day_of_week','day_name','time_start','time_end','time_label','address','active'];
-      const set = [], vals = [];
-      let pi = 1;
 
       // Automatycznie wylicz day_name / time_label jeśli brakuje
       if ('day_of_week' in b && !('day_name' in b)) {
@@ -78,14 +87,26 @@ module.exports = async (req, res) => {
         b.time_label = ts ? `${ts}${te ? `–${te}` : ''}` : null;
       }
 
+      const set = [];
+      const vals = [];
+      let pi = 1;
+
       for (const key of ALLOWED) {
-        if (key in b) { set.push(`${key}=$${pi++}`); vals.push(b[key]); }
+        if (key in b) {
+          set.push(`${key}=$${pi++}`);
+          vals.push(b[key]);
+        }
       }
+
       if (!set.length) return res.status(400).json({ error: 'Brak pól.' });
+
       vals.push(id);
+
       const { rowCount } = await pool.query(
-        `UPDATE schedules SET ${set.join(',')} WHERE id=$${pi}`, vals
+        `UPDATE schedules SET ${set.join(',')} WHERE id=$${pi}`,
+        vals
       );
+
       if (!rowCount) return res.status(404).json({ error: 'Nie znaleziono.' });
       return res.status(200).json({ success: true });
     } catch (e) {
