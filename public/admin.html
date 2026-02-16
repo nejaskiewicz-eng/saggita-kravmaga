@@ -306,7 +306,7 @@ async function openKartoteka(id, mode='view'){
   let r, groups=[], plans=[];
   try{
     [r, {rows:groups}, {rows:plans}] = await Promise.all([
-      aF(`/registration/${id}`),
+     aF(`/registration/${id}?_=${Date.now()}`),
       aF('/groups'),
       aF('/plans'),
     ]);
@@ -424,7 +424,7 @@ async function saveKartoteka(id){
   // usuń undefined
   Object.keys(b).forEach(k=>{if(b[k]===undefined)delete b[k];});
   try{
-    await aF(`/registration/${id}`,{method:'PATCH',body:JSON.stringify(b)});
+    await aF(`/registration/${id}?_=${Date.now()}`,{method:'PATCH',body:JSON.stringify(b)});
     toast('Kartoteka zapisana');
     openKartoteka(id,'view'); // wróć do podglądu
     if(CV==='web-registrations')fetchR('web');
