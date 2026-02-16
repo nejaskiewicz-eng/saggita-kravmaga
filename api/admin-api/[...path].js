@@ -213,7 +213,7 @@ module.exports = async (req, res) => {
     // ══════════════════════════════════════════════════════════════════════
     // REGISTRATION — pojedynczy zapis GET
     // ══════════════════════════════════════════════════════════════════════
-    if (raw.match(/^\/registration\/\d+$/) && method === "GET") {
+    if (raw.match(/^\/registration\/\d+/) && method === "GET") {
       const id = raw.split("/")[2];
       const { rows: [reg] } = await pool.query(`
         SELECT r.*,
@@ -233,7 +233,7 @@ module.exports = async (req, res) => {
     // ══════════════════════════════════════════════════════════════════════
     // REGISTRATION — edycja PATCH (rozszerzona)
     // ══════════════════════════════════════════════════════════════════════
-    if (raw.match(/^\/registration\/\d+$/) && method === "PATCH") {
+    if (raw.match(/^\/registration\/\d+/) && method === "PATCH") {
       const id = raw.split("/")[2];
       const updates = await getBody(req);
 
@@ -261,7 +261,7 @@ module.exports = async (req, res) => {
     // ══════════════════════════════════════════════════════════════════════
     // REGISTRATION — usuwanie DELETE
     // ══════════════════════════════════════════════════════════════════════
-    if (raw.match(/^\/registration\/\d+$/) && method === "DELETE") {
+    if (raw.match(/^\/registration\/\d+/) && method === "DELETE") {
       const id = raw.split("/")[2];
       const { rowCount } = await pool.query("DELETE FROM registrations WHERE id = $1", [id]);
       if (!rowCount) return bad(res, "Nie znaleziono zapisu", 404);
