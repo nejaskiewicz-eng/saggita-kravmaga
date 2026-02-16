@@ -1,7 +1,5 @@
 {
   "rewrites": [
-    { "source": "/", "destination": "/index.html" },
-    { "source": "/zapisz-sie", "destination": "/zapisz-sie.html" },
     { "source": "/admin", "destination": "/admin.html" },
     { "source": "/admin-login", "destination": "/admin-login.html" }
   ]
