@@ -1,7 +1,10 @@
 {
   "dependencies": {
     "pg": "^8.11.3",
-    "bcryptjs": "^2.4.3"
+    "bcryptjs": "^2.4.3",
+    "nodemailer": "^6.9.13",
+    "pdfkit": "^0.15.0"
   }
 }
+
 
