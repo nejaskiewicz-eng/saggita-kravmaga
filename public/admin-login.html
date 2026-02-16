@@ -62,7 +62,7 @@
         return;
       }
 
-      localStorage.setItem('km_admin_token', data.token);
+      localStorage.setItem('km_token', data.token);
       m.textContent = 'OK. Przenoszę do panelu...';
       location.href = '/admin';
     }catch(err){
