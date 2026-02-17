@@ -999,16 +999,24 @@ async function loadGroups(){
     const d=await aF('/groups');
     const rows=arrRows(d);
     c.innerHTML = `
-      <div class="sh"><h3>Grupy</h3></div>
+      <div class="sh">
+        <h3>Grupy</h3>
+        <button class="btn btn-primary btn-sm" onclick="openGroupModal()">+ Dodaj grupę</button>
+      </div>
       <div class="tw"><table>
-        <thead><tr><th>ID</th><th>Miasto</th><th>Nazwa</th><th>Pojemność</th><th>Aktywna</th></tr></thead>
+        <thead><tr><th>ID</th><th>Miasto</th><th>Nazwa</th><th>Kategoria</th><th>Pojemność</th><th>Aktywna</th><th></th></tr></thead>
         <tbody>${rows.map(g=>`
           <tr>
             <td>${g.id}</td>
             <td>${g.city||'—'}</td>
             <td><strong style="color:var(--bright)">${g.name||'—'}</strong></td>
+            <td>${g.category||'—'}</td>
             <td>${g.max_capacity ?? '—'}</td>
             <td>${g.active===false?'<span class="badge br">NIE</span>':'<span class="badge bg">TAK</span>'}</td>
+            <td class="tda">
+              <button class="bi" onclick="openGroupModal(${g.id})">Edytuj</button>
+              <button class="bi del" onclick="deleteGroup(${g.id})">Usuń</button>
+            </td>
           </tr>
         `).join('')}</tbody>
       </table></div>
@@ -1023,9 +1031,12 @@ async function loadSchedules(){
     const d=await aF('/schedules');
     const rows=arrRows(d);
     c.innerHTML = `
-      <div class="sh"><h3>Grafik zajęć</h3></div>
+      <div class="sh">
+        <h3>Grafik zajęć</h3>
+        <button class="btn btn-primary btn-sm" onclick="openScheduleModal()">+ Dodaj termin</button>
+      </div>
       <div class="tw"><table>
-        <thead><tr><th>ID</th><th>Grupa</th><th>Dzień</th><th>Godzina</th><th>Adres</th><th>Aktywny</th></tr></thead>
+        <thead><tr><th>ID</th><th>Grupa</th><th>Dzień</th><th>Godzina</th><th>Adres</th><th>Aktywny</th><th></th></tr></thead>
         <tbody>${rows.map(s=>`
           <tr>
             <td>${s.id}</td>
@@ -1034,6 +1045,10 @@ async function loadSchedules(){
             <td>${(s.time_start?String(s.time_start).slice(0,5):'')}${s.time_end?`–${String(s.time_end).slice(0,5)}`:''}</td>
             <td>${s.address||'—'}</td>
             <td>${s.active===false?'<span class="badge br">NIE</span>':'<span class="badge bg">TAK</span>'}</td>
+            <td class="tda">
+              <button class="bi" onclick="openScheduleModal(${s.id})">Edytuj</button>
+              <button class="bi del" onclick="deleteSchedule(${s.id})">Usuń</button>
+            </td>
           </tr>
         `).join('')}</tbody>
       </table></div>
@@ -1048,22 +1063,320 @@ async function loadLocations(){
     const d=await aF('/locations');
     const rows=arrRows(d);
     c.innerHTML = `
-      <div class="sh"><h3>Lokalizacje</h3></div>
+      <div class="sh">
+        <h3>Lokalizacje</h3>
+        <button class="btn btn-primary btn-sm" onclick="openLocationModal()">+ Dodaj lokalizację</button>
+      </div>
       <div class="tw"><table>
-        <thead><tr><th>ID</th><th>Miasto</th><th>Nazwa</th><th>Adres</th><th>Aktywna</th></tr></thead>
+        <thead><tr><th>ID</th><th>Miasto</th><th>Nazwa</th><th>Adres</th><th>Kolejność</th><th>Aktywna</th><th></th></tr></thead>
         <tbody>${rows.map(l=>`
           <tr>
             <td>${l.id}</td>
             <td><strong style="color:var(--bright)">${l.city||'—'}</strong></td>
             <td>${l.name||'—'}</td>
             <td>${l.address||'—'}</td>
+            <td>${l.sort_order??'—'}</td>
             <td>${l.active===false?'<span class="badge br">NIE</span>':'<span class="badge bg">TAK</span>'}</td>
+            <td class="tda">
+              <button class="bi" onclick="openLocationModal(${l.id})">Edytuj</button>
+              <button class="bi del" onclick="deleteLocation(${l.id})">Usuń</button>
+            </td>
           </tr>
         `).join('')}</tbody>
       </table></div>
     `;
   }catch(e){
     c.innerHTML=`<div class="empty"><strong>Błąd</strong>${e.message}</div>`;
+  }
+}
+
+// ═════════════════════════════════════════════════════════════
+// CRUD: GRUPY
+// ═════════════════════════════════════════════════════════════
+async function openGroupModal(id){
+  let g = {}, locations = [];
+  try{
+    const fetches = id 
+      ? [aF(`/groups/${id}`), aF('/locations')]
+      : [Promise.resolve(null), aF('/locations')];
+    const [groupData, locsData] = await Promise.all(fetches);
+    if(groupData) g = groupData;
+    locations = arrRows(locsData);
+  }catch(e){
+    toast('Błąd: '+e.message,'error');
+    return;
+  }
+
+  const locOpts = locations.map(l => 
+    `<option value="${l.id}" ${l.id==g.location_id?'selected':''}>${l.city} — ${l.name}</option>`
+  ).join('');
+
+  const body = `
+    <div class="fg">
+      <div class="ff full">
+        <label>Lokalizacja *</label>
+        <select id="g-loc"><option value="">— wybierz —</option>${locOpts}</select>
+      </div>
+      <div class="ff"><label>Nazwa grupy *</label><input id="g-name" value="${g.name||''}"></div>
+      <div class="ff">
+        <label>Kategoria</label>
+        <select id="g-cat">
+          <option value="kids" ${g.category==='kids'?'selected':''}>Dzieci</option>
+          <option value="adults" ${g.category==='adults'?'selected':''}>Dorośli</option>
+          <option value="vip" ${g.category==='vip'?'selected':''}>VIP/Indywidualnie</option>
+        </select>
+      </div>
+      <div class="ff"><label>Przedział wiekowy</label><input id="g-age" value="${g.age_range||''}" placeholder="np. 6-10 lat"></div>
+      <div class="ff"><label>Pojemność (max osób)</label><input id="g-cap" type="number" value="${g.max_capacity||20}"></div>
+      <div class="ff full"><label>Notatki</label><textarea id="g-notes">${g.notes||''}</textarea></div>
+      <div class="ff">
+        <label>Aktywna</label>
+        <select id="g-active">
+          <option value="true" ${g.active!==false?'selected':''}>Tak</option>
+          <option value="false" ${g.active===false?'selected':''}>Nie</option>
+        </select>
+      </div>
+    </div>
+  `;
+
+  const footer = `
+    <button class="btn btn-secondary" onclick="closeModal()">Anuluj</button>
+    <button class="btn btn-primary" onclick="saveGroup(${id||'null'})">${id?'Zapisz zmiany':'Dodaj grupę'}</button>
+  `;
+
+  showModal(id ? `Edytuj grupę #${id}` : 'Nowa grupa', body, footer);
+}
+
+async function saveGroup(id){
+  const location_id = parseInt(document.getElementById('g-loc').value||'0');
+  const name = document.getElementById('g-name').value.trim();
+  
+  if(!location_id || !name){
+    toast('Uzupełnij: lokalizacja i nazwa','error');
+    return;
+  }
+
+  const b = {
+    location_id,
+    name,
+    category: document.getElementById('g-cat').value,
+    age_range: document.getElementById('g-age').value.trim()||null,
+    max_capacity: parseInt(document.getElementById('g-cap').value)||20,
+    notes: document.getElementById('g-notes').value.trim()||null,
+    active: document.getElementById('g-active').value==='true'
+  };
+
+  try{
+    if(id){
+      await aF(`/groups/${id}`,{method:'PATCH',body:JSON.stringify(b)});
+      toast('Grupa zaktualizowana');
+    }else{
+      await aF('/groups',{method:'POST',body:JSON.stringify(b)});
+      toast('Grupa dodana');
+    }
+    closeModal();
+    loadGroups();
+  }catch(e){
+    toast('Błąd: '+e.message,'error');
+  }
+}
+
+async function deleteGroup(id){
+  if(!confirm('Usunąć tę grupę? Zostaną utracone powiązania z zapisami!')) return;
+  try{
+    await aF(`/groups/${id}`,{method:'DELETE'});
+    toast('Grupa usunięta');
+    loadGroups();
+  }catch(e){
+    toast('Błąd: '+e.message,'error');
+  }
+}
+
+// ═════════════════════════════════════════════════════════════
+// CRUD: GRAFIK
+// ═════════════════════════════════════════════════════════════
+async function openScheduleModal(id){
+  let s = {}, groups = [];
+  try{
+    const fetches = id 
+      ? [aF(`/schedules/${id}`), aF('/groups')]
+      : [Promise.resolve(null), aF('/groups')];
+    const [schedData, grpsData] = await Promise.all(fetches);
+    if(schedData) s = schedData;
+    groups = arrRows(grpsData);
+  }catch(e){
+    toast('Błąd: '+e.message,'error');
+    return;
+  }
+
+  const grpOpts = groups.map(g => 
+    `<option value="${g.id}" ${g.id==s.group_id?'selected':''}>${g.city||''} — ${g.name}</option>`
+  ).join('');
+
+  const body = `
+    <div class="fg">
+      <div class="ff full">
+        <label>Grupa *</label>
+        <select id="s-grp"><option value="">— wybierz —</option>${grpOpts}</select>
+      </div>
+      <div class="ff">
+        <label>Dzień tygodnia *</label>
+        <select id="s-day">
+          ${DAYS.map((d,i)=>`<option value="${i}" ${s.day_of_week==i?'selected':''}>${d}</option>`).join('')}
+        </select>
+      </div>
+      <div class="ff"><label>Godzina rozpoczęcia</label><input id="s-start" type="time" value="${s.time_start?String(s.time_start).slice(0,5):''}"></div>
+      <div class="ff"><label>Godzina zakończenia</label><input id="s-end" type="time" value="${s.time_end?String(s.time_end).slice(0,5):''}"></div>
+      <div class="ff full"><label>Adres (opcjonalnie)</label><input id="s-addr" value="${s.address||''}" placeholder="np. ul. Przykładowa 1"></div>
+      <div class="ff">
+        <label>Aktywny</label>
+        <select id="s-active">
+          <option value="true" ${s.active!==false?'selected':''}>Tak</option>
+          <option value="false" ${s.active===false?'selected':''}>Nie</option>
+        </select>
+      </div>
+    </div>
+  `;
+
+  const footer = `
+    <button class="btn btn-secondary" onclick="closeModal()">Anuluj</button>
+    <button class="btn btn-primary" onclick="saveSchedule(${id||'null'})">${id?'Zapisz zmiany':'Dodaj termin'}</button>
+  `;
+
+  showModal(id ? `Edytuj termin #${id}` : 'Nowy termin', body, footer);
+}
+
+async function saveSchedule(id){
+  const group_id = parseInt(document.getElementById('s-grp').value||'0');
+  const day_of_week = parseInt(document.getElementById('s-day').value);
+  
+  if(!group_id){
+    toast('Wybierz grupę','error');
+    return;
+  }
+
+  const b = {
+    group_id,
+    day_of_week,
+    day_name: DAYS[day_of_week],
+    time_start: document.getElementById('s-start').value||null,
+    time_end: document.getElementById('s-end').value||null,
+    address: document.getElementById('s-addr').value.trim()||null,
+    active: document.getElementById('s-active').value==='true'
+  };
+
+  // Auto-generate time_label
+  if(b.time_start && b.time_end){
+    b.time_label = `${b.time_start}–${b.time_end}`;
+  }else if(b.time_start){
+    b.time_label = b.time_start;
+  }
+
+  try{
+    if(id){
+      await aF(`/schedules/${id}`,{method:'PATCH',body:JSON.stringify(b)});
+      toast('Termin zaktualizowany');
+    }else{
+      await aF('/schedules',{method:'POST',body:JSON.stringify(b)});
+      toast('Termin dodany');
+    }
+    closeModal();
+    loadSchedules();
+  }catch(e){
+    toast('Błąd: '+e.message,'error');
+  }
+}
+
+async function deleteSchedule(id){
+  if(!confirm('Usunąć ten termin z grafiku?')) return;
+  try{
+    await aF(`/schedules/${id}`,{method:'DELETE'});
+    toast('Termin usunięty');
+    loadSchedules();
+  }catch(e){
+    toast('Błąd: '+e.message,'error');
+  }
+}
+
+// ═════════════════════════════════════════════════════════════
+// CRUD: LOKALIZACJE
+// ═════════════════════════════════════════════════════════════
+async function openLocationModal(id){
+  let l = {};
+  if(id){
+    try{
+      l = await aF(`/locations/${id}`);
+    }catch(e){
+      toast('Błąd: '+e.message,'error');
+      return;
+    }
+  }
+
+  const body = `
+    <div class="fg">
+      <div class="ff"><label>Miasto *</label><input id="l-city" value="${l.city||''}" placeholder="np. Wrocław"></div>
+      <div class="ff"><label>Nazwa *</label><input id="l-name" value="${l.name||''}" placeholder="np. Krav Maga Wrocław"></div>
+      <div class="ff full"><label>Adres</label><input id="l-addr" value="${l.address||''}" placeholder="np. ul. Przykładowa 1, 50-000 Wrocław"></div>
+      <div class="ff"><label>Kolejność wyświetlania</label><input id="l-sort" type="number" value="${l.sort_order??99}" placeholder="1, 2, 3..."></div>
+      <div class="ff">
+        <label>Aktywna</label>
+        <select id="l-active">
+          <option value="true" ${l.active!==false?'selected':''}>Tak</option>
+          <option value="false" ${l.active===false?'selected':''}>Nie</option>
+        </select>
+      </div>
+    </div>
+  `;
+
+  const footer = `
+    <button class="btn btn-secondary" onclick="closeModal()">Anuluj</button>
+    <button class="btn btn-primary" onclick="saveLocation(${id||'null'})">${id?'Zapisz zmiany':'Dodaj lokalizację'}</button>
+  `;
+
+  showModal(id ? `Edytuj lokalizację #${id}` : 'Nowa lokalizacja', body, footer);
+}
+
+async function saveLocation(id){
+  const city = document.getElementById('l-city').value.trim();
+  const name = document.getElementById('l-name').value.trim();
+  
+  if(!city || !name){
+    toast('Uzupełnij: miasto i nazwa','error');
+    return;
+  }
+
+  const b = {
+    city,
+    name,
+    slug: city.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-'),
+    address: document.getElementById('l-addr').value.trim()||null,
+    sort_order: parseInt(document.getElementById('l-sort').value)||99,
+    active: document.getElementById('l-active').value==='true'
+  };
+
+  try{
+    if(id){
+      await aF(`/locations/${id}`,{method:'PATCH',body:JSON.stringify(b)});
+      toast('Lokalizacja zaktualizowana');
+    }else{
+      await aF('/locations',{method:'POST',body:JSON.stringify(b)});
+      toast('Lokalizacja dodana');
+    }
+    closeModal();
+    loadLocations();
+  }catch(e){
+    toast('Błąd: '+e.message,'error');
+  }
+}
+
+async function deleteLocation(id){
+  if(!confirm('Usunąć tę lokalizację? Zostaną utracone powiązania z grupami!')) return;
+  try{
+    await aF(`/locations/${id}`,{method:'DELETE'});
+    toast('Lokalizacja usunięta');
+    loadLocations();
+  }catch(e){
+    toast('Błąd: '+e.message,'error');
   }
 }
 
