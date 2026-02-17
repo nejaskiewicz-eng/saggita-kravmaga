@@ -1,8 +1,8 @@
-// api/admin-api/groups/index.js  — Funkcja #9
-// GET  /api/admin-api/groups           → lista grup
-// POST /api/admin-api/groups           → nowa grupa
-const { getPool } = require('../../_lib/db');
-const { requireAuth } = require('../../_lib/auth');
+// api/admin-api/groups.js
+// GET  /api/admin-api/groups → lista grup
+// POST /api/admin-api/groups → nowa grupa
+const { getPool } = require('../_lib/db');
+const { requireAuth } = require('../_lib/auth');
 
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
