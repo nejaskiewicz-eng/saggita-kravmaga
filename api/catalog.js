@@ -29,7 +29,7 @@ module.exports = async (req, res) => {
   // ── SCHEDULE: /api/schedule (domyślnie) ──────────────────────
   try {
     const { rows: locs } = await pool.query(
-      `SELECT id, city, name, slug, address FROM locations WHERE active = true ORDER BY city`
+      `SELECT id, city, name, slug, address FROM locations WHERE active = true ORDER BY sort_order, city`
     );
 
     const { rows: groups } = await pool.query(`
