@@ -72,7 +72,7 @@ Kontakt: <strong>biuro@akademiaobrony.pl</strong> · <strong>510 930 460</strong
 </body></html>`;
 
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
-      res.setHeader('Content-Disposition', `attachment; filename="dokument-platniczy-${payment_ref}.html"`);
+      res.setHeader('Content-Disposition', `inline`);
       res.setHeader('X-Content-Type-Options', 'nosniff');
       return res.status(200).send(html);
     } catch (e) {
