@@ -63,7 +63,7 @@ a{text-decoration:none;color:inherit}
 }
 .pg-header__h1{
   font-family:'Montserrat',sans-serif;
-  font-weight:700; /* Montserrat tylko 700 */
+  font-weight:700;
   font-size:clamp(2rem,5vw,3.4rem);
   line-height:.95;letter-spacing:-.02em;text-transform:uppercase;
   transform:skewX(-2deg);
@@ -94,7 +94,7 @@ a{text-decoration:none;color:inherit}
 .loc-tab{
   padding:10px 16px;
   font-family:'Montserrat',sans-serif;
-  font-weight:700; /* Montserrat tylko 700 */
+  font-weight:700;
   font-size:.74rem;
   letter-spacing:.14em;
   text-transform:uppercase;
@@ -136,7 +136,7 @@ a{text-decoration:none;color:inherit}
 }
 .group-card__name{
   font-family:'Montserrat',sans-serif;
-  font-weight:700; /* Montserrat tylko 700 */
+  font-weight:700;
   font-size:clamp(1rem,2vw,1.15rem);
   text-transform:uppercase;
   letter-spacing:-.01em;
@@ -185,7 +185,7 @@ a{text-decoration:none;color:inherit}
 
 .slot__day{
   font-family:'Montserrat',sans-serif;
-  font-weight:700; /* Montserrat tylko 700 */
+  font-weight:700;
   font-size:.78rem;letter-spacing:.12em;text-transform:uppercase;
   color:#fff;
 }
@@ -238,7 +238,7 @@ a{text-decoration:none;color:inherit}
 
 .form-section__title{
   font-family:'Montserrat',sans-serif;
-  font-weight:700; /* Montserrat tylko 700 */
+  font-weight:700;
   font-size:1.34rem;
   text-transform:uppercase;letter-spacing:-.01em;
   margin-bottom:6px;
@@ -308,7 +308,7 @@ a{text-decoration:none;color:inherit}
 .form-section-label{
   grid-column:1/-1;
   font-family:'Montserrat',sans-serif;
-  font-weight:700; /* Montserrat tylko 700 */
+  font-weight:700;
   font-size:.70rem;letter-spacing:.18em;text-transform:uppercase;
   color:rgba(255,255,255,0.80);
   margin-top:4px;
@@ -433,12 +433,12 @@ a{text-decoration:none;color:inherit}
   padding:60px;text-align:center;
   font-weight:700;font-size:.88rem;color:var(--text-muted);
 }
-   /* KILL SWITCH — wymuś tło i wyłącz czerwone naloty */
+
+/* KILL SWITCH */
 html, body { background:#141414 !important; }
 .pg-header { background:transparent !important; border-bottom:1px solid rgba(255,255,255,0.10) !important; }
 .group-card__head { background:rgba(0,0,0,0.26) !important; border-bottom:1px solid rgba(255,255,255,0.10) !important; }
 .group-card { background:rgba(255,255,255,0.02) !important; border-color:rgba(255,255,255,0.14) !important; }
-
 </style>
 </head>
 
@@ -454,16 +454,12 @@ html, body { background:#141414 !important; }
 </header>
 
 <main class="wrap">
-
-  <!-- ZAKŁADKI LOKALIZACJI -->
   <nav class="loc-tabs" id="locTabs" aria-label="Lokalizacje" role="tablist"></nav>
 
-  <!-- PANELE Z GRAFIKIEM -->
   <div id="locPanels">
     <div class="loading-overlay">Ładowanie grafiku…</div>
   </div>
 
-  <!-- FORMULARZ ZAPISU -->
   <section class="form-section" id="formSection" aria-live="polite">
     <div class="form-section__title">Formularz zapisu</div>
     <p class="form-section__sub">Pola oznaczone <span style="color:var(--accent)">*</span> są wymagane.</p>
@@ -478,7 +474,6 @@ html, body { background:#141414 !important; }
     <form id="regForm" novalidate>
       <div class="form-grid">
 
-        <!-- Dane osobowe -->
         <div class="form-section-label">Dane osobowe</div>
 
         <div class="form-field">
@@ -516,13 +511,11 @@ html, body { background:#141414 !important; }
 
         <hr class="form-divider">
 
-        <!-- Karnet -->
         <div class="form-section-label">Wybierz karnet</div>
         <div class="price-options" id="priceOptions"></div>
 
         <hr class="form-divider">
 
-        <!-- Data i płatność -->
         <div class="form-section-label">Szczegóły</div>
 
         <div class="form-field">
@@ -538,7 +531,6 @@ html, body { background:#141414 !important; }
           </select>
         </div>
 
-        <!-- Pole na preferowany czas (dla VIP Wałbrzych) -->
         <div class="form-field form-field--full" id="preferredTimeField" style="display:none">
           <label class="form-label" for="f_ptime">Preferowany termin zajęć (Wałbrzych VIP)</label>
           <input class="form-input" type="text" id="f_ptime" name="preferred_time" placeholder="np. wtorek 18:00 lub elastyczny">
@@ -546,7 +538,6 @@ html, body { background:#141414 !important; }
 
         <hr class="form-divider">
 
-        <!-- Zgody -->
         <div class="form-section-label">Zgody</div>
 
         <label class="consent-item">
@@ -573,7 +564,6 @@ html, body { background:#141414 !important; }
     </form>
   </section>
 
-  <!-- POTWIERDZENIE -->
   <div class="confirm-box" id="confirmBox">
     <div class="confirm-box__icon">✓</div>
     <h2 class="confirm-box__h2">Zapis<em> przyjęty</em></h2>
@@ -586,7 +576,120 @@ html, body { background:#141414 !important; }
 </main>
 
 <script>
-const API = '/api';
+/**
+ * ZAPISZ-SIE — stabilne pobieranie grafiku:
+ * - obsługuje /api/schedule (nested: locations->groups->schedules)
+ * - obsługuje /api/admin-api/schedules (flat: lista terminów)
+ * - normalizuje dane i dopiero buduje UI
+ */
+
+const API_BASE = 'https://saggita-kravmaga.vercel.app';
+const API = `${API_BASE}/api`;
+
+const SCHEDULE_SOURCES = [
+  `${API}/schedule`,
+  `${API}/admin-api/schedules`,
+];
+
+const GROUPS_SOURCES = [
+  `${API}/groups`,
+  `${API}/admin-api/groups`,
+];
+
+const LOCATIONS_SOURCES = [
+  `${API}/locations`,
+  `${API}/admin-api/locations`,
+];
+
+function qs(sel, root=document){ return root.querySelector(sel); }
+function qsa(sel, root=document){ return Array.from(root.querySelectorAll(sel)); }
+
+async function fetchJson(url){
+  const res = await fetch(url, { cache: 'no-store' });
+  const text = await res.text();
+  let data;
+  try { data = text ? JSON.parse(text) : null; }
+  catch(e){ throw new Error(`Nieprawidłowy JSON z ${url}: ${text.slice(0,120)}`); }
+  if(!res.ok) throw new Error(`HTTP ${res.status} z ${url}: ${data?.error || text.slice(0,120)}`);
+  return data;
+}
+
+async function fetchFirstOk(urls){
+  let lastErr = null;
+  for(const url of urls){
+    try { return await fetchJson(url); }
+    catch(e){ lastErr = e; }
+  }
+  throw lastErr || new Error('Brak działającego źródła danych');
+}
+
+// ── Normalizacja danych ───────────────────────────────────────────
+const PL_DAY = {1:'Poniedziałek',2:'Wtorek',3:'Środa',4:'Czwartek',5:'Piątek',6:'Sobota',7:'Niedziela',0:'Niedziela'};
+const hhmm = (t) => (t && typeof t === 'string') ? t.slice(0,5) : '';
+
+function looksNested(x){
+  return Array.isArray(x) && x[0] && Array.isArray(x[0].groups);
+}
+
+function normalizeSchedulesPayload(payload){
+  // /admin-api/schedules może zwrócić {rows:[...]} albo [...]. My chcemy [...]
+  if(Array.isArray(payload)) return payload;
+  if(Array.isArray(payload?.rows)) return payload.rows;
+  return [];
+}
+
+function buildNestedFromFlat({ locations, groups, schedules }){
+  const locMap = new Map((locations||[]).map(l => [l.id, { ...l, groups: [] }]));
+  const groupMap = new Map((groups||[]).map(g => [g.id, { ...g, schedules: [] }]));
+
+  // powiąż grupy z lokalizacjami
+  for(const g of (groups||[])){
+    const loc = locMap.get(g.location_id);
+    const gg = groupMap.get(g.id);
+    if(loc && gg) loc.groups.push(gg);
+  }
+
+  // dorzuć schedules do grup
+  for(const s of (schedules||[])){
+    if (s.active === false) continue;
+    const g = groupMap.get(s.group_id);
+    if(!g) continue;
+
+    const day_name = s.day_name || PL_DAY[s.day_of_week] || '—';
+    const time_label = s.time_label || (
+      hhmm(s.time_start) ? `${hhmm(s.time_start)}${hhmm(s.time_end) ? `–${hhmm(s.time_end)}` : ''}` : 'Termin do ustalenia'
+    );
+
+    g.schedules.push({
+      id: s.id,
+      group_id: s.group_id,
+      day_of_week: s.day_of_week,
+      day_name,
+      time_start: s.time_start,
+      time_end: s.time_end,
+      time_label,
+      address: s.address || null,
+      active: s.active !== false,
+    });
+  }
+
+  // sortowanie
+  const locs = Array.from(locMap.values())
+    .sort((a,b)=>(a.city||'').localeCompare(b.city||'', 'pl'));
+
+  for(const loc of locs){
+    loc.groups = (loc.groups||[])
+      .filter(g => g && g.active !== false)
+      .sort((a,b)=>(a.name||'').localeCompare(b.name||'', 'pl'));
+
+    for(const g of loc.groups){
+      g.schedules = (g.schedules||[])
+        .sort((a,b)=> (a.day_of_week - b.day_of_week) || String(a.time_start||'').localeCompare(String(b.time_start||'')));
+    }
+  }
+
+  return locs;
+}
 
 // ── State ─────────────────────────────────────────────────────────
 let allData = [];
@@ -595,31 +698,16 @@ let selectedGroup = null;
 let selectedSchedule = null;
 let selectedLocation = null;
 
-// ── Init ──────────────────────────────────────────────────────────
-async function init() {
-  try {
-    const [sched, prices] = await Promise.all([
-      fetch(`${API}/schedule`).then(r => r.json()),
-      fetch(`${API}/prices`).then(r => r.json()),
-    ]);
-    allData = sched;
-    allPrices = prices;
-    buildTabs();
-    buildPanels();
-  } catch(e) {
-    document.getElementById('locPanels').innerHTML =
-      '<div class="loading-overlay" style="color:#ffb2a6">Błąd ładowania grafiku. Spróbuj odświeżyć stronę.</div>';
-  }
-}
-
-// ── Tabs ──────────────────────────────────────────────────────────
+// ── UI: Tabs ─────────────────────────────────────────────────────
 function buildTabs() {
   const nav = document.getElementById('locTabs');
   nav.innerHTML = '';
+
   allData.forEach((loc, i) => {
     const btn = document.createElement('button');
+    btn.type = 'button';
     btn.className = 'loc-tab' + (i === 0 ? ' active' : '');
-    btn.textContent = loc.city;
+    btn.textContent = loc.city || loc.name || `Lokalizacja ${loc.id}`;
     btn.setAttribute('role','tab');
     btn.setAttribute('aria-selected', i === 0 ? 'true' : 'false');
     btn.addEventListener('click', () => switchTab(loc.id));
@@ -628,17 +716,15 @@ function buildTabs() {
 }
 
 function switchTab(locId) {
-  document.querySelectorAll('.loc-tab').forEach((btn, i) => {
+  qsa('.loc-tab').forEach((btn, i) => {
     const active = allData[i]?.id === locId;
     btn.classList.toggle('active', active);
     btn.setAttribute('aria-selected', active ? 'true' : 'false');
   });
-  document.querySelectorAll('.loc-panel').forEach(p => {
-    p.classList.toggle('active', p.dataset.locId == locId);
-  });
+  qsa('.loc-panel').forEach(p => p.classList.toggle('active', p.dataset.locId == locId));
 }
 
-// ── Panels ────────────────────────────────────────────────────────
+// ── UI: Panels ───────────────────────────────────────────────────
 function buildPanels() {
   const container = document.getElementById('locPanels');
   container.innerHTML = '';
@@ -648,8 +734,9 @@ function buildPanels() {
     panel.className = 'loc-panel' + (locIdx === 0 ? ' active' : '');
     panel.dataset.locId = loc.id;
 
-    if (!loc.groups || !loc.groups.length) {
-      panel.innerHTML = '<p style="color:var(--text-muted);padding:24px 0;font-weight:600">Brak grup dla tej lokalizacji.</p>';
+    const groups = Array.isArray(loc.groups) ? loc.groups : [];
+    if (!groups.length) {
+      panel.innerHTML = '<p style="color:rgba(255,255,255,0.56);padding:24px 0;font-weight:600">Brak grup dla tej lokalizacji.</p>';
       container.appendChild(panel);
       return;
     }
@@ -657,21 +744,21 @@ function buildPanels() {
     const grid = document.createElement('div');
     grid.className = 'sched-grid';
 
-    loc.groups.forEach(group => {
-      const isVIP    = group.category === 'vip';
-      const isClosed = group.notes && group.notes.toLowerCase().includes('zamknięty');
-      const isFull   = group.available <= 0 && !isClosed;
+    groups.forEach(group => {
+      const isVIP = group.category === 'vip';
+      const notes = (group.notes || '').toLowerCase();
+      const isClosed = notes.includes('zamknięty') || notes.includes('zamkniety');
+      const isFull = (group.available != null ? group.available <= 0 : false) && !isClosed;
 
       const card = document.createElement('div');
       card.className = 'group-card';
 
-      // Head
       const head = document.createElement('div');
       head.className = 'group-card__head';
 
       const nameEl = document.createElement('div');
       nameEl.className = 'group-card__name';
-      nameEl.textContent = group.name;
+      nameEl.textContent = group.name || 'Grupa';
       head.appendChild(nameEl);
 
       const meta = document.createElement('div');
@@ -694,12 +781,12 @@ function buildPanels() {
         b.className = 'badge badge--warn';
         b.textContent = 'Lista rezerwowa';
         meta.appendChild(b);
-      } else if (group.available <= 3) {
+      } else if (typeof group.available === 'number' && group.available <= 3) {
         const b = document.createElement('span');
         b.className = 'badge badge--warn';
         b.textContent = `Ostatnie ${group.available} miejsc`;
         meta.appendChild(b);
-      } else {
+      } else if (typeof group.available === 'number') {
         const b = document.createElement('span');
         b.className = 'badge badge--red';
         b.textContent = `${group.available} wolnych miejsc`;
@@ -709,59 +796,75 @@ function buildPanels() {
       head.appendChild(meta);
       card.appendChild(head);
 
-      // Slots or VIP info
       if (isVIP) {
         const info = document.createElement('div');
         info.className = 'vip-info';
-        info.innerHTML = `<strong>${group.notes || 'Zajęcia indywidualne.'}</strong><br>Skontaktuj się z nami, aby ustalić termin:<br>📞 510 930 460 &nbsp;·&nbsp; ✉ biuro@akademiaobrony.pl<br><br>Możesz też zapisać się na listę rezerwową — podaj preferowany termin.`;
+        info.innerHTML = `<strong>${group.notes || 'Zajęcia indywidualne.'}</strong><br>
+          Skontaktuj się z nami, aby ustalić termin:<br>📞 510 930 460 · ✉ biuro@akademiaobrony.pl<br><br>
+          Możesz też zapisać się na listę rezerwową — podaj preferowany termin.`;
         card.appendChild(info);
 
         const vipBtn = document.createElement('div');
         vipBtn.style.cssText = 'padding:0 18px 18px';
-        vipBtn.innerHTML = `<button class="slot__btn" style="font-size:.72rem;padding:10px 18px;cursor:pointer;font-weight:900;letter-spacing:.12em;text-transform:uppercase;" onclick="selectSlot(${loc.id},'${loc.city}',${group.id},'${group.name}',null,null,null,true)">Zapisz się na listę rezerwową →</button>`;
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'slot__btn';
+        b.style.cssText = 'font-size:.72rem;padding:10px 18px;cursor:pointer;font-weight:900;letter-spacing:.12em;text-transform:uppercase;';
+        b.textContent = 'Zapisz się na listę rezerwową →';
+        b.addEventListener('click', () => selectSlot(loc.id, loc.city, group.id, group.name, null, null, null, true));
+        vipBtn.appendChild(b);
         card.appendChild(vipBtn);
 
-      } else if (group.schedules && group.schedules.length) {
-        const slotsWrap = document.createElement('div');
-        slotsWrap.className = 'group-card__slots';
+      } else {
+        const schedules = Array.isArray(group.schedules) ? group.schedules : [];
 
-        group.schedules.forEach(sched => {
-          const slot = document.createElement('div');
-          slot.className = 'slot' + (isClosed ? ' slot--closed' : '');
-          slot.setAttribute('role', isClosed ? 'presentation' : 'button');
-          if (!isClosed) slot.setAttribute('tabindex', '0');
+        // jeżeli brak terminów — pokaż czytelną informację zamiast pustki
+        if(!schedules.length){
+          const empty = document.createElement('div');
+          empty.className = 'vip-info';
+          empty.innerHTML = `<strong>Brak dodanych terminów</strong><br>Jeśli widzisz je w panelu admin, to znaczy, że endpoint, z którego korzysta ta strona, nie zwraca ich w tym formacie.`;
+          card.appendChild(empty);
+        } else {
+          const slotsWrap = document.createElement('div');
+          slotsWrap.className = 'group-card__slots';
 
-          const left = document.createElement('div');
-          left.innerHTML = `
-            <div class="slot__day">${sched.day_name || '—'}</div>
-            <div class="slot__time">${sched.time_label || 'Termin do ustalenia'}</div>
-            ${sched.address ? `<div class="slot__addr">${sched.address}</div>` : ''}
-          `;
+          schedules.forEach(sched => {
+            const dayName = sched.day_name || PL_DAY[sched.day_of_week] || '—';
+            const timeLabel = sched.time_label || (hhmm(sched.time_start) ? `${hhmm(sched.time_start)}${hhmm(sched.time_end) ? `–${hhmm(sched.time_end)}` : ''}` : 'Termin do ustalenia');
 
-          const btnEl = document.createElement('div');
-          btnEl.className = 'slot__btn';
-          btnEl.textContent = isClosed ? 'Zamknięty' : (isFull ? 'Lista rez.' : 'Zapisuję się');
+            const slot = document.createElement('div');
+            slot.className = 'slot' + (isClosed ? ' slot--closed' : '');
+            slot.setAttribute('role', isClosed ? 'presentation' : 'button');
+            if (!isClosed) slot.setAttribute('tabindex', '0');
 
-          slot.appendChild(left);
-          slot.appendChild(btnEl);
+            const left = document.createElement('div');
+            left.innerHTML = `
+              <div class="slot__day">${dayName}</div>
+              <div class="slot__time">${timeLabel}</div>
+              ${sched.address ? `<div class="slot__addr">${sched.address}</div>` : ''}
+            `;
 
-          if (!isClosed) {
-            const handler = (ev) => {
-              window._lastSlotEl = ev.currentTarget;
-              selectSlot(
-                loc.id, loc.city, group.id, group.name,
-                sched.id, sched.day_name, sched.time_label,
-                isFull
-              );
-            };
-            slot.addEventListener('click', handler);
-            slot.addEventListener('keydown', e => { if(e.key === 'Enter' || e.key === ' ') handler(e); });
-          }
+            const btnEl = document.createElement('div');
+            btnEl.className = 'slot__btn';
+            btnEl.textContent = isClosed ? 'Zamknięty' : (isFull ? 'Lista rez.' : 'Zapisuję się');
 
-          slotsWrap.appendChild(slot);
-        });
+            slot.appendChild(left);
+            slot.appendChild(btnEl);
 
-        card.appendChild(slotsWrap);
+            if (!isClosed) {
+              const handler = (ev) => {
+                window._lastSlotEl = ev.currentTarget;
+                selectSlot(loc.id, loc.city, group.id, group.name, sched.id, dayName, timeLabel, isFull);
+              };
+              slot.addEventListener('click', handler);
+              slot.addEventListener('keydown', e => { if(e.key === 'Enter' || e.key === ' ') handler(e); });
+            }
+
+            slotsWrap.appendChild(slot);
+          });
+
+          card.appendChild(slotsWrap);
+        }
       }
 
       grid.appendChild(card);
@@ -772,9 +875,9 @@ function buildPanels() {
   });
 }
 
-// ── Select slot → reveal form ─────────────────────────────────────
+// ── Select slot ──────────────────────────────────────────────────
 function selectSlot(locId, cityName, groupId, groupName, schedId, dayName, timeLabel, isWaitlist) {
-  document.querySelectorAll('.slot.selected').forEach(s => s.classList.remove('selected'));
+  qsa('.slot.selected').forEach(s => s.classList.remove('selected'));
   if (window._lastSlotEl) window._lastSlotEl.classList.add('selected');
 
   selectedGroup = groupId;
@@ -782,16 +885,16 @@ function selectSlot(locId, cityName, groupId, groupName, schedId, dayName, timeL
   selectedLocation = locId;
 
   const isVIP = schedId === null;
-  const waitlistFlag = isWaitlist || false;
+  const waitlistFlag = !!isWaitlist;
 
   const infoText = isVIP
     ? `${cityName} · ${groupName} (lista rezerwowa)`
     : `${cityName} · ${groupName} · ${dayName}, ${timeLabel}${waitlistFlag ? ' (lista rezerwowa)' : ''}`;
-  document.getElementById('slotInfoText').textContent = infoText;
 
+  document.getElementById('slotInfoText').textContent = infoText;
   document.getElementById('preferredTimeField').style.display = isVIP ? 'block' : 'none';
 
-  const group = allData.flatMap(l => l.groups).find(g => g.id === groupId);
+  const group = allData.flatMap(l => l.groups || []).find(g => g.id === groupId);
   buildPriceOptions(group?.category || 'adults');
 
   const section = document.getElementById('formSection');
@@ -799,27 +902,22 @@ function selectSlot(locId, cityName, groupId, groupName, schedId, dayName, timeL
   section.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-// ── Price options ─────────────────────────────────────────────────
+// ── Prices ───────────────────────────────────────────────────────
 function buildPriceOptions(category) {
   const container = document.getElementById('priceOptions');
   container.innerHTML = '';
 
   const isNew = document.getElementById('f_new')?.value !== 'false';
+  const cats = category === 'kids' ? ['kids'] : category === 'vip' ? ['adults','discount'] : ['adults','discount','service'];
 
-  const cats = category === 'kids'
-    ? ['kids']
-    : category === 'vip'
-    ? ['adults', 'discount']
-    : ['adults', 'discount', 'service'];
-
-  const relevant = allPrices.filter(p => cats.includes(p.category));
+  const relevant = (allPrices || []).filter(p => cats.includes(p.category));
   if (!relevant.length) {
-    container.innerHTML = '<p style="color:var(--text-muted);font-size:.82rem">Brak planów cennikowych dla tej grupy.</p>';
+    container.innerHTML = '<p style="color:rgba(255,255,255,0.56);font-size:.82rem">Brak planów cennikowych dla tej grupy.</p>';
     return;
   }
 
   relevant.forEach((plan, i) => {
-    const total = parseFloat(plan.price) + (isNew ? parseFloat(plan.signup_fee || 0) : 0);
+    const total = parseFloat(plan.price || 0) + (isNew ? parseFloat(plan.signup_fee || 0) : 0);
     const monthLabel = plan.months ? `${plan.months} mies.` : 'jednorazowo';
 
     const card = document.createElement('label');
@@ -829,18 +927,21 @@ function buildPriceOptions(category) {
     input.type = 'radio';
     input.name = 'price_plan';
     input.value = plan.id;
+
     if (i === 0) { input.checked = true; card.classList.add('selected'); }
 
     card.innerHTML = `
-      <div class="price-card__name">${plan.name.replace(' — ', '<br>')}</div>
-      <div class="price-card__price">${total.toFixed(0)} zł</div>
-      <div class="price-card__extra">${monthLabel}${isNew && plan.signup_fee > 0 ? ` (w tym ${plan.signup_fee} zł wpisowe)` : ''}${plan.description ? '<br>' + plan.description : ''}</div>
+      <div class="price-card__name">${String(plan.name || '').replace(' — ', '<br>')}</div>
+      <div class="price-card__price">${Number.isFinite(total) ? total.toFixed(0) : '0'} zł</div>
+      <div class="price-card__extra">${monthLabel}${isNew && Number(plan.signup_fee||0) > 0 ? ` (w tym ${plan.signup_fee} zł wpisowe)` : ''}${plan.description ? '<br>' + plan.description : ''}</div>
     `;
     card.prepend(input);
+
     card.addEventListener('click', () => {
-      document.querySelectorAll('.price-card').forEach(c => c.classList.remove('selected'));
+      qsa('.price-card').forEach(c => c.classList.remove('selected'));
       card.classList.add('selected');
     });
+
     container.appendChild(card);
   });
 }
@@ -848,13 +949,13 @@ function buildPriceOptions(category) {
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('f_new')?.addEventListener('change', () => {
     if (selectedGroup !== null) {
-      const group = allData.flatMap(l => l.groups).find(g => g.id === selectedGroup);
+      const group = allData.flatMap(l => l.groups || []).find(g => g.id === selectedGroup);
       buildPriceOptions(group?.category || 'adults');
     }
   });
 });
 
-// ── Form submit ───────────────────────────────────────────────────
+// ── Submit ───────────────────────────────────────────────────────
 document.getElementById('regForm').addEventListener('submit', async (e) => {
   e.preventDefault();
 
@@ -866,14 +967,13 @@ document.getElementById('regForm').addEventListener('submit', async (e) => {
   msg.className = 'form-msg';
   msg.textContent = '';
 
-  if (!selectedGroup) {
-    showMsg('Wybierz termin zajęć z grafiku powyżej.', 'error'); return;
-  }
+  if (!selectedGroup) { showMsg('Wybierz termin zajęć z grafiku powyżej.', 'error'); return; }
 
   const first = document.getElementById('f_first').value.trim();
   const last  = document.getElementById('f_last').value.trim();
   const email = document.getElementById('f_email').value.trim();
   const phone = document.getElementById('f_phone').value.trim();
+
   if (!first || !last) { showMsg('Wpisz imię i nazwisko.', 'error'); return; }
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showMsg('Podaj prawidłowy adres e-mail.', 'error'); return; }
   if (!phone) { showMsg('Podaj numer telefonu.', 'error'); return; }
@@ -900,8 +1000,8 @@ document.getElementById('regForm').addEventListener('submit', async (e) => {
       start_date: document.getElementById('f_date').value || null,
       payment_method: document.getElementById('f_pay').value,
       preferred_time: document.getElementById('f_ptime').value.trim() || null,
-      consent_data: document.getElementById('f_consent_data').checked,
-      consent_rules: document.getElementById('f_consent_rules').checked,
+      consent_data: true,
+      consent_rules: true,
     };
 
     const res = await fetch(`${API}/register`, {
@@ -912,7 +1012,6 @@ document.getElementById('regForm').addEventListener('submit', async (e) => {
 
     const data = await res.json();
     if (!res.ok) { showMsg(data.error || 'Błąd zapisu. Spróbuj ponownie.', 'error'); return; }
-
     showConfirmation(data, first, last);
 
   } catch(err) {
@@ -941,24 +1040,69 @@ function showConfirmation(data, first, last) {
     ? `Twój zapis na listę rezerwową został przyjęty, ${first}. Skontaktujemy się, gdy pojawi się wolne miejsce.`
     : `Dziękujemy za zapis, ${first}! Twoje zgłoszenie zostało przyjęte. Skontaktujemy się, aby potwierdzić miejsce w grupie.`;
 
-  document.getElementById('confirmRef').textContent = data.payment_ref;
+  document.getElementById('confirmRef').textContent = data.payment_ref || '';
 
   if (!isWaitlist && data.total_amount) {
     const div = document.getElementById('confirmTransfer');
     div.innerHTML = `
       <div><span class="lbl">Kwota do wpłaty</span><br><span class="val" style="font-size:1.4rem;font-weight:900;color:var(--accent)">${parseFloat(data.total_amount).toFixed(2)} zł</span></div>
       <br>
-      <div><span class="lbl">Numer konta</span><br><span class="val">${data.bank_account}</span></div>
-      <div><span class="lbl">Odbiorca</span><br><span class="val">${data.bank_name}</span></div>
-      <div><span class="lbl">Tytuł przelewu</span><br><span class="val">${data.transfer_title}</span></div>
+      <div><span class="lbl">Numer konta</span><br><span class="val">${data.bank_account || ''}</span></div>
+      <div><span class="lbl">Odbiorca</span><br><span class="val">${data.bank_name || ''}</span></div>
+      <div><span class="lbl">Tytuł przelewu</span><br><span class="val">${data.transfer_title || ''}</span></div>
       <br>
-      <small style="color:var(--text-muted)">Przelew wyślij najpóźniej do ostatniego dnia poprzedzającego miesiąc rozliczeniowy.</small>
+      <small style="color:rgba(255,255,255,0.56)">Przelew wyślij najpóźniej do ostatniego dnia poprzedzającego miesiąc rozliczeniowy.</small>
     `;
     div.style.display = 'block';
   }
 
   box.classList.add('visible');
   box.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ── Init ─────────────────────────────────────────────────────────
+async function init() {
+  const container = document.getElementById('locPanels');
+  container.innerHTML = '<div class="loading-overlay">Ładowanie grafiku…</div>';
+
+  try {
+    const [schedPayload, pricesPayload] = await Promise.all([
+      fetchFirstOk(SCHEDULE_SOURCES),
+      fetchFirstOk([`${API}/prices`]),
+    ]);
+
+    allPrices = Array.isArray(pricesPayload) ? pricesPayload : (Array.isArray(pricesPayload?.rows) ? pricesPayload.rows : []);
+
+    if (looksNested(schedPayload)) {
+      allData = schedPayload;
+    } else {
+      const flatSchedules = normalizeSchedulesPayload(schedPayload);
+      const [locations, groups] = await Promise.all([
+        fetchFirstOk(LOCATIONS_SOURCES),
+        fetchFirstOk(GROUPS_SOURCES),
+      ]);
+
+      const locArr = Array.isArray(locations) ? locations : (Array.isArray(locations?.rows) ? locations.rows : []);
+      const grpArr = Array.isArray(groups) ? groups : (Array.isArray(groups?.rows) ? groups.rows : []);
+
+      allData = buildNestedFromFlat({
+        locations: locArr,
+        groups: grpArr,
+        schedules: flatSchedules,
+      });
+    }
+
+    buildTabs();
+    buildPanels();
+    if (allData?.[0]?.id) switchTab(allData[0].id);
+
+  } catch(e) {
+    container.innerHTML = `<div class="loading-overlay" style="color:#ffb2a6">
+      Błąd ładowania grafiku.<br><br>
+      <span style="color:rgba(255,255,255,.65);font-weight:600">${e.message || e}</span>
+    </div>`;
+    console.error(e);
+  }
 }
 
 init();
