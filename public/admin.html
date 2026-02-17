@@ -87,7 +87,6 @@ tbody td{padding:11px 14px;font-size:13px;vertical-align:middle;color:var(--text
 .mh{padding:18px 22px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--surface);z-index:1}
 .mh h3{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;color:var(--bright);text-transform:uppercase;letter-spacing:.05em}
 .mb{padding:22px}.mf{padding:14px 22px;border-top:1px solid var(--border);display:flex;gap:10px;justify-content:flex-end;background:var(--surface2);position:sticky;bottom:0}
-/* KARTOTEKA */
 .kart-header{background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:18px 20px;margin-bottom:20px;display:flex;align-items:center;gap:16px}
 .kart-avatar{width:52px;height:52px;border-radius:50%;background:var(--red-bg);border:2px solid var(--red-bdr);display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:22px;color:var(--red-l);flex-shrink:0}
 .kart-name{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;color:var(--bright);text-transform:uppercase}
@@ -178,7 +177,7 @@ select option{background:#1c1414}
 <div id="toasts"></div>
 
 <script>
-const API = '/api/admin-api'; // BEZ końcowego /
+const API = '/api/admin-api';
 let TOKEN = localStorage.getItem('km_token') || '';
 let CV='dashboard', ro=0;
 const RL = 30;
@@ -191,9 +190,6 @@ const PS={
 };
 const RS={new:'Nowy',confirmed:'Potwierdzony',cancelled:'Anulowany',completed:'Zakończony'};
 
-// ─────────────────────────────────────────────────────
-// Helpers
-// ─────────────────────────────────────────────────────
 function arrRows(x){
   if(!x) return [];
   if(Array.isArray(x)) return x;
@@ -236,9 +232,6 @@ function sb(s){const m={confirmed:'bg',new:'bo',cancelled:'br',completed:'bx'};r
 function capB(r,m){const p=m?Math.min(100,Math.round(r/m*100)):0;const c=p>=100?'f':p>=80?'w':'';return `<span class="cb"><span class="cf ${c}" style="width:${p}%"></span></span><span class="ct">${r}/${m||'?'}</span>`;}
 function initials(fn,ln){return ((fn||'?')[0]+(ln||'?')[0]).toUpperCase();}
 
-// ─────────────────────────────────────────────────────
-// API fetch (NAPRAWIONE: Bearer + backticki + błędy)
-// ─────────────────────────────────────────────────────
 async function aF(path,opts={}){
   const h={'Content-Type':'application/json'};
   if(TOKEN) h['Authorization'] = `Bearer ${TOKEN}`;
@@ -257,9 +250,20 @@ async function aF(path,opts={}){
   }
 }
 
-// ─────────────────────────────────────────────────────
-// Login / App
-// ─────────────────────────────────────────────────────
+// NOWA FUNKCJA: Usuń zapis
+async function deleteReg(id){
+  if(!confirm('Na pewno usunąć ten zapis? Operacja jest nieodwracalna!')) return;
+  try{
+    await aF(`/registrations/${id}`,{method:'DELETE'});
+    toast('Zapis usunięty','success');
+    if(CV==='dashboard') loadDash();
+    if(CV==='web-registrations') fetchR('web');
+    if(CV==='participants') fetchR('admin');
+  }catch(e){
+    toast('Błąd: '+e.message,'error');
+  }
+}
+
 function showLogin(){
   document.getElementById('login-screen').style.display='flex';
   document.getElementById('app').style.display='none';
@@ -300,9 +304,6 @@ document.getElementById('btn-logout').addEventListener('click',()=>{
   showLogin();
 });
 
-// ─────────────────────────────────────────────────────
-// Navigation
-// ─────────────────────────────────────────────────────
 function navigate(view){
   CV=view;
   document.querySelectorAll('nav a[data-view]').forEach(a=>a.classList.toggle('active',a.dataset.view===view));
@@ -331,9 +332,6 @@ function navigate(view){
 }
 document.querySelectorAll('nav a[data-view]').forEach(a=>a.addEventListener('click',()=>navigate(a.dataset.view)));
 
-// ─────────────────────────────────────────────────────
-// Export CSV (autoryzowane, działa bez nowej karty)
-// ─────────────────────────────────────────────────────
 document.getElementById('btn-export').addEventListener('click', async ()=>{
   try{
     const url = API + '/export';
@@ -355,9 +353,6 @@ document.getElementById('btn-export').addEventListener('click', async ()=>{
   }
 });
 
-// ─────────────────────────────────────────────────────
-// Dashboard
-// ─────────────────────────────────────────────────────
 async function loadDash(){
   const c=document.getElementById('content');
   try{
@@ -413,7 +408,11 @@ async function loadDash(){
               <td>${sb(r.status)}</td>
               <td>${pb(r.payment_status)}</td>
               <td style="color:var(--dim);font-size:12px">${fdt(r.created_at)}</td>
-              <td><button class="bi" onclick="openKartoteka(${r.id},'view')">Kartoteka</button></td>
+              <td class="tda">
+                <button class="bi" onclick="openKartoteka(${r.id},'view')">Kartoteka</button>
+                <button class="bi" onclick="openKartoteka(${r.id},'edit')">Edytuj</button>
+                <button class="bi del" onclick="deleteReg(${r.id})">Usuń</button>
+              </td>
             </tr>
           `).join('')}
         </tbody>
@@ -424,9 +423,6 @@ async function loadDash(){
   }
 }
 
-// ─────────────────────────────────────────────────────
-// Zapisy (WWW / Admin) – lista + paginacja + filtry
-// ─────────────────────────────────────────────────────
 async function loadReg(source){
   ro=0;
   renderRegShell(source);
@@ -545,6 +541,8 @@ async function fetchR(source){
         <td style="color:var(--dim);font-size:12px">${fdt(r.created_at)}</td>
         <td class="tda">
           <button class="bi" onclick="openKartoteka(${r.id},'view')">Kartoteka</button>
+          <button class="bi" onclick="openKartoteka(${r.id},'edit')">Edytuj</button>
+          <button class="bi del" onclick="deleteReg(${r.id})">Usuń</button>
         </td>
       </tr>
     `).join('');
@@ -564,9 +562,6 @@ async function fetchR(source){
   }
 }
 
-// ─────────────────────────────────────────────────────
-// Dodaj kursanta (loadAdd) – NAPRAWIONE, istnieje i działa
-// ─────────────────────────────────────────────────────
 async function loadAdd(){
   const c=document.getElementById('content');
 
@@ -754,9 +749,6 @@ async function loadAdd(){
   });
 }
 
-// ─────────────────────────────────────────────────────
-// Kartoteka – działa (GET /registrations/:id + PATCH /registrations/:id)
-// ─────────────────────────────────────────────────────
 async function openKartoteka(id, mode='view'){
   let r;
   let locations=[], groups=[], schedules=[], plans=[];
@@ -897,7 +889,8 @@ async function openKartoteka(id, mode='view'){
     ? `<button class="btn btn-secondary" onclick="openKartoteka(${id},'view')">Anuluj</button>
        <button class="btn btn-primary" onclick="saveKartoteka(${id})">Zapisz zmiany</button>`
     : `<button class="btn btn-secondary" onclick="closeModal()">Zamknij</button>
-       <button class="btn btn-primary" onclick="openKartoteka(${id},'edit')">Edytuj kartotekę</button>`;
+       <button class="btn btn-primary" onclick="openKartoteka(${id},'edit')">Edytuj kartotekę</button>
+       <button class="btn btn-secondary" style="background:var(--red);border-color:var(--red)" onclick="deleteReg(${id})">Usuń zapis</button>`;
 
   showModal(`Kartoteka #${id}`, body, footer);
 
@@ -963,9 +956,6 @@ async function saveKartoteka(id){
   }
 }
 
-// ─────────────────────────────────────────────────────
-// Grupy / Grafik / Lokalizacje – proste listy, żeby nie wisiało
-// ─────────────────────────────────────────────────────
 async function loadGroups(){
   const c=document.getElementById('content');
   try{
@@ -1040,7 +1030,6 @@ async function loadLocations(){
   }
 }
 
-// Start
 checkLogin();
 </script>
 </body>
