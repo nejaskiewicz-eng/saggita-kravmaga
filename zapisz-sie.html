@@ -570,8 +570,9 @@ html, body { background:#141414 !important; }
     <p class="confirm-box__text" id="confirmText">Dziękujemy za zapis! Skontaktujemy się w celu potwierdzenia miejsca.</p>
     <div class="confirm-box__ref" id="confirmRef"></div>
     <div class="confirm-box__transfer" id="confirmTransfer" style="display:none"></div>
-    <p class="confirm-box__note">Zachowaj powyższy kod — przyda Ci się do sprawdzenia statusu zapisu oraz jako tytuł przelewu.<br>W razie pytań: <strong>biuro@akademiaobrony.pl</strong> · <strong>510 930 460</strong></p>
-  </div>
+    <div id="confirmActions" style="display:none;gap:10px;flex-wrap:wrap;margin-top:18px"></div>
+    <p class="confirm-box__note">Zachowaj powyższy kod
+    </div>
 
 </main>
 
@@ -1056,8 +1057,44 @@ function showConfirmation(data, first, last) {
     div.style.display = 'block';
   }
 
+  if (!isWaitlist) {
+    const actions = document.getElementById('confirmActions');
+    actions.style.display = 'flex';
+    actions.innerHTML = `
+      <button onclick="handlePayOnline('${data.payment_ref}')" style="background:linear-gradient(180deg,rgba(178,25,0,0.98),rgba(80,8,0,0.95));color:#fff;border:none;padding:13px 22px;font-family:'Open Sans',sans-serif;font-weight:800;font-size:.80rem;letter-spacing:.06em;text-transform:uppercase;cursor:pointer">Opłać online →</button>
+      <button onclick="handleDownloadDoc('${data.payment_ref}')" style="background:transparent;color:rgba(255,255,255,0.90);border:1px solid rgba(255,255,255,0.22);padding:13px 22px;font-family:'Open Sans',sans-serif;font-weight:800;font-size:.80rem;letter-spacing:.06em;text-transform:uppercase;cursor:pointer">Pobierz dokument płatniczy</button>
+    `;
+  }
+
   box.classList.add('visible');
   box.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+async function handlePayOnline(payment_ref) {
+  try {
+    await fetch(`${API}/registration/action`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ payment_ref, action: 'pay_online' })
+    });
+    alert('Płatność online będzie dostępna wkrótce. Skontaktujemy się z Tobą mailowo.');
+  } catch(e) { alert('Błąd. Spróbuj ponownie.'); }
+}
+
+async function handleDownloadDoc(payment_ref) {
+  try {
+    const r = await fetch(`${API}/payment-document?payment_ref=${encodeURIComponent(payment_ref)}`);
+    if (!r.ok) { const err = await r.json(); throw new Error(err.error || 'Błąd'); }
+    const blob = await r.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `dokument-platniczy-${payment_ref}.html`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  } catch(e) { alert('Błąd: ' + e.message); }
 }
 
 // ── Init ─────────────────────────────────────────────────────────
