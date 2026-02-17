@@ -1081,20 +1081,8 @@ async function handlePayOnline(payment_ref) {
   } catch(e) { alert('Błąd. Spróbuj ponownie.'); }
 }
 
-async function handleDownloadDoc(payment_ref) {
-  try {
-    const r = await fetch(`${API}/payment-document?payment_ref=${encodeURIComponent(payment_ref)}`);
-    if (!r.ok) { const err = await r.json(); throw new Error(err.error || 'Błąd'); }
-    const blob = await r.blob();
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `dokument-platniczy-${payment_ref}.html`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-  } catch(e) { alert('Błąd: ' + e.message); }
+function handleDownloadDoc(payment_ref) {
+  window.open(`${API}/payment-document?payment_ref=${encodeURIComponent(payment_ref)}`, '_blank');
 }
 
 // ── Init ─────────────────────────────────────────────────────────
