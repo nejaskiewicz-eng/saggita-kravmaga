@@ -34,7 +34,20 @@ module.exports = async (req, res) => {
       return res.status(500).json({ error: e.message });
     }
   }
-
+// ── GET pojedyncza grupa ───────────────────────────────────────
+  if (req.method === 'GET') {
+    try {
+      const { rows } = await pool.query(`
+        SELECT g.*, l.city
+        FROM groups g
+        LEFT JOIN locations l ON l.id = g.location_id
+        WHERE g.id = $1`, [id]);
+      if (!rows.length) return res.status(404).json({ error: 'Nie znaleziono grupy.' });
+      return res.status(200).json(rows[0]);
+    } catch (e) {
+      return res.status(500).json({ error: e.message });
+    }
+  }
   // ── PATCH edycja grupy ─────────────────────────────────────────
   if (req.method === 'PATCH') {
     try {
