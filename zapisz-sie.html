@@ -1082,7 +1082,14 @@ async function handlePayOnline(payment_ref) {
 }
 
 function handleDownloadDoc(payment_ref) {
-  window.open(`${API}/payment-document?payment_ref=${encodeURIComponent(payment_ref)}`, '_blank');
+  const url = `${API}/payment-document?payment_ref=${encodeURIComponent(payment_ref)}`;
+  const a = document.createElement('a');
+  a.href = url;
+  a.target = '_blank';
+  a.rel = 'noopener noreferrer';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
 }
 
 // ── Init ─────────────────────────────────────────────────────────
