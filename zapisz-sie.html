@@ -440,6 +440,7 @@ html, body { background:#141414 !important; }
 .group-card__head { background:rgba(0,0,0,0.26) !important; border-bottom:1px solid rgba(255,255,255,0.10) !important; }
 .group-card { background:rgba(255,255,255,0.02) !important; border-color:rgba(255,255,255,0.14) !important; }
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 
 <body>
@@ -1081,15 +1082,145 @@ async function handlePayOnline(payment_ref) {
   } catch(e) { alert('Błąd. Spróbuj ponownie.'); }
 }
 
-function handleDownloadDoc(payment_ref) {
-  const url = `${API}/payment-document?payment_ref=${encodeURIComponent(payment_ref)}`;
-  const a = document.createElement('a');
-  a.href = url;
-  a.target = '_blank';
-  a.rel = 'noopener noreferrer';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
+async function handleDownloadDoc(payment_ref) {
+  // Pobierz dane z API
+  try {
+    const r = await fetch(`${API}/payment-document?payment_ref=${encodeURIComponent(payment_ref)}`);
+    if (!r.ok) throw new Error('Błąd pobierania danych');
+    
+    // Parsuj HTML żeby wyciągnąć dane
+    const html = await r.text();
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+    
+    // Wyciągnij dane z HTML
+    const rows = doc.querySelectorAll('table tr');
+    const data = {};
+    rows.forEach(row => {
+      const cells = row.querySelectorAll('td');
+      if (cells.length === 2) {
+        const key = cells[0].textContent.trim();
+        const val = cells[1].textContent.trim();
+        data[key] = val;
+      }
+    });
+    
+    const paymentRef = doc.querySelector('.ref')?.textContent.trim() || payment_ref;
+    
+    // Generuj PDF używając jsPDF
+    if(typeof window.jspdf === 'undefined' && typeof jsPDF === 'undefined') {
+      alert('Trwa ładowanie generatora PDF, spróbuj za chwilę.');
+      return;
+    }
+    
+    const { jsPDF: J } = window.jspdf || {jsPDF: jsPDF};
+    const pdf = new J({unit:'mm', format:'a4'});
+    
+    // Header
+    pdf.setFillColor(10, 0, 0);
+    pdf.rect(0, 0, 210, 40, 'F');
+    pdf.setFillColor(196, 32, 0);
+    pdf.rect(0, 0, 6, 40, 'F');
+    
+    pdf.setTextColor(255, 255, 255);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(16);
+    pdf.text('AKADEMIA OBRONY SAGGITA — KRAV MAGA', 18, 16);
+    pdf.setFontSize(8);
+    pdf.setFont('helvetica', 'normal');
+    pdf.setTextColor(200, 180, 180);
+    pdf.text('DOKUMENT PŁATNICZY', 18, 24);
+    pdf.text('Kod: ' + paymentRef, 18, 31);
+    pdf.text('Data: ' + new Date().toLocaleDateString('pl-PL'), 120, 31);
+    
+    // Linia
+    pdf.setDrawColor(196, 32, 0);
+    pdf.setLineWidth(0.5);
+    pdf.line(15, 46, 195, 46);
+    
+    // Dane kursanta
+    let y = 56;
+    pdf.setTextColor(80, 0, 0);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(8);
+    pdf.text('DANE KURSANTA', 15, y); y += 7;
+    
+    const fields = [
+      ['Imię i nazwisko:', data['Imię i nazwisko'] || '—'],
+      ['Email:', data['Email'] || '—'],
+      ['Telefon:', data['Telefon'] || '—'],
+      ['Miasto:', data['Miasto'] || '—'],
+      ['Grupa:', data['Grupa'] || '—'],
+      ['Karnet:', data['Karnet'] || '—'],
+      ['Kwota:', data['Kwota do wpłaty'] || '—']
+    ];
+    
+    pdf.setDrawColor(200, 200, 200);
+    pdf.setLineWidth(0.3);
+    
+    fields.forEach(f => {
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(8);
+      pdf.setTextColor(60, 60, 60);
+      pdf.text(f[0], 15, y);
+      pdf.setFont('helvetica', 'normal');
+      pdf.setTextColor(20, 20, 20);
+      pdf.text(f[1], 70, y);
+      pdf.line(15, y+2, 195, y+2);
+      y += 9;
+    });
+    
+    y += 8;
+    
+    // Dane do przelewu
+    pdf.setFillColor(245, 245, 245);
+    pdf.rect(15, y-4, 180, 52, 'F');
+    pdf.setFillColor(196, 32, 0);
+    pdf.rect(15, y-4, 4, 52, 'F');
+    
+    pdf.setTextColor(80, 0, 0);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(8);
+    pdf.text('DANE DO PRZELEWU', 24, y+2); y += 10;
+    
+    const bankFields = [
+      ['Numer konta:', data['Numer konta'] || '—'],
+      ['Odbiorca:', data['Odbiorca'] || 'Akademia Obrony Saggita'],
+      ['Tytuł przelewu:', data['Tytuł przelewu'] || paymentRef],
+      ['Kwota:', data['Kwota'] || data['Kwota do wpłaty'] || '—']
+    ];
+    
+    bankFields.forEach(f => {
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(8);
+      pdf.setTextColor(80, 80, 80);
+      pdf.text(f[0], 24, y);
+      pdf.setFont('helvetica', 'normal');
+      pdf.setTextColor(30, 30, 30);
+      const lines = pdf.splitTextToSize(f[1], 110);
+      pdf.text(lines, 75, y);
+      y += 9;
+    });
+    
+    y += 10;
+    
+    // Ważna informacja
+    pdf.setFillColor(196, 32, 0);
+    pdf.rect(15, y, 180, 22, 'F');
+    pdf.setTextColor(255, 255, 255);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(9);
+    pdf.text('WAŻNE: Przelew w ciągu 3 dni roboczych.', 105, y+8, {align:'center'});
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(8);
+    pdf.text('Po tym terminie rezerwacja przepada. Kontakt: biuro@akademiaobrony.pl · 510 930 460', 105, y+16, {align:'center'});
+    
+    // Zapisz PDF
+    pdf.save('dokument-platniczy-' + paymentRef + '.pdf');
+    
+  } catch(e) {
+    alert('Błąd: ' + e.message);
+  }
 }
 
 // ── Init ─────────────────────────────────────────────────────────
