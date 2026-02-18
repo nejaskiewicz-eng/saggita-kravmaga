@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zapisz się przez cennik — Krav Maga Saggita</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&family=Open+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:'Open Sans',sans-serif;
+  overflow-x:hidden;
+}
+a{color:inherit;text-decoration:none}
+button,input,select,textarea{font:inherit}
+img{max-width:100%;display:block}
+
+:root{
+  --bg:#141414;
+
+  --accent:#B21900;
+  --accent-rgb:178,25,0;
+
+  --accent-strong:#DA2A00;
+  --accent-glass:rgba(var(--accent-rgb),0.08);
+  --border-accent:rgba(var(--accent-rgb),0.45);
+
+  --white:#FFFFFF;
+  --text:rgba(255,255,255,0.86);
+  --text-muted:rgba(255,255,255,0.56);
+  --border-neutral:rgba(255,255,255,0.16);
+
+  --panel:rgba(255,255,255,0.02);
+  --panel-2:rgba(0,0,0,0.26);
+  --line:rgba(255,255,255,0.10);
+  --shadow:0 24px 70px rgba(0,0,0,0.55);
+
+  --radius:18px;
+  --radius-sm:14px;
+}
+
+.page{
+  max-width:1080px;
+  margin:0 auto;
+  padding:28px 18px 80px;
+}
+.header{
+  display:flex; align-items:flex-start; justify-content:space-between;
+  gap:16px; margin-bottom:18px;
+}
+.brand{
+  display:flex; flex-direction:column; gap:6px;
+}
+.kicker{
+  display:inline-flex; align-items:center; gap:10px;
+  font-weight:800; letter-spacing:.12em; text-transform:uppercase;
+  color:rgba(255,255,255,0.70); font-size:12px;
+}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 6px rgba(var(--accent-rgb),0.12)}
+h1{
+  font-family:'Montserrat',sans-serif;
+  font-size:30px;
+  line-height:1.12;
+  color:var(--white);
+}
+.sub{
+  color:var(--text-muted);
+  font-size:14px;
+  max-width:62ch;
+}
+.badgeTop{
+  display:inline-flex; align-items:center; gap:8px;
+  padding:10px 12px;
+  border:1px solid var(--line);
+  background:rgba(255,255,255,0.03);
+  border-radius:999px;
+  color:rgba(255,255,255,0.75);
+  font-size:12px;
+  height:fit-content;
+}
+.badgeTop strong{color:var(--white)}
+.hr{height:1px;background:var(--line);margin:18px 0 18px}
+
+.stepper{
+  display:flex; gap:10px; flex-wrap:wrap;
+  margin:0 0 18px;
+}
+.step{
+  display:inline-flex; align-items:center; gap:10px;
+  padding:10px 12px;
+  border:1px solid var(--line);
+  border-radius:999px;
+  background:rgba(255,255,255,0.02);
+  color:rgba(255,255,255,0.72);
+  font-size:12px;
+}
+.step .n{
+  width:22px;height:22px;border-radius:999px;
+  display:inline-flex;align-items:center;justify-content:center;
+  font-weight:800;
+  border:1px solid rgba(255,255,255,0.14);
+  color:rgba(255,255,255,0.78);
+}
+.step.active{border-color:var(--border-accent); background:var(--accent-glass); color:rgba(255,255,255,0.88)}
+.step.active .n{border-color:rgba(var(--accent-rgb),0.35); color:var(--white); background:rgba(var(--accent-rgb),0.18)}
+
+.panel{
+  border:1px solid var(--line);
+  background:var(--panel);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+  overflow:hidden;
+}
+.panelHead{
+  padding:18px 18px 14px;
+  border-bottom:1px solid var(--line);
+  display:flex; align-items:flex-end; justify-content:space-between;
+  gap:14px;
+}
+.panelHead h2{
+  font-family:'Montserrat',sans-serif;
+  font-size:18px;
+  color:var(--white);
+}
+.panelHead p{
+  color:var(--text-muted);
+  font-size:13px;
+  margin-top:6px;
+  max-width:70ch;
+}
+.panelBody{padding:16px 18px 18px}
+.grid2{display:grid;grid-template-columns:1.15fr .85fr;gap:14px}
+@media (max-width: 900px){ .grid2{grid-template-columns:1fr} }
+
+.card{
+  border:1px solid rgba(255,255,255,0.10);
+  background:rgba(0,0,0,0.22);
+  border-radius:var(--radius-sm);
+  padding:14px 14px;
+}
+.cardTitle{
+  display:flex; align-items:flex-start; justify-content:space-between; gap:10px;
+}
+.cardTitle strong{color:var(--white);font-size:15px}
+.pill{
+  display:inline-flex; align-items:center; gap:8px;
+  padding:6px 10px;
+  border-radius:999px;
+  border:1px solid rgba(var(--accent-rgb),0.28);
+  background:rgba(var(--accent-rgb),0.10);
+  color:rgba(255,255,255,0.85);
+  font-size:12px;
+  white-space:nowrap;
+}
+.small{color:var(--text-muted);font-size:12px;margin-top:8px;line-height:1.45}
+.price{
+  font-family:'Montserrat',sans-serif;
+  font-size:22px; color:var(--white);
+}
+.price span{font-size:12px;color:rgba(255,255,255,0.62);font-family:'Open Sans',sans-serif;font-weight:700}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:10px;
+  padding:12px 14px;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,0.14);
+  background:rgba(255,255,255,0.04);
+  color:rgba(255,255,255,0.90);
+  cursor:pointer;
+  font-weight:800;
+  letter-spacing:.02em;
+  transition:transform .12s ease, border-color .12s ease, background .12s ease;
+}
+.btn:hover{transform:translateY(-1px);border-color:rgba(255,255,255,0.22);background:rgba(255,255,255,0.06)}
+.btn.primary{
+  background:linear-gradient(180deg, rgba(var(--accent-rgb),0.92), rgba(var(--accent-rgb),0.72));
+  border-color:rgba(var(--accent-rgb),0.75);
+}
+.btn.primary:hover{background:linear-gradient(180deg, rgba(var(--accent-rgb),1), rgba(var(--accent-rgb),0.78));border-color:rgba(var(--accent-rgb),0.90)}
+.btn.ghost{background:transparent}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.btnSmall{padding:10px 12px;border-radius:12px;font-size:13px}
+
+.formGrid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+}
+.formGrid .full{grid-column:1/-1}
+@media (max-width: 720px){
+  .formGrid{grid-template-columns:1fr}
+}
+.field label{
+  display:block;
+  font-size:12px;
+  font-weight:800;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:rgba(255,255,255,0.70);
+  margin-bottom:6px;
+}
+.field input,.field select,.field textarea{
+  width:100%;
+  padding:12px 12px;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,0.14);
+  background:rgba(0,0,0,0.22);
+  color:rgba(255,255,255,0.92);
+  outline:none;
+}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:rgba(var(--accent-rgb),0.55);box-shadow:0 0 0 6px rgba(var(--accent-rgb),0.08)}
+.field textarea{min-height:98px;resize:vertical}
+.help{margin-top:7px;color:rgba(255,255,255,0.58);font-size:12px;line-height:1.4}
+.inline{
+  display:flex; align-items:flex-start; gap:10px;
+  padding:12px 12px;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,0.12);
+  background:rgba(255,255,255,0.02);
+}
+.inline input{width:auto;margin-top:3px}
+.inline label{margin:0;font-size:13px;color:rgba(255,255,255,0.84);font-weight:700;letter-spacing:0;text-transform:none}
+
+.notice{
+  border:1px solid rgba(var(--accent-rgb),0.30);
+  background:rgba(var(--accent-rgb),0.09);
+  border-radius:16px;
+  padding:12px 12px;
+  color:rgba(255,255,255,0.85);
+  font-size:13px;
+  line-height:1.5;
+}
+.notice strong{color:var(--white)}
+.summary{
+  display:grid;
+  gap:10px;
+}
+.sRow{
+  display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap;
+  padding:10px 12px;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,0.10);
+  background:rgba(0,0,0,0.18);
+  font-size:13px;
+}
+.sRow b{color:rgba(255,255,255,0.92)}
+.sRow span{color:rgba(255,255,255,0.65)}
+.footerBar{
+  display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end;
+  margin-top:14px;
+}
+
+.toastWrap{
+  position:fixed; left:0; right:0; bottom:14px;
+  display:flex; justify-content:center; pointer-events:none;
+  z-index:9999;
+}
+.toast{
+  pointer-events:auto;
+  max-width:min(720px, calc(100% - 24px));
+  border-radius:999px;
+  padding:12px 14px;
+  border:1px solid rgba(255,255,255,0.18);
+  background:rgba(0,0,0,0.72);
+  color:rgba(255,255,255,0.92);
+  box-shadow:0 20px 60px rgba(0,0,0,0.55);
+  display:flex; align-items:center; gap:10px;
+  font-weight:700;
+}
+.toast.ok{border-color:rgba(46,204,113,0.35)}
+.toast.err{border-color:rgba(var(--accent-rgb),0.55)}
+.spin{
+  width:16px;height:16px;border-radius:50%;
+  border:2px solid rgba(255,255,255,0.22);
+  border-top-color:rgba(255,255,255,0.75);
+  animation:sp 0.8s linear infinite;
+}
+@keyframes sp{to{transform:rotate(360deg)}}
+.hidden{display:none !important}
+</style>
+</head>
+
+<body>
+<div class="page">
+
+  <div class="header">
+    <div class="brand">
+      <div class="kicker"><span class="dot"></span><span>KRAV MAGA SAGGITA</span></div>
+      <h1>Zapisz się przez cennik</h1>
+      <div class="sub">Zaczynamy od wyboru usługi. Potem wybierasz lokalizację i termin, uzupełniasz dane i kończysz płatnością online albo dokumentem do przelewu.</div>
+    </div>
+    <div class="badgeTop">
+      <span>Tryb:</span> <strong>Cennik → Zapis</strong>
+    </div>
+  </div>
+
+  <div class="hr"></div>
+
+  <div class="stepper" id="stepper">
+    <div class="step active" data-step="1"><span class="n">1</span><span>Wybór usługi</span></div>
+    <div class="step" data-step="2"><span class="n">2</span><span>Lokalizacja i termin</span></div>
+    <div class="step" data-step="3"><span class="n">3</span><span>Dane i zgody</span></div>
+    <div class="step" data-step="4"><span class="n">4</span><span>Podsumowanie</span></div>
+    <div class="step" data-step="5"><span class="n">5</span><span>Płatność</span></div>
+  </div>
+
+  <!-- STEP 1 -->
+  <section class="panel" id="step1">
+    <div class="panelHead">
+      <div>
+        <h2>1) Wybierz usługę z cennika</h2>
+        <p>Wybierasz konkretną pozycję z cennika. Na kolejnych krokach dopasujesz lokalizację, grupę i termin.</p>
+      </div>
+      <button class="btn btnSmall ghost" id="btnReload">Odśwież</button>
+    </div>
+    <div class="panelBody">
+      <div class="grid2">
+        <div class="card">
+          <div class="cardTitle">
+            <strong>Cennik</strong>
+            <span class="pill" id="pricesMeta">Ładowanie…</span>
+          </div>
+          <div class="small">Kliknij „Wybierz”, żeby rozpocząć zapis od konkretnej usługi.</div>
+          <div id="pricesList" style="display:grid;gap:10px;margin-top:12px"></div>
+        </div>
+
+        <div class="card">
+          <div class="cardTitle">
+            <strong>Wybrana usługa</strong>
+            <span class="pill" id="selectedPill">Brak</span>
+          </div>
+          <div class="small" id="selectedDesc">Najpierw wybierz pozycję z cennika po lewej stronie.</div>
+
+          <div class="row" style="margin-top:14px">
+            <button class="btn primary" id="goStep2" disabled>Przejdź do wyboru terminu</button>
+          </div>
+          <div class="help">Jeśli masz już karnet miesięczny, zaznaczysz to później – wtedy kwota może być 0 zł.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STEP 2 -->
+  <section class="panel hidden" id="step2" style="margin-top:14px">
+    <div class="panelHead">
+      <div>
+        <h2>2) Lokalizacja, grupa i termin</h2>
+        <p>Wybierz miejsce treningów i konkretny termin z grafiku. Pokażemy tylko dostępne opcje.</p>
+      </div>
+      <button class="btn btnSmall ghost" id="back1">Wstecz</button>
+    </div>
+    <div class="panelBody">
+      <div class="formGrid">
+        <div class="field full">
+          <label>Lokalizacja *</label>
+          <select id="f_location"><option value="">Ładowanie…</option></select>
+          <div class="help">Najpierw wybierz lokalizację – wtedy pokażemy dostępne grupy.</div>
+        </div>
+        <div class="field full">
+          <label>Grupa *</label>
+          <select id="f_group"><option value="">Najpierw wybierz lokalizację</option></select>
+          <div class="help" id="groupHelp">—</div>
+        </div>
+        <div class="field full">
+          <label>Termin z grafiku (opcjonalnie)</label>
+          <select id="f_schedule"><option value="">— wybierz termin (opcjonalnie) —</option></select>
+          <div class="help">Jeśli nie wybierzesz terminu, odezwiemy się, żeby go doprecyzować.</div>
+        </div>
+        <div class="field full">
+          <label>Preferowana data startu (opcjonalnie)</label>
+          <input id="f_start_date" type="date">
+        </div>
+        <div class="field full">
+          <label>Preferowana godzina (opcjonalnie)</label>
+          <input id="f_preferred_time" type="text" placeholder="np. poniedziałek po 18:00 / dowolnie">
+        </div>
+      </div>
+
+      <div class="footerBar">
+        <button class="btn" id="goStep3" disabled>Dalej: dane</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- STEP 3 -->
+  <section class="panel hidden" id="step3" style="margin-top:14px">
+    <div class="panelHead">
+      <div>
+        <h2>3) Dane kursanta i zgody</h2>
+        <p>Uzupełnij dane. Pola oznaczone * są wymagane.</p>
+      </div>
+      <button class="btn btnSmall ghost" id="back2">Wstecz</button>
+    </div>
+    <div class="panelBody">
+      <div class="formGrid">
+        <div class="field">
+          <label>Imię *</label>
+          <input id="f_first_name" type="text" placeholder="np. Jan">
+        </div>
+        <div class="field">
+          <label>Nazwisko *</label>
+          <input id="f_last_name" type="text" placeholder="np. Kowalski">
+        </div>
+        <div class="field">
+          <label>Email *</label>
+          <input id="f_email" type="email" placeholder="np. jan@email.pl">
+        </div>
+        <div class="field">
+          <label>Telefon *</label>
+          <input id="f_phone" type="text" placeholder="np. 600 000 000">
+        </div>
+        <div class="field">
+          <label>Rok urodzenia</label>
+          <input id="f_birth_year" type="number" placeholder="np. 1992">
+        </div>
+        <div class="field">
+          <label>Typ kursanta</label>
+          <select id="f_is_new">
+            <option value="true">Nowy</option>
+            <option value="false">Kontynuacja</option>
+          </select>
+          <div class="help">Dla nowych może doliczyć się jednorazowa opłata wpisowa (zgodnie z cennikiem).</div>
+        </div>
+
+        <div class="field full">
+          <div class="inline">
+            <input type="checkbox" id="f_has_membership" name="has_membership">
+            <div>
+              <label for="f_has_membership" style="font-weight:700;color:rgba(255,255,255,0.92);cursor:pointer">
+                Mam już karnet miesięczny (wtedy płatność może wynosić 0 zł)
+              </label>
+              <div class="help">Jeśli zaznaczysz, system ustawi kwotę na 0 zł.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="field full">
+          <div class="inline">
+            <input type="checkbox" id="f_consent_data">
+            <div>
+              <label for="f_consent_data" style="font-weight:700;color:rgba(255,255,255,0.92);cursor:pointer">
+                Wyrażam zgodę na przetwarzanie danych w celu realizacji zapisu *
+              </label>
+              <div class="help">Bez tej zgody nie możemy przyjąć zgłoszenia.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="field full">
+          <div class="inline">
+            <input type="checkbox" id="f_consent_rules">
+            <div>
+              <label for="f_consent_rules" style="font-weight:700;color:rgba(255,255,255,0.92);cursor:pointer">
+                Akceptuję regulamin i zasady uczestnictwa *
+              </label>
+              <div class="help">To standardowe potwierdzenie, żeby wszystko było jasne od początku.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="field full">
+          <label>Uwagi (opcjonalnie)</label>
+          <textarea id="f_notes" placeholder="Np. kontuzje, preferencje, dodatkowe pytania…"></textarea>
+        </div>
+      </div>
+
+      <div class="footerBar">
+        <button class="btn" id="goStep4" disabled>Dalej: podsumowanie</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- STEP 4 -->
+  <section class="panel hidden" id="step4" style="margin-top:14px">
+    <div class="panelHead">
+      <div>
+        <h2>4) Podsumowanie i potwierdzenie</h2>
+        <p>Sprawdź dane i wyślij zgłoszenie. Potem pokażemy opcje płatności.</p>
+      </div>
+      <button class="btn btnSmall ghost" id="back3">Wstecz</button>
+    </div>
+    <div class="panelBody">
+      <div class="summary" id="summaryBox"></div>
+
+      <div class="notice" style="margin-top:12px">
+        <strong>Uwaga:</strong> jeśli grupa jest pełna, zapis trafi na listę rezerwową – dostaniesz informację mailem.
+      </div>
+
+      <div class="footerBar">
+        <button class="btn primary" id="submitBtn">Wyślij zgłoszenie</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- STEP 5 -->
+  <section class="panel hidden" id="step5" style="margin-top:14px">
+    <div class="panelHead">
+      <div>
+        <h2>5) Płatność</h2>
+        <p>Możesz przejść do płatności online albo pobrać dokument do przelewu.</p>
+      </div>
+      <button class="btn btnSmall ghost" id="back4">Wstecz</button>
+    </div>
+    <div class="panelBody">
+      <div class="card">
+        <div class="cardTitle">
+          <strong>Twoje zgłoszenie zostało przyjęte</strong>
+          <span class="pill" id="payPill">—</span>
+        </div>
+        <div class="small" id="payText">—</div>
+
+        <div class="row" style="margin-top:14px">
+          <button class="btn primary" id="payOnlineBtn">Płatność online</button>
+          <button class="btn" id="docBtn">Pobierz dokument płatniczy</button>
+        </div>
+
+        <div class="help" id="payHelp" style="margin-top:10px">—</div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<div class="toastWrap" id="toastWrap" style="display:none">
+  <div class="toast" id="toast">
+    <span id="toastIcon">•</span>
+    <span id="toastMsg">—</span>
+  </div>
+</div>
+
+<script>
+const API_BASE = 'https://saggita-kravmaga.vercel.app';
+const API = `${API_BASE}/api`;
+
+const SCHEDULE_URL = `${API}/schedule`;
+const PRICES_URL = `${API}/prices`;
+
+let scheduleData = [];
+let pricesData = [];
+let selectedPlan = null;
+
+let selected = {
+  location_id: null,
+  group_id: null,
+  schedule_id: null,
+};
+
+let registrationResult = null; // { payment_ref, total_amount, is_waitlist, ... }
+
+function toast(msg, type='ok', ms=3200){
+  const w=document.getElementById('toastWrap');
+  const t=document.getElementById('toast');
+  const icon=document.getElementById('toastIcon');
+  const m=document.getElementById('toastMsg');
+  t.className = `toast ${type==='err'?'err':'ok'}`;
+  icon.textContent = type==='err' ? '!' : '✓';
+  m.textContent = msg;
+  w.style.display='flex';
+  clearTimeout(window.__toastT);
+  window.__toastT=setTimeout(()=>{ w.style.display='none'; }, ms);
+}
+
+async function fetchJson(url){
+  const r = await fetch(url, { cache: 'no-store' });
+  const d = await r.json().catch(()=>({error:'Błąd odpowiedzi serwera'}));
+  if(!r.ok) throw new Error(d.error || `Błąd HTTP ${r.status}`);
+  return d;
+}
+
+function money(v){
+  const n = Number(v||0);
+  return n.toLocaleString('pl-PL', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+}
+
+function setStep(n){
+  document.querySelectorAll('[id^="step"]').forEach(s=>{
+    const sn = parseInt(s.id.replace('step',''),10);
+    s.classList.toggle('hidden', sn!==n);
+  });
+  document.querySelectorAll('#stepper .step').forEach(el=>{
+    el.classList.toggle('active', parseInt(el.dataset.step,10)===n);
+  });
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function planLabel(p){
+  const months = p.months ? `${p.months} mies.` : 'jednorazowo';
+  return `${p.name} • ${money(p.price)} zł • ${months}`;
+}
+
+function groupLabel(g){
+  const cap = (typeof g.available==='number') ? `Dostępne: ${g.available}` : '';
+  return `${g.name}${cap?` · ${cap}`:''}`;
+}
+function scheduleLabel(s){
+  const day = (s.day_name!=null ? s.day_name : s.day_of_week);
+  const ts = s.time_start ? String(s.time_start).slice(0,5) : '';
+  const te = s.time_end ? String(s.time_end).slice(0,5) : '';
+  const tl = (ts && te) ? `${ts}–${te}` : (s.time_label || ts || '');
+  const addr = s.address ? ` · ${s.address}` : '';
+  return `${day} ${tl}${addr}`;
+}
+
+function buildPrices(){
+  const list=document.getElementById('pricesList');
+  const meta=document.getElementById('pricesMeta');
+
+  const rows = Array.isArray(pricesData) ? pricesData : (Array.isArray(pricesData?.rows) ? pricesData.rows : []);
+  meta.textContent = rows.length ? `${rows.length} pozycji` : 'Brak pozycji';
+
+  // grupowanie po category
+  const byCat = {};
+  rows.forEach(p=>{
+    const c = (p.category || 'Inne');
+    (byCat[c] ||= []).push(p);
+  });
+
+  const catOrder = Object.keys(byCat).sort((a,b)=>a.localeCompare(b,'pl'));
+  list.innerHTML = catOrder.map(cat=>{
+    const items = byCat[cat].slice().sort((a,b)=>Number(a.price||0)-Number(b.price||0));
+    const cards = items.map(p=>{
+      const months = p.months ? `${p.months} mies.` : 'jednorazowo';
+      const fee = Number(p.signup_fee||0) > 0 ? `+ wpisowe ${money(p.signup_fee)} zł (dla nowych)` : '';
+      const desc = (p.description||'').trim();
+      return `
+        <div class="card" style="padding:12px">
+          <div class="cardTitle">
+            <strong>${p.name}</strong>
+            <span class="pill">${months}</span>
+          </div>
+          <div class="row" style="justify-content:space-between;align-items:flex-end;margin-top:8px">
+            <div>
+              <div class="price">${money(p.price)} zł <span>${fee}</span></div>
+              ${desc ? `<div class="small">${escapeHtml(desc)}</div>` : `<div class="small">—</div>`}
+            </div>
+            <div>
+              <button class="btn btnSmall primary" onclick="selectPlan(${p.id})">Wybierz</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    return `
+      <div style="display:grid;gap:10px">
+        <div class="pill" style="width:fit-content">${escapeHtml(cat)}</div>
+        <div style="display:grid;gap:10px">
+          ${cards}
+        </div>
+      </div>
+    `;
+  }).join('<div style="height:10px"></div>');
+}
+
+function selectPlan(id){
+  const p = (pricesData||[]).find(x=>Number(x.id)===Number(id));
+  if(!p){ toast('Nie znaleziono pozycji z cennika','err'); return; }
+  selectedPlan = p;
+  document.getElementById('selectedPill').textContent = p.months ? `${p.months} mies.` : 'jednorazowo';
+  document.getElementById('selectedDesc').innerHTML = `
+    <div class="sRow"><b>Usługa</b><span>${escapeHtml(p.name)}</span></div>
+    <div class="sRow"><b>Cena</b><span>${money(p.price)} zł</span></div>
+    <div class="sRow"><b>Opis</b><span>${escapeHtml((p.description||'—').trim() || '—')}</span></div>
+  `;
+  document.getElementById('goStep2').disabled = false;
+}
+
+function escapeHtml(str){
+  return String(str||'')
+    .replaceAll('&','&amp;')
+    .replaceAll('<','&lt;')
+    .replaceAll('>','&gt;')
+    .replaceAll('"','&quot;')
+    .replaceAll("'",'&#039;');
+}
+
+function buildLocationSelect(){
+  const sel=document.getElementById('f_location');
+  sel.innerHTML = `<option value="">— wybierz lokalizację —</option>` + scheduleData.map(loc=>
+    `<option value="${loc.id}">${escapeHtml(loc.city)} — ${escapeHtml(loc.name||'')}</option>`
+  ).join('');
+}
+
+function rebuildGroups(){
+  const locId = Number(document.getElementById('f_location').value||0);
+  selected.location_id = locId || null;
+  selected.group_id = null;
+  selected.schedule_id = null;
+
+  const grpSel=document.getElementById('f_group');
+  const schSel=document.getElementById('f_schedule');
+  const gh=document.getElementById('groupHelp');
+
+  if(!locId){
+    grpSel.innerHTML = `<option value="">Najpierw wybierz lokalizację</option>`;
+    schSel.innerHTML = `<option value="">— wybierz termin (opcjonalnie) —</option>`;
+    gh.textContent='—';
+    validateStep2();
+    return;
+  }
+
+  const loc = scheduleData.find(l=>Number(l.id)===locId);
+  const groups = (loc?.groups || []).filter(g=>g.active!==false);
+
+  if(!groups.length){
+    grpSel.innerHTML = `<option value="">Brak grup w tej lokalizacji</option>`;
+    schSel.innerHTML = `<option value="">—</option>`;
+    gh.textContent='Brak dostępnych grup dla wybranej lokalizacji.';
+    validateStep2();
+    return;
+  }
+
+  grpSel.innerHTML = `<option value="">— wybierz grupę —</option>` + groups.map(g=>
+    `<option value="${g.id}">${escapeHtml(groupLabel(g))}</option>`
+  ).join('');
+
+  gh.textContent = 'Wybierz grupę — pokażemy terminy z grafiku.';
+  schSel.innerHTML = `<option value="">— wybierz termin (opcjonalnie) —</option>`;
+  validateStep2();
+}
+
+function rebuildSchedules(){
+  const locId = Number(document.getElementById('f_location').value||0);
+  const gid = Number(document.getElementById('f_group').value||0);
+  selected.group_id = gid || null;
+  selected.schedule_id = null;
+
+  const schSel=document.getElementById('f_schedule');
+  const gh=document.getElementById('groupHelp');
+
+  if(!locId || !gid){
+    schSel.innerHTML = `<option value="">— wybierz termin (opcjonalnie) —</option>`;
+    gh.textContent = !locId ? 'Najpierw wybierz lokalizację.' : 'Wybierz grupę — pokażemy terminy.';
+    validateStep2();
+    return;
+  }
+
+  const loc = scheduleData.find(l=>Number(l.id)===locId);
+  const g = (loc?.groups || []).find(x=>Number(x.id)===gid);
+
+  const scheds = (g?.schedules || []);
+  schSel.innerHTML = `<option value="">— wybierz termin (opcjonalnie) —</option>` + scheds.map(s=>
+    `<option value="${s.id}">${escapeHtml(scheduleLabel(s))}</option>`
+  ).join('');
+
+  const available = (typeof g?.available==='number') ? g.available : null;
+  if(available===0){
+    gh.textContent = 'Ta grupa jest aktualnie pełna — zapis może trafić na listę rezerwową.';
+  }else if(available!=null){
+    gh.textContent = `Dostępne miejsca: ${available}.`;
+  }else{
+    gh.textContent = '—';
+  }
+
+  validateStep2();
+}
+
+function validateStep2(){
+  const ok = !!(selected.location_id && selected.group_id);
+  document.getElementById('goStep3').disabled = !ok;
+}
+
+function validateStep3(){
+  const fn = document.getElementById('f_first_name').value.trim();
+  const ln = document.getElementById('f_last_name').value.trim();
+  const em = document.getElementById('f_email').value.trim();
+  const ph = document.getElementById('f_phone').value.trim();
+  const cd = document.getElementById('f_consent_data').checked;
+  const cr = document.getElementById('f_consent_rules').checked;
+  const ok = fn && ln && em && ph && cd && cr;
+  document.getElementById('goStep4').disabled = !ok;
+}
+
+function buildSummary(){
+  const locId = selected.location_id;
+  const gid = selected.group_id;
+  const sid = Number(document.getElementById('f_schedule').value||0) || null;
+
+  const loc = scheduleData.find(l=>Number(l.id)===locId);
+  const g = (loc?.groups||[]).find(x=>Number(x.id)===gid);
+  const s = sid ? (g?.schedules||[]).find(x=>Number(x.id)===sid) : null;
+
+  const hasMembership = document.getElementById('f_has_membership').checked;
+
+  const sum = document.getElementById('summaryBox');
+  sum.innerHTML = `
+    <div class="sRow"><b>Usługa</b><span>${escapeHtml(selectedPlan?.name || '—')}</span></div>
+    <div class="sRow"><b>Cena z cennika</b><span>${hasMembership ? '0 zł (posiadacz karnetu)' : `${money(selectedPlan?.price||0)} zł`}</span></div>
+    <div class="sRow"><b>Lokalizacja</b><span>${escapeHtml(loc ? `${loc.city} — ${loc.name||''}` : '—')}</span></div>
+    <div class="sRow"><b>Grupa</b><span>${escapeHtml(g ? g.name : '—')}</span></div>
+    <div class="sRow"><b>Termin</b><span>${escapeHtml(s ? scheduleLabel(s) : 'do ustalenia')}</span></div>
+    <div class="sRow"><b>Kursant</b><span>${escapeHtml(document.getElementById('f_first_name').value.trim() + ' ' + document.getElementById('f_last_name').value.trim())}</span></div>
+    <div class="sRow"><b>Kontakt</b><span>${escapeHtml(document.getElementById('f_email').value.trim())} · ${escapeHtml(document.getElementById('f_phone').value.trim())}</span></div>
+  `;
+
+  selected.schedule_id = sid;
+}
+
+async function submit(){
+  if(!selectedPlan){ toast('Wybierz usługę z cennika','err'); return; }
+  if(!selected.location_id || !selected.group_id){ toast('Wybierz lokalizację i grupę','err'); return; }
+
+  const body = {
+    first_name: document.getElementById('f_first_name').value.trim(),
+    last_name: document.getElementById('f_last_name').value.trim(),
+    email: document.getElementById('f_email').value.trim(),
+    phone: document.getElementById('f_phone').value.trim(),
+    birth_year: Number(document.getElementById('f_birth_year').value||0) || null,
+    is_new: document.getElementById('f_is_new').value === 'true',
+    group_id: selected.group_id,
+    schedule_id: selected.schedule_id || null,
+    price_plan_id: selectedPlan.id,
+    start_date: document.getElementById('f_start_date').value || null,
+    preferred_time: document.getElementById('f_preferred_time').value.trim() || null,
+    consent_data: !!document.getElementById('f_consent_data').checked,
+    consent_rules: !!document.getElementById('f_consent_rules').checked,
+    has_membership: !!document.getElementById('f_has_membership').checked,
+    notes: document.getElementById('f_notes').value || null,
+  };
+
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  btn.innerHTML = `<span class="spin"></span> Wysyłam…`;
+
+  try{
+    const d = await fetch(`${API}/register`, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(body)
+    }).then(async r=>{
+      const j = await r.json().catch(()=>({error:'Błąd odpowiedzi serwera'}));
+      if(!r.ok) throw new Error(j.error || `Błąd HTTP ${r.status}`);
+      return j;
+    });
+
+    registrationResult = d;
+
+    toast('Zgłoszenie przyjęte');
+    preparePaymentUI();
+    setStep(5);
+
+  }catch(e){
+    toast(e.message || 'Błąd zapisu','err', 4200);
+  }finally{
+    btn.disabled = false;
+    btn.textContent = 'Wyślij zgłoszenie';
+  }
+}
+
+function preparePaymentUI(){
+  const pill=document.getElementById('payPill');
+  const text=document.getElementById('payText');
+  const help=document.getElementById('payHelp');
+  const payBtn=document.getElementById('payOnlineBtn');
+  const docBtn=document.getElementById('docBtn');
+
+  const amount = Number(registrationResult?.total_amount||0);
+  const ref = registrationResult?.payment_ref;
+
+  if(amount<=0){
+    pill.textContent = 'Brak płatności';
+    text.innerHTML = `Kwota do zapłaty: <strong>0 zł</strong>. Jeśli coś trzeba doprecyzować, odezwiemy się mailowo.`;
+    payBtn.disabled = true;
+    docBtn.disabled = true;
+    help.textContent = `Ref: ${ref || '—'}`;
+    return;
+  }
+
+  pill.textContent = `${money(amount)} zł`;
+  text.innerHTML = `Kwota do zapłaty: <strong>${money(amount)} zł</strong> · Ref: <strong style="font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace">${ref}</strong>`;
+  help.textContent = 'Możesz opłacić online albo pobrać dokument do przelewu.';
+
+  payBtn.disabled = false;
+  docBtn.disabled = false;
+
+  payBtn.onclick = ()=>handlePayOnline(ref);
+  docBtn.onclick = ()=>downloadPaymentDoc(ref);
+}
+
+async function handlePayOnline(payment_ref){
+  if(!payment_ref) return toast('Brak referencji płatności','err');
+
+  const btn = document.getElementById('payOnlineBtn');
+  const prev = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = `<span class="spin"></span> Przekierowuję…`;
+
+  try{
+    const d = await fetch(`${API}/registration/action`, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ payment_ref, action: 'pay_online' })
+    }).then(async r=>{
+      const j = await r.json().catch(()=>({error:'Błąd odpowiedzi serwera'}));
+      if(!r.ok) throw new Error(j.error || `Błąd HTTP ${r.status}`);
+      return j;
+    });
+
+    // d.url expected
+    if(d?.url){
+      window.location.href = d.url;
+    }else{
+      toast('Brak linku do płatności (sprawdź konfigurację)','err', 4200);
+    }
+  }catch(e){
+    toast(e.message || 'Błąd płatności','err', 4200);
+  }finally{
+    btn.disabled = false;
+    btn.innerHTML = prev;
+  }
+}
+
+async function downloadPaymentDoc(payment_ref){
+  if(!payment_ref) return toast('Brak referencji płatności','err');
+  const url = `${API}/payment-document?payment_ref=${encodeURIComponent(payment_ref)}`;
+  window.open(url, '_blank');
+}
+
+async function loadAll(){
+  document.getElementById('pricesMeta').textContent = 'Ładowanie…';
+  document.getElementById('pricesList').innerHTML = `<div class="notice"><span class="spin" style="margin-right:10px;display:inline-block"></span> Ładuję cennik…</div>`;
+  try{
+    const [sched, prices] = await Promise.all([fetchJson(SCHEDULE_URL), fetchJson(PRICES_URL)]);
+    scheduleData = Array.isArray(sched) ? sched : [];
+    pricesData = Array.isArray(prices) ? prices : (Array.isArray(prices?.rows)?prices.rows:[]);
+    buildPrices();
+    buildLocationSelect();
+    toast('Dane wczytane');
+  }catch(e){
+    document.getElementById('pricesList').innerHTML = `<div class="notice"><strong>Błąd:</strong> ${escapeHtml(e.message||e)}</div>`;
+    toast('Nie udało się wczytać danych','err', 4200);
+  }
+}
+
+document.getElementById('btnReload').addEventListener('click', loadAll);
+
+document.getElementById('goStep2').addEventListener('click', ()=>setStep(2));
+document.getElementById('back1').addEventListener('click', ()=>setStep(1));
+document.getElementById('back2').addEventListener('click', ()=>setStep(2));
+document.getElementById('back3').addEventListener('click', ()=>setStep(3));
+document.getElementById('back4').addEventListener('click', ()=>setStep(4));
+
+document.getElementById('f_location').addEventListener('change', rebuildGroups);
+document.getElementById('f_group').addEventListener('change', rebuildSchedules);
+document.getElementById('f_schedule').addEventListener('change', ()=>{
+  selected.schedule_id = Number(document.getElementById('f_schedule').value||0) || null;
+});
+
+document.getElementById('goStep3').addEventListener('click', ()=>setStep(3));
+document.getElementById('goStep4').addEventListener('click', ()=>{
+  buildSummary();
+  setStep(4);
+});
+
+['f_first_name','f_last_name','f_email','f_phone','f_consent_data','f_consent_rules'].forEach(id=>{
+  document.getElementById(id).addEventListener('input', validateStep3);
+  document.getElementById(id).addEventListener('change', validateStep3);
+});
+document.getElementById('f_has_membership').addEventListener('change', ()=>{
+  // tylko UX — płatność i kwota finalna ustawiają się po rejestracji
+});
+document.getElementById('submitBtn').addEventListener('click', submit);
+
+(function boot(){
+  loadAll();
+  // walidacje startowe
+  validateStep2();
+  validateStep3();
+})();
+</script>
+</body>
+</html>
