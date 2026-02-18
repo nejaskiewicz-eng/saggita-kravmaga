@@ -1097,7 +1097,7 @@ async function openGroupModal(id){
   let g = {}, locations = [];
   try{
     const fetches = id 
-      ? [aF(`/groups/${id}`), aF('/locations')]
+      ? [aF(`/resource?type=groups&id=${id}`), aF('/locations')]
       : [Promise.resolve(null), aF('/locations')];
     const [groupData, locsData] = await Promise.all(fetches);
     if(groupData) g = groupData;
@@ -1168,7 +1168,7 @@ async function saveGroup(id){
 
   try{
     if(id){
-      await aF(`/groups/${id}`,{method:'PATCH',body:JSON.stringify(b)});
+      await aF(`/resource?type=groups&id=${id}`,{method:'PATCH',body:JSON.stringify(b)});
       toast('Grupa zaktualizowana');
     }else{
       await aF('/groups',{method:'POST',body:JSON.stringify(b)});
@@ -1184,7 +1184,7 @@ async function saveGroup(id){
 async function deleteGroup(id){
   if(!confirm('Usunąć tę grupę? Zostaną utracone powiązania z zapisami!')) return;
   try{
-    await aF(`/groups/${id}`,{method:'DELETE'});
+    await aF(`/resource?type=groups&id=${id}`,{method:'DELETE'});
     toast('Grupa usunięta');
     loadGroups();
   }catch(e){
@@ -1199,7 +1199,7 @@ async function openScheduleModal(id){
   let s = {}, groups = [];
   try{
     const fetches = id 
-      ? [aF(`/schedules/${id}`), aF('/groups')]
+      ? [aF(`/resource?type=schedules&id=${id}`), aF('/groups')]
       : [Promise.resolve(null), aF('/groups')];
     const [schedData, grpsData] = await Promise.all(fetches);
     if(schedData) s = schedData;
@@ -1274,7 +1274,7 @@ async function saveSchedule(id){
 
   try{
     if(id){
-      await aF(`/schedules/${id}`,{method:'PATCH',body:JSON.stringify(b)});
+      await aF(`/resource?type=schedules&id=${id}`,{method:'PATCH',body:JSON.stringify(b)});
       toast('Termin zaktualizowany');
     }else{
       await aF('/schedules',{method:'POST',body:JSON.stringify(b)});
@@ -1290,7 +1290,7 @@ async function saveSchedule(id){
 async function deleteSchedule(id){
   if(!confirm('Usunąć ten termin z grafiku?')) return;
   try{
-    await aF(`/schedules/${id}`,{method:'DELETE'});
+    await aF(`/resource?type=schedules&id=${id}`,{method:'DELETE'});
     toast('Termin usunięty');
     loadSchedules();
   }catch(e){
@@ -1305,7 +1305,7 @@ async function openLocationModal(id){
   let l = {};
   if(id){
     try{
-      l = await aF(`/locations/${id}`);
+      l = await aF(`/resource?type=locations&id=${id}`);
     }catch(e){
       toast('Błąd: '+e.message,'error');
       return;
@@ -1356,7 +1356,7 @@ async function saveLocation(id){
 
   try{
     if(id){
-      await aF(`/locations/${id}`,{method:'PATCH',body:JSON.stringify(b)});
+      await aF(`/resource?type=locations&id=${id}`,{method:'PATCH',body:JSON.stringify(b)});
       toast('Lokalizacja zaktualizowana');
     }else{
       await aF('/locations',{method:'POST',body:JSON.stringify(b)});
@@ -1372,7 +1372,7 @@ async function saveLocation(id){
 async function deleteLocation(id){
   if(!confirm('Usunąć tę lokalizację? Zostaną utracone powiązania z grupami!')) return;
   try{
-    await aF(`/locations/${id}`,{method:'DELETE'});
+    await aF(`/resource?type=locations&id=${id}`,{method:'DELETE'});
     toast('Lokalizacja usunięta');
     loadLocations();
   }catch(e){
