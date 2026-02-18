@@ -1125,6 +1125,8 @@ async function loadGroups(){
   try{
     const d=await aF('/groups');
     const rows=arrRows(d);
+    window.__plans = rows;
+    window.__plansMap = Object.fromEntries(rows.map(r=>[String(r.id), r]));
     c.innerHTML = `
       <div class="sh">
         <h3>Grupy</h3>
@@ -1157,6 +1159,8 @@ async function loadSchedules(){
   try{
     const d=await aF('/schedules');
     const rows=arrRows(d);
+    window.__plans = rows;
+    window.__plansMap = Object.fromEntries(rows.map(r=>[String(r.id), r]));
     c.innerHTML = `
       <div class="sh">
         <h3>Grafik zajęć</h3>
@@ -1189,6 +1193,8 @@ async function loadLocations(){
   try{
     const d=await aF('/locations');
     const rows=arrRows(d);
+    window.__plans = rows;
+    window.__plansMap = Object.fromEntries(rows.map(r=>[String(r.id), r]));
     c.innerHTML = `
       <div class="sh">
         <h3>Lokalizacje</h3>
@@ -1226,6 +1232,8 @@ async function loadPlans(){
   try{
     const d=await aF('/plans');
     const rows=arrRows(d);
+    window.__plans = rows;
+    window.__plansMap = Object.fromEntries(rows.map(r=>[String(r.id), r]));
 
     const segLabel = (v)=>{
       const m = {adults:'Dorośli', kids:'Dzieci', vip:'VIP', other:'Inne'};
@@ -1263,7 +1271,7 @@ async function loadPlans(){
               <td><strong style="color:var(--bright)">${p.name||'—'}</strong></td>
               <td><strong>${(p.price??'—')} zł</strong></td>
               <td>${(p.months??0)}</td>
-              <td>${(p.signup_fee_new??p.entry_fee_new??p.fee_new??'—')}${(p.signup_fee_new??p.entry_fee_new??p.fee_new)===undefined?'':' zł'}</td>
+              <td>${(p.signup_fee==null?'—':(p.signup_fee+' zł'))}</td>
               <td>${p.active===false?'<span class="badge br">NIE</span>':'<span class="badge bg">TAK</span>'}</td>
               <td style="color:var(--dim);font-size:12px">${(p.description||p.desc||'—')}</td>
               <td class="tda">
@@ -1282,11 +1290,9 @@ async function loadPlans(){
 
 async function openPlanModal(id){
   let p = {};
-  try{
-    if(id) p = await aF(`/resource?type=plans&id=${id}`);
-  }catch(e){
-    toast('Błąd: '+e.message,'error');
-    return;
+  if(id){
+    p = (window.__plansMap && window.__plansMap[String(id)]) ? window.__plansMap[String(id)] : {};
+    if(!p || !p.id){ toast('Nie znaleziono pozycji w pamięci — odśwież listę.','error'); return; }
   }
 
   const body = `
@@ -1326,7 +1332,7 @@ async function openPlanModal(id){
 
       <div class="ff">
         <label>Wpisowe (nowi) (zł)</label>
-        <input id="p-fee" type="number" step="0.01" value="${p.signup_fee_new??p.entry_fee_new??p.fee_new??''}">
+        <input id="p-fee" type="number" step="0.01" value="${(p.signup_fee ?? '')}">
       </div>
 
       <div class="ff full">
@@ -1350,7 +1356,7 @@ async function savePlan(id){
   const price = parseFloat(document.getElementById('p-price').value||'');
   const months = parseInt(document.getElementById('p-months').value||'0',10) || 0;
   const feeRaw = document.getElementById('p-fee').value;
-  const signup_fee_new = feeRaw==='' ? null : (parseFloat(feeRaw)||0);
+  const signup_fee = feeRaw==='' ? null : (parseFloat(feeRaw)||0);
   const description = document.getElementById('p-desc').value || null;
   const active = document.getElementById('p-active').value === 'true';
 
@@ -1358,13 +1364,15 @@ async function savePlan(id){
   if(Number.isNaN(price)){ toast('Uzupełnij: cena','error'); return; }
 
   // Minimalny, bezpieczny payload (żeby nie wysypać się na kolumnach, których nie ma)
-  const payload = { name, category, price, months, active, description };
-  // wpisowe jako pole opcjonalne – backend może je zignorować, jeśli nie ma kolumny
-  if(signup_fee_new !== null) payload.signup_fee_new = signup_fee_new;
+  const payload = { name, category, price, active, description };
+  // months: 0 = jednorazowe, >0 = karnet (miesiące)
+  payload.months = months;
+  // wpisowe: opcjonalne
+  if(signup_fee !== null) payload.signup_fee = signup_fee;
 
   try{
     if(id){
-      await aF(`/resource?type=plans&id=${id}`, { method:'PATCH', body: JSON.stringify(payload) });
+      await aF(`/plans?id=${id}`, { method:'PATCH', body: JSON.stringify(payload) });
       toast('Pozycja zaktualizowana','success');
     }else{
       await aF('/plans', { method:'POST', body: JSON.stringify(payload) });
