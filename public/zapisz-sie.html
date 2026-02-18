@@ -440,7 +440,7 @@ html, body { background:#141414 !important; }
 .group-card__head { background:rgba(0,0,0,0.26) !important; border-bottom:1px solid rgba(255,255,255,0.10) !important; }
 .group-card { background:rgba(255,255,255,0.02) !important; border-color:rgba(255,255,255,0.14) !important; }
 </style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 
 <body>
@@ -1083,140 +1083,95 @@ async function handlePayOnline(payment_ref) {
 }
 
 async function handleDownloadDoc(payment_ref) {
-  // Pobierz dane z API
   try {
+    // Pobierz dane jako JSON
     const r = await fetch(`${API}/payment-document?payment_ref=${encodeURIComponent(payment_ref)}`);
     if (!r.ok) throw new Error('Błąd pobierania danych');
     
-    // Parsuj HTML żeby wyciągnąć dane
-    const html = await r.text();
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, 'text/html');
+    const data = await r.json();
     
-    // Wyciągnij dane z HTML
-    const rows = doc.querySelectorAll('table tr');
-    const data = {};
-    rows.forEach(row => {
-      const cells = row.querySelectorAll('td');
-      if (cells.length === 2) {
-        const key = cells[0].textContent.trim();
-        const val = cells[1].textContent.trim();
-        data[key] = val;
-      }
-    });
+    // Stwórz HTML z danymi (html2pdf wspiera UTF-8 natywnie)
+    const html = `
+      <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto;">
+        <div style="background: #0a0000; color: white; padding: 30px 20px; margin: -20px -20px 20px -20px; border-left: 6px solid #c42000;">
+          <h1 style="margin: 0 0 5px 0; font-size: 18px;">AKADEMIA OBRONY SAGGITA — KRAV MAGA</h1>
+          <p style="margin: 5px 0; font-size: 10px; color: #c8b4b4;">DOKUMENT PŁATNICZY</p>
+          <p style="margin: 8px 0 0 0; font-size: 10px; color: #c8b4b4;">Kod: ${data.payment_ref} | Data: ${new Date().toLocaleDateString('pl-PL')}</p>
+        </div>
+        
+        <div style="margin: 20px 0;">
+          <h2 style="color: #500000; font-size: 11px; text-transform: uppercase; margin-bottom: 10px;">DANE KURSANTA</h2>
+          <table style="width: 100%; border-collapse: collapse;">
+            <tr style="border-bottom: 1px solid #ddd;">
+              <td style="padding: 8px 10px; font-weight: bold; width: 180px; background: #f8f8f8; font-size: 12px;">Imię i nazwisko:</td>
+              <td style="padding: 8px 10px; font-size: 12px;">${data.first_name} ${data.last_name}</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #ddd;">
+              <td style="padding: 8px 10px; font-weight: bold; background: #f8f8f8; font-size: 12px;">Email:</td>
+              <td style="padding: 8px 10px; font-size: 12px;">${data.email}</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #ddd;">
+              <td style="padding: 8px 10px; font-weight: bold; background: #f8f8f8; font-size: 12px;">Telefon:</td>
+              <td style="padding: 8px 10px; font-size: 12px;">${data.phone}</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #ddd;">
+              <td style="padding: 8px 10px; font-weight: bold; background: #f8f8f8; font-size: 12px;">Miasto:</td>
+              <td style="padding: 8px 10px; font-size: 12px;">${data.city}</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #ddd;">
+              <td style="padding: 8px 10px; font-weight: bold; background: #f8f8f8; font-size: 12px;">Grupa:</td>
+              <td style="padding: 8px 10px; font-size: 12px;">${data.group_name}</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #ddd;">
+              <td style="padding: 8px 10px; font-weight: bold; background: #f8f8f8; font-size: 12px;">Karnet:</td>
+              <td style="padding: 8px 10px; font-size: 12px;">${data.plan_name}</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #ddd;">
+              <td style="padding: 8px 10px; font-weight: bold; background: #f8f8f8; font-size: 12px;">Kwota:</td>
+              <td style="padding: 8px 10px; font-size: 12px;"><strong>${data.amount}</strong></td>
+            </tr>
+          </table>
+        </div>
+        
+        <div style="margin: 30px 0; background: #f5f5f5; padding: 20px; border-left: 4px solid #c42000;">
+          <h2 style="color: #500000; font-size: 11px; text-transform: uppercase; margin: 0 0 10px 0;">DANE DO PRZELEWU</h2>
+          <table style="width: 100%; border-collapse: collapse;">
+            <tr style="border-bottom: 1px solid #ddd;">
+              <td style="padding: 6px 0; font-weight: bold; width: 140px; font-size: 11px; color: #505050;">Numer konta:</td>
+              <td style="padding: 6px 0; font-size: 11px;">${data.bank_account}</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #ddd;">
+              <td style="padding: 6px 0; font-weight: bold; font-size: 11px; color: #505050;">Odbiorca:</td>
+              <td style="padding: 6px 0; font-size: 11px;">${data.bank_name}</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #ddd;">
+              <td style="padding: 6px 0; font-weight: bold; font-size: 11px; color: #505050;">Tytuł przelewu:</td>
+              <td style="padding: 6px 0; font-size: 11px;">${data.payment_title}</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #ddd;">
+              <td style="padding: 6px 0; font-weight: bold; font-size: 11px; color: #505050;">Kwota:</td>
+              <td style="padding: 6px 0; font-size: 11px;"><strong>${data.amount}</strong></td>
+            </tr>
+          </table>
+        </div>
+        
+        <div style="background: #c42000; color: white; padding: 15px; text-align: center; margin-top: 30px;">
+          <p style="margin: 0 0 5px 0; font-size: 12px; font-weight: bold;">WAŻNE: Przelew w ciągu 3 dni roboczych.</p>
+          <p style="margin: 0; font-size: 10px;">Po tym terminie rezerwacja przepada. Kontakt: biuro@akademiaobrony.pl · 510 930 460</p>
+        </div>
+      </div>
+    `;
     
-    const paymentRef = doc.querySelector('.ref')?.textContent.trim() || payment_ref;
+    // Generuj PDF używając html2pdf (wspiera polskie znaki)
+    const opt = {
+      margin: 10,
+      filename: `dokument-platniczy-${data.payment_ref}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2 },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
     
-    // Generuj PDF używając jsPDF
-    if(typeof window.jspdf === 'undefined' && typeof jsPDF === 'undefined') {
-      alert('Trwa ładowanie generatora PDF, spróbuj za chwilę.');
-      return;
-    }
-    
-    const { jsPDF: J } = window.jspdf || {jsPDF: jsPDF};
-    const pdf = new J({unit:'mm', format:'a4'});
-    
-    // Header
-    pdf.setFillColor(10, 0, 0);
-    pdf.rect(0, 0, 210, 40, 'F');
-    pdf.setFillColor(196, 32, 0);
-    pdf.rect(0, 0, 6, 40, 'F');
-    
-    pdf.setTextColor(255, 255, 255);
-    pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(16);
-    pdf.text('AKADEMIA OBRONY SAGGITA — KRAV MAGA', 18, 16);
-    pdf.setFontSize(8);
-    pdf.setFont('helvetica', 'normal');
-    pdf.setTextColor(200, 180, 180);
-    pdf.text('DOKUMENT PŁATNICZY', 18, 24);
-    pdf.text('Kod: ' + paymentRef, 18, 31);
-    pdf.text('Data: ' + new Date().toLocaleDateString('pl-PL'), 120, 31);
-    
-    // Linia
-    pdf.setDrawColor(196, 32, 0);
-    pdf.setLineWidth(0.5);
-    pdf.line(15, 46, 195, 46);
-    
-    // Dane kursanta
-    let y = 56;
-    pdf.setTextColor(80, 0, 0);
-    pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(8);
-    pdf.text('DANE KURSANTA', 15, y); y += 7;
-    
-    const fields = [
-      ['Imię i nazwisko:', data['Imię i nazwisko'] || '—'],
-      ['Email:', data['Email'] || '—'],
-      ['Telefon:', data['Telefon'] || '—'],
-      ['Miasto:', data['Miasto'] || '—'],
-      ['Grupa:', data['Grupa'] || '—'],
-      ['Karnet:', data['Karnet'] || '—'],
-      ['Kwota:', data['Kwota do wpłaty'] || '—']
-    ];
-    
-    pdf.setDrawColor(200, 200, 200);
-    pdf.setLineWidth(0.3);
-    
-    fields.forEach(f => {
-      pdf.setFont('helvetica', 'bold');
-      pdf.setFontSize(8);
-      pdf.setTextColor(60, 60, 60);
-      pdf.text(f[0], 15, y);
-      pdf.setFont('helvetica', 'normal');
-      pdf.setTextColor(20, 20, 20);
-      pdf.text(f[1], 70, y);
-      pdf.line(15, y+2, 195, y+2);
-      y += 9;
-    });
-    
-    y += 8;
-    
-    // Dane do przelewu
-    pdf.setFillColor(245, 245, 245);
-    pdf.rect(15, y-4, 180, 52, 'F');
-    pdf.setFillColor(196, 32, 0);
-    pdf.rect(15, y-4, 4, 52, 'F');
-    
-    pdf.setTextColor(80, 0, 0);
-    pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(8);
-    pdf.text('DANE DO PRZELEWU', 24, y+2); y += 10;
-    
-    const bankFields = [
-      ['Numer konta:', data['Numer konta'] || '—'],
-      ['Odbiorca:', data['Odbiorca'] || 'Akademia Obrony Saggita'],
-      ['Tytuł przelewu:', data['Tytuł przelewu'] || paymentRef],
-      ['Kwota:', data['Kwota'] || data['Kwota do wpłaty'] || '—']
-    ];
-    
-    bankFields.forEach(f => {
-      pdf.setFont('helvetica', 'bold');
-      pdf.setFontSize(8);
-      pdf.setTextColor(80, 80, 80);
-      pdf.text(f[0], 24, y);
-      pdf.setFont('helvetica', 'normal');
-      pdf.setTextColor(30, 30, 30);
-      const lines = pdf.splitTextToSize(f[1], 110);
-      pdf.text(lines, 75, y);
-      y += 9;
-    });
-    
-    y += 10;
-    
-    // Ważna informacja
-    pdf.setFillColor(196, 32, 0);
-    pdf.rect(15, y, 180, 22, 'F');
-    pdf.setTextColor(255, 255, 255);
-    pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(9);
-    pdf.text('WAŻNE: Przelew w ciągu 3 dni roboczych.', 105, y+8, {align:'center'});
-    pdf.setFont('helvetica', 'normal');
-    pdf.setFontSize(8);
-    pdf.text('Po tym terminie rezerwacja przepada. Kontakt: biuro@akademiaobrony.pl · 510 930 460', 105, y+16, {align:'center'});
-    
-    // Zapisz PDF
-    pdf.save('dokument-platniczy-' + paymentRef + '.pdf');
+    html2pdf().set(opt).from(html).save();
     
   } catch(e) {
     alert('Błąd: ' + e.message);
