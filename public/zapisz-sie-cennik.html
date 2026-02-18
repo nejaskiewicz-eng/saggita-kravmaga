@@ -283,6 +283,32 @@ h1{
 }
 @keyframes sp{to{transform:rotate(360deg)}}
 .hidden{display:none !important}
+
+/* === Cennik: układ "Dorośli / Dzieci" + koszyk na górze === */
+.cartTop{padding:14px}
+.cartTop__head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.cartTop__actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+.selectedBox{margin-top:10px;border:1px solid rgba(255,255,255,0.10);border-radius:14px;background:rgba(255,255,255,.03);padding:12px}
+.gridPrices{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.accHead{width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:12px 12px;border:1px solid rgba(255,255,255,0.10);border-radius:14px;background:rgba(255,255,255,.03);
+  color:var(--text);cursor:pointer;font-weight:800}
+.accHead:hover{border-color:rgba(232,77,41,.55)}
+.accBody{margin-top:10px}
+.pricesCols{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.priceCard{border:1px solid rgba(255,255,255,0.10);border-radius:14px;background:rgba(255,255,255,.03);padding:12px}
+.priceCard__top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.priceCard__name{font-weight:900;font-size:15px;line-height:1.2}
+
+/* mobile */
+@media (max-width: 900px){
+  .cartTop__head{flex-direction:column}
+  .cartTop__actions{width:100%;justify-content:flex-start}
+  .gridPrices{grid-template-columns:1fr}
+  .pricesCols{grid-template-columns:1fr}
+  .btn{width:100%}
+  .btn.btnSmall{width:auto}
+}
 </style>
 </head>
 
@@ -317,33 +343,56 @@ h1{
         <h2>1) Wybierz usługę z cennika</h2>
         <p>Wybierasz konkretną pozycję z cennika. Na kolejnych krokach dopasujesz lokalizację, grupę i termin.</p>
       </div>
-      <button class="btn btnSmall ghost" id="btnReload">Odśwież</button>
+      
     </div>
     <div class="panelBody">
-      <div class="grid2">
-        <div class="card">
-          <div class="cardTitle">
-            <strong>Cennik</strong>
-            <span class="pill" id="pricesMeta">Ładowanie…</span>
+      <div class="card cartTop">
+        <div class="cartTop__head">
+          <div>
+            <div class="cardTitle" style="margin-bottom:6px">
+              <strong>Wybrana usługa</strong>
+              <span class="pill" id="selectedPill">Brak</span>
+            </div>
+            <div class="small" id="selectedHint">Najpierw wybierz usługę z cennika poniżej.</div>
           </div>
-          <div class="small">Kliknij „Wybierz”, żeby rozpocząć zapis od konkretnej usługi.</div>
-          <div id="pricesList" style="display:grid;gap:10px;margin-top:12px"></div>
+          <div class="cartTop__actions">
+            <button class="btn btnSmall ghost" id="btnClearCart" disabled>Opróżnij koszyk</button>
+            <button class="btn btnSmall ghost" id="btnReload">Odśwież</button>
+          </div>
+        </div>
+
+        <div id="selectedDesc" class="selectedBox">
+          <div class="small">—</div>
+        </div>
+
+        <div class="row" style="margin-top:12px;justify-content:flex-end">
+          <button class="btn primary" id="goStep2" disabled>Przejdź do wyboru terminu</button>
+        </div>
+        <div class="help">Jeśli masz już karnet miesięczny, zaznaczysz to później – wtedy kwota może być 0 zł.</div>
+      </div>
+
+      <div class="gridPrices" style="margin-top:12px">
+        <div class="card">
+          <button class="accHead" type="button" onclick="toggleCat('adults')">
+            <span>Dorośli</span>
+            <span class="pill" id="metaAdults">—</span>
+          </button>
+          <div class="accBody hidden" id="accAdults">
+            <div id="pricesAdultsList" class="pricesCols"></div>
+          </div>
         </div>
 
         <div class="card">
-          <div class="cardTitle">
-            <strong>Wybrana usługa</strong>
-            <span class="pill" id="selectedPill">Brak</span>
+          <button class="accHead" type="button" onclick="toggleCat('kids')">
+            <span>Dzieci</span>
+            <span class="pill" id="metaKids">—</span>
+          </button>
+          <div class="accBody hidden" id="accKids">
+            <div id="pricesKidsList" class="pricesCols"></div>
           </div>
-          <div class="small" id="selectedDesc">Najpierw wybierz pozycję z cennika po lewej stronie.</div>
-
-          <div class="row" style="margin-top:14px">
-            <button class="btn primary" id="goStep2" disabled>Przejdź do wyboru terminu</button>
-          </div>
-          <div class="help">Jeśli masz już karnet miesięczny, zaznaczysz to później – wtedy kwota może być 0 zł.</div>
         </div>
       </div>
-    </div>
+</div>
   </section>
 
   <!-- STEP 2 -->
@@ -608,68 +657,110 @@ function scheduleLabel(s){
 }
 
 function buildPrices(){
-  const list=document.getElementById('pricesList');
-  const meta=document.getElementById('pricesMeta');
-
   const rows = Array.isArray(pricesData) ? pricesData : (Array.isArray(pricesData?.rows) ? pricesData.rows : []);
-  meta.textContent = rows.length ? `${rows.length} pozycji` : 'Brak pozycji';
 
-  // grupowanie po category
-  const byCat = {};
+  // podział na Dorośli / Dzieci (na podstawie category)
+  const norm = (v)=>String(v||'').trim().toLowerCase();
+  const isKids = (p)=>{
+    const c = norm(p.category);
+    return c.includes('kid') || c.includes('dziec');
+  };
+  const isAdults = (p)=>{
+    const c = norm(p.category);
+    return c.includes('adult') || c.includes('doro');
+  };
+
+  const adults = [];
+  const kids = [];
+  const other = [];
+
   rows.forEach(p=>{
-    const c = (p.category || 'Inne');
-    (byCat[c] ||= []).push(p);
+    if(isKids(p)) kids.push(p);
+    else if(isAdults(p)) adults.push(p);
+    else other.push(p);
   });
 
-  const catOrder = Object.keys(byCat).sort((a,b)=>a.localeCompare(b,'pl'));
-  list.innerHTML = catOrder.map(cat=>{
-    const items = byCat[cat].slice().sort((a,b)=>Number(a.price||0)-Number(b.price||0));
-    const cards = items.map(p=>{
-      const months = p.months ? `${p.months} mies.` : 'jednorazowo';
-      const fee = Number(p.signup_fee||0) > 0 ? `+ wpisowe ${money(p.signup_fee)} zł (dla nowych)` : '';
-      const desc = (p.description||'').trim();
-      return `
-        <div class="card" style="padding:12px">
-          <div class="cardTitle">
-            <strong>${p.name}</strong>
-            <span class="pill">${months}</span>
-          </div>
-          <div class="row" style="justify-content:space-between;align-items:flex-end;margin-top:8px">
-            <div>
-              <div class="price">${money(p.price)} zł <span>${fee}</span></div>
-              ${desc ? `<div class="small">${escapeHtml(desc)}</div>` : `<div class="small">—</div>`}
-            </div>
-            <div>
-              <button class="btn btnSmall primary" onclick="selectPlan(${p.id})">Wybierz</button>
-            </div>
-          </div>
-        </div>
-      `;
-    }).join('');
+  // jeśli ktoś nie ma kategorii, wrzucamy do "Dorośli", żeby nic nie zniknęło
+  other.forEach(p=>adults.push(p));
+
+  adults.sort((a,b)=>Number(a.price||0)-Number(b.price||0));
+  kids.sort((a,b)=>Number(a.price||0)-Number(b.price||0));
+
+  const metaA = document.getElementById('metaAdults');
+  const metaK = document.getElementById('metaKids');
+  metaA.textContent = adults.length ? `${adults.length} pozycji` : 'Brak';
+  metaK.textContent = kids.length ? `${kids.length} pozycji` : 'Brak';
+
+  const render = (arr)=>arr.map(p=>{
+    const months = p.months ? `${p.months} mies.` : 'jednorazowo';
+    const fee = Number(p.signup_fee||0) > 0 ? `+ wpisowe ${money(p.signup_fee)} zł (dla nowych)` : '';
+    const desc = (p.description||'').trim();
 
     return `
-      <div style="display:grid;gap:10px">
-        <div class="pill" style="width:fit-content">${escapeHtml(cat)}</div>
-        <div style="display:grid;gap:10px">
-          ${cards}
+      <div class="priceCard">
+        <div class="priceCard__top">
+          <div>
+            <div class="priceCard__name">${escapeHtml(p.name)}</div>
+            <div class="small">${months}</div>
+          </div>
+          <button class="btn btnSmall primary" onclick="selectPlan(${p.id})">Wybierz</button>
         </div>
+        <div class="price">${money(p.price)} zł <span>${fee}</span></div>
+        ${desc ? `<div class="small">${escapeHtml(desc)}</div>` : `<div class="small">—</div>`}
       </div>
     `;
-  }).join('<div style="height:10px"></div>');
+  }).join('');
+
+  document.getElementById('pricesAdultsList').innerHTML = adults.length ? render(adults) : `<div class="notice">Brak pozycji w tej sekcji.</div>`;
+  document.getElementById('pricesKidsList').innerHTML = kids.length ? render(kids) : `<div class="notice">Brak pozycji w tej sekcji.</div>`;
 }
+
 
 function selectPlan(id){
   const p = (pricesData||[]).find(x=>Number(x.id)===Number(id));
   if(!p){ toast('Nie znaleziono pozycji z cennika','err'); return; }
   selectedPlan = p;
+
   document.getElementById('selectedPill').textContent = p.months ? `${p.months} mies.` : 'jednorazowo';
+  document.getElementById('selectedHint').textContent = 'Wybrano usługę. Teraz przejdź do wyboru terminu.';
   document.getElementById('selectedDesc').innerHTML = `
     <div class="sRow"><b>Usługa</b><span>${escapeHtml(p.name)}</span></div>
     <div class="sRow"><b>Cena</b><span>${money(p.price)} zł</span></div>
     <div class="sRow"><b>Opis</b><span>${escapeHtml((p.description||'—').trim() || '—')}</span></div>
   `;
   document.getElementById('goStep2').disabled = false;
+  document.getElementById('btnClearCart').disabled = false;
 }
+
+
+function clearCart(){
+  selectedPlan = null;
+  selected = { location_id:null, group_id:null, schedule_id:null };
+  registrationRef = null;
+  document.getElementById('selectedPill').textContent = 'Brak';
+  document.getElementById('selectedHint').textContent = 'Najpierw wybierz usługę z cennika poniżej.';
+  document.getElementById('selectedDesc').innerHTML = `<div class="small">—</div>`;
+  document.getElementById('goStep2').disabled = true;
+  document.getElementById('btnClearCart').disabled = true;
+  // reset step 2 selections if user was there
+  try{
+    document.getElementById('locSelect').value = '';
+    document.getElementById('groupSelect').innerHTML = `<option value="">Wybierz grupę…</option>`;
+    document.getElementById('slotList').innerHTML = '';
+  }catch(_){}
+  toast('Koszyk opróżniony');
+}
+
+function toggleCat(which){
+  const el = document.getElementById(which==='kids' ? 'accKids' : 'accAdults');
+  const isHidden = el.classList.contains('hidden');
+  // zwijamy drugą sekcję, żeby na mobile nie robić ściany
+  const other = document.getElementById(which==='kids' ? 'accAdults' : 'accKids');
+  other.classList.add('hidden');
+  if(isHidden) el.classList.remove('hidden');
+  else el.classList.add('hidden');
+}
+
 
 function escapeHtml(str){
   return String(str||'')
@@ -923,8 +1014,10 @@ async function downloadPaymentDoc(payment_ref){
 }
 
 async function loadAll(){
-  document.getElementById('pricesMeta').textContent = 'Ładowanie…';
-  document.getElementById('pricesList').innerHTML = `<div class="notice"><span class="spin" style="margin-right:10px;display:inline-block"></span> Ładuję cennik…</div>`;
+  document.getElementById('metaAdults').textContent = 'Ładowanie…';
+  document.getElementById('metaKids').textContent = 'Ładowanie…';
+  document.getElementById('pricesAdultsList').innerHTML = `<div class="notice"><span class="spin" style="margin-right:10px;display:inline-block"></span> Ładuję cennik…</div>`;
+  document.getElementById('pricesKidsList').innerHTML = `<div class="notice"><span class="spin" style="margin-right:10px;display:inline-block"></span> Ładuję cennik…</div>`;
   try{
     const [sched, prices] = await Promise.all([fetchJson(SCHEDULE_URL), fetchJson(PRICES_URL)]);
     scheduleData = Array.isArray(sched) ? sched : [];
@@ -933,12 +1026,17 @@ async function loadAll(){
     buildLocationSelect();
     toast('Dane wczytane');
   }catch(e){
-    document.getElementById('pricesList').innerHTML = `<div class="notice"><strong>Błąd:</strong> ${escapeHtml(e.message||e)}</div>`;
+    const msg = `<div class="notice"><strong>Błąd:</strong> ${escapeHtml(e.message||e)}</div>`;
+    document.getElementById('pricesAdultsList').innerHTML = msg;
+    document.getElementById('pricesKidsList').innerHTML = msg;
+    document.getElementById('metaAdults').textContent = 'Błąd';
+    document.getElementById('metaKids').textContent = 'Błąd';
     toast('Nie udało się wczytać danych','err', 4200);
   }
 }
 
 document.getElementById('btnReload').addEventListener('click', loadAll);
+document.getElementById('btnClearCart').addEventListener('click', clearCart);
 
 document.getElementById('goStep2').addEventListener('click', ()=>setStep(2));
 document.getElementById('back1').addEventListener('click', ()=>setStep(1));
