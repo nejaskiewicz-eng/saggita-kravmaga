@@ -440,7 +440,6 @@ html, body { background:#141414 !important; }
 .group-card__head { background:rgba(0,0,0,0.26) !important; border-bottom:1px solid rgba(255,255,255,0.10) !important; }
 .group-card { background:rgba(255,255,255,0.02) !important; border-color:rgba(255,255,255,0.14) !important; }
 </style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 
 <body>
@@ -1082,40 +1081,20 @@ async function handlePayOnline(payment_ref) {
   } catch(e) { alert('Błąd. Spróbuj ponownie.'); }
 }
 
-async function handleDownloadDoc(payment_ref) {
-  try {
-    // Pobierz HTML z backendu
-    const url = `${API}/payment-document?payment_ref=${encodeURIComponent(payment_ref)}`;
-    const res = await fetch(url);
-    
-    if (!res.ok) throw new Error('Nie udało się pobrać dokumentu');
-    
-    // Pobierz HTML jako tekst
-    const htmlContent = await res.text();
-    
-    // Utwórz tymczasowy niewidoczny element
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = htmlContent;
-    tempDiv.style.position = 'absolute';
-    tempDiv.style.left = '-9999px';
-    tempDiv.style.top = '0';
-    document.body.appendChild(tempDiv);
-    
-    // Generuj PDF z HTML
-    const opt = {
-      margin: 10,
-      filename: `dokument-platniczy-${payment_ref}.pdf`,
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-    };
-    
-    await html2pdf().set(opt).from(tempDiv).save();
-    
-    // Usuń tymczasowy element
-    document.body.removeChild(tempDiv);
-  } catch(e) {
-    alert('Błąd pobierania dokumentu: ' + e.message);
+function handleDownloadDoc(payment_ref) {
+  // Otwórz dokument w nowym oknie i użyj natywnego drukowania przeglądarki
+  const url = `${API}/payment-document?payment_ref=${encodeURIComponent(payment_ref)}`;
+  const printWindow = window.open(url, '_blank', 'width=800,height=900');
+  
+  if (printWindow) {
+    // Poczekaj aż dokument się załaduje, potem automatycznie wywołaj drukowanie
+    printWindow.addEventListener('load', function() {
+      setTimeout(() => {
+        printWindow.print();
+      }, 500);
+    });
+  } else {
+    alert('Zablokowano wyskakujące okno. Pozwól na wyskakujące okna dla tej strony.');
   }
 }
 
