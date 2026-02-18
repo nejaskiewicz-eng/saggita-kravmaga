@@ -512,6 +512,15 @@ html, body { background:#141414 !important; }
         <hr class="form-divider">
 
         <div class="form-section-label">Wybierz karnet</div>
+
+        <!-- Checkbox dla posiadaczy karnetu -->
+        <div class="consent-item" style="margin-bottom:16px;">
+          <input type="checkbox" id="f_has_membership" name="has_membership">
+          <label for="f_has_membership" style="font-weight:600;color:rgba(255,255,255,0.90);">
+            Posiadam już karnet miesięczny <span style="font-weight:400;color:rgba(255,255,255,0.65);">(rezerwuję tylko miejsce, bez płatności)</span>
+          </label>
+        </div>
+
         <div class="price-options" id="priceOptions"></div>
 
         <hr class="form-divider">
@@ -908,6 +917,13 @@ function buildPriceOptions(category) {
   const container = document.getElementById('priceOptions');
   container.innerHTML = '';
 
+  // Sprawdź czy zaznaczono "Posiadam karnet"
+  const hasMembership = document.getElementById('f_has_membership')?.checked;
+  if (hasMembership) {
+    container.innerHTML = '<p style="color:rgba(255,255,255,0.76);font-size:.9rem;font-weight:600;">✓ Posiadasz karnet — rezerwacja bez płatności</p>';
+    return;
+  }
+
   const isNew = document.getElementById('f_new')?.value !== 'false';
   const cats = category === 'kids' ? ['kids'] : category === 'vip' ? ['adults','discount'] : ['adults','discount','service'];
 
@@ -949,6 +965,14 @@ function buildPriceOptions(category) {
 
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('f_new')?.addEventListener('change', () => {
+    if (selectedGroup !== null) {
+      const group = allData.flatMap(l => l.groups || []).find(g => g.id === selectedGroup);
+      buildPriceOptions(group?.category || 'adults');
+    }
+  });
+
+  // Listener dla checkbox "Posiadam karnet"
+  document.getElementById('f_has_membership')?.addEventListener('change', () => {
     if (selectedGroup !== null) {
       const group = allData.flatMap(l => l.groups || []).find(g => g.id === selectedGroup);
       buildPriceOptions(group?.category || 'adults');
@@ -998,6 +1022,7 @@ document.getElementById('regForm').addEventListener('submit', async (e) => {
       group_id: selectedGroup,
       schedule_id: selectedSchedule,
       price_plan_id: selectedPrice ? parseInt(selectedPrice.value) : null,
+      has_membership: document.getElementById('f_has_membership')?.checked || false,
       start_date: document.getElementById('f_date').value || null,
       payment_method: document.getElementById('f_pay').value,
       preferred_time: document.getElementById('f_ptime').value.trim() || null,

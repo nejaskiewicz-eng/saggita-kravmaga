@@ -51,7 +51,12 @@ module.exports = async (req, res) => {
     // Pobierz cennik
     let total_amount = 0;
     let plan_name = null;
-    if (b.price_plan_id) {
+    
+    // Jeśli osoba ma karnet, nie płaci
+    if (b.has_membership) {
+      total_amount = 0;
+      plan_name = 'Posiadacz karnetu miesięcznego';
+    } else if (b.price_plan_id) {
       const { rows: [plan] } = await pool.query(
         `SELECT id, name, price, signup_fee FROM price_plans WHERE id = $1 AND active = true`,
         [b.price_plan_id]
@@ -64,6 +69,7 @@ module.exports = async (req, res) => {
     }
 
     const payment_ref = genRef();
+    const payment_status = b.has_membership ? 'waived' : 'unpaid';
 
     // Zapisz
     const { rows: [reg] } = await pool.query(`
@@ -72,21 +78,22 @@ module.exports = async (req, res) => {
         group_id, schedule_id, price_plan_id, location_id,
         start_date, preferred_time,
         is_waitlist, status, payment_status, payment_method,
-        payment_ref, total_amount, source, consent_data, consent_rules
+        payment_ref, total_amount, source, consent_data, consent_rules, has_membership
       ) VALUES (
         $1,$2,$3,$4,$5,$6,
         $7,$8,$9,$10,
         $11,$12,
-        $13,'new','unpaid',$14,
-        $15,$16,'web',$17,$18
+        $13,'new',$14,$15,
+        $16,$17,'web',$18,$19,$20
       ) RETURNING id, payment_ref, total_amount, is_waitlist, email`,
       [
         b.first_name.trim(), b.last_name.trim(), b.email.trim(), b.phone.trim(),
         b.birth_year || null, b.is_new !== false,
         b.group_id, b.schedule_id || null, b.price_plan_id || null, group.location_id,
         b.start_date || null, b.preferred_time || null,
-        is_waitlist, b.payment_method || 'transfer',
+        is_waitlist, payment_status, b.payment_method || 'transfer',
         payment_ref, total_amount, b.consent_data || false, b.consent_rules || false,
+        b.has_membership || false,
       ]
     );
 
