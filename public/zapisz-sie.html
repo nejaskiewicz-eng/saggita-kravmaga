@@ -14,379 +14,236 @@ html{scroll-behavior:smooth}
 body{background:#141414;color:#fff;font-family:'Open Sans',sans-serif;min-height:100vh}
 a{text-decoration:none;color:inherit}
 
+/* =========================================================
+   ZAPISZ SIĘ — spójne z kmPage--misja
+   (Montserrat ONLY 700, tło #141414, akcenty jak w misji)
+   ========================================================= */
+
 :root{
+  --bg:#141414;
+
   --accent:#B21900;
   --accent-rgb:178,25,0;
 
-  --bg:#141414;
-  --surface:rgba(255,255,255,0.03);
-  --surface2:rgba(0,0,0,0.30);
-  --border:rgba(255,255,255,0.12);
-  --border-strong:rgba(255,255,255,0.18);
+  --accent-strong:#DA2A00;
+  --accent-glass:rgba(var(--accent-rgb),0.08);
+  --border-accent:rgba(var(--accent-rgb),0.45);
 
-  --text:rgba(255,255,255,0.88);
-  --muted:rgba(255,255,255,0.56);
-  --muted2:rgba(255,255,255,0.42);
+  --white:#FFFFFF;
+  --text:rgba(255,255,255,0.86);
+  --text-muted:rgba(255,255,255,0.56);
+  --border-neutral:rgba(255,255,255,0.16);
 
-  --glow:0 12px 60px rgba(var(--accent-rgb),0.14);
-  --shadow:0 30px 100px rgba(0,0,0,0.55);
-}
-
-/* ── SUBTLE BACKGROUND TEXTURE ── */
-body::before{
-  content:'';
-  position:fixed; inset:0;
-  pointer-events:none;
-  background:
-    radial-gradient(700px 420px at 18% 10%, rgba(var(--accent-rgb),0.10), transparent 60%),
-    radial-gradient(640px 420px at 82% 18%, rgba(255,255,255,0.06), transparent 62%),
-    radial-gradient(560px 420px at 60% 92%, rgba(var(--accent-rgb),0.06), transparent 62%),
-    linear-gradient(180deg, rgba(0,0,0,0.25), rgba(0,0,0,0.55));
-  opacity:.95;
-  z-index:-1;
+  --panel:rgba(255,255,255,0.02);
+  --panel-2:rgba(0,0,0,0.26);
+  --line:rgba(255,255,255,0.10);
 }
 
 /* ── WRAP ── */
 .wrap{width:min(1200px,94vw);margin:0 auto;}
 
-/* ── PAGE HEADER ── */
+/* ── PAGE HEADER (bez czerwonych gradientów) ── */
 .pg-header{
-  padding:56px 0 32px;
-  border-bottom:1px solid var(--border);
-  position:relative;
-  overflow:hidden;
-}
-.pg-header::after{
-  content:'';
-  position:absolute; left:0; right:0; bottom:-1px; height:2px;
-  background:linear-gradient(90deg, transparent, rgba(var(--accent-rgb),0.9), transparent);
-  opacity:.45;
+  background:transparent;
+  border-bottom:1px solid var(--line);
+  padding:58px 0 42px;
+  text-align:center;
 }
 .pg-header__kicker{
   font-weight:800;font-size:.68rem;letter-spacing:.18em;text-transform:uppercase;
-  color:rgba(255,255,255,0.78);
-  display:inline-flex;align-items:center;gap:10px;
+  color:var(--accent);
+  margin-bottom:14px;
+  display:inline-flex;align-items:center;gap:8px;
 }
 .pg-header__kicker::before{
-  content:'';width:6px;height:6px;border-radius:50%;
+  content:'';
+  width:6px;height:6px;border-radius:50%;
   background:var(--accent);
-  box-shadow:0 0 14px rgba(var(--accent-rgb),0.65);
+  box-shadow:0 0 10px rgba(var(--accent-rgb),0.60);
 }
 .pg-header__h1{
-  margin-top:14px;
-  font-family:'Montserrat',sans-serif;font-weight:700;
+  font-family:'Montserrat',sans-serif;
+  font-weight:700;
   font-size:clamp(2rem,5vw,3.4rem);
   line-height:.95;letter-spacing:-.02em;text-transform:uppercase;
   transform:skewX(-2deg);
+  display:inline-block;
 }
 .pg-header__h1 em{font-style:normal;color:var(--accent);}
 .pg-header__sub{
-  margin-top:14px;font-weight:700;font-size:.95rem;
-  color:var(--muted);max-width:720px;
+  margin-top:14px;
+  font-weight:600;font-size:.92rem;
+  color:var(--text-muted);
+  max-width:640px;margin-inline:auto;
+}
+.pg-header__ul{
+  width:140px;height:3px;
+  background:linear-gradient(90deg,var(--accent),transparent);
+  box-shadow:0 0 10px rgba(var(--accent-rgb),0.20);
+  margin:18px auto 0;
+  opacity:.9;
 }
 
-/* ── LOCATION TABS ── */
+/* ── LOCATION TABS (jak chipy) ── */
 .loc-tabs{
-  display:flex;gap:10px;margin:34px 0 24px;
+  display:flex;gap:8px;margin:34px 0 26px;
+  border-bottom:1px solid var(--line);
+  padding-bottom:10px;
   flex-wrap:wrap;
-  align-items:center;
 }
 .loc-tab{
-  padding:12px 18px;
-  font-family:'Montserrat',sans-serif;font-weight:700;font-size:.78rem;
-  letter-spacing:.14em;text-transform:uppercase;
-  background:rgba(255,255,255,0.02);
-  border:1px solid var(--border);
+  padding:10px 16px;
+  font-family:'Montserrat',sans-serif;
+  font-weight:700;
+  font-size:.74rem;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  background:rgba(0,0,0,0.30);
+  border:1px solid rgba(255,255,255,0.16);
   color:rgba(255,255,255,0.70);
   cursor:pointer;
-  transition:transform 180ms ease, border-color 180ms ease, background 180ms ease, color 180ms ease;
+  transition:transform 200ms ease, filter 200ms ease, border-color 200ms ease, background 200ms ease, color 200ms ease;
 }
 .loc-tab:hover{
-  transform:translateY(-1px);
+  transform:translateY(-2px);
   border-color:rgba(var(--accent-rgb),0.55);
-  background:rgba(var(--accent-rgb),0.08);
   color:#fff;
 }
 .loc-tab.active{
-  border-color:rgba(var(--accent-rgb),0.80);
+  border-color:rgba(var(--accent-rgb),0.75);
   background:rgba(var(--accent-rgb),0.12);
   color:#fff;
-  box-shadow:var(--glow);
 }
 
 /* ── PANELS ── */
 .loc-panel{display:none;}
 .loc-panel.active{display:block;}
-.sched-grid{display:grid;gap:16px;margin-bottom:46px;}
+.sched-grid{display:grid;gap:14px;margin-bottom:42px;}
 
 /* ── GROUP CARD ── */
 .group-card{
-  border:1px solid var(--border);
-  background:var(--surface);
+  border:1px solid rgba(255,255,255,0.14);
+  background:var(--panel);
   overflow:hidden;
-  box-shadow:var(--shadow);
+  box-shadow:0 26px 90px rgba(0,0,0,0.55);
 }
 .group-card__head{
-  padding:16px 18px;
-  display:flex;align-items:flex-end;justify-content:space-between;gap:12px;
+  padding:14px 18px;
+  border-bottom:1px solid rgba(255,255,255,0.10);
+  background:var(--panel-2);
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
   flex-wrap:wrap;
-  background:rgba(0,0,0,0.18);
-  border-bottom:1px solid rgba(255,255,255,0.08);
-  position:relative;
-}
-.group-card__head::after{
-  content:'';
-  position:absolute; left:0; right:0; top:0; height:2px;
-  background:linear-gradient(90deg, rgba(var(--accent-rgb),0.75), transparent 65%);
-  opacity:.9;
 }
 .group-card__name{
-  font-family:'Montserrat',sans-serif;font-weight:700;
-  font-size:clamp(1rem,2vw,1.2rem);
+  font-family:'Montserrat',sans-serif;
+  font-weight:700;
+  font-size:clamp(1rem,2vw,1.15rem);
   text-transform:uppercase;
   letter-spacing:-.01em;
+  color:#fff;
 }
-.group-card__meta{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+.group-card__meta{display:flex;gap:10px;flex-wrap:wrap;}
 
 .badge{
   font-weight:800;font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;
   padding:4px 10px;border:1px solid;
-  background:rgba(0,0,0,0.20);
+  background:rgba(0,0,0,0.30);
 }
-.badge--accent{color:rgba(255,255,255,0.92);border-color:rgba(var(--accent-rgb),0.55);}
-.badge--white{color:rgba(255,255,255,0.72);border-color:rgba(255,255,255,0.18);}
-.badge--warn{color:#e8a500;border-color:rgba(232,165,0,0.45);}
-.badge--closed{color:#888;border-color:rgba(255,255,255,0.12);background:rgba(0,0,0,0.28);}
+.badge--red{color:rgba(255,255,255,0.86);border-color:rgba(var(--accent-rgb),0.45);}
+.badge--white{color:rgba(255,255,255,0.62);border-color:rgba(255,255,255,0.18);}
+.badge--warn{color:#e8a500;border-color:rgba(232,165,0,0.40);background:rgba(232,165,0,0.10);}
+.badge--closed{color:#9a9a9a;border-color:rgba(255,255,255,0.12);background:rgba(0,0,0,0.20);}
 
-/* ─────────────────────────────────────────────────────────────
-   SLOTS SHELL (background & accents)
-   ───────────────────────────────────────────────────────────── */
-
+/* ── SLOTS GRID ── */
 .group-card__slots{
-  position:relative;
-  padding:18px 18px 22px;
-  background:rgba(0,0,0,0.18);
-  overflow:hidden;
-}
-
-/* delikatne “życie” w tle */
-.group-card__slots::before{
-  content:'';
-  position:absolute; inset:0;
-  background:
-    radial-gradient(420px 220px at 12% 30%, rgba(var(--accent-rgb),0.08), transparent 60%),
-    radial-gradient(520px 260px at 82% 40%, rgba(255,255,255,0.06), transparent 65%),
-    linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
-  background-size:auto, auto, 70px 1px;
-  opacity:.35;
-  pointer-events:none;
-}
-
-/* cienki akcent na górze sekcji */
-.group-card__slots::after{
-  content:'';
-  position:absolute; left:0; right:0; top:0; height:2px;
-  background:linear-gradient(90deg, rgba(var(--accent-rgb),0.85), transparent 70%);
-  opacity:.9;
-}
-
-/* ─────────────────────────────────────────
-   WEEKLY CALENDAR (WOW)
-   Desktop: columns = days (tylko użyte)
-   Mobile: stacked day sections
-   ───────────────────────────────────────── */
-
-.weekcal{
-  position:relative;
-  padding:0;
-}
-
-.weekcal::before{
-  content:'';
-  position:absolute; inset:0;
-  background:
-    radial-gradient(420px 220px at 12% 30%, rgba(var(--accent-rgb),0.10), transparent 60%),
-    radial-gradient(520px 260px at 82% 40%, rgba(255,255,255,0.06), transparent 65%),
-    linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px),
-    linear-gradient(0deg, rgba(255,255,255,0.05) 1px, transparent 1px);
-  background-size:auto, auto, 80px 1px, 1px 64px;
-  opacity:.18;
-  pointer-events:none;
-}
-
-.weekcal__grid{
-  position:relative;
   display:grid;
-  gap:12px;
-  align-items:stretch;
+  grid-template-columns:repeat(auto-fill, minmax(260px,1fr));
+  gap:1px;
+  background:rgba(255,255,255,0.10);
 }
 
-/* desktop: kolumny dni */
-@media(min-width:860px){
-  .weekcal__grid{
-    grid-template-columns:repeat(var(--days, 3), 1fr);
-  }
-}
-
-.weekcal__day{
-  border:1px solid rgba(255,255,255,0.10);
+.slot{
   background:rgba(0,0,0,0.22);
-  overflow:hidden;
-  display:flex;
-  flex-direction:column;
-  min-height:120px;
+  padding:16px 18px;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  cursor:pointer;
+  transition:background 200ms, transform 120ms, border-color 200ms;
+  border-left:2px solid transparent;
 }
+.slot:hover{
+  background:rgba(255,255,255,0.03);
+  border-left-color:rgba(var(--accent-rgb),0.55);
+}
+.slot.selected{
+  background:rgba(var(--accent-rgb),0.10);
+  border-left-color:rgba(var(--accent-rgb),0.90);
+}
+.slot:active{transform:scale(0.995);}
 
-.weekcal__dayHead{
-  padding:12px 12px;
-  border-bottom:1px solid rgba(255,255,255,0.08);
-  background:rgba(0,0,0,0.26);
+.slot--closed{cursor:default;opacity:.55;}
+.slot--closed:hover{background:rgba(0,0,0,0.22);border-left-color:transparent;transform:none;}
+
+.slot__day{
   font-family:'Montserrat',sans-serif;
   font-weight:700;
-  font-size:.72rem;
-  letter-spacing:.16em;
-  text-transform:uppercase;
-  color:rgba(255,255,255,0.88);
-  position:relative;
-}
-
-.weekcal__dayHead::after{
-  content:'';
-  position:absolute; left:0; right:0; bottom:0; height:2px;
-  background:linear-gradient(90deg, rgba(var(--accent-rgb),0.75), transparent 70%);
-  opacity:.65;
-}
-
-.weekcal__dayBody{
-  padding:12px 12px 14px;
-  display:flex;
-  flex-direction:column;
-  gap:10px;
-  flex:1;
-}
-
-.weekcal__slot{
-  position:relative;
-  border:1px solid rgba(255,255,255,0.12);
-  background:rgba(0,0,0,0.28);
-  padding:12px 12px 12px 12px;
-  cursor:pointer;
-  transition:transform 180ms ease, border-color 180ms ease, background 180ms ease;
-  overflow:hidden;
-}
-
-.weekcal__slot::before{
-  content:'';
-  position:absolute; inset:-50px -70px auto auto;
-  width:190px; height:190px;
-  background:linear-gradient(135deg, rgba(var(--accent-rgb),0.22), transparent 65%);
-  transform:rotate(10deg);
-  opacity:.55;
-}
-
-.weekcal__slot:hover{
-  transform:translateY(-2px);
-  border-color:rgba(var(--accent-rgb),0.55);
-  background:rgba(var(--accent-rgb),0.06);
-}
-
-.weekcal__slot.selected{
-  border-color:rgba(var(--accent-rgb),0.85);
-  background:rgba(var(--accent-rgb),0.10);
-  box-shadow:0 12px 60px rgba(var(--accent-rgb),0.14);
-}
-
-.weekcal__time{
-  font-weight:800;
-  font-size:1.06rem;
+  font-size:.78rem;letter-spacing:.12em;text-transform:uppercase;
   color:#fff;
 }
-.weekcal__time em{font-style:normal;color:var(--accent);}
-
-.weekcal__addr{
-  margin-top:8px;
-  font-weight:700;
-  font-size:.74rem;
-  color:var(--muted);
-  line-height:1.35;
-  max-width:34ch;
+.slot__time{
+  font-weight:800;font-size:1.02rem;color:rgba(255,255,255,0.92);
+  margin-top:2px;
 }
+.slot.selected .slot__time{color:#fff;}
 
-.weekcal__btn{
-  margin-top:10px;
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  font-weight:800;
-  font-size:.62rem;
-  letter-spacing:.14em;
-  text-transform:uppercase;
-  color:rgba(255,255,255,0.88);
+.slot__addr{font-weight:600;font-size:.72rem;color:var(--text-muted);margin-top:4px;}
+
+.slot__btn{
+  font-weight:900;font-size:.64rem;letter-spacing:.12em;text-transform:uppercase;
+  color:rgba(255,255,255,0.86);
   border:1px solid rgba(255,255,255,0.18);
-  padding:8px 10px;
-  background:rgba(0,0,0,0.24);
-  transition:background 180ms ease, border-color 180ms ease, color 180ms ease;
-  width:max-content;
+  background:rgba(0,0,0,0.30);
+  padding:8px 14px;
   white-space:nowrap;
+  transition:transform 200ms ease, filter 200ms ease, border-color 200ms ease, background 200ms ease, color 200ms ease;
 }
-.weekcal__slot:hover .weekcal__btn{
+.slot:hover .slot__btn{
   border-color:rgba(var(--accent-rgb),0.65);
-  background:rgba(var(--accent-rgb),0.12);
+  background:rgba(var(--accent-rgb),0.14);
   color:#fff;
 }
-.weekcal__slot.selected .weekcal__btn{
-  border-color:rgba(var(--accent-rgb),0.90);
-  background:rgba(var(--accent-rgb),0.18);
+.slot.selected .slot__btn{
+  border-color:rgba(var(--accent-rgb),0.85);
+  background:linear-gradient(180deg, rgba(var(--accent-rgb),0.98), rgba(82,10,0,0.92));
   color:#fff;
-}
-
-.weekcal__slot.weekcal__slot--closed{
-  cursor:default;
-  opacity:.55;
-}
-.weekcal__slot.weekcal__slot--closed:hover{
-  transform:none;
-  border-color:rgba(255,255,255,0.12);
-  background:rgba(0,0,0,0.28);
-}
-
-/* mobile: dzień jako sekcja, sloty pod spodem (grid sam się układa) */
-@media(max-width:859px){
-  .weekcal__grid{grid-template-columns:1fr;}
 }
 
 /* VIP info */
 .vip-info{
-  padding:20px 18px;
-  font-weight:700;font-size:.90rem;line-height:1.70;
+  padding:22px 18px;
+  font-weight:600;font-size:.88rem;line-height:1.70;
   color:rgba(255,255,255,0.70);
 }
 .vip-info strong{color:#fff;}
 
 /* ── FORM SECTION ── */
 .form-section{
-  background:rgba(255,255,255,0.025);
-  border:1px solid var(--border);
-  position:relative;
+  border:1px solid rgba(255,255,255,0.14);
+  background:rgba(255,255,255,0.02);
   padding:34px 28px 38px;
-  margin-bottom:60px;
+  margin-bottom:56px;
   display:none;
-  box-shadow:var(--shadow);
-}
-.form-section::before{
-  content:'';
-  position:absolute; left:0; right:0; top:0; height:2px;
-  background:linear-gradient(90deg, rgba(var(--accent-rgb),0.90), transparent 70%);
-  opacity:.95;
+  box-shadow:0 26px 90px rgba(0,0,0,0.55);
 }
 .form-section.visible{display:block;}
 
 .form-section__title{
-  font-family:'Montserrat',sans-serif;font-weight:700;
-  font-size:1.35rem;text-transform:uppercase;letter-spacing:-.01em;
+  font-family:'Montserrat',sans-serif;
+  font-weight:700;
+  font-size:1.34rem;
+  text-transform:uppercase;letter-spacing:-.01em;
   margin-bottom:6px;
 }
-.form-section__sub{font-weight:700;font-size:.84rem;color:var(--muted);margin-bottom:24px;}
+.form-section__sub{font-weight:600;font-size:.84rem;color:var(--text-muted);margin-bottom:24px;}
 
 .selected-slot-info{
   background:rgba(0,0,0,0.30);
@@ -394,8 +251,19 @@ body::before{
   padding:12px 16px;margin-bottom:22px;
   display:flex;align-items:center;gap:14px;flex-wrap:wrap;
 }
-.selected-slot-info__label{font-weight:800;font-size:.66rem;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,0.70);}
-.selected-slot-info__val{font-weight:800;font-size:.92rem;color:#fff;}
+.selected-slot-info__label{
+  font-weight:800;font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;
+  color:rgba(255,255,255,0.72);
+}
+.selected-slot-info__val{font-weight:700;font-size:.90rem;color:#fff;}
+.selected-slot-info{position:relative;}
+.selected-slot-info::before{
+  content:'';
+  position:absolute;left:0;top:0;bottom:0;width:3px;
+  background:var(--accent);
+  box-shadow:0 0 16px rgba(var(--accent-rgb),0.35);
+  opacity:.95;
+}
 
 .form-grid{
   display:grid;
@@ -406,41 +274,44 @@ body::before{
 
 .form-field{display:flex;flex-direction:column;gap:6px;}
 .form-field--full{grid-column:1/-1;}
+
 .form-label{
   font-weight:800;font-size:.66rem;letter-spacing:.16em;text-transform:uppercase;
-  color:rgba(255,255,255,0.70);
+  color:rgba(255,255,255,0.62);
 }
 .form-label span{color:var(--accent);}
+
 .form-input,.form-select,.form-textarea{
-  background:rgba(255,255,255,0.04);
-  border:1px solid rgba(255,255,255,0.15);
+  background:rgba(0,0,0,0.30);
+  border:1px solid rgba(255,255,255,0.16);
   color:#fff;
   font-family:'Open Sans',sans-serif;
-  font-weight:700;font-size:.92rem;
+  font-weight:600;font-size:.90rem;
   padding:11px 14px;
   outline:none;
-  transition:border-color 180ms ease, background 180ms ease;
+  transition:border-color 200ms,background 200ms;
   -webkit-appearance:none;
 }
 .form-input::placeholder{color:rgba(255,255,255,0.25);}
 .form-input:focus,.form-select:focus,.form-textarea:focus{
   border-color:rgba(var(--accent-rgb),0.70);
-  background:rgba(var(--accent-rgb),0.06);
+  background:rgba(var(--accent-rgb),0.08);
 }
 .form-select option{background:#141414;color:#fff;}
 .form-textarea{resize:vertical;min-height:80px;}
 
 .form-divider{
   grid-column:1/-1;
-  border:none;border-top:1px solid var(--border);
+  border:none;border-top:1px solid rgba(255,255,255,0.10);
   margin:8px 0;
 }
 .form-section-label{
   grid-column:1/-1;
-  font-family:'Montserrat',sans-serif;font-weight:700;
-  font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;
-  color:rgba(255,255,255,0.86);
-  margin-top:2px;
+  font-family:'Montserrat',sans-serif;
+  font-weight:700;
+  font-size:.70rem;letter-spacing:.18em;text-transform:uppercase;
+  color:rgba(255,255,255,0.80);
+  margin-top:4px;
 }
 
 /* Price cards */
@@ -450,85 +321,77 @@ body::before{
   gap:10px;margin-top:4px;
 }
 .price-card{
-  border:1px solid var(--border);
-  padding:14px 14px;
-  cursor:pointer;
-  transition:border-color 180ms ease, background 180ms ease, transform 180ms ease;
-  position:relative;
+  border:1px solid rgba(255,255,255,0.14);
   background:rgba(0,0,0,0.22);
+  padding:14px 16px;
+  cursor:pointer;
+  transition:border-color 200ms,background 200ms, transform 200ms;
+  position:relative;
 }
 .price-card:hover{
-  border-color:rgba(var(--accent-rgb),0.50);
-  background:rgba(var(--accent-rgb),0.06);
-  transform:translateY(-1px);
+  border-color:rgba(var(--accent-rgb),0.55);
+  background:rgba(var(--accent-rgb),0.08);
+  transform:translateY(-2px);
 }
 .price-card.selected{
   border-color:rgba(var(--accent-rgb),0.85);
-  background:rgba(var(--accent-rgb),0.10);
-  box-shadow:var(--glow);
+  background:rgba(var(--accent-rgb),0.12);
 }
 .price-card input{position:absolute;opacity:0;pointer-events:none;}
 .price-card__name{font-weight:800;font-size:.78rem;color:#fff;margin-bottom:4px;}
-.price-card__price{font-family:'Montserrat',sans-serif;font-weight:700;font-size:1.35rem;color:#fff;}
-.price-card__price em{font-style:normal;color:var(--accent);}
-.price-card__extra{font-weight:700;font-size:.68rem;color:var(--muted);margin-top:2px;}
+.price-card__price{font-family:'Montserrat',sans-serif;font-weight:700;font-size:1.26rem;color:#fff;}
+.price-card__extra{font-weight:600;font-size:.68rem;color:var(--text-muted);margin-top:2px;}
 
 /* Consents */
 .consent-item{
   grid-column:1/-1;
   display:flex;gap:12px;align-items:flex-start;
-  font-weight:700;font-size:.82rem;line-height:1.60;
-  color:rgba(255,255,255,0.74);
+  font-weight:600;font-size:.82rem;line-height:1.60;
+  color:rgba(255,255,255,0.70);
   cursor:pointer;
 }
 .consent-item input[type=checkbox]{
   width:18px;height:18px;flex-shrink:0;
-  accent-color:var(--accent);cursor:pointer;margin-top:2px;
+  accent-color:var(--accent);
+  cursor:pointer;margin-top:2px;
 }
 
 /* Submit */
 .form-actions{
   grid-column:1/-1;
-  display:flex;align-items:center;gap:14px;margin-top:10px;flex-wrap:wrap;
+  display:flex;align-items:center;gap:16px;margin-top:10px;flex-wrap:wrap;
 }
 .btn-submit{
-  background:linear-gradient(180deg, rgba(var(--accent-rgb),0.95), rgba(82,10,0,0.92));
-  color:#fff;border:none;
-  font-family:'Open Sans',sans-serif;font-weight:800;
-  font-size:.82rem;letter-spacing:.08em;text-transform:uppercase;
+  background:linear-gradient(180deg, rgba(var(--accent-rgb),0.98), rgba(82,10,0,0.92));
+  color:#fff;border:1px solid rgba(255,255,255,0.10);
+  font-family:'Open Sans',sans-serif;font-weight:900;
+  font-size:.82rem;letter-spacing:.06em;text-transform:uppercase;
   padding:14px 28px;cursor:pointer;
-  transition:filter 180ms ease, transform 180ms ease;
-  box-shadow:var(--glow);
+  transition:transform 200ms ease, filter 200ms ease;
+  box-shadow:0 10px 48px rgba(var(--accent-rgb),0.22);
 }
-.btn-submit:hover{filter:brightness(1.08);transform:translateY(-2px);}
+.btn-submit:hover{transform:translateY(-3px);filter:brightness(1.08);}
 .btn-submit:disabled{opacity:.50;cursor:not-allowed;transform:none;filter:none;}
-.form-note{font-weight:700;font-size:.76rem;color:var(--muted);}
+.form-note{font-weight:600;font-size:.76rem;color:var(--text-muted);}
 
 /* Error / info */
 .form-msg{
   grid-column:1/-1;
   padding:12px 16px;
-  font-weight:800;font-size:.82rem;
+  font-weight:700;font-size:.82rem;
   display:none;
 }
-.form-msg.error{background:rgba(var(--accent-rgb),0.12);border:1px solid rgba(var(--accent-rgb),0.40);color:#ffb0b0;display:block;}
-.form-msg.info{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.16);color:rgba(255,255,255,0.84);display:block;}
+.form-msg.error{background:rgba(var(--accent-rgb),0.15);border:1px solid rgba(var(--accent-rgb),0.45);color:#ffb2a6;display:block;}
+.form-msg.info{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.18);color:rgba(255,255,255,0.80);display:block;}
 
 /* ── CONFIRMATION ── */
 .confirm-box{
-  max-width:720px;margin:60px auto;
+  max-width:680px;margin:56px auto;
   border:1px solid rgba(255,255,255,0.14);
-  background:rgba(0,0,0,0.30);
-  padding:40px 34px;
+  background:rgba(255,255,255,0.02);
+  padding:40px 32px;
   display:none;
-  box-shadow:var(--shadow);
-  position:relative;
-}
-.confirm-box::before{
-  content:'';
-  position:absolute; left:0; right:0; top:0; height:2px;
-  background:linear-gradient(90deg, rgba(var(--accent-rgb),0.90), transparent 70%);
-  opacity:.95;
+  box-shadow:0 26px 90px rgba(0,0,0,0.55);
 }
 .confirm-box.visible{display:block;}
 .confirm-box__icon{font-size:3rem;margin-bottom:18px;}
@@ -537,66 +400,28 @@ body::before{
   font-size:1.8rem;text-transform:uppercase;margin-bottom:10px;
 }
 .confirm-box__h2 em{font-style:normal;color:var(--accent);}
-.confirm-box__text{font-weight:700;font-size:.92rem;line-height:1.70;color:rgba(255,255,255,0.72);margin-bottom:22px;}
+.confirm-box__text{font-weight:600;font-size:.90rem;line-height:1.70;color:rgba(255,255,255,0.70);margin-bottom:22px;}
 .confirm-box__transfer{
-  background:rgba(0,0,0,0.34);
+  background:rgba(0,0,0,0.30);
   border:1px solid rgba(255,255,255,0.12);
-  padding:20px 20px;
-  font-size:.90rem;
+  padding:18px 20px;
+  font-size:.88rem;
   line-height:2;
 }
-.confirm-box__transfer .lbl{font-weight:800;font-size:.64rem;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,0.72);}
-.confirm-box__transfer .val{font-weight:800;color:#fff;}
+.confirm-box__transfer .lbl{font-weight:800;font-size:.65rem;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,0.72);}
+.confirm-box__transfer .val{font-weight:700;color:#fff;}
 .confirm-box__ref{
   display:inline-block;
   font-family:'Montserrat',sans-serif;font-weight:700;font-size:1.5rem;
-  color:#fff;letter-spacing:.10em;
-  margin:14px 0 4px;
+  color:#fff;letter-spacing:.08em;
+  margin:16px 0;
+  padding:10px 12px;
+  border:1px solid rgba(255,255,255,0.14);
+  background:rgba(0,0,0,0.30);
 }
 .confirm-box__note{
-  margin-top:18px;font-weight:700;font-size:.78rem;
+  margin-top:18px;font-weight:600;font-size:.78rem;
   color:rgba(255,255,255,0.45);line-height:1.65;
-}
-
-/* ── CONFIRM ACTIONS ── */
-.confirm-actions{
-  margin-top:18px;
-  display:flex;
-  gap:10px;
-  flex-wrap:wrap;
-  align-items:center;
-}
-.btn-confirm{
-  border:none;
-  cursor:pointer;
-  font-family:'Open Sans',sans-serif;
-  font-weight:800;
-  font-size:.80rem;
-  letter-spacing:.06em;
-  text-transform:uppercase;
-  padding:12px 18px;
-  transition:transform 200ms ease, filter 200ms ease, border-color 200ms ease, background 200ms ease;
-}
-.btn-confirm:hover{transform:translateY(-2px);filter:brightness(1.08);}
-.btn-confirm:disabled{opacity:.55;cursor:not-allowed;transform:none;filter:none;}
-.btn-confirm--primary{
-  background:linear-gradient(180deg,rgba(178,25,0,0.98),rgba(80,8,0,0.95));
-  color:#fff;
-  box-shadow:0 10px 48px rgba(178,25,0,0.22);
-}
-.btn-confirm--ghost{
-  background:transparent;
-  color:rgba(255,255,255,0.90);
-  border:1px solid rgba(255,255,255,0.22);
-}
-.btn-confirm--ghost:hover{
-  border-color:rgba(178,25,0,0.65);
-  background:rgba(178,25,0,0.06);
-}
-.confirm-hint{
-  font-weight:600;
-  font-size:.78rem;
-  color:rgba(255,255,255,0.55);
 }
 
 /* ── SPINNER ── */
@@ -606,8 +431,14 @@ body::before{
 /* ── LOADING STATE ── */
 .loading-overlay{
   padding:60px;text-align:center;
-  font-weight:800;font-size:.88rem;color:var(--muted);
+  font-weight:700;font-size:.88rem;color:var(--text-muted);
 }
+
+/* KILL SWITCH */
+html, body { background:#141414 !important; }
+.pg-header { background:transparent !important; border-bottom:1px solid rgba(255,255,255,0.10) !important; }
+.group-card__head { background:rgba(0,0,0,0.26) !important; border-bottom:1px solid rgba(255,255,255,0.10) !important; }
+.group-card { background:rgba(255,255,255,0.02) !important; border-color:rgba(255,255,255,0.14) !important; }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
@@ -619,11 +450,11 @@ body::before{
     <div class="pg-header__kicker">Krav Maga Saggita</div>
     <h1 class="pg-header__h1">ZAPISZ SIĘ<em> NA ZAJĘCIA</em></h1>
     <p class="pg-header__sub">Wybierz lokalizację, termin i grupę — formularz uzupełni się automatycznie.</p>
+    <div class="pg-header__ul" aria-hidden="true"></div>
   </div>
 </header>
 
 <main class="wrap">
-
   <nav class="loc-tabs" id="locTabs" aria-label="Lokalizacje" role="tablist"></nav>
 
   <div id="locPanels">
@@ -650,22 +481,27 @@ body::before{
           <label class="form-label" for="f_first">Imię <span>*</span></label>
           <input class="form-input" type="text" id="f_first" name="first_name" autocomplete="given-name" required>
         </div>
+
         <div class="form-field">
           <label class="form-label" for="f_last">Nazwisko <span>*</span></label>
           <input class="form-input" type="text" id="f_last" name="last_name" autocomplete="family-name" required>
         </div>
+
         <div class="form-field">
           <label class="form-label" for="f_email">Adres e-mail <span>*</span></label>
           <input class="form-input" type="email" id="f_email" name="email" autocomplete="email" required>
         </div>
+
         <div class="form-field">
           <label class="form-label" for="f_phone">Telefon <span>*</span></label>
           <input class="form-input" type="tel" id="f_phone" name="phone" autocomplete="tel" placeholder="+48 xxx xxx xxx">
         </div>
+
         <div class="form-field">
           <label class="form-label" for="f_birth">Rok urodzenia</label>
           <input class="form-input" type="number" id="f_birth" name="birth_year" min="1950" max="2022" placeholder="np. 1990">
         </div>
+
         <div class="form-field">
           <label class="form-label" for="f_new">Czy to Twój pierwszy sezon?</label>
           <select class="form-select" id="f_new" name="is_new">
@@ -687,6 +523,7 @@ body::before{
           <label class="form-label" for="f_date">Preferowana data startu</label>
           <input class="form-input" type="date" id="f_date" name="start_date">
         </div>
+
         <div class="form-field">
           <label class="form-label" for="f_pay">Metoda płatności</label>
           <select class="form-select" id="f_pay" name="payment_method">
@@ -733,33 +570,128 @@ body::before{
     <h2 class="confirm-box__h2">Zapis<em> przyjęty</em></h2>
     <p class="confirm-box__text" id="confirmText">Dziękujemy za zapis! Skontaktujemy się w celu potwierdzenia miejsca.</p>
     <div class="confirm-box__ref" id="confirmRef"></div>
-
     <div class="confirm-box__transfer" id="confirmTransfer" style="display:none"></div>
-
-    <div class="confirm-actions" id="confirmActions" style="display:none">
-      <button type="button" class="btn-confirm btn-confirm--primary" id="btnPayOnline">
-        Zapłać online →
-      </button>
-
-      <button type="button" class="btn-confirm btn-confirm--ghost" id="btnPayDoc">
-        Pobierz dokument płatniczy
-      </button>
-
-      <div class="confirm-hint" id="confirmHint">
-        Wybierz sposób finalizacji. Możesz też wrócić później — kod zostaje ten sam.
-      </div>
+    <div id="confirmActions" style="display:none;gap:10px;flex-wrap:wrap;margin-top:18px"></div>
+    <p class="confirm-box__note">Zachowaj powyższy kod
     </div>
-
-    <p class="confirm-box__note">
-      Zachowaj powyższy kod — przyda Ci się do sprawdzenia statusu zapisu oraz jako tytuł przelewu.<br>
-      W razie pytań: <strong><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="67050e12150827060c0603020a0e0608051508091e49170b">[email&#160;protected]</a></strong> · <strong>510 930 460</strong>
-    </p>
-  </div>
 
 </main>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
-const API = '/api';
+<script>
+/**
+ * ZAPISZ-SIE — stabilne pobieranie grafiku:
+ * - obsługuje /api/schedule (nested: locations->groups->schedules)
+ * - obsługuje /api/admin-api/schedules (flat: lista terminów)
+ * - normalizuje dane i dopiero buduje UI
+ */
+
+const API_BASE = 'https://saggita-kravmaga.vercel.app';
+const API = `${API_BASE}/api`;
+
+const SCHEDULE_SOURCES = [
+  `${API}/schedule`,
+  `${API}/admin-api/schedules`,
+];
+
+const GROUPS_SOURCES = [
+  `${API}/groups`,
+  `${API}/admin-api/groups`,
+];
+
+const LOCATIONS_SOURCES = [
+  `${API}/locations`,
+  `${API}/admin-api/locations`,
+];
+
+function qs(sel, root=document){ return root.querySelector(sel); }
+function qsa(sel, root=document){ return Array.from(root.querySelectorAll(sel)); }
+
+async function fetchJson(url){
+  const res = await fetch(url, { cache: 'no-store' });
+  const text = await res.text();
+  let data;
+  try { data = text ? JSON.parse(text) : null; }
+  catch(e){ throw new Error(`Nieprawidłowy JSON z ${url}: ${text.slice(0,120)}`); }
+  if(!res.ok) throw new Error(`HTTP ${res.status} z ${url}: ${data?.error || text.slice(0,120)}`);
+  return data;
+}
+
+async function fetchFirstOk(urls){
+  let lastErr = null;
+  for(const url of urls){
+    try { return await fetchJson(url); }
+    catch(e){ lastErr = e; }
+  }
+  throw lastErr || new Error('Brak działającego źródła danych');
+}
+
+// ── Normalizacja danych ───────────────────────────────────────────
+const PL_DAY = {1:'Poniedziałek',2:'Wtorek',3:'Środa',4:'Czwartek',5:'Piątek',6:'Sobota',7:'Niedziela',0:'Niedziela'};
+const hhmm = (t) => (t && typeof t === 'string') ? t.slice(0,5) : '';
+
+function looksNested(x){
+  return Array.isArray(x) && x[0] && Array.isArray(x[0].groups);
+}
+
+function normalizeSchedulesPayload(payload){
+  // /admin-api/schedules może zwrócić {rows:[...]} albo [...]. My chcemy [...]
+  if(Array.isArray(payload)) return payload;
+  if(Array.isArray(payload?.rows)) return payload.rows;
+  return [];
+}
+
+function buildNestedFromFlat({ locations, groups, schedules }){
+  const locMap = new Map((locations||[]).map(l => [l.id, { ...l, groups: [] }]));
+  const groupMap = new Map((groups||[]).map(g => [g.id, { ...g, schedules: [] }]));
+
+  // powiąż grupy z lokalizacjami
+  for(const g of (groups||[])){
+    const loc = locMap.get(g.location_id);
+    const gg = groupMap.get(g.id);
+    if(loc && gg) loc.groups.push(gg);
+  }
+
+  // dorzuć schedules do grup
+  for(const s of (schedules||[])){
+    if (s.active === false) continue;
+    const g = groupMap.get(s.group_id);
+    if(!g) continue;
+
+    const day_name = s.day_name || PL_DAY[s.day_of_week] || '—';
+    const time_label = s.time_label || (
+      hhmm(s.time_start) ? `${hhmm(s.time_start)}${hhmm(s.time_end) ? `–${hhmm(s.time_end)}` : ''}` : 'Termin do ustalenia'
+    );
+
+    g.schedules.push({
+      id: s.id,
+      group_id: s.group_id,
+      day_of_week: s.day_of_week,
+      day_name,
+      time_start: s.time_start,
+      time_end: s.time_end,
+      time_label,
+      address: s.address || null,
+      active: s.active !== false,
+    });
+  }
+
+  // sortowanie
+  const locs = Array.from(locMap.values())
+    .sort((a,b)=>(a.city||'').localeCompare(b.city||'', 'pl'));
+
+  for(const loc of locs){
+    loc.groups = (loc.groups||[])
+      .filter(g => g && g.active !== false)
+      .sort((a,b)=>(a.name||'').localeCompare(b.name||'', 'pl'));
+
+    for(const g of loc.groups){
+      g.schedules = (g.schedules||[])
+        .sort((a,b)=> (a.day_of_week - b.day_of_week) || String(a.time_start||'').localeCompare(String(b.time_start||'')));
+    }
+  }
+
+  return locs;
+}
 
 // ── State ─────────────────────────────────────────────────────────
 let allData = [];
@@ -768,31 +700,16 @@ let selectedGroup = null;
 let selectedSchedule = null;
 let selectedLocation = null;
 
-// ── Init ──────────────────────────────────────────────────────────
-async function init() {
-  try {
-    const [sched, prices] = await Promise.all([
-      fetch(`${API}/schedule`).then(r => r.json()),
-      fetch(`${API}/prices`).then(r => r.json()),
-    ]);
-    allData = sched;
-    allPrices = prices;
-    buildTabs();
-    buildPanels();
-  } catch(e) {
-    document.getElementById('locPanels').innerHTML =
-      '<div class="loading-overlay" style="color:#ffb0b0">Błąd ładowania grafiku. Spróbuj odświeżyć stronę.</div>';
-  }
-}
-
-// ── Tabs ──────────────────────────────────────────────────────────
+// ── UI: Tabs ─────────────────────────────────────────────────────
 function buildTabs() {
   const nav = document.getElementById('locTabs');
   nav.innerHTML = '';
+
   allData.forEach((loc, i) => {
     const btn = document.createElement('button');
+    btn.type = 'button';
     btn.className = 'loc-tab' + (i === 0 ? ' active' : '');
-    btn.textContent = loc.city;
+    btn.textContent = loc.city || loc.name || `Lokalizacja ${loc.id}`;
     btn.setAttribute('role','tab');
     btn.setAttribute('aria-selected', i === 0 ? 'true' : 'false');
     btn.addEventListener('click', () => switchTab(loc.id));
@@ -801,17 +718,15 @@ function buildTabs() {
 }
 
 function switchTab(locId) {
-  document.querySelectorAll('.loc-tab').forEach((btn, i) => {
+  qsa('.loc-tab').forEach((btn, i) => {
     const active = allData[i]?.id === locId;
     btn.classList.toggle('active', active);
     btn.setAttribute('aria-selected', active ? 'true' : 'false');
   });
-  document.querySelectorAll('.loc-panel').forEach(p => {
-    p.classList.toggle('active', p.dataset.locId == locId);
-  });
+  qsa('.loc-panel').forEach(p => p.classList.toggle('active', p.dataset.locId == locId));
 }
 
-// ── Panels ────────────────────────────────────────────────────────
+// ── UI: Panels ───────────────────────────────────────────────────
 function buildPanels() {
   const container = document.getElementById('locPanels');
   container.innerHTML = '';
@@ -821,8 +736,9 @@ function buildPanels() {
     panel.className = 'loc-panel' + (locIdx === 0 ? ' active' : '');
     panel.dataset.locId = loc.id;
 
-    if (!loc.groups || !loc.groups.length) {
-      panel.innerHTML = '<p style="color:var(--muted);padding:24px 0;font-weight:700">Brak grup dla tej lokalizacji.</p>';
+    const groups = Array.isArray(loc.groups) ? loc.groups : [];
+    if (!groups.length) {
+      panel.innerHTML = '<p style="color:rgba(255,255,255,0.56);padding:24px 0;font-weight:600">Brak grup dla tej lokalizacji.</p>';
       container.appendChild(panel);
       return;
     }
@@ -830,21 +746,21 @@ function buildPanels() {
     const grid = document.createElement('div');
     grid.className = 'sched-grid';
 
-    loc.groups.forEach(group => {
-      const isVIP    = group.category === 'vip';
-      const isClosed = group.notes && group.notes.toLowerCase().includes('zamknięty');
-      const isFull   = group.available <= 0 && !isClosed;
+    groups.forEach(group => {
+      const isVIP = group.category === 'vip';
+      const notes = (group.notes || '').toLowerCase();
+      const isClosed = notes.includes('zamknięty') || notes.includes('zamkniety');
+      const isFull = (group.available != null ? group.available <= 0 : false) && !isClosed;
 
       const card = document.createElement('div');
       card.className = 'group-card';
 
-      // Head
       const head = document.createElement('div');
       head.className = 'group-card__head';
 
       const nameEl = document.createElement('div');
       nameEl.className = 'group-card__name';
-      nameEl.textContent = group.name;
+      nameEl.textContent = group.name || 'Grupa';
       head.appendChild(nameEl);
 
       const meta = document.createElement('div');
@@ -867,14 +783,14 @@ function buildPanels() {
         b.className = 'badge badge--warn';
         b.textContent = 'Lista rezerwowa';
         meta.appendChild(b);
-      } else if (group.available <= 3) {
+      } else if (typeof group.available === 'number' && group.available <= 3) {
         const b = document.createElement('span');
         b.className = 'badge badge--warn';
         b.textContent = `Ostatnie ${group.available} miejsc`;
         meta.appendChild(b);
-      } else {
+      } else if (typeof group.available === 'number') {
         const b = document.createElement('span');
-        b.className = 'badge badge--accent';
+        b.className = 'badge badge--red';
         b.textContent = `${group.available} wolnych miejsc`;
         meta.appendChild(b);
       }
@@ -882,128 +798,77 @@ function buildPanels() {
       head.appendChild(meta);
       card.appendChild(head);
 
-      // Slots shell
-      const slotsShell = document.createElement('div');
-      slotsShell.className = 'group-card__slots';
-
       if (isVIP) {
         const info = document.createElement('div');
         info.className = 'vip-info';
-        info.innerHTML = `<strong>${group.notes || 'Zajęcia indywidualne.'}</strong><br>Skontaktuj się z nami, aby ustalić termin:<br>📞 510 930 460 &nbsp;·&nbsp; ✉ biuro@akademiaobrony.pl<br><br>Możesz też zapisać się na listę rezerwową — podaj preferowany termin.`;
-        slotsShell.appendChild(info);
+        info.innerHTML = `<strong>${group.notes || 'Zajęcia indywidualne.'}</strong><br>
+          Skontaktuj się z nami, aby ustalić termin:<br>📞 510 930 460 · ✉ biuro@akademiaobrony.pl<br><br>
+          Możesz też zapisać się na listę rezerwową — podaj preferowany termin.`;
+        card.appendChild(info);
 
         const vipBtn = document.createElement('div');
         vipBtn.style.cssText = 'padding:0 18px 18px';
-        vipBtn.innerHTML = `
-          <button class="btn-submit" style="padding:12px 18px;font-size:.78rem;letter-spacing:.10em" onclick="selectSlot(${loc.id},'${loc.city}',${group.id},'${group.name}',null,null,null,true)">
-            Zapisz się na listę rezerwową →
-          </button>`;
-        slotsShell.appendChild(vipBtn);
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'slot__btn';
+        b.style.cssText = 'font-size:.72rem;padding:10px 18px;cursor:pointer;font-weight:900;letter-spacing:.12em;text-transform:uppercase;';
+        b.textContent = 'Zapisz się na listę rezerwową →';
+        b.addEventListener('click', () => selectSlot(loc.id, loc.city, group.id, group.name, null, null, null, true));
+        vipBtn.appendChild(b);
+        card.appendChild(vipBtn);
 
-      } else if (group.schedules && group.schedules.length) {
+      } else {
+        const schedules = Array.isArray(group.schedules) ? group.schedules : [];
 
-        // ── WEEKLY CALENDAR (instead of timeline) ──
-        const weekcal = document.createElement('div');
-        weekcal.className = 'weekcal';
+        // jeżeli brak terminów — pokaż czytelną informację zamiast pustki
+        if(!schedules.length){
+          const empty = document.createElement('div');
+          empty.className = 'vip-info';
+          empty.innerHTML = `<strong>Brak dodanych terminów</strong><br>Jeśli widzisz je w panelu admin, to znaczy, że endpoint, z którego korzysta ta strona, nie zwraca ich w tym formacie.`;
+          card.appendChild(empty);
+        } else {
+          const slotsWrap = document.createElement('div');
+          slotsWrap.className = 'group-card__slots';
 
-        const calGrid = document.createElement('div');
-        calGrid.className = 'weekcal__grid';
+          schedules.forEach(sched => {
+            const dayName = sched.day_name || PL_DAY[sched.day_of_week] || '—';
+            const timeLabel = sched.time_label || (hhmm(sched.time_start) ? `${hhmm(sched.time_start)}${hhmm(sched.time_end) ? `–${hhmm(sched.time_end)}` : ''}` : 'Termin do ustalenia');
 
-        // mapowanie PL -> klucz dnia
-        const dayMap = {
-          'poniedziałek':'pon','pon':'pon',
-          'wtorek':'wto','wto':'wto',
-          'środa':'śro','sroda':'śro','śr':'śro','sro':'śro',
-          'czwartek':'czw','czw':'czw',
-          'piątek':'pią','piatek':'pią','pt':'pią',
-          'sobota':'sob','sob':'sob',
-          'niedziela':'nie','nd':'nie','nie':'nie'
-        };
-        const dayLabel = { pon:'PON', wto:'WTO', śro:'ŚRO', czw:'CZW', pią:'PIĄ', sob:'SOB', nie:'NIE' };
-        const dayOrder = ['pon','wto','śro','czw','pią','sob','nie'];
-
-        // grupowanie terminów po dniu
-        const buckets = {};
-        (group.schedules || []).forEach(s => {
-          const raw = (s.day_name || '').toLowerCase().trim();
-          const key = dayMap[raw] || raw.slice(0,3) || '—';
-          if(!buckets[key]) buckets[key] = [];
-          buckets[key].push(s);
-        });
-
-        // tylko dni, które faktycznie mają terminy
-        const usedDays = dayOrder.filter(d => buckets[d]?.length).concat(
-          Object.keys(buckets).filter(d => !dayOrder.includes(d))
-        );
-
-        calGrid.style.setProperty('--days', String(Math.max(1, usedDays.length)));
-
-        usedDays.forEach(dayKey => {
-          const dayCol = document.createElement('div');
-          dayCol.className = 'weekcal__day';
-
-          const head = document.createElement('div');
-          head.className = 'weekcal__dayHead';
-          head.textContent = (dayLabel[dayKey] || (dayKey || 'Dzień').toUpperCase());
-
-          const body = document.createElement('div');
-          body.className = 'weekcal__dayBody';
-
-          // sortowanie po godzinie
-          const sorted = (buckets[dayKey] || []).slice().sort((a,b)=>{
-            const ta = (a.time_label || '').match(/\d{1,2}:\d{2}/)?.[0] || '';
-            const tb = (b.time_label || '').match(/\d{1,2}:\d{2}/)?.[0] || '';
-            return ta.localeCompare(tb);
-          });
-
-          sorted.forEach(sched => {
             const slot = document.createElement('div');
-            slot.className = 'weekcal__slot' + (isClosed ? ' weekcal__slot--closed' : '');
+            slot.className = 'slot' + (isClosed ? ' slot--closed' : '');
             slot.setAttribute('role', isClosed ? 'presentation' : 'button');
-            if (!isClosed) slot.setAttribute('tabindex','0');
+            if (!isClosed) slot.setAttribute('tabindex', '0');
 
-            const time = sched.time_label || 'Termin do ustalenia';
-
-            slot.innerHTML = `
-              <div class="weekcal__time"><em>${time}</em></div>
-              ${sched.address ? `<div class="weekcal__addr">${sched.address}</div>` : ''}
-              <div class="weekcal__btn">${isClosed ? 'Zamknięty' : (isFull ? 'Lista rez.' : 'Zapisuję się')}</div>
+            const left = document.createElement('div');
+            left.innerHTML = `
+              <div class="slot__day">${dayName}</div>
+              <div class="slot__time">${timeLabel}</div>
+              ${sched.address ? `<div class="slot__addr">${sched.address}</div>` : ''}
             `;
+
+            const btnEl = document.createElement('div');
+            btnEl.className = 'slot__btn';
+            btnEl.textContent = isClosed ? 'Zamknięty' : (isFull ? 'Lista rez.' : 'Zapisuję się');
+
+            slot.appendChild(left);
+            slot.appendChild(btnEl);
 
             if (!isClosed) {
               const handler = (ev) => {
                 window._lastSlotEl = ev.currentTarget;
-
-                // zaznaczenie tylko jednego slotu w kalendarzu
-                document.querySelectorAll('.weekcal__slot.selected').forEach(x => x.classList.remove('selected'));
-                ev.currentTarget.classList.add('selected');
-
-                selectSlot(
-                  loc.id, loc.city, group.id, group.name,
-                  sched.id, sched.day_name, sched.time_label,
-                  isFull
-                );
+                selectSlot(loc.id, loc.city, group.id, group.name, sched.id, dayName, timeLabel, isFull);
               };
               slot.addEventListener('click', handler);
               slot.addEventListener('keydown', e => { if(e.key === 'Enter' || e.key === ' ') handler(e); });
             }
 
-            body.appendChild(slot);
+            slotsWrap.appendChild(slot);
           });
 
-          dayCol.appendChild(head);
-          dayCol.appendChild(body);
-          calGrid.appendChild(dayCol);
-        });
-
-        weekcal.appendChild(calGrid);
-        slotsShell.appendChild(weekcal);
-
-      } else {
-        slotsShell.innerHTML = `<div class="vip-info"><strong>Brak dostępnych terminów.</strong><br>Skontaktuj się z nami, a dopasujemy grupę.</div>`;
+          card.appendChild(slotsWrap);
+        }
       }
 
-      card.appendChild(slotsShell);
       grid.appendChild(card);
     });
 
@@ -1012,10 +877,9 @@ function buildPanels() {
   });
 }
 
-// ── Select slot → reveal form ─────────────────────────────────────
+// ── Select slot ──────────────────────────────────────────────────
 function selectSlot(locId, cityName, groupId, groupName, schedId, dayName, timeLabel, isWaitlist) {
-  // usuń zaznaczenie zarówno ze starego .slot jak i nowego .weekcal__slot
-  document.querySelectorAll('.slot.selected, .weekcal__slot.selected').forEach(s => s.classList.remove('selected'));
+  qsa('.slot.selected').forEach(s => s.classList.remove('selected'));
   if (window._lastSlotEl) window._lastSlotEl.classList.add('selected');
 
   selectedGroup = groupId;
@@ -1023,16 +887,16 @@ function selectSlot(locId, cityName, groupId, groupName, schedId, dayName, timeL
   selectedLocation = locId;
 
   const isVIP = schedId === null;
-  const waitlistFlag = isWaitlist || false;
+  const waitlistFlag = !!isWaitlist;
 
   const infoText = isVIP
     ? `${cityName} · ${groupName} (lista rezerwowa)`
     : `${cityName} · ${groupName} · ${dayName}, ${timeLabel}${waitlistFlag ? ' (lista rezerwowa)' : ''}`;
-  document.getElementById('slotInfoText').textContent = infoText;
 
+  document.getElementById('slotInfoText').textContent = infoText;
   document.getElementById('preferredTimeField').style.display = isVIP ? 'block' : 'none';
 
-  const group = allData.flatMap(l => l.groups).find(g => g.id === groupId);
+  const group = allData.flatMap(l => l.groups || []).find(g => g.id === groupId);
   buildPriceOptions(group?.category || 'adults');
 
   const section = document.getElementById('formSection');
@@ -1040,27 +904,22 @@ function selectSlot(locId, cityName, groupId, groupName, schedId, dayName, timeL
   section.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-// ── Price options ─────────────────────────────────────────────────
+// ── Prices ───────────────────────────────────────────────────────
 function buildPriceOptions(category) {
   const container = document.getElementById('priceOptions');
   container.innerHTML = '';
 
   const isNew = document.getElementById('f_new')?.value !== 'false';
+  const cats = category === 'kids' ? ['kids'] : category === 'vip' ? ['adults','discount'] : ['adults','discount','service'];
 
-  const cats = category === 'kids'
-    ? ['kids']
-    : category === 'vip'
-    ? ['adults', 'discount']
-    : ['adults', 'discount', 'service'];
-
-  const relevant = allPrices.filter(p => cats.includes(p.category));
+  const relevant = (allPrices || []).filter(p => cats.includes(p.category));
   if (!relevant.length) {
-    container.innerHTML = '<p style="color:var(--muted);font-size:.82rem;font-weight:700">Brak planów cennikowych dla tej grupy.</p>';
+    container.innerHTML = '<p style="color:rgba(255,255,255,0.56);font-size:.82rem">Brak planów cennikowych dla tej grupy.</p>';
     return;
   }
 
   relevant.forEach((plan, i) => {
-    const total = parseFloat(plan.price) + (isNew ? parseFloat(plan.signup_fee || 0) : 0);
+    const total = parseFloat(plan.price || 0) + (isNew ? parseFloat(plan.signup_fee || 0) : 0);
     const monthLabel = plan.months ? `${plan.months} mies.` : 'jednorazowo';
 
     const card = document.createElement('label');
@@ -1070,18 +929,21 @@ function buildPriceOptions(category) {
     input.type = 'radio';
     input.name = 'price_plan';
     input.value = plan.id;
+
     if (i === 0) { input.checked = true; card.classList.add('selected'); }
 
     card.innerHTML = `
-      <div class="price-card__name">${plan.name.replace(' — ', '<br>')}</div>
-      <div class="price-card__price"><em>${total.toFixed(0)}</em> zł</div>
-      <div class="price-card__extra">${monthLabel}${isNew && plan.signup_fee > 0 ? ` (w tym ${plan.signup_fee} zł wpisowe)` : ''}${plan.description ? '<br>' + plan.description : ''}</div>
+      <div class="price-card__name">${String(plan.name || '').replace(' — ', '<br>')}</div>
+      <div class="price-card__price">${Number.isFinite(total) ? total.toFixed(0) : '0'} zł</div>
+      <div class="price-card__extra">${monthLabel}${isNew && Number(plan.signup_fee||0) > 0 ? ` (w tym ${plan.signup_fee} zł wpisowe)` : ''}${plan.description ? '<br>' + plan.description : ''}</div>
     `;
     card.prepend(input);
+
     card.addEventListener('click', () => {
-      document.querySelectorAll('.price-card').forEach(c => c.classList.remove('selected'));
+      qsa('.price-card').forEach(c => c.classList.remove('selected'));
       card.classList.add('selected');
     });
+
     container.appendChild(card);
   });
 }
@@ -1089,13 +951,13 @@ function buildPriceOptions(category) {
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('f_new')?.addEventListener('change', () => {
     if (selectedGroup !== null) {
-      const group = allData.flatMap(l => l.groups).find(g => g.id === selectedGroup);
+      const group = allData.flatMap(l => l.groups || []).find(g => g.id === selectedGroup);
       buildPriceOptions(group?.category || 'adults');
     }
   });
 });
 
-// ── Form submit ───────────────────────────────────────────────────
+// ── Submit ───────────────────────────────────────────────────────
 document.getElementById('regForm').addEventListener('submit', async (e) => {
   e.preventDefault();
 
@@ -1107,14 +969,13 @@ document.getElementById('regForm').addEventListener('submit', async (e) => {
   msg.className = 'form-msg';
   msg.textContent = '';
 
-  if (!selectedGroup) {
-    showMsg('Wybierz termin zajęć z grafiku powyżej.', 'error'); return;
-  }
+  if (!selectedGroup) { showMsg('Wybierz termin zajęć z grafiku powyżej.', 'error'); return; }
 
   const first = document.getElementById('f_first').value.trim();
   const last  = document.getElementById('f_last').value.trim();
   const email = document.getElementById('f_email').value.trim();
   const phone = document.getElementById('f_phone').value.trim();
+
   if (!first || !last) { showMsg('Wpisz imię i nazwisko.', 'error'); return; }
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showMsg('Podaj prawidłowy adres e-mail.', 'error'); return; }
   if (!phone) { showMsg('Podaj numer telefonu.', 'error'); return; }
@@ -1141,8 +1002,8 @@ document.getElementById('regForm').addEventListener('submit', async (e) => {
       start_date: document.getElementById('f_date').value || null,
       payment_method: document.getElementById('f_pay').value,
       preferred_time: document.getElementById('f_ptime').value.trim() || null,
-      consent_data: document.getElementById('f_consent_data').checked,
-      consent_rules: document.getElementById('f_consent_rules').checked,
+      consent_data: true,
+      consent_rules: true,
     };
 
     const res = await fetch(`${API}/register`, {
@@ -1153,7 +1014,6 @@ document.getElementById('regForm').addEventListener('submit', async (e) => {
 
     const data = await res.json();
     if (!res.ok) { showMsg(data.error || 'Błąd zapisu. Spróbuj ponownie.', 'error'); return; }
-
     showConfirmation(data, first, last);
 
   } catch(err) {
@@ -1182,129 +1042,130 @@ function showConfirmation(data, first, last) {
     ? `Twój zapis na listę rezerwową został przyjęty, ${first}. Skontaktujemy się, gdy pojawi się wolne miejsce.`
     : `Dziękujemy za zapis, ${first}! Twoje zgłoszenie zostało przyjęte. Skontaktujemy się, aby potwierdzić miejsce w grupie.`;
 
-  document.getElementById('confirmRef').textContent = data.payment_ref;
+  document.getElementById('confirmRef').textContent = data.payment_ref || '';
 
-  // pokaż akcje
-  const btnWrap = document.getElementById('confirmActions');
-  if (btnWrap) btnWrap.style.display = 'flex';
-
-  // zapamiętaj ref (dla backendu/pdf)
-  window.__regRef = data.payment_ref;
-  window.__regEmail = data.email || document.getElementById('f_email')?.value?.trim() || null;
-
-  // podepnij akcje
-  const btnPayOnline = document.getElementById('btnPayOnline');
-  const btnPayDoc = document.getElementById('btnPayDoc');
-
-  if (btnPayOnline) {
-    btnPayOnline.onclick = async () => {
-      await finalizeAction('pay_online');
-      alert('Płatność online będzie podpięta w kolejnym kroku. Na razie to placeholder 🙂');
-    };
-  }
-
-  if (btnPayDoc) {
-    btnPayDoc.onclick = async () => {
-      await finalizeAction('download_doc', true);
-    };
-  }
-
-  // dane przelewu
   if (!isWaitlist && data.total_amount) {
     const div = document.getElementById('confirmTransfer');
     div.innerHTML = `
-      <div><span class="lbl">Kwota do wpłaty</span><br><span class="val" style="font-size:1.4rem;font-weight:800;color:#fff">${parseFloat(data.total_amount).toFixed(2)} zł</span></div>
+      <div><span class="lbl">Kwota do wpłaty</span><br><span class="val" style="font-size:1.4rem;font-weight:900;color:var(--accent)">${parseFloat(data.total_amount).toFixed(2)} zł</span></div>
       <br>
-      <div><span class="lbl">Numer konta</span><br><span class="val">${data.bank_account}</span></div>
-      <div><span class="lbl">Odbiorca</span><br><span class="val">${data.bank_name}</span></div>
-      <div><span class="lbl">Tytuł przelewu</span><br><span class="val">${data.transfer_title}</span></div>
+      <div><span class="lbl">Numer konta</span><br><span class="val">${data.bank_account || ''}</span></div>
+      <div><span class="lbl">Odbiorca</span><br><span class="val">${data.bank_name || ''}</span></div>
+      <div><span class="lbl">Tytuł przelewu</span><br><span class="val">${data.transfer_title || ''}</span></div>
       <br>
-      <small style="color:var(--muted)">Przelew wyślij najpóźniej do ostatniego dnia poprzedzającego miesiąc rozliczeniowy.</small>
+      <small style="color:rgba(255,255,255,0.56)">Przelew wyślij najpóźniej do ostatniego dnia poprzedzającego miesiąc rozliczeniowy.</small>
     `;
     div.style.display = 'block';
+  }
+
+  if (!isWaitlist) {
+    const actions = document.getElementById('confirmActions');
+    actions.style.display = 'flex';
+    actions.innerHTML = `
+      <button onclick="handlePayOnline('${data.payment_ref}')" style="background:linear-gradient(180deg,rgba(178,25,0,0.98),rgba(80,8,0,0.95));color:#fff;border:none;padding:13px 22px;font-family:'Open Sans',sans-serif;font-weight:800;font-size:.80rem;letter-spacing:.06em;text-transform:uppercase;cursor:pointer">Opłać online →</button>
+      <button onclick="handleDownloadDoc('${data.payment_ref}')" style="background:transparent;color:rgba(255,255,255,0.90);border:1px solid rgba(255,255,255,0.22);padding:13px 22px;font-family:'Open Sans',sans-serif;font-weight:800;font-size:.80rem;letter-spacing:.06em;text-transform:uppercase;cursor:pointer">Pobierz dokument płatniczy</button>
+    `;
   }
 
   box.classList.add('visible');
   box.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-async function finalizeAction(action, downloadDoc=false){
-  if(!window.__regRef) return;
-
-  const btnPay = document.getElementById('btnPayOnline');
-  const btnDoc = document.getElementById('btnPayDoc');
-  if(btnPay) btnPay.disabled = true;
-  if(btnDoc) btnDoc.disabled = true;
-
-  try{
-    // backend: rejestruje akcję + wysyła mail
-    const res = await fetch(`${API}/registration/action`, {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({
-        payment_ref: window.__regRef,
-        action
-      })
+async function handlePayOnline(payment_ref) {
+  try {
+    await fetch(`${API}/registration/action`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ payment_ref, action: 'pay_online' })
     });
-
-    const data = await res.json();
-    if(!res.ok) throw new Error(data.error || 'Błąd akcji.');
-
-    // pobranie PDF
-    if(downloadDoc){
-      await downloadPaymentDoc(window.__regRef);
-    }
-  }catch(e){
-    alert(e.message || 'Coś poszło nie tak. Spróbuj ponownie.');
-  }finally{
-    if(btnPay) btnPay.disabled = false;
-    if(btnDoc) btnDoc.disabled = false;
-  }
+    alert('Płatność online będzie dostępna wkrótce. Skontaktujemy się z Tobą mailowo.');
+  } catch(e) { alert('Błąd. Spróbuj ponownie.'); }
 }
 
-async function downloadPaymentDoc(paymentRef){
-  // Pobierz HTML z backendu
-  const res = await fetch(`${API}/payment-document?payment_ref=${encodeURIComponent(paymentRef)}`, {
-    method:'GET'
-  });
-
-  if(!res.ok){
-    let err = 'Nie udało się pobrać dokumentu.';
-    try{
-      const j = await res.json();
-      err = j.error || err;
-    }catch(_){}
-    throw new Error(err);
-  }
-
-  // Pobierz HTML jako tekst
-  const htmlContent = await res.text();
-  
-  // Utwórz tymczasowy element do renderowania HTML
-  const tempDiv = document.createElement('div');
-  tempDiv.innerHTML = htmlContent;
-  tempDiv.style.position = 'absolute';
-  tempDiv.style.left = '-9999px';
-  document.body.appendChild(tempDiv);
-  
-  // Generuj PDF z HTML używając html2pdf
-  const opt = {
-    margin: 10,
-    filename: `dokument-platniczy-${paymentRef}.pdf`,
-    image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { scale: 2, useCORS: true },
-    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-  };
-  
+async function handleDownloadDoc(payment_ref) {
   try {
+    // Pobierz HTML z backendu
+    const url = `${API}/payment-document?payment_ref=${encodeURIComponent(payment_ref)}`;
+    const res = await fetch(url);
+    
+    if (!res.ok) throw new Error('Nie udało się pobrać dokumentu');
+    
+    // Pobierz HTML jako tekst
+    const htmlContent = await res.text();
+    
+    // Utwórz tymczasowy niewidoczny element
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = htmlContent;
+    tempDiv.style.position = 'absolute';
+    tempDiv.style.left = '-9999px';
+    tempDiv.style.top = '0';
+    document.body.appendChild(tempDiv);
+    
+    // Generuj PDF z HTML
+    const opt = {
+      margin: 10,
+      filename: `dokument-platniczy-${payment_ref}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+    
     await html2pdf().set(opt).from(tempDiv).save();
-  } finally {
+    
     // Usuń tymczasowy element
     document.body.removeChild(tempDiv);
+  } catch(e) {
+    alert('Błąd pobierania dokumentu: ' + e.message);
   }
 }
 
-fetchAPI();
+// ── Init ─────────────────────────────────────────────────────────
+async function init() {
+  const container = document.getElementById('locPanels');
+  container.innerHTML = '<div class="loading-overlay">Ładowanie grafiku…</div>';
+
+  try {
+    const [schedPayload, pricesPayload] = await Promise.all([
+      fetchFirstOk(SCHEDULE_SOURCES),
+      fetchFirstOk([`${API}/prices`]),
+    ]);
+
+    allPrices = Array.isArray(pricesPayload) ? pricesPayload : (Array.isArray(pricesPayload?.rows) ? pricesPayload.rows : []);
+
+    if (looksNested(schedPayload)) {
+      allData = schedPayload;
+    } else {
+      const flatSchedules = normalizeSchedulesPayload(schedPayload);
+      const [locations, groups] = await Promise.all([
+        fetchFirstOk(LOCATIONS_SOURCES),
+        fetchFirstOk(GROUPS_SOURCES),
+      ]);
+
+      const locArr = Array.isArray(locations) ? locations : (Array.isArray(locations?.rows) ? locations.rows : []);
+      const grpArr = Array.isArray(groups) ? groups : (Array.isArray(groups?.rows) ? groups.rows : []);
+
+      allData = buildNestedFromFlat({
+        locations: locArr,
+        groups: grpArr,
+        schedules: flatSchedules,
+      });
+    }
+
+    buildTabs();
+    buildPanels();
+    if (allData?.[0]?.id) switchTab(allData[0].id);
+
+  } catch(e) {
+    container.innerHTML = `<div class="loading-overlay" style="color:#ffb2a6">
+      Błąd ładowania grafiku.<br><br>
+      <span style="color:rgba(255,255,255,.65);font-weight:600">${e.message || e}</span>
+    </div>`;
+    console.error(e);
+  }
+}
+
+init();
 </script>
+
 </body>
 </html>
