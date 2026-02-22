@@ -538,6 +538,15 @@ h1{
   .priceCard{padding:13px 14px}
 }
 
+.discount-badge{
+  display:inline-flex;align-items:center;
+  padding:3px 8px;border-radius:999px;
+  background:rgba(46,204,113,0.18);
+  border:1px solid rgba(46,204,113,0.35);
+  color:#2ecc71;
+  font-size:11px;font-weight:800;letter-spacing:.04em;
+  white-space:nowrap;
+}
 /* grid2 (pozostałości innych kroków) */
 .grid2{display:grid;grid-template-columns:1.15fr .85fr;gap:14px}
 @media (max-width:900px){.grid2{grid-template-columns:1fr}}
@@ -617,6 +626,23 @@ h1{
     </div>
     <div class="panelBody">
       <div class="formGrid">
+        <!-- Selector miesięcy — widoczny tylko dla karnetu rok szkolny -->
+        <div class="field full" id="fieldMonths" style="display:none">
+          <label>Liczba miesięcy *</label>
+          <select id="f_months">
+            <option value="1">1 miesiąc — 180 zł</option>
+            <option value="2">2 miesiące — 360 zł</option>
+            <option value="3">3 miesiące — 540 zł</option>
+            <option value="4">4 miesiące — 720 zł</option>
+            <option value="5">5 miesięcy — 900 zł</option>
+            <option value="6">6 miesięcy — 1 080 zł</option>
+            <option value="7">7 miesięcy — 1 260 zł</option>
+            <option value="8">8 miesięcy — 1 440 zł</option>
+            <option value="9">9 miesięcy — 1 620 zł</option>
+            <option value="10" selected>10 miesięcy — 1 800 zł (pełny rok szkolny)</option>
+          </select>
+          <div class="help">Stawka: 180 zł / miesiąc. Kwota w koszyku aktualizuje się automatycznie.</div>
+        </div>
         <div class="field full">
           <label>Lokalizacja *</label>
           <select id="f_location"><option value="">Ładowanie…</option></select>
@@ -867,38 +893,88 @@ function scheduleLabel(s){
   return `${day} ${tl}${addr}`;
 }
 
-function buildPrices(){
-  const rows = Array.isArray(pricesData) ? pricesData : (Array.isArray(pricesData?.rows) ? pricesData.rows : []);
+// ─── HELPERS ───────────────────────────────────────────────────────
+const norm = (v)=>String(v||'').trim().toLowerCase();
+const isKidsPlan  = (p)=>{ const c=norm(p.category); return c.includes('kid')||c.includes('dziec'); };
+const isAdultPlan = (p)=>!isKidsPlan(p);
+const isOneTime   = (p)=>!Number(p.months||0);
+const isSchoolYear= (p)=>isKidsPlan(p) && Number(p.months||0)>=10;
+const isMultiMonth= (p)=>Number(p.months||0)>=3;
+const monthlyRate = (p)=>Number(p.months||0)>1 ? Number(p.price)/Number(p.months) : Number(p.price);
 
-  const norm = (v)=>String(v||'').trim().toLowerCase();
-  const isKids = (p)=>{ const c=norm(p.category); return c.includes('kid')||c.includes('dziec'); };
-  const isAdults = (p)=>{ const c=norm(p.category); return c.includes('adult')||c.includes('doro'); };
+// Czy plan ma opłatę wpisową? NIE dla jednorazowych
+const hasFee = (p, isNew)=> !isOneTime(p) && isNew && Number(p.signup_fee||0)>0;
+
+// Oblicz całkowity koszt (bez wpisowego)
+function calcTotal(p, months){
+  if(isSchoolYear(p)) return 180 * (months||10);
+  return Number(p.price||0);
+}
+
+function buildPrices(){
+  const rows = Array.isArray(pricesData) ? pricesData : (Array.isArray(pricesData?.rows)?pricesData.rows:[]);
 
   const adults=[], kids=[], other=[];
-  rows.forEach(p=>{ if(isKids(p)) kids.push(p); else if(isAdults(p)) adults.push(p); else other.push(p); });
+  rows.forEach(p=>{ if(isKidsPlan(p)) kids.push(p); else if(isAdultPlan(p)) adults.push(p); else other.push(p); });
   other.forEach(p=>adults.push(p));
   adults.sort((a,b)=>Number(a.price||0)-Number(b.price||0));
   kids.sort((a,b)=>Number(a.price||0)-Number(b.price||0));
 
   document.getElementById('metaAdults').textContent = adults.length ? `${adults.length} pozycji` : 'Brak';
-  document.getElementById('metaKids').textContent = kids.length ? `${kids.length} pozycji` : 'Brak';
+  document.getElementById('metaKids').textContent   = kids.length   ? `${kids.length} pozycji`   : 'Brak';
+
+  // Znajdź referencję 1 miesiąca dorosłych do obliczenia rabatu
+  const adult1m = adults.find(p=>Number(p.months||0)===1);
+  const adult1mPrice = adult1m ? Number(adult1m.price) : null;
 
   const renderCards = (arr, type)=>arr.map(p=>{
-    const months = p.months ? `${p.months} mies.` : 'jednorazowo';
-    const fee = Number(p.signup_fee||0)>0 ? `+ wpisowe ${money(p.signup_fee)} zł dla nowych` : '';
-    const desc = (p.description||'').trim();
+    const months   = Number(p.months||0);
     const btnClass = type==='kids' ? 'btn-kids' : 'btn-adults';
+    const monthly  = monthlyRate(p);
+    const fee      = Number(p.signup_fee||0);
+
+    let priceHtml = '';
+    let subHtml   = '';
+    let badgeHtml = '';
+
+    if(isOneTime(p)){
+      // Jednorazowe — cena totalna, BEZ wpisowego
+      priceHtml = `<div class="price-amount">${money(p.price)}<small>zł</small></div>`;
+      subHtml   = `<div class="price-desc" style="color:rgba(255,255,255,0.4);font-size:11px">Brak opłaty wpisowej</div>`;
+    } else if(isSchoolYear(p)){
+      // Karnet rok szkolny — pokaż stawkę/miesiąc
+      priceHtml = `<div class="price-amount">${money(180)}<small>zł / mies.</small></div>`;
+      subHtml   = `<div class="price-fee">Do ${months} miesięcy — od ${money(180)} do ${money(180*months)} zł łącznie</div>`;
+      if(fee>0) subHtml += `<div class="price-fee">+ wpisowe ${money(fee)} zł dla nowych</div>`;
+    } else if(isMultiMonth(p) && type==='adults'){
+      // Dorosłe wielomiesięczne — cena/miesiąc + rabat + łącznie
+      const discPct = adult1mPrice ? Math.round((1 - monthly/adult1mPrice)*100) : null;
+      priceHtml = `<div class="price-amount">${money(Math.round(monthly))}<small>zł / mies.</small></div>`;
+      subHtml   = `<div class="price-fee">łącznie ${money(p.price)} zł za ${months} mies.</div>`;
+      if(discPct>0) badgeHtml = `<span class="discount-badge">-${discPct}%</span>`;
+      if(fee>0) subHtml += `<div class="price-fee">+ wpisowe ${money(fee)} zł dla nowych</div>`;
+    } else {
+      // Standardowe miesięczne
+      priceHtml = `<div class="price-amount">${money(monthly)}<small>zł / mies.</small></div>`;
+      if(fee>0) subHtml = `<div class="price-fee">+ wpisowe ${money(fee)} zł dla nowych</div>`;
+    }
+
+    const desc = (p.description||'').trim();
+
     return `
       <div class="priceCard" id="pc-${p.id}">
         <div class="priceCard__top">
           <div>
             <div class="priceCard__name">${escapeHtml(p.name)}</div>
-            <div class="priceCard__duration">${months}</div>
+            <div class="priceCard__duration">${isOneTime(p)?'jednorazowo':months>1?`${months} mies.`:'1 mies.'}</div>
           </div>
-          <button class="btn btnSmall ${btnClass}" onclick="selectPlan(${p.id})">Wybierz</button>
+          <div style="display:flex;align-items:center;gap:6px">
+            ${badgeHtml}
+            <button class="btn btnSmall ${btnClass}" onclick="selectPlan(${p.id})">Wybierz</button>
+          </div>
         </div>
-        <div class="price-amount">${money(p.price)}<small>zł</small></div>
-        ${fee ? `<div class="price-fee">${escapeHtml(fee)}</div>` : ''}
+        ${priceHtml}
+        ${subHtml}
         ${desc ? `<div class="price-desc">${escapeHtml(desc)}</div>` : ''}
       </div>
     `;
@@ -913,24 +989,42 @@ function buildPrices(){
 }
 
 
+function updateCartPrice(){
+  if(!selectedPlan) return;
+  const months = isSchoolYear(selectedPlan) ? (Number(document.getElementById('f_months')?.value||10)) : null;
+  const base = calcTotal(selectedPlan, months);
+  const isNew = document.getElementById('f_is_new')?.value === 'true';
+  const fee = hasFee(selectedPlan, isNew) ? Number(selectedPlan.signup_fee||0) : 0;
+  const total = base + fee;
+
+  document.getElementById('cartPrice').innerHTML = `${money(total)}<small> zł</small>`;
+
+  let hint = '';
+  if(isOneTime(selectedPlan))             hint = 'Jednorazowe — brak opłaty wpisowej';
+  else if(isSchoolYear(selectedPlan))     hint = `Karnet ${months} mies. × 180 zł${fee>0?' + wpisowe':''}`;
+  else if(Number(selectedPlan.months||0)>1) hint = `Karnet ${selectedPlan.months} mies. — ${money(Math.round(monthlyRate(selectedPlan)))} zł/mies.${fee>0?' + wpisowe':''}`;
+  else                                    hint = `Karnet miesięczny${fee>0?' + wpisowe':''}`;
+  document.getElementById('cartHint').textContent = hint;
+}
+
 function selectPlan(id){
   const p = (pricesData||[]).find(x=>Number(x.id)===Number(id));
   if(!p){ toast('Nie znaleziono pozycji z cennika','err'); return; }
   selectedPlan = p;
 
-  // Aktualizuj koszyk inline
+  // Pokaż / ukryj selektor miesięcy w step2
+  const fm = document.getElementById('fieldMonths');
+  if(fm) fm.style.display = isSchoolYear(p) ? '' : 'none';
+
+  // Aktualizuj koszyk
   const cart = document.getElementById('cartInline');
   cart.classList.remove('empty');
   document.getElementById('cartServiceName').textContent = p.name;
-  document.getElementById('cartPrice').innerHTML = `${money(p.price)}<small> zł</small>`;
-  document.getElementById('cartHint').textContent = p.months
-    ? `Karnet ${p.months} mies. — wybierz lokalizację i termin`
-    : 'Jednorazowo — wybierz lokalizację i termin';
+  updateCartPrice();
 
   // Podświetl wybraną kartę
   document.querySelectorAll('.priceCard').forEach(el=>{
     el.style.outline = el.id===`pc-${id}` ? '2px solid rgba(255,255,255,0.35)' : '';
-    el.style.boxShadow = '';
   });
 
   document.getElementById('goStep2').disabled = false;
@@ -949,10 +1043,11 @@ function clearCart(){
   document.getElementById('cartServiceName').textContent = 'Nie wybrano jeszcze';
   document.getElementById('cartPrice').innerHTML = '— <small>zł</small>';
   document.getElementById('cartHint').textContent = 'Wybierz ofertę z cennika poniżej';
-
   document.getElementById('goStep2').disabled = true;
   document.getElementById('btnClearCart').disabled = true;
-  document.querySelectorAll('.priceCard').forEach(el=>{ el.style.outline=''; el.style.boxShadow=''; });
+  const fm = document.getElementById('fieldMonths');
+  if(fm) fm.style.display = 'none';
+  document.querySelectorAll('.priceCard').forEach(el=>{ el.style.outline=''; });
   toast('Koszyk opróżniony');
 }
 
@@ -1067,27 +1162,46 @@ function validateStep3(){
 
 function buildSummary(){
   const locId = selected.location_id;
-  const gid = selected.group_id;
-  const sid = Number(document.getElementById('f_schedule').value||0) || null;
+  const gid   = selected.group_id;
+  const sid   = Number(document.getElementById('f_schedule').value||0) || null;
 
   const loc = scheduleData.find(l=>Number(l.id)===locId);
-  const g = (loc?.groups||[]).find(x=>Number(x.id)===gid);
-  const s = sid ? (g?.schedules||[]).find(x=>Number(x.id)===sid) : null;
+  const g   = (loc?.groups||[]).find(x=>Number(x.id)===gid);
+  const s   = sid ? (g?.schedules||[]).find(x=>Number(x.id)===sid) : null;
 
+  const isNew       = document.getElementById('f_is_new').value === 'true';
   const hasMembership = document.getElementById('f_has_membership').checked;
+  const months      = isSchoolYear(selectedPlan) ? Number(document.getElementById('f_months')?.value||10) : null;
+
+  const base   = hasMembership ? 0 : calcTotal(selectedPlan, months);
+  const fee    = (!hasMembership && hasFee(selectedPlan, isNew)) ? Number(selectedPlan.signup_fee||0) : 0;
+  const total  = base + fee;
+
+  let priceDesc = '';
+  if(hasMembership)                               priceDesc = '0 zł (posiadacz karnetu)';
+  else if(isOneTime(selectedPlan))                priceDesc = `${money(base)} zł (jednorazowe)`;
+  else if(isSchoolYear(selectedPlan))             priceDesc = `180 zł × ${months} mies. = ${money(base)} zł`;
+  else if(Number(selectedPlan.months||0)>1)       priceDesc = `${money(base)} zł (${selectedPlan.months} mies. × ${money(Math.round(monthlyRate(selectedPlan)))} zł)`;
+  else                                            priceDesc = `${money(base)} zł / mies.`;
 
   const sum = document.getElementById('summaryBox');
   sum.innerHTML = `
-    <div class="sRow"><b>Usługa</b><span>${escapeHtml(selectedPlan?.name || '—')}</span></div>
-    <div class="sRow"><b>Cena z cennika</b><span>${hasMembership ? '0 zł (posiadacz karnetu)' : `${money(selectedPlan?.price||0)} zł`}</span></div>
-    <div class="sRow"><b>Lokalizacja</b><span>${escapeHtml(loc ? `${loc.city} — ${loc.name||''}` : '—')}</span></div>
-    <div class="sRow"><b>Grupa</b><span>${escapeHtml(g ? g.name : '—')}</span></div>
-    <div class="sRow"><b>Termin</b><span>${escapeHtml(s ? scheduleLabel(s) : 'do ustalenia')}</span></div>
-    <div class="sRow"><b>Kursant</b><span>${escapeHtml(document.getElementById('f_first_name').value.trim() + ' ' + document.getElementById('f_last_name').value.trim())}</span></div>
+    <div class="sRow"><b>Usługa</b><span>${escapeHtml(selectedPlan?.name||'—')}</span></div>
+    <div class="sRow"><b>Koszt karnetu</b><span>${priceDesc}</span></div>
+    ${fee>0 ? `<div class="sRow"><b>Opłata wpisowa</b><span>${money(fee)} zł (jednorazowo dla nowych)</span></div>` : ''}
+    <div class="sRow" style="border-color:rgba(255,255,255,0.20)"><b style="color:var(--white);font-size:14px">Do zapłaty</b><span style="color:var(--white);font-size:16px;font-weight:800">${money(total)} zł</span></div>
+    <div class="sRow"><b>Lokalizacja</b><span>${escapeHtml(loc?`${loc.city} — ${loc.name||''}` : '—')}</span></div>
+    <div class="sRow"><b>Grupa</b><span>${escapeHtml(g?g.name:'—')}</span></div>
+    <div class="sRow"><b>Termin</b><span>${escapeHtml(s?scheduleLabel(s):'do ustalenia')}</span></div>
+    <div class="sRow"><b>Kursant</b><span>${escapeHtml(document.getElementById('f_first_name').value.trim()+' '+document.getElementById('f_last_name').value.trim())}</span></div>
     <div class="sRow"><b>Kontakt</b><span>${escapeHtml(document.getElementById('f_email').value.trim())} · ${escapeHtml(document.getElementById('f_phone').value.trim())}</span></div>
   `;
 
   selected.schedule_id = sid;
+  // Zapisz wyliczoną kwotę do późniejszego użycia
+  selected._totalAmount = total;
+  selected._feeAmount   = fee;
+  selected._months      = months;
 }
 
 async function submit(){
@@ -1096,20 +1210,23 @@ async function submit(){
 
   const body = {
     first_name: document.getElementById('f_first_name').value.trim(),
-    last_name: document.getElementById('f_last_name').value.trim(),
-    email: document.getElementById('f_email').value.trim(),
-    phone: document.getElementById('f_phone').value.trim(),
+    last_name:  document.getElementById('f_last_name').value.trim(),
+    email:      document.getElementById('f_email').value.trim(),
+    phone:      document.getElementById('f_phone').value.trim(),
     birth_year: Number(document.getElementById('f_birth_year').value||0) || null,
-    is_new: document.getElementById('f_is_new').value === 'true',
-    group_id: selected.group_id,
-    schedule_id: selected.schedule_id || null,
+    is_new:     document.getElementById('f_is_new').value === 'true',
+    group_id:   selected.group_id,
+    schedule_id:selected.schedule_id || null,
     price_plan_id: selectedPlan.id,
     start_date: document.getElementById('f_start_date').value || null,
     preferred_time: document.getElementById('f_preferred_time').value.trim() || null,
-    consent_data: !!document.getElementById('f_consent_data').checked,
+    consent_data:  !!document.getElementById('f_consent_data').checked,
     consent_rules: !!document.getElementById('f_consent_rules').checked,
-    has_membership: !!document.getElementById('f_has_membership').checked,
-    notes: document.getElementById('f_notes').value || null,
+    has_membership:!!document.getElementById('f_has_membership').checked,
+    notes:      document.getElementById('f_notes').value || null,
+    total_amount: selected._totalAmount || 0,
+    months_selected: selected._months || null,
+    signup_fee:  selected._feeAmount || 0,
   };
 
   const btn = document.getElementById('submitBtn');
@@ -1142,31 +1259,38 @@ async function submit(){
 }
 
 function preparePaymentUI(){
-  const pill=document.getElementById('payPill');
-  const text=document.getElementById('payText');
-  const help=document.getElementById('payHelp');
-  const payBtn=document.getElementById('payOnlineBtn');
-  const docBtn=document.getElementById('docBtn');
+  const pill   = document.getElementById('payPill');
+  const text   = document.getElementById('payText');
+  const help   = document.getElementById('payHelp');
+  const payBtn = document.getElementById('payOnlineBtn');
+  const docBtn = document.getElementById('docBtn');
 
-  const amount = Number(registrationResult?.total_amount||0);
-  const ref = registrationResult?.payment_ref;
+  const amount   = Number(registrationResult?.total_amount||0);
+  const ref      = registrationResult?.payment_ref;
+  const feeAmt   = Number(selected._feeAmount||0);
+  const baseAmt  = amount - feeAmt;
 
   if(amount<=0){
     pill.textContent = 'Brak płatności';
-    text.innerHTML = `Kwota do zapłaty: <strong>0 zł</strong>. Jeśli coś trzeba doprecyzować, odezwiemy się mailowo.`;
+    text.innerHTML   = `Kwota do zapłaty: <strong>0 zł</strong>. Jeśli coś trzeba doprecyzować, odezwiemy się mailowo.`;
     payBtn.disabled = true;
     docBtn.disabled = true;
-    help.textContent = `Ref: ${ref || '—'}`;
+    help.textContent = `Ref: ${ref||'—'}`;
     return;
   }
 
   pill.textContent = `${money(amount)} zł`;
-  text.innerHTML = `Kwota do zapłaty: <strong>${money(amount)} zł</strong> · Ref: <strong style="font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace">${ref}</strong>`;
+
+  let breakdown = `<strong>${money(baseAmt)} zł</strong> (karnet)`;
+  if(feeAmt>0) breakdown += ` + <strong>${money(feeAmt)} zł</strong> (opłata wpisowa)`;
+  breakdown += ` = <strong>${money(amount)} zł łącznie</strong>`;
+
+  text.innerHTML = `Kwota do zapłaty: ${breakdown}<br>
+    <span style="opacity:.6;font-size:12px">Ref: <code>${ref||'—'}</code></span>`;
   help.textContent = 'Możesz opłacić online albo pobrać dokument do przelewu.';
 
   payBtn.disabled = false;
   docBtn.disabled = false;
-
   payBtn.onclick = ()=>handlePayOnline(ref);
   docBtn.onclick = ()=>downloadPaymentDoc(ref);
 }
@@ -1233,6 +1357,10 @@ async function loadAll(){
 }
 
 document.getElementById('btnClearCart').addEventListener('click', clearCart);
+
+// Odśwież koszyk gdy zmienia się liczba miesięcy lub typ kursanta
+document.getElementById('f_months').addEventListener('change', ()=>{ if(selectedPlan) updateCartPrice(); });
+document.getElementById('f_is_new').addEventListener('change', ()=>{ if(selectedPlan) updateCartPrice(); });
 
 document.getElementById('goStep2').addEventListener('click', ()=>setStep(2));
 document.getElementById('back1').addEventListener('click', ()=>setStep(1));
