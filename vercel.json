@@ -1,35 +1,31 @@
 {
   "version": 2,
   "functions": {
-    "api/**/*.js": {
-      "memory": 512,
-      "maxDuration": 10
-    }
+    "api/**/*.js": { "memory": 512, "maxDuration": 10 }
   },
   "rewrites": [
-    { "source": "/api/schedule",                     "destination": "/api/catalog" },
-    { "source": "/api/prices",                       "destination": "/api/catalog?_r=prices" },
-    { "source": "/api/register",                     "destination": "/api/register" },
-    { "source": "/api/payment-document",             "destination": "/api/registration/action" },
-    { "source": "/api/registration/action",          "destination": "/api/registration/action" },
+    { "source": "/api/payment-document", "destination": "/api/registration/action" },
+    
+    { "source": "/api/admin-api/registrations/:id", "destination": "/api/saggita?_module=registrations&id=:id" },
+    { "source": "/api/admin-api/registrations", "destination": "/api/saggita?_module=registrations" },
+    { "source": "/api/admin-api/history", "destination": "/api/saggita?_module=registrations&_route=history" },
 
-    { "source": "/api/admin-api/login",              "destination": "/api/admin-api/login" },
-    { "source": "/api/admin-api/stats",              "destination": "/api/admin-api/stats" },
-    { "source": "/api/admin-api/export",             "destination": "/api/admin-api/export" },
-    { "source": "/api/admin-api/plans/:path*",       "destination": "/api/admin-api/plans" },
-    { "source": "/api/admin-api/plans",              "destination": "/api/admin-api/plans" },
+    { "source": "/api/admin-api/students/:id/payments/:pid", "destination": "/api/saggita?_module=students&id=:id&_route=payments&pid=:pid" },
+    { "source": "/api/admin-api/students/:id/payments", "destination": "/api/saggita?_module=students&id=:id&_route=payments" },
+    { "source": "/api/admin-api/students/:id/attendance/:aid", "destination": "/api/saggita?_module=students&id=:id&_route=attendance&aid=:aid" },
+    { "source": "/api/admin-api/students/:id/attendance", "destination": "/api/saggita?_module=students&id=:id&_route=attendance" },
+    { "source": "/api/admin-api/students/:id/groups", "destination": "/api/saggita?_module=students&id=:id&_route=groups" },
+    { "source": "/api/admin-api/students/:id/reg-payment", "destination": "/api/saggita?_module=students&id=:id&_route=reg-payment" },
+    { "source": "/api/admin-api/students/:id", "destination": "/api/saggita?_module=students&id=:id" },
+    { "source": "/api/admin-api/students", "destination": "/api/saggita?_module=students" },
 
-    { "source": "/api/admin-api/registrations/:id",  "destination": "/api/admin-api/registrations/[id]" },
-    { "source": "/api/admin-api/registrations",      "destination": "/api/admin-api/registrations/[id]" },
-
-    { "source": "/api/admin-api/groups/:id/members", "destination": "/api/admin-api/groups/[id]" },
-    { "source": "/api/admin-api/groups/:id",         "destination": "/api/admin-api/groups/[id]" },
-    { "source": "/api/admin-api/groups",             "destination": "/api/admin-api/groups/index" },
-
-    { "source": "/api/admin-api/schedules/:id",      "destination": "/api/admin-api/schedules/index" },
-    { "source": "/api/admin-api/schedules",          "destination": "/api/admin-api/schedules/index" },
-
-    { "source": "/api/admin-api/locations/:path*",   "destination": "/api/admin-api/locations/index" },
-    { "source": "/api/admin-api/locations",          "destination": "/api/admin-api/locations/index" }
+    { "source": "/api/instructor/login", "destination": "/api/saggita?_module=instructor-auth" },
+    { "source": "/api/instructor/me", "destination": "/api/saggita?_module=instructor-auth&_route=me" },
+    { "source": "/api/instructor/groups/:id/students", "destination": "/api/saggita?_module=instructor-panel&_route=students&id=:id" },
+    { "source": "/api/instructor/groups/:id/stats", "destination": "/api/saggita?_module=instructor-panel&_route=stats&id=:id" },
+    { "source": "/api/instructor/groups", "destination": "/api/saggita?_module=instructor-panel&_route=groups" },
+    { "source": "/api/instructor/payments", "destination": "/api/saggita?_module=instructor-panel&_route=payments" },
+    { "source": "/api/instructor/sessions/:id/attendance", "destination": "/api/saggita?_module=instructor-attendance&_route=attendance&id=:id" },
+    { "source": "/api/instructor/sessions", "destination": "/api/saggita?_module=instructor-attendance&_route=sessions" }
   ]
 }

@@ -1,0 +1,1474 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panel Instruktora — Krav Maga Saggita</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --red: #c42000;
+    --red-dark: #9a1800;
+    --red-glow: rgba(196,32,0,0.15);
+    --black: #0d0d0d;
+    --surface: #161616;
+    --surface2: #1e1e1e;
+    --surface3: #262626;
+    --border: rgba(255,255,255,0.08);
+    --text: #f0f0f0;
+    --muted: #888;
+    --green: #22c55e;
+    --yellow: #f59e0b;
+    --blue: #3b82f6;
+    --font-head: 'Barlow Condensed', sans-serif;
+    --font-body: 'Barlow', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--font-body);
+    background: var(--black);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── TOPBAR ── */
+  .topbar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    height: 56px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .topbar-brand {
+    font-family: var(--font-head);
+    font-size: 20px;
+    font-weight: 900;
+    letter-spacing: .06em;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .topbar-brand span { color: var(--red); }
+  .topbar-sep { flex: 1; }
+  .topbar-user {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .avatar {
+    width: 32px; height: 32px;
+    background: var(--red);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-head);
+    font-weight: 700;
+    font-size: 14px;
+    color: #fff;
+  }
+  .btn-logout {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 5px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    cursor: pointer;
+    font-family: var(--font-body);
+    transition: all .2s;
+  }
+  .btn-logout:hover { border-color: var(--red); color: var(--text); }
+
+  /* ── LAYOUT ── */
+  .layout {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+  }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    width: 260px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    position: sticky;
+    top: 56px;
+    height: calc(100vh - 56px);
+    overflow-y: auto;
+  }
+  .sidebar-section {
+    padding: 16px 12px 8px;
+    font-family: var(--font-head);
+    font-size: 11px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 600;
+  }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--muted);
+    border-left: 3px solid transparent;
+    transition: all .15s;
+    border-radius: 0 4px 4px 0;
+    margin: 1px 8px 1px 0;
+  }
+  .nav-item:hover { background: var(--surface2); color: var(--text); }
+  .nav-item.active { background: var(--red-glow); color: var(--text); border-left-color: var(--red); }
+  .nav-icon { font-size: 16px; width: 20px; text-align: center; }
+  .nav-badge {
+    margin-left: auto;
+    background: var(--surface3);
+    color: var(--muted);
+    font-size: 11px;
+    padding: 2px 7px;
+    border-radius: 10px;
+    font-family: var(--font-head);
+    font-weight: 600;
+  }
+  .nav-item.active .nav-badge { background: var(--red); color: #fff; }
+
+  /* ── MAIN ── */
+  .main {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0;
+  }
+
+  /* ── PAGE HEADER ── */
+  .page-header {
+    padding: 28px 32px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  .page-title {
+    font-family: var(--font-head);
+    font-size: 32px;
+    font-weight: 900;
+    letter-spacing: .02em;
+    line-height: 1;
+  }
+  .page-subtitle {
+    font-size: 14px;
+    color: var(--muted);
+    margin-top: 4px;
+    font-weight: 400;
+  }
+  .page-actions { margin-left: auto; display: flex; gap: 8px; }
+
+  /* ── VIEWS ── */
+  .view { display: none; }
+  .view.active { display: block; }
+
+  /* ── STATS GRID ── */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 1px;
+    background: var(--border);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+  .stat-card {
+    background: var(--surface);
+    padding: 20px 24px;
+  }
+  .stat-label {
+    font-family: var(--font-head);
+    font-size: 11px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .stat-value {
+    font-family: var(--font-head);
+    font-size: 36px;
+    font-weight: 900;
+    line-height: 1;
+    color: var(--text);
+  }
+  .stat-value.red { color: var(--red); }
+  .stat-value.green { color: var(--green); }
+  .stat-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+  /* ── CONTENT AREA ── */
+  .content { padding: 24px 32px; }
+
+  /* ── GROUPS ── */
+  .groups-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 16px;
+    padding: 24px 32px;
+  }
+  .group-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all .2s;
+  }
+  .group-card:hover { border-color: var(--red); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,.3); }
+  .group-card-head {
+    background: var(--surface2);
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .group-name {
+    font-family: var(--font-head);
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+  .group-city {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+  .group-card-body { padding: 16px 20px; }
+  .group-meta { display: flex; flex-direction: column; gap: 8px; }
+  .group-meta-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 13px;
+  }
+  .group-meta-label { color: var(--muted); }
+  .group-meta-val { font-weight: 500; }
+  .group-card-footer {
+    padding: 12px 20px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 8px;
+  }
+  .capacity-bar {
+    height: 4px;
+    background: var(--surface3);
+    border-radius: 2px;
+    margin-top: 10px;
+    overflow: hidden;
+  }
+  .capacity-fill {
+    height: 100%;
+    background: var(--red);
+    border-radius: 2px;
+    transition: width .4s;
+  }
+  .capacity-fill.ok { background: var(--green); }
+  .capacity-fill.warn { background: var(--yellow); }
+
+  /* ── SCHEDULE PILLS ── */
+  .schedule-pills { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+  .schedule-pill {
+    background: var(--surface3);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 3px 8px;
+    font-size: 11px;
+    font-family: var(--font-head);
+    font-weight: 600;
+    letter-spacing: .04em;
+    color: var(--muted);
+  }
+
+  /* ── TABLE ── */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  thead th {
+    text-align: left;
+    padding: 10px 14px;
+    font-family: var(--font-head);
+    font-size: 11px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+    font-weight: 600;
+  }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background .1s; }
+  tbody tr:hover { background: var(--surface2); }
+  tbody td { padding: 11px 14px; }
+  tbody td.name { font-weight: 500; }
+  .tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    font-family: var(--font-head);
+    letter-spacing: .04em;
+  }
+  .tag-green { background: rgba(34,197,94,.15); color: var(--green); }
+  .tag-red { background: rgba(196,32,0,.15); color: #f87171; }
+  .tag-yellow { background: rgba(245,158,11,.15); color: var(--yellow); }
+  .tag-blue { background: rgba(59,130,246,.15); color: var(--blue); }
+  .tag-gray { background: var(--surface3); color: var(--muted); }
+
+  /* ── ATTENDANCE GRID ── */
+  .attendance-view { padding: 24px 32px; }
+  .attendance-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .student-row {
+    display: flex;
+    align-items: center;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    gap: 12px;
+    transition: background .1s;
+  }
+  .student-row:hover { background: var(--surface2); }
+  .student-name { flex: 1; font-weight: 500; }
+  .student-info { font-size: 12px; color: var(--muted); }
+  .toggle-btn {
+    width: 48px; height: 26px;
+    border-radius: 13px;
+    border: 2px solid var(--border);
+    background: var(--surface3);
+    cursor: pointer;
+    position: relative;
+    transition: all .2s;
+    flex-shrink: 0;
+  }
+  .toggle-btn::after {
+    content: '';
+    position: absolute;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: var(--muted);
+    top: 2px; left: 2px;
+    transition: all .2s;
+  }
+  .toggle-btn.on { background: var(--green); border-color: var(--green); }
+  .toggle-btn.on::after { transform: translateX(22px); background: #fff; }
+
+  /* ── SESSIONS LIST ── */
+  .sessions-list { padding: 0 32px 32px; }
+  .session-row {
+    display: flex;
+    align-items: center;
+    padding: 14px 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    margin-bottom: 8px;
+    gap: 16px;
+    cursor: pointer;
+    transition: all .15s;
+  }
+  .session-row:hover { border-color: var(--red); }
+  .session-date {
+    font-family: var(--font-head);
+    font-size: 20px;
+    font-weight: 700;
+    min-width: 100px;
+  }
+  .session-stats { flex: 1; display: flex; gap: 16px; }
+  .session-stat { font-size: 13px; color: var(--muted); }
+  .session-stat strong { color: var(--text); }
+  .pct-badge {
+    font-family: var(--font-head);
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--green);
+    min-width: 52px;
+    text-align: right;
+  }
+  .pct-badge.low { color: var(--red); }
+  .pct-badge.mid { color: var(--yellow); }
+
+  /* ── BUTTONS ── */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 5px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: var(--font-body);
+    border: none;
+    transition: all .15s;
+    text-decoration: none;
+  }
+  .btn-primary { background: var(--red); color: #fff; }
+  .btn-primary:hover { background: var(--red-dark); }
+  .btn-secondary { background: var(--surface3); color: var(--text); border: 1px solid var(--border); }
+  .btn-secondary:hover { border-color: var(--red); }
+  .btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+  .btn-ghost:hover { color: var(--text); border-color: var(--text); }
+  .btn-success { background: rgba(34,197,94,.15); color: var(--green); border: 1px solid rgba(34,197,94,.3); }
+  .btn-success:hover { background: rgba(34,197,94,.25); }
+
+  /* ── MODAL ── */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,.7);
+    backdrop-filter: blur(4px);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 1000;
+    display: none;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    width: 100%;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
+    margin: 16px;
+  }
+  .modal-head {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .modal-title { font-family: var(--font-head); font-size: 22px; font-weight: 700; }
+  .modal-close { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 20px; }
+  .modal-body { padding: 24px; }
+  .modal-foot { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; gap: 8px; justify-content: flex-end; }
+
+  /* ── FORM ── */
+  .field { margin-bottom: 16px; }
+  .field label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 6px; letter-spacing: .05em; text-transform: uppercase; font-family: var(--font-head); }
+  .field input, .field textarea, .field select {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 10px 12px;
+    color: var(--text);
+    font-size: 14px;
+    font-family: var(--font-body);
+    outline: none;
+    transition: border-color .15s;
+  }
+  .field input:focus, .field textarea:focus, .field select:focus { border-color: var(--red); }
+
+  /* ── BACK BUTTON ── */
+  .back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 0;
+    color: var(--muted);
+    font-size: 13px;
+    cursor: pointer;
+    background: none;
+    border: none;
+    font-family: var(--font-body);
+    margin: 20px 32px 0;
+  }
+  .back-btn:hover { color: var(--text); }
+
+  /* ── EMPTY STATE ── */
+  .empty-state {
+    text-align: center;
+    padding: 60px 24px;
+    color: var(--muted);
+  }
+  .empty-icon { font-size: 48px; margin-bottom: 12px; }
+  .empty-title { font-family: var(--font-head); font-size: 20px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
+
+  /* ── LOADING ── */
+  .loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 60px;
+    color: var(--muted);
+    font-size: 14px;
+    gap: 10px;
+  }
+  .spinner {
+    width: 20px; height: 20px;
+    border: 2px solid var(--border);
+    border-top-color: var(--red);
+    border-radius: 50%;
+    animation: spin .7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── LOGIN SCREEN ── */
+  #loginScreen {
+    position: fixed; inset: 0;
+    background: var(--black);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 999;
+  }
+  .login-box {
+    width: 100%;
+    max-width: 380px;
+    padding: 0 16px;
+  }
+  .login-logo {
+    font-family: var(--font-head);
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: .15em;
+    text-transform: uppercase;
+    color: var(--red);
+    text-align: center;
+    margin-bottom: 4px;
+  }
+  .login-title {
+    font-family: var(--font-head);
+    font-size: 40px;
+    font-weight: 900;
+    text-align: center;
+    margin-bottom: 32px;
+    letter-spacing: .02em;
+  }
+  .login-title em { color: var(--red); font-style: normal; }
+  .login-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 32px;
+  }
+  .login-error {
+    background: rgba(196,32,0,.15);
+    border: 1px solid rgba(196,32,0,.3);
+    border-radius: 5px;
+    padding: 10px 14px;
+    font-size: 13px;
+    color: #f87171;
+    margin-bottom: 16px;
+    display: none;
+  }
+  .login-btn {
+    width: 100%;
+    background: var(--red);
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    padding: 12px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: var(--font-head);
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    margin-top: 8px;
+    transition: background .15s;
+  }
+  .login-btn:hover { background: var(--red-dark); }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--surface3); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+  @media (max-width: 768px) {
+    .sidebar { display: none; }
+    .groups-grid { grid-template-columns: 1fr; padding: 16px; }
+    .content { padding: 16px; }
+    .attendance-view { padding: 16px; }
+    .sessions-list { padding: 0 16px 16px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo">Krav Maga Saggita</div>
+    <div class="login-title">Panel<br><em>Instruktora</em></div>
+    <div class="login-card">
+      <div class="login-error" id="loginError"></div>
+      <div class="field">
+        <label>Login</label>
+        <input type="text" id="loginUsername" placeholder="Twój login" autocomplete="username">
+      </div>
+      <div class="field">
+        <label>Hasło</label>
+        <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password">
+      </div>
+      <button class="login-btn" id="loginBtn" onclick="doLogin()">Zaloguj się</button>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app" style="display:none; flex-direction:column; min-height:100vh;">
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-brand">SAGGITA <span>///</span> INSTRUKTOR</div>
+    <div class="topbar-sep"></div>
+    <div class="topbar-user">
+      <div class="avatar" id="userAvatar">?</div>
+      <span id="userName">Instruktor</span>
+      <button class="btn-logout" onclick="logout()">Wyloguj</button>
+    </div>
+  </div>
+
+  <div class="layout">
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+      <div class="sidebar-section">Nawigacja</div>
+      <div class="nav-item active" data-view="groups" onclick="showView('groups')">
+        <span class="nav-icon">🥋</span> Moje grupy
+      </div>
+      <div class="nav-item" data-view="sessions" onclick="showView('sessions')">
+        <span class="nav-icon">📋</span> Treningi
+      </div>
+      <div class="nav-item" data-view="payments" onclick="showView('payments')">
+        <span class="nav-icon">💳</span> Płatności
+      </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="main" id="mainContent">
+
+      <!-- ══ VIEW: GROUPS ══ -->
+      <div class="view active" id="view-groups">
+        <div class="page-header">
+          <div>
+            <div class="page-title">Moje Grupy</div>
+            <div class="page-subtitle" id="groupsSubtitle">Ładowanie...</div>
+          </div>
+        </div>
+        <div id="groupsContainer" class="groups-grid">
+          <div class="loading"><div class="spinner"></div> Ładowanie grup...</div>
+        </div>
+      </div>
+
+      <!-- ══ VIEW: GROUP DETAIL ══ -->
+      <div class="view" id="view-group-detail">
+        <button class="back-btn" onclick="showView('groups')">← Wróć do grup</button>
+        <div class="page-header" style="margin-top:8px">
+          <div>
+            <div class="page-title" id="detailGroupName">Nazwa grupy</div>
+            <div class="page-subtitle" id="detailGroupMeta"></div>
+          </div>
+          <div class="page-actions">
+            <button class="btn btn-primary" onclick="openNewSessionModal()">+ Nowy trening</button>
+          </div>
+        </div>
+        <div class="stats-grid" id="detailStats"></div>
+
+        <!-- Tabs -->
+        <div style="padding: 20px 32px 0; display:flex; gap:0; border-bottom: 1px solid var(--border);">
+          <button class="tab-btn active" onclick="switchTab('students')" id="tab-students" style="background:none;border:none;color:var(--muted);padding:10px 20px;cursor:pointer;font-size:14px;font-weight:600;font-family:var(--font-body);border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s;">Kursanci</button>
+          <button class="tab-btn" onclick="switchTab('sessions')" id="tab-sessions" style="background:none;border:none;color:var(--muted);padding:10px 20px;cursor:pointer;font-size:14px;font-weight:600;font-family:var(--font-body);border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s;">Historia treningów</button>
+          <button class="tab-btn" onclick="switchTab('groupstats')" id="tab-groupstats" style="background:none;border:none;color:var(--muted);padding:10px 20px;cursor:pointer;font-size:14px;font-weight:600;font-family:var(--font-body);border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s;">Frekwencja</button>
+        </div>
+
+        <div id="tab-content-students" class="content" style="padding:24px 32px;">
+          <div class="loading"><div class="spinner"></div> Ładowanie kursantów...</div>
+        </div>
+        <div id="tab-content-sessions" class="sessions-list" style="display:none;padding-top:24px">
+          <div class="loading"><div class="spinner"></div> Ładowanie treningów...</div>
+        </div>
+        <div id="tab-content-groupstats" style="display:none;padding:24px 32px">
+          <div class="loading"><div class="spinner"></div> Ładowanie statystyk...</div>
+        </div>
+      </div>
+
+      <!-- ══ VIEW: ATTENDANCE ══ -->
+      <div class="view" id="view-attendance">
+        <button class="back-btn" id="attendanceBackBtn" onclick="backFromAttendance()">← Wróć</button>
+        <div class="page-header" style="margin-top:8px">
+          <div>
+            <div class="page-title">Lista obecności</div>
+            <div class="page-subtitle" id="attendanceSessionInfo"></div>
+          </div>
+          <div class="page-actions">
+            <button class="btn btn-ghost" onclick="markAll(true)">✓ Wszyscy obecni</button>
+            <button class="btn btn-ghost" onclick="markAll(false)">✗ Wyczyść</button>
+            <button class="btn btn-success" onclick="saveAttendance()">💾 Zapisz</button>
+          </div>
+        </div>
+        <div id="attendanceStats" class="stats-grid"></div>
+        <div id="attendanceList" style="padding: 0 32px 32px; margin-top:16px;">
+          <div class="loading"><div class="spinner"></div> Ładowanie...</div>
+        </div>
+      </div>
+
+      <!-- ══ VIEW: SESSIONS (all) ══ -->
+      <div class="view" id="view-sessions">
+        <div class="page-header">
+          <div>
+            <div class="page-title">Treningi</div>
+            <div class="page-subtitle">Historia i planowanie treningów</div>
+          </div>
+          <div class="page-actions">
+            <button class="btn btn-primary" onclick="openNewSessionModal()">+ Nowy trening</button>
+          </div>
+        </div>
+        <div style="padding:20px 32px;">
+          <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:6px;font-family:var(--font-head);font-weight:600;letter-spacing:.08em;text-transform:uppercase;">WYBIERZ GRUPĘ</label>
+          <select id="sessionGroupFilter" onchange="loadGroupSessions()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:5px;font-size:14px;width:300px;">
+            <option value="">Wszystkie grupy</option>
+          </select>
+        </div>
+        <div class="sessions-list" id="allSessionsList">
+          <div class="loading"><div class="spinner"></div> Wybierz grupę...</div>
+        </div>
+      </div>
+
+      <!-- ══ VIEW: PAYMENTS ══ -->
+      <div class="view" id="view-payments">
+        <div class="page-header">
+          <div>
+            <div class="page-title">Płatności</div>
+            <div class="page-subtitle">Status płatności kursantów w Twoich grupach</div>
+          </div>
+        </div>
+        <div style="padding:20px 32px 0;">
+          <select id="paymentGroupFilter" onchange="loadPayments()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:5px;font-size:14px;width:300px;">
+            <option value="">Wszystkie moje grupy</option>
+          </select>
+        </div>
+        <div class="content" id="paymentsList">
+          <div class="loading"><div class="spinner"></div> Ładowanie płatności...</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Nowy trening -->
+<div class="modal-overlay" id="newSessionModal">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">Nowy trening</div>
+      <button class="modal-close" onclick="closeModal('newSessionModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label>Grupa</label>
+        <select id="newSessionGroup"></select>
+      </div>
+      <div class="field">
+        <label>Data treningu</label>
+        <input type="date" id="newSessionDate">
+      </div>
+      <div class="field">
+        <label>Notatki (opcjonalne)</label>
+        <textarea id="newSessionNotes" rows="3" placeholder="Notatki do treningu..."></textarea>
+      </div>
+      <div id="newSessionError" style="color:#f87171;font-size:13px;display:none;margin-top:8px;"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('newSessionModal')">Anuluj</button>
+      <button class="btn btn-primary" onclick="createSession()">Utwórz trening</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = '';  // Ustaw URL jeśli inny niż domena
+let TOKEN = localStorage.getItem('instructor_token') || '';
+let ME = null;
+let currentGroupId = null;
+let currentSessionId = null;
+let activeTab = 'students';
+let attendanceData = {};
+
+// ── API ──────────────────────────────────────────────────────
+async function api(path, opts = {}) {
+  const res = await fetch(API + path, {
+    headers: { 
+      'Content-Type': 'application/json', 
+      'Authorization': TOKEN ? `Bearer ${TOKEN}` : ''
+    },
+    ...opts,
+    body: opts.body ? JSON.stringify(opts.body) : undefined,
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+  return data;
+}
+
+// ── AUTH ─────────────────────────────────────────────────────
+async function doLogin() {
+  const username = document.getElementById('loginUsername').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  const btn = document.getElementById('loginBtn');
+  const err = document.getElementById('loginError');
+  
+  if (!username || !password) {
+    showError(err, 'Podaj login i hasło.');
+    return;
+  }
+  
+  btn.textContent = 'Logowanie...';
+  btn.disabled = true;
+  err.style.display = 'none';
+  
+  try {
+    const data = await api('/api/instructor/login', {
+      method: 'POST',
+      body: { username, password },
+    });
+    TOKEN = data.token;
+    localStorage.setItem('instructor_token', TOKEN);
+    await initApp(data.instructor);
+  } catch (e) {
+    showError(err, e.message);
+    btn.textContent = 'Zaloguj się';
+    btn.disabled = false;
+  }
+}
+
+function showError(el, msg) {
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+function logout() {
+  TOKEN = '';
+  localStorage.removeItem('instructor_token');
+  location.reload();
+}
+
+document.getElementById('loginPassword').addEventListener('keydown', e => {
+  if (e.key === 'Enter') doLogin();
+});
+
+// ── INIT ─────────────────────────────────────────────────────
+async function initApp(instructor) {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+  
+  if (instructor) {
+    ME = instructor;
+  } else {
+    ME = await api('/api/instructor/me');
+  }
+  
+  const initials = (ME.first_name?.[0] || '') + (ME.last_name?.[0] || '');
+  document.getElementById('userAvatar').textContent = initials;
+  document.getElementById('userName').textContent = `${ME.first_name} ${ME.last_name}`;
+  
+  // Wypełnij select grupy w filtrach
+  if (ME.groups && ME.groups.length) {
+    const groupOpts = ME.groups.map(g => `<option value="${g.id}">${g.name}</option>`).join('');
+    document.getElementById('sessionGroupFilter').innerHTML = '<option value="">Wszystkie grupy</option>' + groupOpts;
+    document.getElementById('paymentGroupFilter').innerHTML = '<option value="">Wszystkie moje grupy</option>' + groupOpts;
+    
+    const newSessionGroupOpts = ME.groups.map(g => `<option value="${g.id}">${g.name}</option>`).join('');
+    document.getElementById('newSessionGroup').innerHTML = newSessionGroupOpts;
+  }
+  
+  loadGroups();
+}
+
+// ── AUTO LOGIN ───────────────────────────────────────────────
+if (TOKEN) {
+  api('/api/instructor/me').then(me => initApp(me)).catch(() => {
+    TOKEN = '';
+    localStorage.removeItem('instructor_token');
+  });
+}
+
+// ── VIEWS ────────────────────────────────────────────────────
+function showView(name) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById(`view-${name}`)?.classList.add('active');
+  document.querySelector(`[data-view="${name}"]`)?.classList.add('active');
+}
+
+// ── GROUPS VIEW ──────────────────────────────────────────────
+async function loadGroups() {
+  try {
+    const data = await api('/api/instructor/groups');
+    const groups = data.rows || [];
+    
+    document.getElementById('groupsSubtitle').textContent = 
+      `${groups.length} ${groups.length === 1 ? 'grupa' : groups.length < 5 ? 'grupy' : 'grup'} przypisanych do Ciebie`;
+    
+    if (!groups.length) {
+      document.getElementById('groupsContainer').innerHTML = `
+        <div class="empty-state" style="grid-column:1/-1">
+          <div class="empty-icon">🥋</div>
+          <div class="empty-title">Brak przypisanych grup</div>
+          <p>Skontaktuj się z administratorem, aby przypisać grupy do Twojego konta.</p>
+        </div>`;
+      return;
+    }
+    
+    document.getElementById('groupsContainer').innerHTML = groups.map(g => {
+      const cap = g.max_capacity || 0;
+      const reg = g.registered || 0;
+      const pct = cap ? Math.round(reg / cap * 100) : 0;
+      const fillClass = pct > 90 ? 'red' : pct > 70 ? 'warn' : 'ok';
+      
+      const schedHTML = (g.schedules || []).map(s => 
+        `<span class="schedule-pill">${s.day_name} ${String(s.time_start||'').slice(0,5)}</span>`
+      ).join('');
+      
+      return `
+      <div class="group-card" onclick="openGroup(${g.id}, '${g.name.replace(/'/g,"\\'")}', '${g.city||''}')">
+        <div class="group-card-head">
+          <div>
+            <div class="group-name">${g.name}</div>
+            <div class="group-city">📍 ${g.city || '—'} ${g.location_name ? '· ' + g.location_name : ''}</div>
+          </div>
+          <span class="tag tag-blue">${g.category || 'adults'}</span>
+        </div>
+        <div class="group-card-body">
+          <div class="group-meta">
+            <div class="group-meta-row">
+              <span class="group-meta-label">Kursanci</span>
+              <span class="group-meta-val">${g.student_count || 0} legacy + ${reg} zapisanych</span>
+            </div>
+            ${cap ? `<div class="group-meta-row">
+              <span class="group-meta-label">Pojemność</span>
+              <span class="group-meta-val">${reg} / ${cap} (${pct}%)</span>
+            </div>` : ''}
+            ${g.last_session ? `<div class="group-meta-row">
+              <span class="group-meta-label">Ostatni trening</span>
+              <span class="group-meta-val">${formatDate(g.last_session)}</span>
+            </div>` : ''}
+          </div>
+          ${cap ? `<div class="capacity-bar"><div class="capacity-fill ${fillClass}" style="width:${pct}%"></div></div>` : ''}
+          ${schedHTML ? `<div class="schedule-pills" style="margin-top:12px">${schedHTML}</div>` : ''}
+        </div>
+        <div class="group-card-footer">
+          <button class="btn btn-secondary" style="flex:1" onclick="event.stopPropagation();openGroup(${g.id},'${g.name.replace(/'/g,"\\'")}','${g.city||''}')">Kursanci</button>
+          <button class="btn btn-primary" style="flex:1" onclick="event.stopPropagation();openNewSessionForGroup(${g.id})">+ Trening</button>
+        </div>
+      </div>`;
+    }).join('');
+    
+  } catch (e) {
+    document.getElementById('groupsContainer').innerHTML = `<div style="padding:32px;color:var(--red)">${e.message}</div>`;
+  }
+}
+
+// ── GROUP DETAIL ─────────────────────────────────────────────
+async function openGroup(id, name, city) {
+  currentGroupId = id;
+  showView('group-detail');
+  document.getElementById('detailGroupName').textContent = name;
+  document.getElementById('detailGroupMeta').textContent = `📍 ${city}`;
+  
+  // Ustaw grupę w modal nowej sesji
+  const sel = document.getElementById('newSessionGroup');
+  if (sel) {
+    for (const opt of sel.options) if (opt.value == id) { sel.value = id; break; }
+  }
+  
+  activeTab = 'students';
+  updateTabs();
+  loadStudents(id);
+}
+
+function switchTab(tab) {
+  activeTab = tab;
+  updateTabs();
+  if (tab === 'students') loadStudents(currentGroupId);
+  else if (tab === 'sessions') loadSessions(currentGroupId);
+  else if (tab === 'groupstats') loadGroupStats(currentGroupId);
+}
+
+function updateTabs() {
+  ['students','sessions','groupstats'].forEach(t => {
+    const btn = document.getElementById(`tab-${t}`);
+    const content = document.getElementById(`tab-content-${t}`);
+    const active = t === activeTab;
+    btn.style.color = active ? 'var(--text)' : 'var(--muted)';
+    btn.style.borderBottomColor = active ? 'var(--red)' : 'transparent';
+    content.style.display = active ? 'block' : 'none';
+  });
+}
+
+// ── STUDENTS ─────────────────────────────────────────────────
+async function loadStudents(groupId) {
+  const container = document.getElementById('tab-content-students');
+  container.innerHTML = '<div class="loading"><div class="spinner"></div> Ładowanie kursantów...</div>';
+  
+  try {
+    const data = await api(`/api/instructor/groups/${groupId}/students`);
+    const legacy = data.legacy || [];
+    const registered = data.registered || [];
+    
+    // Stats
+    document.getElementById('detailStats').innerHTML = `
+      <div class="stat-card"><div class="stat-label">Kursanci legacy</div><div class="stat-value">${legacy.length}</div></div>
+      <div class="stat-card"><div class="stat-label">Nowe zapisy</div><div class="stat-value green">${registered.length}</div></div>
+      <div class="stat-card"><div class="stat-label">Łącznie</div><div class="stat-value">${legacy.length + registered.length}</div></div>
+      <div class="stat-card"><div class="stat-label">Śr. frekwencja</div><div class="stat-value red">${avgAttendance(legacy)}%</div></div>
+    `;
+    
+    let html = '';
+    
+    if (registered.length) {
+      html += `<h3 style="font-family:var(--font-head);font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 0 12px;font-weight:600">Nowe zapisy (${registered.length})</h3>`;
+      html += `<div class="table-wrap" style="margin-bottom:32px"><table>
+        <thead><tr>
+          <th>Imię i nazwisko</th><th>Telefon</th><th>Karnet</th><th>Status płatności</th><th>Nowy</th>
+        </tr></thead><tbody>
+        ${registered.map(r => `
+          <tr>
+            <td class="name">${r.first_name} ${r.last_name}</td>
+            <td>${r.phone || '—'}</td>
+            <td>${r.plan_name || '—'}</td>
+            <td>${paymentTag(r.payment_status)}</td>
+            <td>${r.is_new ? '<span class="tag tag-blue">Nowy</span>' : '—'}</td>
+          </tr>
+        `).join('')}
+        </tbody></table></div>`;
+    }
+    
+    if (legacy.length) {
+      html += `<h3 style="font-family:var(--font-head);font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 0 12px;font-weight:600">Kursanci z historii (${legacy.length})</h3>`;
+      html += `<div class="table-wrap"><table>
+        <thead><tr>
+          <th>Imię i nazwisko</th><th>Telefon</th><th>Treningi</th><th>Frekwencja</th><th>Ostatni trening</th>
+        </tr></thead><tbody>
+        ${legacy.map(s => `
+          <tr>
+            <td class="name">${s.first_name} ${s.last_name}${!s.is_active ? ' <span class="tag tag-gray">Nieaktywny</span>' : ''}</td>
+            <td>${s.phone || '—'}</td>
+            <td>${s.total_present || 0} / ${s.total_sessions || 0}</td>
+            <td>${attendanceTag(s.attendance_pct)}</td>
+            <td>${s.last_training ? formatDate(s.last_training) : '—'}</td>
+          </tr>
+        `).join('')}
+        </tbody></table></div>`;
+    }
+    
+    if (!html) html = '<div class="empty-state"><div class="empty-icon">👥</div><div class="empty-title">Brak kursantów</div></div>';
+    container.innerHTML = html;
+    
+  } catch (e) {
+    container.innerHTML = `<div style="color:var(--red);padding:16px">${e.message}</div>`;
+  }
+}
+
+function avgAttendance(students) {
+  if (!students.length) return 0;
+  const withData = students.filter(s => s.total_sessions > 0);
+  if (!withData.length) return 0;
+  return Math.round(withData.reduce((a, s) => a + (s.attendance_pct || 0), 0) / withData.length);
+}
+
+// ── SESSIONS ─────────────────────────────────────────────────
+async function loadSessions(groupId) {
+  const container = document.getElementById('tab-content-sessions');
+  container.innerHTML = '<div class="loading"><div class="spinner"></div> Ładowanie treningów...</div>';
+  
+  try {
+    const data = await api(`/api/instructor/sessions?group_id=${groupId}`);
+    const sessions = data.rows || [];
+    
+    if (!sessions.length) {
+      container.innerHTML = '<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-title">Brak treningów</div><p>Utwórz pierwszy trening dla tej grupy.</p></div>';
+      return;
+    }
+    
+    container.innerHTML = sessions.map(s => {
+      const pct = s.attendance_pct || 0;
+      const pctClass = pct >= 75 ? '' : pct >= 50 ? 'mid' : 'low';
+      return `
+      <div class="session-row" onclick="openAttendance(${s.id}, '${formatDate(s.session_date)}')">
+        <div class="session-date">${formatDate(s.session_date)}</div>
+        <div class="session-stats">
+          <div class="session-stat"><strong>${s.present_count || 0}</strong> obecnych</div>
+          <div class="session-stat"><strong>${s.total_students || 0}</strong> w grupie</div>
+          ${s.instructor_first ? `<div class="session-stat">👤 ${s.instructor_first} ${s.instructor_last}</div>` : ''}
+        </div>
+        <div class="pct-badge ${pctClass}">${pct}%</div>
+        <span style="color:var(--muted);font-size:18px">›</span>
+      </div>`;
+    }).join('');
+    
+  } catch (e) {
+    container.innerHTML = `<div style="color:var(--red);padding:16px">${e.message}</div>`;
+  }
+}
+
+async function loadGroupSessions() {
+  const groupId = document.getElementById('sessionGroupFilter').value;
+  if (!groupId) {
+    document.getElementById('allSessionsList').innerHTML = '<div style="padding:32px;color:var(--muted)">Wybierz grupę z listy powyżej.</div>';
+    return;
+  }
+  
+  const container = document.getElementById('allSessionsList');
+  container.innerHTML = '<div class="loading"><div class="spinner"></div> Ładowanie...</div>';
+  
+  try {
+    const data = await api(`/api/instructor/sessions?group_id=${groupId}`);
+    const sessions = data.rows || [];
+    
+    if (!sessions.length) {
+      container.innerHTML = '<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-title">Brak treningów</div></div>';
+      return;
+    }
+    
+    container.innerHTML = sessions.map(s => {
+      const pct = s.attendance_pct || 0;
+      const pctClass = pct >= 75 ? '' : pct >= 50 ? 'mid' : 'low';
+      return `
+      <div class="session-row" onclick="openAttendance(${s.id}, '${formatDate(s.session_date)}')">
+        <div class="session-date">${formatDate(s.session_date)}</div>
+        <div class="session-stats">
+          <div class="session-stat"><strong>${s.present_count}</strong> / <strong>${s.total_students}</strong> obecnych</div>
+        </div>
+        <div class="pct-badge ${pctClass}">${pct}%</div>
+        <span style="color:var(--muted);font-size:18px">›</span>
+      </div>`;
+    }).join('');
+  } catch (e) {
+    container.innerHTML = `<div style="color:var(--red);padding:16px">${e.message}</div>`;
+  }
+}
+
+// ── ATTENDANCE ────────────────────────────────────────────────
+async function openAttendance(sessionId, dateLabel) {
+  currentSessionId = sessionId;
+  attendanceData = {};
+  showView('attendance');
+  document.getElementById('attendanceSessionInfo').textContent = dateLabel;
+  document.getElementById('attendanceList').innerHTML = '<div class="loading"><div class="spinner"></div> Ładowanie...</div>';
+  
+  try {
+    const data = await api(`/api/instructor/sessions/${sessionId}/attendance`);
+    const legacy = data.legacy || [];
+    const registered = data.registered || [];
+    
+    // Inicjalizuj attendanceData
+    legacy.forEach(a => {
+      attendanceData[`s_${a.student_id}`] = { student_id: a.student_id, present: a.present };
+    });
+    
+    const presentCount = legacy.filter(a => a.present).length;
+    const total = legacy.length;
+    document.getElementById('attendanceStats').innerHTML = `
+      <div class="stat-card"><div class="stat-label">Obecni</div><div class="stat-value green" id="presentCount">${presentCount}</div></div>
+      <div class="stat-card"><div class="stat-label">Nieobecni</div><div class="stat-value red" id="absentCount">${total - presentCount}</div></div>
+      <div class="stat-card"><div class="stat-label">Łącznie</div><div class="stat-value">${total}</div></div>
+      <div class="stat-card"><div class="stat-label">Frekwencja</div><div class="stat-value" id="pctCount">${total ? Math.round(presentCount/total*100) : 0}%</div></div>
+    `;
+    
+    let html = '';
+    
+    if (legacy.length) {
+      html += `<div style="font-family:var(--font-head);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:0 14px;margin-bottom:8px;font-weight:600">KURSANCI (${legacy.length})</div>`;
+      html += legacy.map(a => `
+        <div class="student-row">
+          <div>
+            <div class="student-name">${a.first_name} ${a.last_name}</div>
+            ${a.diff_group ? '<div class="student-info">z innej grupy</div>' : ''}
+          </div>
+          <button class="toggle-btn ${a.present ? 'on' : ''}" 
+            onclick="toggleAttendance('s_${a.student_id}', this)"
+            data-id="s_${a.student_id}">
+          </button>
+        </div>`).join('');
+    }
+    
+    if (registered.length) {
+      html += `<div style="font-family:var(--font-head);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:16px 14px 8px;font-weight:600">NOWE ZAPISY (${registered.length})</div>`;
+      html += registered.map(r => `
+        <div class="student-row" style="opacity:0.7">
+          <div>
+            <div class="student-name">${r.first_name} ${r.last_name}</div>
+            <div class="student-info">${paymentTagText(r.payment_status)} · zapis z systemu</div>
+          </div>
+          <span style="font-size:12px;color:var(--muted)">brak profilu</span>
+        </div>`).join('');
+    }
+    
+    document.getElementById('attendanceList').innerHTML = html;
+  } catch (e) {
+    document.getElementById('attendanceList').innerHTML = `<div style="color:var(--red);padding:16px">${e.message}</div>`;
+  }
+}
+
+function toggleAttendance(key, btn) {
+  attendanceData[key].present = !attendanceData[key].present;
+  btn.classList.toggle('on', attendanceData[key].present);
+  updateAttendanceStats();
+}
+
+function updateAttendanceStats() {
+  const vals = Object.values(attendanceData);
+  const present = vals.filter(v => v.present).length;
+  const total = vals.length;
+  document.getElementById('presentCount').textContent = present;
+  document.getElementById('absentCount').textContent = total - present;
+  document.getElementById('pctCount').textContent = total ? Math.round(present/total*100) + '%' : '0%';
+}
+
+function markAll(present) {
+  Object.keys(attendanceData).forEach(k => {
+    attendanceData[k].present = present;
+  });
+  document.querySelectorAll('.toggle-btn').forEach(btn => btn.classList.toggle('on', present));
+  updateAttendanceStats();
+}
+
+async function saveAttendance() {
+  const attendances = Object.values(attendanceData);
+  try {
+    await api(`/api/instructor/sessions/${currentSessionId}/attendance`, {
+      method: 'POST',
+      body: { attendances },
+    });
+    showToast('✅ Obecności zapisane!');
+  } catch (e) {
+    showToast(`❌ ${e.message}`, 'red');
+  }
+}
+
+function backFromAttendance() {
+  if (currentGroupId) {
+    showView('group-detail');
+    // Odśwież sesje jeśli widoczne
+    if (activeTab === 'sessions') loadSessions(currentGroupId);
+  } else {
+    showView('sessions');
+  }
+}
+
+// ── GROUP STATS ───────────────────────────────────────────────
+async function loadGroupStats(groupId) {
+  const container = document.getElementById('tab-content-groupstats');
+  container.innerHTML = '<div class="loading"><div class="spinner"></div> Ładowanie statystyk...</div>';
+  
+  try {
+    const data = await api(`/api/instructor/groups/${groupId}/stats`);
+    const { sessions, topStudents, summary } = data;
+    
+    let html = `
+      <div class="stats-grid" style="margin:-24px -32px 24px;background:var(--border)">
+        <div class="stat-card"><div class="stat-label">Treningi łącznie</div><div class="stat-value">${summary?.total_sessions || 0}</div></div>
+        <div class="stat-card"><div class="stat-label">Śr. frekwencja</div><div class="stat-value red">${summary?.avg_attendance_pct || 0}%</div></div>
+        <div class="stat-card"><div class="stat-label">Pierwszy trening</div><div class="stat-value" style="font-size:18px">${summary?.first_session ? formatDate(summary.first_session) : '—'}</div></div>
+      </div>`;
+    
+    if (sessions && sessions.length) {
+      html += `<h3 style="font-family:var(--font-head);font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 0 12px;font-weight:600">OSTATNIE TRENINGI</h3>`;
+      html += `<div class="table-wrap" style="margin-bottom:32px"><table>
+        <thead><tr><th>Data</th><th>Obecni</th><th>Łącznie</th><th>Frekwencja</th></tr></thead>
+        <tbody>${(sessions || []).map(s => `
+          <tr>
+            <td>${formatDate(s.session_date)}</td>
+            <td>${s.present_count}</td>
+            <td>${s.total_students}</td>
+            <td>${attendanceTag(s.attendance_pct)}</td>
+          </tr>`).join('')}
+        </tbody></table></div>`;
+    }
+    
+    if (topStudents && topStudents.length) {
+      html += `<h3 style="font-family:var(--font-head);font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 0 12px;font-weight:600">TOP 10 KURSANTÓW WG FREKWENCJI</h3>`;
+      html += `<div class="table-wrap"><table>
+        <thead><tr><th>#</th><th>Kursant</th><th>Obecności</th><th>Łącznie</th><th>%</th></tr></thead>
+        <tbody>${topStudents.map((s, i) => `
+          <tr>
+            <td style="color:var(--muted)">${i+1}</td>
+            <td class="name">${s.first_name} ${s.last_name}</td>
+            <td>${s.present}</td>
+            <td>${s.total}</td>
+            <td>${attendanceTag(s.pct)}</td>
+          </tr>`).join('')}
+        </tbody></table></div>`;
+    }
+    
+    container.innerHTML = html;
+  } catch (e) {
+    container.innerHTML = `<div style="color:var(--red);padding:16px">${e.message}</div>`;
+  }
+}
+
+// ── PAYMENTS ─────────────────────────────────────────────────
+async function loadPayments() {
+  const groupId = document.getElementById('paymentGroupFilter').value;
+  const container = document.getElementById('paymentsList');
+  container.innerHTML = '<div class="loading"><div class="spinner"></div> Ładowanie...</div>';
+  
+  try {
+    const url = groupId ? `/api/instructor/payments?group_id=${groupId}` : '/api/instructor/payments';
+    const data = await api(url);
+    const rows = data.rows || [];
+    
+    if (!rows.length) {
+      container.innerHTML = '<div class="empty-state"><div class="empty-icon">💳</div><div class="empty-title">Brak zapisów</div></div>';
+      return;
+    }
+    
+    const paid = rows.filter(r => r.payment_status === 'paid').length;
+    const unpaid = rows.filter(r => r.payment_status === 'unpaid').length;
+    
+    container.innerHTML = `
+      <div class="stats-grid" style="margin:-24px -32px 24px">
+        <div class="stat-card"><div class="stat-label">Opłacone</div><div class="stat-value green">${paid}</div></div>
+        <div class="stat-card"><div class="stat-label">Nieopłacone</div><div class="stat-value red">${unpaid}</div></div>
+        <div class="stat-card"><div class="stat-label">Łącznie zapisów</div><div class="stat-value">${rows.length}</div></div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>Kursant</th><th>Grupa</th><th>Karnet</th><th>Status płatności</th><th>Metoda</th><th>Data zapisu</th>
+          </tr></thead>
+          <tbody>
+            ${rows.map(r => `
+              <tr>
+                <td class="name">${r.first_name} ${r.last_name}</td>
+                <td>${r.group_name || '—'}</td>
+                <td>${r.plan_name || (r.has_membership ? 'Karnet miesięczny' : '—')}</td>
+                <td>${paymentTag(r.payment_status)}</td>
+                <td>${r.payment_method || '—'}</td>
+                <td>${r.created_at ? formatDate(r.created_at) : '—'}</td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>`;
+  } catch (e) {
+    container.innerHTML = `<div style="color:var(--red);padding:16px">${e.message}</div>`;
+  }
+}
+
+// ── NEW SESSION MODAL ─────────────────────────────────────────
+function openNewSessionModal() {
+  // Ustaw dzisiejszą datę
+  document.getElementById('newSessionDate').value = new Date().toISOString().slice(0,10);
+  document.getElementById('newSessionNotes').value = '';
+  document.getElementById('newSessionError').style.display = 'none';
+  document.getElementById('newSessionModal').classList.add('open');
+}
+
+function openNewSessionForGroup(groupId) {
+  const sel = document.getElementById('newSessionGroup');
+  for (const opt of sel.options) if (opt.value == groupId) { sel.value = groupId; break; }
+  openNewSessionModal();
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+async function createSession() {
+  const group_id = document.getElementById('newSessionGroup').value;
+  const session_date = document.getElementById('newSessionDate').value;
+  const notes = document.getElementById('newSessionNotes').value;
+  const errEl = document.getElementById('newSessionError');
+  
+  if (!session_date) {
+    errEl.textContent = 'Podaj datę treningu.';
+    errEl.style.display = 'block';
+    return;
+  }
+  
+  try {
+    const data = await api('/api/instructor/sessions', {
+      method: 'POST',
+      body: { group_id: parseInt(group_id), session_date, notes },
+    });
+    
+    closeModal('newSessionModal');
+    showToast(`✅ Trening utworzony! Dodano ${data.students_added} kursantów.`);
+    
+    // Otwórz listę obecności dla nowej sesji
+    openAttendance(data.session.id, formatDate(session_date));
+    
+  } catch (e) {
+    errEl.textContent = e.message;
+    errEl.style.display = 'block';
+  }
+}
+
+// ── HELPERS ──────────────────────────────────────────────────
+function formatDate(d) {
+  if (!d) return '—';
+  const date = new Date(d);
+  return date.toLocaleDateString('pl-PL', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+function paymentTag(status) {
+  const map = {
+    paid: '<span class="tag tag-green">Opłacone</span>',
+    unpaid: '<span class="tag tag-red">Nieopłacone</span>',
+    waived: '<span class="tag tag-blue">Zwolniony</span>',
+    pending: '<span class="tag tag-yellow">Oczekuje</span>',
+  };
+  return map[status] || `<span class="tag tag-gray">${status}</span>`;
+}
+
+function paymentTagText(status) {
+  const map = { paid: 'Opłacone', unpaid: 'Nieopłacone', waived: 'Zwolniony', pending: 'Oczekuje' };
+  return map[status] || status;
+}
+
+function attendanceTag(pct) {
+  if (pct === null || pct === undefined) return '—';
+  const p = parseInt(pct);
+  if (p >= 75) return `<span class="tag tag-green">${p}%</span>`;
+  if (p >= 50) return `<span class="tag tag-yellow">${p}%</span>`;
+  return `<span class="tag tag-red">${p}%</span>`;
+}
+
+let toastTimer;
+function showToast(msg, color = 'green') {
+  let t = document.getElementById('toast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = 'toast';
+    t.style.cssText = `position:fixed;bottom:24px;right:24px;padding:12px 20px;border-radius:6px;font-size:14px;font-weight:600;z-index:9999;transition:all .3s;`;
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.style.background = color === 'red' ? 'var(--red)' : '#22c55e';
+  t.style.color = '#fff';
+  t.style.opacity = '1';
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.style.opacity = '0', 3000);
+}
+
+// Zamknij modal klikając overlay
+document.getElementById('newSessionModal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal('newSessionModal');
+});
+</script>
+</body>
+</html>
