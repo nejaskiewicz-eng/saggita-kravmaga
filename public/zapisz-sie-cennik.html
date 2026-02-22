@@ -6,327 +6,569 @@
 <title>Zapisz się przez cennik — Krav Maga Saggita</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&family=Open+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800;900&family=Open+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 
 <style>
+
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
+
+:root{
+  --bg:#0d0a0a;
+  --accent:#B21900;
+  --accent-rgb:178,25,0;
+  --accent-glow:rgba(178,25,0,0.18);
+  --accent-hot:#DA2A00;
+
+  --blue:#1A6FD4;
+  --blue-rgb:26,111,212;
+  --blue-light:#5BA8FF;
+  --blue-glow:rgba(26,111,212,0.18);
+
+  --white:#FFFFFF;
+  --text:rgba(255,255,255,0.88);
+  --text-muted:rgba(255,255,255,0.52);
+  --line:rgba(255,255,255,0.09);
+  --line-soft:rgba(255,255,255,0.06);
+
+  --glass:rgba(255,255,255,0.04);
+  --glass-strong:rgba(255,255,255,0.07);
+  --glass-dark:rgba(0,0,0,0.32);
+
+  --shadow-deep:0 32px 80px rgba(0,0,0,0.7);
+  --shadow-card:0 8px 32px rgba(0,0,0,0.45);
+
+  --radius:20px;
+  --radius-sm:14px;
+  --radius-xs:10px;
+}
+
 body{
   background:var(--bg);
   color:var(--text);
   font-family:'Open Sans',sans-serif;
   overflow-x:hidden;
+  min-height:100vh;
 }
-a{color:inherit;text-decoration:none}
-button,input,select,textarea{font:inherit}
-img{max-width:100%;display:block}
 
-:root{
-  --bg:#141414;
-
-  --accent:#B21900;
-  --accent-rgb:178,25,0;
-
-  --accent-strong:#DA2A00;
-  --accent-glass:rgba(var(--accent-rgb),0.08);
-  --border-accent:rgba(var(--accent-rgb),0.45);
-
-  --white:#FFFFFF;
-  --text:rgba(255,255,255,0.86);
-  --text-muted:rgba(255,255,255,0.56);
-  --border-neutral:rgba(255,255,255,0.16);
-
-  --panel:rgba(255,255,255,0.02);
-  --panel-2:rgba(0,0,0,0.26);
-  --line:rgba(255,255,255,0.10);
-  --shadow:0 24px 70px rgba(0,0,0,0.55);
-
-  --radius:18px;
-  --radius-sm:14px;
+/* Subtle background radial glows */
+body::before{
+  content:'';
+  position:fixed;
+  inset:0;
+  background:
+    radial-gradient(ellipse 60% 40% at 20% 10%, rgba(178,25,0,0.06) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 35% at 80% 80%, rgba(26,111,212,0.05) 0%, transparent 55%);
+  pointer-events:none;
+  z-index:0;
 }
 
 .page{
-  max-width:1080px;
+  position:relative;
+  z-index:1;
+  max-width:1100px;
   margin:0 auto;
-  padding:28px 18px 80px;
+  padding:32px 20px 100px;
 }
-.header{
-  display:flex; align-items:flex-start; justify-content:space-between;
-  gap:16px; margin-bottom:18px;
+
+/* ═══════════════════════════════════════
+   HEADER ROW — nagłówek + koszyk inline
+   ═══════════════════════════════════════ */
+.header-row{
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:20px;
+  align-items:center;
+  margin-bottom:24px;
 }
-.brand{
-  display:flex; flex-direction:column; gap:6px;
-}
+@media (max-width:700px){ .header-row{grid-template-columns:1fr} }
+
+.brand{display:flex;flex-direction:column;gap:8px}
 .kicker{
-  display:inline-flex; align-items:center; gap:10px;
-  font-weight:800; letter-spacing:.12em; text-transform:uppercase;
-  color:rgba(255,255,255,0.70); font-size:12px;
+  display:inline-flex;align-items:center;gap:9px;
+  font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
+  color:rgba(255,255,255,0.50);
 }
-.dot{width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 6px rgba(var(--accent-rgb),0.12)}
+.kicker-dot{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--accent);
+  box-shadow:0 0 0 4px rgba(178,25,0,0.15), 0 0 12px rgba(178,25,0,0.4);
+}
 h1{
   font-family:'Montserrat',sans-serif;
-  font-size:30px;
-  line-height:1.12;
-  color:var(--white);
+  font-size:52px;font-weight:600;line-height:1.05;
+  color:var(--white);letter-spacing:.04em;text-transform:uppercase;
 }
-.sub{
-  color:var(--text-muted);
-  font-size:14px;
-  max-width:62ch;
+.header-sub{
+  font-family:'Open Sans',sans-serif;
+  font-size:14px;font-weight:400;
+  color:rgba(255,255,255,0.52);
+  margin-top:4px;
 }
-.badgeTop{
-  display:inline-flex; align-items:center; gap:8px;
-  padding:10px 12px;
-  border:1px solid var(--line);
-  background:rgba(255,255,255,0.03);
-  border-radius:999px;
-  color:rgba(255,255,255,0.75);
-  font-size:12px;
-  height:fit-content;
-}
-.badgeTop strong{color:var(--white)}
-.hr{height:1px;background:var(--line);margin:18px 0 18px}
 
+/* Koszyk — mały blok inline z nagłówkiem */
+.cart-inline{
+  background:rgba(255,255,255,0.045);
+  backdrop-filter:blur(20px) saturate(180%);
+  -webkit-backdrop-filter:blur(20px) saturate(180%);
+  border:1px solid rgba(255,255,255,0.12);
+  border-radius:var(--radius-sm);
+  padding:14px 18px;
+  min-width:230px;
+  box-shadow:var(--shadow-card), inset 0 1px 0 rgba(255,255,255,0.08);
+  display:flex;flex-direction:column;gap:10px;
+}
+.cart-inline__label{
+  font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+  color:rgba(255,255,255,0.42);
+}
+.cart-inline__service{
+  font-size:13px;font-weight:700;color:var(--white);
+  min-height:18px;
+}
+.cart-inline__price{
+  font-family:'Montserrat',sans-serif;
+  font-size:26px;font-weight:900;color:var(--white);
+  line-height:1;
+}
+.cart-inline__price small{
+  font-size:13px;font-family:'Open Sans',sans-serif;font-weight:500;
+  color:rgba(255,255,255,0.45);margin-left:4px;
+}
+.cart-inline__actions{
+  display:flex;gap:8px;
+}
+.cart-inline__hint{
+  font-size:11px;color:rgba(255,255,255,0.38);line-height:1.4;
+  font-style:italic;
+}
+/* cart state: empty */
+.cart-inline.empty .cart-inline__service{color:rgba(255,255,255,0.3);font-style:italic;font-weight:400}
+.cart-inline.empty .cart-inline__price{color:rgba(255,255,255,0.18)}
+
+/* ═══════════════════════════════════════
+   STEPPER
+   ═══════════════════════════════════════ */
 .stepper{
-  display:flex; gap:10px; flex-wrap:wrap;
-  margin:0 0 18px;
+  display:flex;gap:8px;flex-wrap:wrap;margin-bottom:28px;
 }
 .step{
-  display:inline-flex; align-items:center; gap:10px;
-  padding:10px 12px;
+  display:inline-flex;align-items:center;gap:9px;
+  padding:8px 14px;
   border:1px solid var(--line);
   border-radius:999px;
-  background:rgba(255,255,255,0.02);
-  color:rgba(255,255,255,0.72);
-  font-size:12px;
+  background:var(--glass);
+  color:rgba(255,255,255,0.48);
+  font-size:12px;font-weight:600;letter-spacing:.02em;
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+  transition:all .2s;
 }
 .step .n{
-  width:22px;height:22px;border-radius:999px;
+  width:20px;height:20px;border-radius:50%;
   display:inline-flex;align-items:center;justify-content:center;
-  font-weight:800;
-  border:1px solid rgba(255,255,255,0.14);
-  color:rgba(255,255,255,0.78);
+  font-size:11px;font-weight:800;
+  border:1px solid rgba(255,255,255,0.12);
+  color:rgba(255,255,255,0.55);
 }
-.step.active{border-color:var(--border-accent); background:var(--accent-glass); color:rgba(255,255,255,0.88)}
-.step.active .n{border-color:rgba(var(--accent-rgb),0.35); color:var(--white); background:rgba(var(--accent-rgb),0.18)}
+.step.active{
+  border-color:rgba(var(--accent-rgb),0.45);
+  background:rgba(var(--accent-rgb),0.10);
+  color:rgba(255,255,255,0.90);
+}
+.step.active .n{
+  border-color:rgba(var(--accent-rgb),0.50);
+  color:var(--white);background:rgba(var(--accent-rgb),0.22);
+}
 
+/* ═══════════════════════════════════════
+   PANELS
+   ═══════════════════════════════════════ */
 .panel{
-  border:1px solid var(--line);
-  background:var(--panel);
+  border:1px solid rgba(255,255,255,0.09);
+  background:rgba(255,255,255,0.03);
+  backdrop-filter:blur(24px) saturate(160%);
+  -webkit-backdrop-filter:blur(24px) saturate(160%);
   border-radius:var(--radius);
-  box-shadow:var(--shadow);
+  box-shadow:var(--shadow-deep), inset 0 1px 0 rgba(255,255,255,0.06);
   overflow:hidden;
 }
 .panelHead{
-  padding:18px 18px 14px;
+  padding:20px 22px 16px;
   border-bottom:1px solid var(--line);
-  display:flex; align-items:flex-end; justify-content:space-between;
-  gap:14px;
+  display:flex;align-items:flex-end;justify-content:space-between;gap:14px;
 }
 .panelHead h2{
   font-family:'Montserrat',sans-serif;
-  font-size:18px;
-  color:var(--white);
+  font-size:18px;font-weight:600;color:var(--white);letter-spacing:-.01em;
 }
-.panelHead p{
-  color:var(--text-muted);
-  font-size:13px;
-  margin-top:6px;
-  max-width:70ch;
-}
-.panelBody{padding:16px 18px 18px}
-.grid2{display:grid;grid-template-columns:1.15fr .85fr;gap:14px}
-@media (max-width: 900px){ .grid2{grid-template-columns:1fr} }
+.panelHead p{color:var(--text-muted);font-size:13px;margin-top:5px;max-width:70ch}
+.panelBody{padding:20px 22px 22px}
 
-.card{
-  border:1px solid rgba(255,255,255,0.10);
-  background:rgba(0,0,0,0.22);
-  border-radius:var(--radius-sm);
-  padding:14px 14px;
-}
-.cardTitle{
-  display:flex; align-items:flex-start; justify-content:space-between; gap:10px;
-}
-.cardTitle strong{color:var(--white);font-size:15px}
-.pill{
-  display:inline-flex; align-items:center; gap:8px;
-  padding:6px 10px;
-  border-radius:999px;
-  border:1px solid rgba(var(--accent-rgb),0.28);
-  background:rgba(var(--accent-rgb),0.10);
-  color:rgba(255,255,255,0.85);
-  font-size:12px;
-  white-space:nowrap;
-}
-.small{color:var(--text-muted);font-size:12px;margin-top:8px;line-height:1.45}
-.price{
-  font-family:'Montserrat',sans-serif;
-  font-size:22px; color:var(--white);
-}
-.price span{font-size:12px;color:rgba(255,255,255,0.62);font-family:'Open Sans',sans-serif;font-weight:700}
-.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:10px}
-.btn{
-  display:inline-flex; align-items:center; justify-content:center; gap:10px;
-  padding:12px 14px;
-  border-radius:14px;
-  border:1px solid rgba(255,255,255,0.14);
-  background:rgba(255,255,255,0.04);
-  color:rgba(255,255,255,0.90);
-  cursor:pointer;
-  font-weight:800;
-  letter-spacing:.02em;
-  transition:transform .12s ease, border-color .12s ease, background .12s ease;
-}
-.btn:hover{transform:translateY(-1px);border-color:rgba(255,255,255,0.22);background:rgba(255,255,255,0.06)}
-.btn.primary{
-  background:linear-gradient(180deg, rgba(var(--accent-rgb),0.92), rgba(var(--accent-rgb),0.72));
-  border-color:rgba(var(--accent-rgb),0.75);
-}
-.btn.primary:hover{background:linear-gradient(180deg, rgba(var(--accent-rgb),1), rgba(var(--accent-rgb),0.78));border-color:rgba(var(--accent-rgb),0.90)}
-.btn.ghost{background:transparent}
-.btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
-.btnSmall{padding:10px 12px;border-radius:12px;font-size:13px}
-
-.formGrid{
+/* ═══════════════════════════════════════
+   STEP 1 — GRID CENNIKA
+   ═══════════════════════════════════════ */
+.prices-layout{
   display:grid;
   grid-template-columns:1fr 1fr;
-  gap:12px;
+  gap:18px;
+  margin-top:0;
 }
+@media (max-width:820px){ .prices-layout{grid-template-columns:1fr} }
+
+/* KOLUMNA CENNIKOWA */
+.price-col{
+  border-radius:var(--radius-sm);
+  overflow:hidden;
+  display:flex;flex-direction:column;
+  border:1px solid rgba(255,255,255,0.09);
+  backdrop-filter:blur(16px);
+  -webkit-backdrop-filter:blur(16px);
+}
+
+/* Nagłówek kolumny */
+.price-col__head{
+  padding:16px 18px 14px;
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  border-bottom:1px solid rgba(255,255,255,0.08);
+}
+.price-col__title{
+  font-family:'Montserrat',sans-serif;
+  font-size:20px;font-weight:600;letter-spacing:-.01em;
+}
+.price-col__meta{
+  font-size:11px;font-weight:700;letter-spacing:.10em;text-transform:uppercase;
+  padding:5px 10px;border-radius:999px;
+}
+.price-col__body{
+  padding:14px 14px 16px;
+  display:flex;flex-direction:column;gap:10px;
+  flex:1;
+}
+
+/* === DOROŚLI — czerwona kolumna === */
+.price-col.adults{
+  background:linear-gradient(145deg, rgba(178,25,0,0.12) 0%, rgba(0,0,0,0.28) 60%);
+  box-shadow:0 0 0 1px rgba(178,25,0,0.22) inset, var(--shadow-card);
+}
+.price-col.adults .price-col__head{
+  background:rgba(178,25,0,0.14);
+  border-bottom-color:rgba(178,25,0,0.25);
+}
+.price-col.adults .price-col__title{color:#FF6B4A}
+.price-col.adults .price-col__meta{
+  background:rgba(178,25,0,0.20);
+  border:1px solid rgba(178,25,0,0.35);
+  color:rgba(255,150,120,0.90);
+}
+
+/* === DZIECI — niebieska kolumna === */
+.price-col.kids{
+  background:linear-gradient(145deg, rgba(26,111,212,0.10) 0%, rgba(0,0,0,0.28) 60%);
+  box-shadow:0 0 0 1px rgba(26,111,212,0.20) inset, var(--shadow-card);
+}
+.price-col.kids .price-col__head{
+  background:rgba(26,111,212,0.12);
+  border-bottom-color:rgba(26,111,212,0.22);
+}
+.price-col.kids .price-col__title{color:var(--blue-light)}
+.price-col.kids .price-col__meta{
+  background:rgba(26,111,212,0.18);
+  border:1px solid rgba(26,111,212,0.32);
+  color:rgba(130,190,255,0.90);
+}
+
+/* KARTY POZYCJI CENNIKA */
+.priceCard{
+  border-radius:var(--radius-xs);
+  padding:13px 14px;
+  display:flex;flex-direction:column;gap:6px;
+  transition:transform .15s ease, box-shadow .15s ease;
+  position:relative;
+  overflow:hidden;
+}
+.priceCard::before{
+  content:'';
+  position:absolute;inset:0;
+  background:rgba(255,255,255,0.025);
+  opacity:0;
+  transition:opacity .15s;
+}
+.priceCard:hover{transform:translateY(-2px)}
+.priceCard:hover::before{opacity:1}
+
+/* Karta dorosłych */
+.adults .priceCard{
+  background:rgba(178,25,0,0.09);
+  border:1px solid rgba(178,25,0,0.22);
+}
+.adults .priceCard:hover{box-shadow:0 6px 24px rgba(178,25,0,0.25)}
+
+/* Karta dzieci */
+.kids .priceCard{
+  background:rgba(26,111,212,0.09);
+  border:1px solid rgba(26,111,212,0.20);
+}
+.kids .priceCard:hover{box-shadow:0 6px 24px rgba(26,111,212,0.25)}
+
+.priceCard__top{
+  display:flex;align-items:flex-start;justify-content:space-between;gap:10px;
+}
+.priceCard__name{
+  font-size:14px;font-weight:800;line-height:1.25;color:var(--white);
+}
+.priceCard__duration{
+  font-size:11px;font-weight:600;color:rgba(255,255,255,0.45);
+  margin-top:2px;letter-spacing:.03em;
+}
+.price-amount{
+  font-family:'Montserrat',sans-serif;
+  font-size:28px;font-weight:900;line-height:1;
+  color:var(--white);
+  margin-top:4px;
+}
+.price-amount small{
+  font-size:13px;font-family:'Open Sans',sans-serif;font-weight:600;
+  color:rgba(255,255,255,0.50);margin-left:3px;
+}
+.price-fee{
+  font-size:11px;font-weight:600;line-height:1.4;
+  color:rgba(255,255,255,0.40);margin-top:1px;
+}
+.price-desc{
+  font-size:12px;line-height:1.5;
+  color:rgba(255,255,255,0.50);margin-top:2px;
+}
+
+/* PRZYCISKI */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  padding:11px 16px;border-radius:12px;
+  border:1px solid rgba(255,255,255,0.12);
+  background:rgba(255,255,255,0.05);
+  color:rgba(255,255,255,0.88);
+  cursor:pointer;font-weight:700;font-size:13px;
+  letter-spacing:.03em;
+  transition:transform .12s ease, box-shadow .12s ease, background .12s ease, border-color .12s ease;
+  white-space:nowrap;
+  font-family:'Open Sans',sans-serif;
+}
+.btn:hover{transform:translateY(-1px);border-color:rgba(255,255,255,0.22);background:rgba(255,255,255,0.08)}
+.btn:disabled{opacity:.38;cursor:not-allowed;transform:none !important}
+.btn.ghost{background:transparent;border-color:rgba(255,255,255,0.10)}
+.btn.ghost:hover{background:rgba(255,255,255,0.05)}
+.btnSmall{padding:8px 12px;font-size:12px;border-radius:9px}
+
+/* Przycisk Wybierz — Dorośli */
+.btn-adults{
+  background:linear-gradient(135deg, rgba(178,25,0,0.80), rgba(218,42,0,0.65));
+  border-color:rgba(178,25,0,0.70);
+  color:#fff;
+  box-shadow:0 4px 14px rgba(178,25,0,0.30);
+}
+.btn-adults:hover{
+  background:linear-gradient(135deg, rgba(218,42,0,0.90), rgba(178,25,0,0.80));
+  border-color:rgba(218,42,0,0.85);
+  box-shadow:0 6px 20px rgba(178,25,0,0.45);
+}
+
+/* Przycisk Wybierz — Dzieci */
+.btn-kids{
+  background:linear-gradient(135deg, rgba(26,111,212,0.80), rgba(91,168,255,0.55));
+  border-color:rgba(26,111,212,0.65);
+  color:#fff;
+  box-shadow:0 4px 14px rgba(26,111,212,0.30);
+}
+.btn-kids:hover{
+  background:linear-gradient(135deg, rgba(26,111,212,0.95), rgba(91,168,255,0.70));
+  border-color:rgba(91,168,255,0.70);
+  box-shadow:0 6px 20px rgba(26,111,212,0.45);
+}
+
+/* Przycisk CTA "Przejdź do wyboru terminu" */
+.btn.primary{
+  background:linear-gradient(135deg, rgba(var(--accent-rgb),0.90), rgba(var(--accent-rgb),0.65));
+  border-color:rgba(var(--accent-rgb),0.70);
+  color:#fff;
+  box-shadow:0 4px 18px rgba(var(--accent-rgb),0.30);
+  padding:13px 20px;font-size:14px;font-weight:800;
+}
+.btn.primary:hover{
+  background:linear-gradient(135deg, rgba(var(--accent-rgb),1), rgba(var(--accent-rgb),0.80));
+  box-shadow:0 6px 24px rgba(var(--accent-rgb),0.50);
+}
+
+/* ═══════════════════════════════════════
+   INSTRUKCJA KROKÓW
+   ═══════════════════════════════════════ */
+.step-hint{
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  padding:11px 16px;
+  background:rgba(255,255,255,0.03);
+  border:1px solid rgba(255,255,255,0.07);
+  border-radius:999px;
+  margin-bottom:20px;
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+}
+.step-hint__item{
+  display:flex;align-items:center;gap:7px;
+  font-size:12px;color:rgba(255,255,255,0.45);
+  font-weight:500;
+}
+.step-hint__num{
+  width:18px;height:18px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:10px;font-weight:800;
+  background:rgba(255,255,255,0.07);
+  border:1px solid rgba(255,255,255,0.12);
+  color:rgba(255,255,255,0.55);flex-shrink:0;
+}
+.step-hint__arrow{color:rgba(255,255,255,0.20);font-size:10px}
+
+/* ═══════════════════════════════════════
+   FORMULARZE (kroki 2-4)
+   ═══════════════════════════════════════ */
+.formGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .formGrid .full{grid-column:1/-1}
-@media (max-width: 720px){
-  .formGrid{grid-template-columns:1fr}
-}
+@media (max-width:720px){.formGrid{grid-template-columns:1fr}}
 .field label{
-  display:block;
-  font-size:12px;
-  font-weight:800;
-  letter-spacing:.08em;
-  text-transform:uppercase;
-  color:rgba(255,255,255,0.70);
-  margin-bottom:6px;
+  display:block;font-size:11px;font-weight:700;letter-spacing:.08em;
+  text-transform:uppercase;color:rgba(255,255,255,0.55);margin-bottom:6px;
 }
 .field input,.field select,.field textarea{
-  width:100%;
-  padding:12px 12px;
-  border-radius:14px;
-  border:1px solid rgba(255,255,255,0.14);
-  background:rgba(0,0,0,0.22);
-  color:rgba(255,255,255,0.92);
-  outline:none;
-}
-.field input:focus,.field select:focus,.field textarea:focus{border-color:rgba(var(--accent-rgb),0.55);box-shadow:0 0 0 6px rgba(var(--accent-rgb),0.08)}
-.field textarea{min-height:98px;resize:vertical}
-.help{margin-top:7px;color:rgba(255,255,255,0.58);font-size:12px;line-height:1.4}
-.inline{
-  display:flex; align-items:flex-start; gap:10px;
-  padding:12px 12px;
-  border-radius:14px;
+  width:100%;padding:11px 13px;
+  border-radius:12px;
   border:1px solid rgba(255,255,255,0.12);
-  background:rgba(255,255,255,0.02);
+  background:rgba(255,255,255,0.04);
+  backdrop-filter:blur(8px);
+  color:rgba(255,255,255,0.90);
+  outline:none;
+  transition:border-color .15s, box-shadow .15s;
 }
-.inline input{width:auto;margin-top:3px}
-.inline label{margin:0;font-size:13px;color:rgba(255,255,255,0.84);font-weight:700;letter-spacing:0;text-transform:none}
+.field input:focus,.field select:focus,.field textarea:focus{
+  border-color:rgba(var(--accent-rgb),0.55);
+  box-shadow:0 0 0 5px rgba(var(--accent-rgb),0.08);
+}
+.field textarea{min-height:90px;resize:vertical}
+.help{margin-top:6px;color:rgba(255,255,255,0.42);font-size:12px;line-height:1.4}
+.inline{
+  display:flex;align-items:flex-start;gap:10px;
+  padding:12px 13px;border-radius:12px;
+  border:1px solid rgba(255,255,255,0.10);
+  background:rgba(255,255,255,0.025);
+}
+.inline input{width:auto;margin-top:2px}
+.inline label{margin:0;font-size:13px;color:rgba(255,255,255,0.80);font-weight:600;letter-spacing:0;text-transform:none}
 
+/* ═══════════════════════════════════════
+   SUMMARY, NOTICES
+   ═══════════════════════════════════════ */
 .notice{
-  border:1px solid rgba(var(--accent-rgb),0.30);
-  background:rgba(var(--accent-rgb),0.09);
-  border-radius:16px;
-  padding:12px 12px;
-  color:rgba(255,255,255,0.85);
-  font-size:13px;
-  line-height:1.5;
+  border:1px solid rgba(var(--accent-rgb),0.25);
+  background:rgba(var(--accent-rgb),0.07);
+  backdrop-filter:blur(8px);
+  border-radius:14px;padding:12px 14px;
+  color:rgba(255,255,255,0.80);font-size:13px;line-height:1.5;
 }
 .notice strong{color:var(--white)}
-.summary{
-  display:grid;
-  gap:10px;
-}
+.summary{display:grid;gap:8px}
 .sRow{
-  display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap;
-  padding:10px 12px;
-  border-radius:14px;
-  border:1px solid rgba(255,255,255,0.10);
-  background:rgba(0,0,0,0.18);
-  font-size:13px;
+  display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;
+  padding:10px 13px;border-radius:12px;
+  border:1px solid rgba(255,255,255,0.08);
+  background:rgba(255,255,255,0.025);font-size:13px;
 }
-.sRow b{color:rgba(255,255,255,0.92)}
-.sRow span{color:rgba(255,255,255,0.65)}
-.footerBar{
-  display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end;
-  margin-top:14px;
-}
+.sRow b{color:rgba(255,255,255,0.88)}
+.sRow span{color:rgba(255,255,255,0.55)}
+.footerBar{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end;margin-top:14px}
 
+/* CARD (step 5) */
+.card{
+  border:1px solid rgba(255,255,255,0.09);
+  background:rgba(255,255,255,0.03);
+  border-radius:var(--radius-sm);padding:16px;
+  backdrop-filter:blur(12px);
+}
+.cardTitle{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.cardTitle strong{color:var(--white);font-size:15px;font-weight:800}
+.pill{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:5px 10px;border-radius:999px;
+  border:1px solid rgba(var(--accent-rgb),0.28);
+  background:rgba(var(--accent-rgb),0.10);
+  color:rgba(255,255,255,0.80);font-size:12px;font-weight:700;white-space:nowrap;
+}
+.small{color:rgba(255,255,255,0.50);font-size:12px;margin-top:8px;line-height:1.45}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:12px}
+
+/* ═══════════════════════════════════════
+   TOAST
+   ═══════════════════════════════════════ */
 .toastWrap{
-  position:fixed; left:0; right:0; bottom:14px;
-  display:flex; justify-content:center; pointer-events:none;
-  z-index:9999;
+  position:fixed;left:0;right:0;bottom:16px;
+  display:flex;justify-content:center;pointer-events:none;z-index:9999;
 }
 .toast{
   pointer-events:auto;
-  max-width:min(720px, calc(100% - 24px));
-  border-radius:999px;
-  padding:12px 14px;
-  border:1px solid rgba(255,255,255,0.18);
-  background:rgba(0,0,0,0.72);
-  color:rgba(255,255,255,0.92);
-  box-shadow:0 20px 60px rgba(0,0,0,0.55);
-  display:flex; align-items:center; gap:10px;
-  font-weight:700;
+  max-width:min(680px,calc(100% - 24px));
+  border-radius:999px;padding:12px 18px;
+  border:1px solid rgba(255,255,255,0.14);
+  background:rgba(12,8,8,0.88);
+  backdrop-filter:blur(20px);
+  color:rgba(255,255,255,0.90);
+  box-shadow:0 20px 60px rgba(0,0,0,0.60);
+  display:flex;align-items:center;gap:10px;font-weight:700;font-size:13px;
 }
 .toast.ok{border-color:rgba(46,204,113,0.35)}
 .toast.err{border-color:rgba(var(--accent-rgb),0.55)}
 .spin{
-  width:16px;height:16px;border-radius:50%;
-  border:2px solid rgba(255,255,255,0.22);
+  width:15px;height:15px;border-radius:50%;
+  border:2px solid rgba(255,255,255,0.20);
   border-top-color:rgba(255,255,255,0.75);
-  animation:sp 0.8s linear infinite;
+  animation:sp 0.8s linear infinite;display:inline-block;
 }
 @keyframes sp{to{transform:rotate(360deg)}}
 .hidden{display:none !important}
 
-/* === Cennik: układ "Dorośli / Dzieci" + koszyk na górze === */
-.cartTop{padding:14px}
-.cartTop__head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
-.cartTop__actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}
-.selectedBox{margin-top:10px;border:1px solid rgba(255,255,255,0.10);border-radius:14px;background:rgba(255,255,255,.03);padding:12px}
-.gridPrices{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-.accHead{width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;
-  padding:12px 12px;border:1px solid rgba(255,255,255,0.10);border-radius:14px;background:rgba(255,255,255,.03);
-  color:var(--text);cursor:pointer;font-weight:800}
-.accHead:hover{border-color:rgba(232,77,41,.55)}
-.accBody{margin-top:10px}
-.pricesCols{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.priceCard{border:1px solid rgba(255,255,255,0.10);border-radius:14px;background:rgba(255,255,255,.03);padding:12px}
-.priceCard__top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
-.priceCard__name{font-weight:900;font-size:15px;line-height:1.2}
-
 /* mobile */
-@media (max-width: 900px){
-  .cartTop__head{flex-direction:column}
-  .cartTop__actions{width:100%;justify-content:flex-start}
-  .gridPrices{grid-template-columns:1fr}
-  .pricesCols{grid-template-columns:1fr}
-  .btn{width:100%}
-  .btn.btnSmall{width:auto}
+@media (max-width:600px){
+  h1{font-size:30px}
+  .prices-layout{gap:12px}
+  .btn.primary{width:100%}
+  .step-hint{display:none}
 }
+
+/* grid2 (pozostałości innych kroków) */
+.grid2{display:grid;grid-template-columns:1.15fr .85fr;gap:14px}
+@media (max-width:900px){.grid2{grid-template-columns:1fr}}
 </style>
 </head>
 
 <body>
 <div class="page">
 
-  <div class="header">
+  <!-- HEADER ROW: nagłówek + koszyk inline -->
+  <div class="header-row">
     <div class="brand">
-      <div class="kicker"><span class="dot"></span><span>KRAV MAGA SAGGITA</span></div>
-      <h1>Zapisz się przez cennik</h1>
-      <div class="sub">Zaczynamy od wyboru usługi. Potem wybierasz lokalizację i termin, uzupełniasz dane i kończysz płatnością online albo dokumentem do przelewu.</div>
+      <div class="kicker"><span class="kicker-dot"></span><span>KRAV MAGA SAGGITA</span></div>
+      <h1>Cennik</h1>
+      <p class="header-sub">Sprawdź ceny, wybierz karnet i zapisz się na zajęcia.</p>
     </div>
-    <div class="badgeTop">
-      <span>Tryb:</span> <strong>Cennik → Zapis</strong>
+
+    <!-- Koszyk inline -->
+    <div class="cart-inline empty" id="cartInline">
+      <div class="cart-inline__label">Wybrana usługa</div>
+      <div class="cart-inline__service" id="cartServiceName">Nie wybrano jeszcze</div>
+      <div class="cart-inline__price" id="cartPrice">— <small>zł</small></div>
+      <div class="cart-inline__actions">
+        <button class="btn btnSmall ghost" id="btnClearCart" disabled>✕ Usuń</button>
+        <button class="btn btnSmall primary" id="goStep2" disabled>Wybierz termin →</button>
+      </div>
+      <div class="cart-inline__hint" id="cartHint">Wybierz ofertę z cennika poniżej</div>
     </div>
   </div>
 
-  <div class="hr"></div>
 
   <div class="stepper" id="stepper">
     <div class="step active" data-step="1"><span class="n">1</span><span>Wybór usługi</span></div>
@@ -336,63 +578,33 @@ h1{
     <div class="step" data-step="5"><span class="n">5</span><span>Płatność</span></div>
   </div>
 
-  <!-- STEP 1 -->
-  <section class="panel" id="step1">
-    <div class="panelHead">
-      <div>
-        <h2>1) Wybierz usługę z cennika</h2>
-        <p>Wybierasz konkretną pozycję z cennika. Na kolejnych krokach dopasujesz lokalizację, grupę i termin.</p>
+  <!-- STEP 1 — dwie kolumny cennika -->
+  <section id="step1">
+    <div class="prices-layout">
+
+      <!-- KOLUMNA: DOROŚLI -->
+      <div class="price-col adults">
+        <div class="price-col__head">
+          <div class="price-col__title">Dorośli</div>
+          <div class="price-col__meta" id="metaAdults">—</div>
+        </div>
+        <div class="price-col__body" id="pricesAdultsList">
+          <div style="padding:20px;text-align:center;color:rgba(255,255,255,0.35);font-size:13px"><span class="spin" style="display:inline-block;margin-right:8px"></span>Ładuję…</div>
+        </div>
       </div>
-      
+
+      <!-- KOLUMNA: DZIECI -->
+      <div class="price-col kids">
+        <div class="price-col__head">
+          <div class="price-col__title">Dzieci</div>
+          <div class="price-col__meta" id="metaKids">—</div>
+        </div>
+        <div class="price-col__body" id="pricesKidsList">
+          <div style="padding:20px;text-align:center;color:rgba(255,255,255,0.35);font-size:13px"><span class="spin" style="display:inline-block;margin-right:8px"></span>Ładuję…</div>
+        </div>
+      </div>
+
     </div>
-    <div class="panelBody">
-      <div class="card cartTop">
-        <div class="cartTop__head">
-          <div>
-            <div class="cardTitle" style="margin-bottom:6px">
-              <strong>Wybrana usługa</strong>
-              <span class="pill" id="selectedPill">Brak</span>
-            </div>
-            <div class="small" id="selectedHint">Najpierw wybierz usługę z cennika poniżej.</div>
-          </div>
-          <div class="cartTop__actions">
-            <button class="btn btnSmall ghost" id="btnClearCart" disabled>Opróżnij koszyk</button>
-            <button class="btn btnSmall ghost" id="btnReload">Odśwież</button>
-          </div>
-        </div>
-
-        <div id="selectedDesc" class="selectedBox">
-          <div class="small">—</div>
-        </div>
-
-        <div class="row" style="margin-top:12px;justify-content:flex-end">
-          <button class="btn primary" id="goStep2" disabled>Przejdź do wyboru terminu</button>
-        </div>
-        <div class="help">Jeśli masz już karnet miesięczny, zaznaczysz to później – wtedy kwota może być 0 zł.</div>
-      </div>
-
-      <div class="gridPrices" style="margin-top:12px">
-        <div class="card">
-          <button class="accHead" type="button" onclick="toggleCat('adults')">
-            <span>Dorośli</span>
-            <span class="pill" id="metaAdults">—</span>
-          </button>
-          <div class="accBody hidden" id="accAdults">
-            <div id="pricesAdultsList" class="pricesCols"></div>
-          </div>
-        </div>
-
-        <div class="card">
-          <button class="accHead" type="button" onclick="toggleCat('kids')">
-            <span>Dzieci</span>
-            <span class="pill" id="metaKids">—</span>
-          </button>
-          <div class="accBody hidden" id="accKids">
-            <div id="pricesKidsList" class="pricesCols"></div>
-          </div>
-        </div>
-      </div>
-</div>
   </section>
 
   <!-- STEP 2 -->
@@ -659,60 +871,46 @@ function scheduleLabel(s){
 function buildPrices(){
   const rows = Array.isArray(pricesData) ? pricesData : (Array.isArray(pricesData?.rows) ? pricesData.rows : []);
 
-  // podział na Dorośli / Dzieci (na podstawie category)
   const norm = (v)=>String(v||'').trim().toLowerCase();
-  const isKids = (p)=>{
-    const c = norm(p.category);
-    return c.includes('kid') || c.includes('dziec');
-  };
-  const isAdults = (p)=>{
-    const c = norm(p.category);
-    return c.includes('adult') || c.includes('doro');
-  };
+  const isKids = (p)=>{ const c=norm(p.category); return c.includes('kid')||c.includes('dziec'); };
+  const isAdults = (p)=>{ const c=norm(p.category); return c.includes('adult')||c.includes('doro'); };
 
-  const adults = [];
-  const kids = [];
-  const other = [];
-
-  rows.forEach(p=>{
-    if(isKids(p)) kids.push(p);
-    else if(isAdults(p)) adults.push(p);
-    else other.push(p);
-  });
-
-  // jeśli ktoś nie ma kategorii, wrzucamy do "Dorośli", żeby nic nie zniknęło
+  const adults=[], kids=[], other=[];
+  rows.forEach(p=>{ if(isKids(p)) kids.push(p); else if(isAdults(p)) adults.push(p); else other.push(p); });
   other.forEach(p=>adults.push(p));
-
   adults.sort((a,b)=>Number(a.price||0)-Number(b.price||0));
   kids.sort((a,b)=>Number(a.price||0)-Number(b.price||0));
 
-  const metaA = document.getElementById('metaAdults');
-  const metaK = document.getElementById('metaKids');
-  metaA.textContent = adults.length ? `${adults.length} pozycji` : 'Brak';
-  metaK.textContent = kids.length ? `${kids.length} pozycji` : 'Brak';
+  document.getElementById('metaAdults').textContent = adults.length ? `${adults.length} pozycji` : 'Brak';
+  document.getElementById('metaKids').textContent = kids.length ? `${kids.length} pozycji` : 'Brak';
 
-  const render = (arr)=>arr.map(p=>{
+  const renderCards = (arr, type)=>arr.map(p=>{
     const months = p.months ? `${p.months} mies.` : 'jednorazowo';
-    const fee = Number(p.signup_fee||0) > 0 ? `+ wpisowe ${money(p.signup_fee)} zł (dla nowych)` : '';
+    const fee = Number(p.signup_fee||0)>0 ? `+ wpisowe ${money(p.signup_fee)} zł dla nowych` : '';
     const desc = (p.description||'').trim();
-
+    const btnClass = type==='kids' ? 'btn-kids' : 'btn-adults';
     return `
-      <div class="priceCard">
+      <div class="priceCard" id="pc-${p.id}">
         <div class="priceCard__top">
           <div>
             <div class="priceCard__name">${escapeHtml(p.name)}</div>
-            <div class="small">${months}</div>
+            <div class="priceCard__duration">${months}</div>
           </div>
-          <button class="btn btnSmall primary" onclick="selectPlan(${p.id})">Wybierz</button>
+          <button class="btn btnSmall ${btnClass}" onclick="selectPlan(${p.id})">Wybierz</button>
         </div>
-        <div class="price">${money(p.price)} zł <span>${fee}</span></div>
-        ${desc ? `<div class="small">${escapeHtml(desc)}</div>` : `<div class="small">—</div>`}
+        <div class="price-amount">${money(p.price)}<small>zł</small></div>
+        ${fee ? `<div class="price-fee">${escapeHtml(fee)}</div>` : ''}
+        ${desc ? `<div class="price-desc">${escapeHtml(desc)}</div>` : ''}
       </div>
     `;
   }).join('');
 
-  document.getElementById('pricesAdultsList').innerHTML = adults.length ? render(adults) : `<div class="notice">Brak pozycji w tej sekcji.</div>`;
-  document.getElementById('pricesKidsList').innerHTML = kids.length ? render(kids) : `<div class="notice">Brak pozycji w tej sekcji.</div>`;
+  document.getElementById('pricesAdultsList').innerHTML = adults.length
+    ? renderCards(adults,'adults')
+    : `<div style="padding:16px;color:rgba(255,255,255,0.35);font-size:13px">Brak pozycji.</div>`;
+  document.getElementById('pricesKidsList').innerHTML = kids.length
+    ? renderCards(kids,'kids')
+    : `<div style="padding:16px;color:rgba(255,255,255,0.35);font-size:13px">Brak pozycji.</div>`;
 }
 
 
@@ -721,45 +919,45 @@ function selectPlan(id){
   if(!p){ toast('Nie znaleziono pozycji z cennika','err'); return; }
   selectedPlan = p;
 
-  document.getElementById('selectedPill').textContent = p.months ? `${p.months} mies.` : 'jednorazowo';
-  document.getElementById('selectedHint').textContent = 'Wybrano usługę. Teraz przejdź do wyboru terminu.';
-  document.getElementById('selectedDesc').innerHTML = `
-    <div class="sRow"><b>Usługa</b><span>${escapeHtml(p.name)}</span></div>
-    <div class="sRow"><b>Cena</b><span>${money(p.price)} zł</span></div>
-    <div class="sRow"><b>Opis</b><span>${escapeHtml((p.description||'—').trim() || '—')}</span></div>
-  `;
+  // Aktualizuj koszyk inline
+  const cart = document.getElementById('cartInline');
+  cart.classList.remove('empty');
+  document.getElementById('cartServiceName').textContent = p.name;
+  document.getElementById('cartPrice').innerHTML = `${money(p.price)}<small> zł</small>`;
+  document.getElementById('cartHint').textContent = p.months
+    ? `Karnet ${p.months} mies. — wybierz lokalizację i termin`
+    : 'Jednorazowo — wybierz lokalizację i termin';
+
+  // Podświetl wybraną kartę
+  document.querySelectorAll('.priceCard').forEach(el=>{
+    el.style.outline = el.id===`pc-${id}` ? '2px solid rgba(255,255,255,0.35)' : '';
+    el.style.boxShadow = '';
+  });
+
   document.getElementById('goStep2').disabled = false;
   document.getElementById('btnClearCart').disabled = false;
+  toast(`Wybrano: ${p.name}`);
 }
 
 
 function clearCart(){
   selectedPlan = null;
   selected = { location_id:null, group_id:null, schedule_id:null };
-  registrationRef = null;
-  document.getElementById('selectedPill').textContent = 'Brak';
-  document.getElementById('selectedHint').textContent = 'Najpierw wybierz usługę z cennika poniżej.';
-  document.getElementById('selectedDesc').innerHTML = `<div class="small">—</div>`;
+  registrationResult = null;
+
+  const cart = document.getElementById('cartInline');
+  cart.classList.add('empty');
+  document.getElementById('cartServiceName').textContent = 'Nie wybrano jeszcze';
+  document.getElementById('cartPrice').innerHTML = '— <small>zł</small>';
+  document.getElementById('cartHint').textContent = 'Wybierz ofertę z cennika poniżej';
+
   document.getElementById('goStep2').disabled = true;
   document.getElementById('btnClearCart').disabled = true;
-  // reset step 2 selections if user was there
-  try{
-    document.getElementById('locSelect').value = '';
-    document.getElementById('groupSelect').innerHTML = `<option value="">Wybierz grupę…</option>`;
-    document.getElementById('slotList').innerHTML = '';
-  }catch(_){}
+  document.querySelectorAll('.priceCard').forEach(el=>{ el.style.outline=''; el.style.boxShadow=''; });
   toast('Koszyk opróżniony');
 }
 
-function toggleCat(which){
-  const el = document.getElementById(which==='kids' ? 'accKids' : 'accAdults');
-  const isHidden = el.classList.contains('hidden');
-  // zwijamy drugą sekcję, żeby na mobile nie robić ściany
-  const other = document.getElementById(which==='kids' ? 'accAdults' : 'accKids');
-  other.classList.add('hidden');
-  if(isHidden) el.classList.remove('hidden');
-  else el.classList.add('hidden');
-}
+function toggleCat(which){ /* deprecated — kolumny zawsze widoczne */ }
 
 
 function escapeHtml(str){
@@ -1014,10 +1212,10 @@ async function downloadPaymentDoc(payment_ref){
 }
 
 async function loadAll(){
-  document.getElementById('metaAdults').textContent = 'Ładowanie…';
-  document.getElementById('metaKids').textContent = 'Ładowanie…';
-  document.getElementById('pricesAdultsList').innerHTML = `<div class="notice"><span class="spin" style="margin-right:10px;display:inline-block"></span> Ładuję cennik…</div>`;
-  document.getElementById('pricesKidsList').innerHTML = `<div class="notice"><span class="spin" style="margin-right:10px;display:inline-block"></span> Ładuję cennik…</div>`;
+  document.getElementById('metaAdults').textContent = '…';
+  document.getElementById('metaKids').textContent = '…';
+  document.getElementById('pricesAdultsList').innerHTML = `<div style="padding:20px;text-align:center;color:rgba(255,255,255,0.35);font-size:13px"><span class="spin" style="display:inline-block;margin-right:8px"></span>Ładuję cennik…</div>`;
+  document.getElementById('pricesKidsList').innerHTML = `<div style="padding:20px;text-align:center;color:rgba(255,255,255,0.35);font-size:13px"><span class="spin" style="display:inline-block;margin-right:8px"></span>Ładuję cennik…</div>`;
   try{
     const [sched, prices] = await Promise.all([fetchJson(SCHEDULE_URL), fetchJson(PRICES_URL)]);
     scheduleData = Array.isArray(sched) ? sched : [];
@@ -1026,7 +1224,7 @@ async function loadAll(){
     buildLocationSelect();
     toast('Dane wczytane');
   }catch(e){
-    const msg = `<div class="notice"><strong>Błąd:</strong> ${escapeHtml(e.message||e)}</div>`;
+    const msg = `<div style="padding:16px;color:rgba(255,100,80,0.85);font-size:13px"><strong>Błąd:</strong> ${escapeHtml(e.message||e)}</div>`;
     document.getElementById('pricesAdultsList').innerHTML = msg;
     document.getElementById('pricesKidsList').innerHTML = msg;
     document.getElementById('metaAdults').textContent = 'Błąd';
@@ -1035,7 +1233,6 @@ async function loadAll(){
   }
 }
 
-document.getElementById('btnReload').addEventListener('click', loadAll);
 document.getElementById('btnClearCart').addEventListener('click', clearCart);
 
 document.getElementById('goStep2').addEventListener('click', ()=>setStep(2));
