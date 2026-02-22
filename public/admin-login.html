@@ -1,76 +1,84 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="pl">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Logowanie — Panel admina</title>
-  <style>
-    body{margin:0;background:#0b0b0b;color:#fff;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial}
-    .wrap{min-height:100vh;display:grid;place-items:center;padding:24px}
-    .card{width:min(420px,100%);background:#141414;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:22px}
-    h1{margin:0 0 12px;font-size:22px}
-    label{display:block;margin:12px 0 6px;font-size:13px;opacity:.85}
-    input{width:100%;padding:12px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.12);background:#0f0f0f;color:#fff}
-    button{margin-top:14px;width:100%;padding:12px;border-radius:10px;border:0;background:#e11d48;color:#fff;font-weight:700;cursor:pointer}
-    .msg{margin-top:12px;font-size:13px;opacity:.9}
-    a{color:#fff}
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panel logowania</title>
+<style>
+body{
+  margin:0;
+  background:#120000;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  height:100vh;
+  font-family:Arial, sans-serif;
+}
+.card{
+  background:#1d0d0d;
+  padding:40px;
+  border-radius:12px;
+  width:320px;
+  box-shadow:0 0 40px rgba(0,0,0,0.6);
+  color:white;
+}
+input{
+  width:100%;
+  padding:10px;
+  margin-bottom:15px;
+  border-radius:6px;
+  border:none;
+}
+button{
+  width:100%;
+  padding:12px;
+  background:#c40000;
+  color:white;
+  border:none;
+  border-radius:6px;
+  font-weight:bold;
+  cursor:pointer;
+}
+.error{
+  color:#ff4444;
+  margin-top:10px;
+}
+</style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="card">
-      <h1>Logowanie do panelu</h1>
 
-      <form id="f">
-        <label>Login</label>
-        <input id="u" autocomplete="username" />
+<div class="card">
+<h2>Logowanie</h2>
 
-        <label>Hasło</label>
-        <input id="p" type="password" autocomplete="current-password" />
+<input type="text" id="email" placeholder="Email">
+<input type="password" id="password" placeholder="Hasło">
 
-        <button type="submit">Zaloguj</button>
-      </form>
+<button onclick="login()">Zaloguj się</button>
 
-      <div class="msg" id="m"></div>
-      <div class="msg" style="opacity:.7;margin-top:10px">
-        Po zalogowaniu zostaniesz przeniesiona do <a href="/admin">/admin</a>.
-      </div>
-    </div>
-  </div>
+<div id="error" class="error"></div>
+</div>
 
 <script>
-  const f = document.getElementById('f');
-  const m = document.getElementById('m');
+async function login(){
+  const email = document.getElementById('email').value
+  const password = document.getElementById('password').value
 
-  f.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    m.textContent = 'Loguję...';
+  const res = await fetch('/api/login',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({email,password})
+  })
 
-    const username = document.getElementById('u').value.trim();
-    const password = document.getElementById('p').value;
+  const data = await res.json()
 
-    try{
-      const r = await fetch('/api/admin-api/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
-      });
-
-      const data = await r.json().catch(()=>({}));
-      if(!r.ok){
-        m.textContent = data.error || 'Błąd logowania.';
-        return;
-      }
-
-      // ✅ WAŻNE: admin.html czyta km_token
-      localStorage.setItem('km_token', data.token);
-
-      m.textContent = 'OK. Przenoszę do panelu...';
-      location.href = '/admin';
-    }catch(err){
-      m.textContent = 'Błąd połączenia.';
-    }
-  });
+  if(res.ok){
+    localStorage.setItem('token',data.token)
+    window.location.href='/admin.html'
+  }else{
+    document.getElementById('error').innerText=data.error
+  }
+}
 </script>
+
 </body>
 </html>
