@@ -1,0 +1,20 @@
+id,name,address_id,days,is_active,group_type,sort_order
+1,Wrocław - 2025/2026,2,{"1":{"from":"18:30","to":"20:00"},"3":{"from":"18:30","to":"20:00"}},1,KMG,30
+2,Wrocław - Leśnica - Początkująca,3,{"1":{"from":"17:30","to":"19:00"},"3":{"from":"17:30","to":"19:00"}},0,KMG,
+3,Wrocław - Psie Pole - Początkująca,4,{"2":{"from":"19:30","to":"21:00"},"4":{"from":"19:30","to":"21:00"}},0,KMG,40
+4,Wrocław - Plac Muzealny - Studencka,5,{"1":{"from":"19:30","to":"21:00"},"3":{"from":"19:30","to":"21:00"}},0,KMG,
+5,Wrocław - 2024/2025 - NOWY NABÓR,2,{"1":{"from":"18:00","to":"19:30"},"3":{"from":"18:00","to":"19:30"}},0,KMG,10
+6,Wrocław ul. Świstackiego - 2024/2025 - zaawansowani,2,{"1":{"from":"19:30","to":"21:00"},"3":{"from":"19:30","to":"21:00"}},0,KMG,20
+7,Wrocław - Dzieci,2,{"1":{"from":"18:00","to":"19:30"},"3":{"from":"18:00","to":"19:30"}},0,KMG,
+8,Jelenia Góra - Łączona,8,{"1":{"from":"18:00","to":"19:30"},"3":{"from":"18:00","to":"19:30"}},0,KMG,
+9,Wałbrzych - 2024/2025,6,{"2":{"from":"19:30","to":"21:00"},"4":{"from":"19:30","to":"21:00"}},0,KMG,70
+10,Świdnica - Dzieci,7,{"2":{"from":"16:30","to":"17:20"},"4":{"from":"16:30","to":"17:20"}},1,KMG,
+11,Świdnica - 2025/2026,7,{"2":{"from":"17:30","to":"19:00"},"4":{"from":"17:30","to":"19:00"}},1,KMG,60
+12,Kłodzko - Łączona,9,{"2":{"from":"18:00","to":"19:30"},"4":{"from":"18:00","to":"19:30"}},0,KMG,
+13,Wrocław - PSIE POLE - Początkująca,10,{"2":{"from":"19:20","to":"20:50"},"4":{"from":"19:20","to":"20:50"}},0,KMG,
+14,KETTLE - Wrocław - Hotel GEM,12,{"5":{"from":"18:30","to":"19:30"}},0,KETTLE,
+15,Wrocław - Tęczowa - początkująca,13,{"2":{"from":"19:30","to":"21:00"},"4":{"from":"19:30","to":"21:00"}},0,,
+16,Dzierżoniów - Garncarska 1 - początkująca,14,{"2":{"from":"19:30","to":"21:00"},"4":{"from":"19:30","to":"21:00"}},0,,
+17,grupa kobiety,2,{"2":{"from":"18:00","to":"19:30"},"4":{"from":"18:00","to":"19:30"}},0,,
+18,Wrocław Dzieci Young 8-10,2,{"1":{"from":"16:00","to":"16:50"},"3":{"from":"16:00","to":"16:50"}},0,,
+19,Wrocław Dzieci Junior 10-14,15,{"1":{"from":"17:00","to":"17:50"},"3":{"from":"17:00","to":"17:50"}},0,,
