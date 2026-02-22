@@ -16,15 +16,21 @@ export default async function handler(req, res) {
   try {
 
     // =========================
-    // STARE ŚCIEŻKI ADMIN-API (żeby nie ruszać frontu)
+    // LOGIN (obsługa login LUB email)
     // =========================
 
     if (url.startsWith('/api/admin-api/login') && method === 'POST') {
-      const { email, password } = req.body
+      const { email, login, password } = req.body
+
+      const identifier = email || login
+
+      if (!identifier || !password) {
+        return json(res, 400, { error: 'Brak danych logowania' })
+      }
 
       const result = await pool.query(
-        `SELECT * FROM users WHERE email = $1`,
-        [email]
+        `SELECT * FROM users WHERE email = $1 OR login = $1`,
+        [identifier]
       )
 
       if (!result.rows.length) {
@@ -46,6 +52,10 @@ export default async function handler(req, res) {
       return json(res, 200, { token })
     }
 
+    // =========================
+    // AUTORYZACJA
+    // =========================
+
     const authHeader = req.headers.authorization
     let decoded = null
 
@@ -53,6 +63,10 @@ export default async function handler(req, res) {
       const token = authHeader.split(' ')[1]
       decoded = jwt.verify(token, process.env.JWT_SECRET)
     }
+
+    // =========================
+    // LISTA ZAPISÓW
+    // =========================
 
     if (url.startsWith('/api/admin-api/registrations') && method === 'GET') {
       if (!decoded) return json(res, 401, { error: 'Brak autoryzacji' })
@@ -65,7 +79,7 @@ export default async function handler(req, res) {
     }
 
     // =========================
-    // PUBLIC
+    // PUBLIC REGISTER
     // =========================
 
     if (url.startsWith('/api/register') && method === 'POST') {
