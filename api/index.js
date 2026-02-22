@@ -16,12 +16,12 @@ export default async function handler(req, res) {
   try {
 
     // =========================
-    // LOGIN (obsługa login LUB email)
+    // LOGIN — IGNORUJEMY TOKEN
     // =========================
 
     if (url.startsWith('/api/admin-api/login') && method === 'POST') {
-      const { email, login, password } = req.body
 
+      const { email, login, password } = req.body
       const identifier = email || login
 
       if (!identifier || !password) {
@@ -53,20 +53,20 @@ export default async function handler(req, res) {
     }
 
     // =========================
-    // AUTORYZACJA
+    // AUTORYZACJA DLA RESZTY
     // =========================
 
-    const authHeader = req.headers.authorization
     let decoded = null
+    const authHeader = req.headers.authorization
 
     if (authHeader) {
-      const token = authHeader.split(' ')[1]
-      decoded = jwt.verify(token, process.env.JWT_SECRET)
+      try {
+        const token = authHeader.split(' ')[1]
+        decoded = jwt.verify(token, process.env.JWT_SECRET)
+      } catch (e) {
+        return json(res, 401, { error: 'Nieprawidłowy token' })
+      }
     }
-
-    // =========================
-    // LISTA ZAPISÓW
-    // =========================
 
     if (url.startsWith('/api/admin-api/registrations') && method === 'GET') {
       if (!decoded) return json(res, 401, { error: 'Brak autoryzacji' })
@@ -77,10 +77,6 @@ export default async function handler(req, res) {
 
       return json(res, 200, result.rows)
     }
-
-    // =========================
-    // PUBLIC REGISTER
-    // =========================
 
     if (url.startsWith('/api/register') && method === 'POST') {
       const data = req.body
