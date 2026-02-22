@@ -66,22 +66,24 @@ body::before{
 .page{
   position:relative;
   z-index:1;
-  max-width:1100px;
+  max-width:1280px;
   margin:0 auto;
-  padding:32px 20px 100px;
+  padding:56px 40px 120px;
 }
+@media (max-width:1024px){ .page{ padding:40px 28px 100px; } }
+@media (max-width:600px){  .page{ padding:28px 16px 80px; } }
 
 /* ═══════════════════════════════════════
    HEADER ROW — nagłówek + koszyk inline
    ═══════════════════════════════════════ */
 .header-row{
   display:grid;
-  grid-template-columns:1fr auto;
-  gap:20px;
-  align-items:center;
-  margin-bottom:24px;
+  grid-template-columns:1fr 280px;
+  gap:32px;
+  align-items:start;
+  margin-bottom:32px;
 }
-@media (max-width:700px){ .header-row{grid-template-columns:1fr} }
+@media (max-width:680px){ .header-row{ grid-template-columns:1fr; gap:20px; } }
 
 .brand{display:flex;flex-direction:column;gap:8px}
 .kicker{
@@ -113,10 +115,10 @@ h1{
   -webkit-backdrop-filter:blur(20px) saturate(180%);
   border:1px solid rgba(255,255,255,0.12);
   border-radius:var(--radius-sm);
-  padding:14px 18px;
-  min-width:230px;
+  padding:18px 20px;
+  width:100%;
   box-shadow:var(--shadow-card), inset 0 1px 0 rgba(255,255,255,0.08);
-  display:flex;flex-direction:column;gap:10px;
+  display:flex;flex-direction:column;gap:12px;
 }
 .cart-inline__label{
   font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
@@ -150,7 +152,7 @@ h1{
    STEPPER
    ═══════════════════════════════════════ */
 .stepper{
-  display:flex;gap:8px;flex-wrap:wrap;margin-bottom:28px;
+  display:flex;gap:8px;flex-wrap:wrap;margin-bottom:32px;
 }
 .step{
   display:inline-flex;align-items:center;gap:9px;
@@ -211,7 +213,7 @@ h1{
 .prices-layout{
   display:grid;
   grid-template-columns:1fr 1fr;
-  gap:18px;
+  gap:24px;
   margin-top:0;
 }
 @media (max-width:820px){ .prices-layout{grid-template-columns:1fr} }
@@ -228,21 +230,21 @@ h1{
 
 /* Nagłówek kolumny */
 .price-col__head{
-  padding:16px 18px 14px;
+  padding:20px 22px 16px;
   display:flex;align-items:center;justify-content:space-between;gap:10px;
   border-bottom:1px solid rgba(255,255,255,0.08);
 }
 .price-col__title{
   font-family:'Montserrat',sans-serif;
-  font-size:20px;font-weight:600;letter-spacing:-.01em;
+  font-size:22px;font-weight:600;letter-spacing:-.01em;
 }
 .price-col__meta{
   font-size:11px;font-weight:700;letter-spacing:.10em;text-transform:uppercase;
-  padding:5px 10px;border-radius:999px;
+  padding:5px 12px;border-radius:999px;
 }
 .price-col__body{
-  padding:14px 14px 16px;
-  display:flex;flex-direction:column;gap:10px;
+  padding:18px 18px 22px;
+  display:flex;flex-direction:column;gap:12px;
   flex:1;
 }
 
@@ -281,8 +283,8 @@ h1{
 /* KARTY POZYCJI CENNIKA */
 .priceCard{
   border-radius:var(--radius-xs);
-  padding:13px 14px;
-  display:flex;flex-direction:column;gap:6px;
+  padding:16px 18px;
+  display:flex;flex-direction:column;gap:7px;
   transition:transform .15s ease, box-shadow .15s ease;
   position:relative;
   overflow:hidden;
@@ -533,10 +535,14 @@ h1{
 
 /* mobile */
 @media (max-width:600px){
-  h1{font-size:30px}
-  .prices-layout{gap:12px}
+  h1{font-size:36px}
+  .prices-layout{gap:14px}
   .btn.primary{width:100%}
-  .step-hint{display:none}
+  .cart-inline__actions{flex-direction:column}
+  .cart-inline__actions .btn{width:100%}
+  .price-col__head{padding:16px}
+  .price-col__body{padding:14px 14px 18px}
+  .priceCard{padding:13px 14px}
 }
 
 /* grid2 (pozostałości innych kroków) */
