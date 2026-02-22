@@ -32,15 +32,22 @@ module.exports = async (req, res) => {
       `SELECT id, city, name, slug, address FROM locations WHERE active = true ORDER BY sort_order, city`
     );
 
+    // UWAGA: Aktualizacja! Liczymy nowe rejestracje ORAZ kursantów przeniesionych z legacy
     const { rows: groups } = await pool.query(`
       SELECT
         g.id, g.location_id, g.name, g.category, g.age_range,
         g.max_capacity, g.notes, g.active,
-        COALESCE(COUNT(r.id) FILTER (
-          WHERE r.status NOT IN ('cancelled') AND r.is_waitlist = false
-        ), 0)::int AS registered
+        (
+          COALESCE(COUNT(DISTINCT r.id) FILTER (
+            WHERE r.status NOT IN ('cancelled') AND r.is_waitlist = false
+          ), 0) +
+          COALESCE(COUNT(DISTINCT sg.student_id) FILTER (
+            WHERE sg.active = true
+          ), 0)
+        )::int AS registered
       FROM groups g
       LEFT JOIN registrations r ON r.group_id = g.id
+      LEFT JOIN student_groups sg ON sg.group_id = g.id
       WHERE g.active = true
       GROUP BY g.id
       ORDER BY g.name
