@@ -74,8 +74,20 @@ module.exports = async (req, res) => {
     }
   }
 
+  // ── DELETE usuń plan ──────────────────────────────────────────
+  if (req.method === 'DELETE') {
+    const { id } = req.query;
+    if (!id) return res.status(400).json({ error: 'Brak id.' });
+    try {
+      const { rowCount } = await pool.query(`DELETE FROM price_plans WHERE id=$1`, [id]);
+      if (!rowCount) return res.status(404).json({ error: 'Nie znaleziono.' });
+      return res.status(200).json({ success: true });
+    } catch (e) {
+      return res.status(500).json({ error: e.message });
+    }
+  }
+
   // ── GET export CSV (gdy ?_route=export) ──────────────────────
-  // Obsługujemy /export w tym samym pliku przez vercel.json rewrite
   return res.status(405).json({ error: 'Method not allowed' });
 };
 

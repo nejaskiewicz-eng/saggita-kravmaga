@@ -1388,7 +1388,7 @@ async function savePlan(id){
 async function deletePlan(id){
   if(!confirm('Na pewno usunąć tę pozycję cennika?')) return;
   try{
-    await aF(`/resource?type=plans&id=${id}`, { method:'DELETE' });
+    await aF(`/plans?id=${id}`, { method:'DELETE' });
     toast('Pozycja usunięta','success');
     loadPlans();
   }catch(e){
