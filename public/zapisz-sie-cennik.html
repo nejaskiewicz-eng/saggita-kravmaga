@@ -804,6 +804,7 @@ h1{
         <div class="row" style="margin-top:14px">
           <button class="btn primary" id="payOnlineBtn">Płatność online</button>
           <button class="btn" id="docBtn">Pobierz dokument płatniczy</button>
+          <button class="btn ghost" id="backToCennik">← Wróć do cennika</button>
         </div>
 
         <div class="help" id="payHelp" style="margin-top:10px">—</div>
@@ -1304,6 +1305,7 @@ async function handlePayOnline(payment_ref){
   btn.innerHTML = `<span class="spin"></span> Przekierowuję…`;
 
   try{
+    // Wysyłamy akcję pay_online — to trigguje mail do kursanta
     const d = await fetch(`${API}/registration/action`, {
       method:'POST',
       headers:{'Content-Type':'application/json'},
@@ -1314,10 +1316,11 @@ async function handlePayOnline(payment_ref){
       return j;
     });
 
-    // d.url expected
     if(d?.url){
+      // Zapisz że płacił online — po powrocie z bramki wyślemy potwierdzenie
+      sessionStorage.setItem('km_pending_confirm', payment_ref);
       window.location.href = d.url;
-    }else{
+    } else {
       toast('Brak linku do płatności (sprawdź konfigurację)','err', 4200);
     }
   }catch(e){
@@ -1328,10 +1331,38 @@ async function handlePayOnline(payment_ref){
   }
 }
 
+// Sprawdź czy wracamy po płatności online
+(async ()=>{
+  const ref = sessionStorage.getItem('km_pending_confirm');
+  const params = new URLSearchParams(window.location.search);
+  const success = params.get('payment') === 'success' || params.get('status') === 'paid';
+  if(ref && success){
+    sessionStorage.removeItem('km_pending_confirm');
+    try{
+      await fetch(`${API}/registration/action`, {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ payment_ref: ref, action: 'payment_confirmed' })
+      });
+      toast('Płatność potwierdzona — sprawdź maila 🎉','ok', 6000);
+    }catch(_){}
+  }
+})();
+
 async function downloadPaymentDoc(payment_ref){
   if(!payment_ref) return toast('Brak referencji płatności','err');
-  const url = `${API}/payment-document?payment_ref=${encodeURIComponent(payment_ref)}`;
+
+  // Wyślij akcję → trigguje mail z dokumentem do kursanta
+  fetch(`${API}/registration/action`, {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ payment_ref, action: 'download_doc' })
+  }).catch(()=>{});
+
+  // Otwórz dokument do wydruku
+  const url = `${API}/registration/action?payment_ref=${encodeURIComponent(payment_ref)}`;
   window.open(url, '_blank');
+  toast('Dokument otwarty · mail z potwierdzeniem wysłany na Twoją skrzynkę','ok',4000);
 }
 
 async function loadAll(){
@@ -1357,6 +1388,11 @@ async function loadAll(){
 }
 
 document.getElementById('btnClearCart').addEventListener('click', clearCart);
+document.getElementById('backToCennik').addEventListener('click', ()=>{
+  clearCart();
+  setStep(1);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
 
 // Odśwież koszyk gdy zmienia się liczba miesięcy lub typ kursanta
 document.getElementById('f_months').addEventListener('change', ()=>{ if(selectedPlan) updateCartPrice(); });

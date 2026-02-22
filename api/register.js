@@ -1,7 +1,7 @@
 // api/register.js  — Funkcja #3
 // POST /api/register → zapis kursanta, zwraca dane płatności
 const { getPool } = require('./_lib/db');
-const { sendMail, mailKursant, mailAdmin } = require('./_lib/mail');
+const { sendMail, mailAdmin } = require('./_lib/mail');
 
 const BANK_ACCOUNT = process.env.BANK_ACCOUNT || 'PL00 0000 0000 0000 0000 0000 0000';
 const BANK_NAME    = process.env.BANK_NAME    || 'Akademia Obrony Saggita';
@@ -97,16 +97,26 @@ module.exports = async (req, res) => {
       ]
     );
 
-    // Wyślij maile asynchronicznie (nie blokuj odpowiedzi)
     const mailData = {
-      first_name: b.first_name, payment_ref, group_name: group.name,
-      city: group.city, total_amount, bank_account: BANK_ACCOUNT,
-      bank_name: BANK_NAME, is_waitlist,
+      first_name: b.first_name, last_name: b.last_name,
+      email: b.email, phone: b.phone,
+      payment_ref, group_name: group.name, city: group.city,
+      total_amount, plan_name, is_waitlist,
+      bank_account: BANK_ACCOUNT, bank_name: BANK_NAME,
     };
-    Promise.all([
-      sendMail({ to: b.email, ...mailKursant(mailData) }),
-      sendMail({ to: ADMIN_EMAIL, ...mailAdmin({ ...mailData, last_name: b.last_name, email: b.email, phone: b.phone }) }),
-    ]).catch(e => console.error('[register/mail]', e));
+
+    const mails = [
+      sendMail({ to: ADMIN_EMAIL, ...mailAdmin(mailData) }),
+    ];
+
+    // Dla listy rezerwowej wyślij od razu mail do kursanta
+    // Dla normalnego zapisu mail idzie dopiero przy wyborze metody płatności (action.js)
+    if (is_waitlist) {
+      const { mailWaitlist } = require('./_lib/mail');
+      mails.push(sendMail({ to: b.email, ...mailWaitlist(mailData) }));
+    }
+
+    Promise.all(mails).catch(e => console.error('[register/mail]', e));
 
     return res.status(201).json({
       id: reg.id,
