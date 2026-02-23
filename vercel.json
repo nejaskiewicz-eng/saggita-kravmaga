@@ -47,15 +47,25 @@
     { "source": "/api/admin-api/instructors/:id", "destination": "/api/admin-api/resource?type=instructors&id=:id" },
     { "source": "/api/admin-api/instructors",     "destination": "/api/admin-api/resource?type=instructors" },
 
-    { "source": "/api/instructor/login",                    "destination": "/api/saggita?_module=instructor-auth" },
-    { "source": "/api/instructor/me",                       "destination": "/api/saggita?_module=instructor-auth&_route=me" },
-    { "source": "/api/instructor/groups/:id/students",      "destination": "/api/saggita?_module=instructor-panel&_route=students&id=:id" },
-    { "source": "/api/instructor/groups/:id/stats",         "destination": "/api/saggita?_module=instructor-panel&_route=stats&id=:id" },
-    { "source": "/api/instructor/groups",                   "destination": "/api/saggita?_module=instructor-panel&_route=groups" },
-    { "source": "/api/instructor/payments",                 "destination": "/api/saggita?_module=instructor-panel&_route=payments" },
-    { "source": "/api/instructor/sessions/:id/attendance",  "destination": "/api/saggita?_module=instructor-attendance&_route=attendance&id=:id" },
-    { "source": "/api/instructor/sessions",                 "destination": "/api/saggita?_module=instructor-attendance&_route=sessions" },
+    { "source": "/api/instructor/login",                      "destination": "/api/saggita?_module=instructor-auth" },
+    { "source": "/api/instructor/me",                         "destination": "/api/saggita?_module=instructor-auth&_route=me" },
 
-    { "source": "/api/instructor/panel",                    "destination": "/api/saggita?_module=instructor-panel" }
+    { "source": "/api/instructor/groups/:id/students",        "destination": "/api/saggita?_module=instructor-panel&_route=students&id=:id" },
+    { "source": "/api/instructor/groups/:id/stats",           "destination": "/api/saggita?_module=instructor-panel&_route=stats&id=:id" },
+    { "source": "/api/instructor/groups",                     "destination": "/api/saggita?_module=instructor-panel&_route=groups" },
+    { "source": "/api/instructor/payments",                   "destination": "/api/saggita?_module=instructor-panel&_route=payments" },
+
+    { "source": "/api/instructor/sessions/:id/attendance",    "destination": "/api/saggita?_module=instructor-attendance&_route=attendance&id=:id" },
+    { "source": "/api/instructor/sessions",                   "destination": "/api/saggita?_module=instructor-attendance&_route=sessions" },
+
+    { "source": "/api/instructor/students/:id/payments/:pid", "destination": "/api/saggita?_module=instructor-students&id=:id&_route=payments&pid=:pid" },
+    { "source": "/api/instructor/students/:id/payments",      "destination": "/api/saggita?_module=instructor-students&id=:id&_route=payments" },
+    { "source": "/api/instructor/students/:id/attendance",    "destination": "/api/saggita?_module=instructor-students&id=:id&_route=attendance" },
+    { "source": "/api/instructor/students/:id",               "destination": "/api/saggita?_module=instructor-students&id=:id" },
+    { "source": "/api/instructor/students",                   "destination": "/api/saggita?_module=instructor-students" },
+
+    { "source": "/api/instructor/calendar",                   "destination": "/api/saggita?_module=instructor-calendar" },
+
+    { "source": "/api/instructor/panel",                      "destination": "/api/saggita?_module=instructor-panel" }
   ]
 }
