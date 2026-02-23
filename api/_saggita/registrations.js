@@ -61,9 +61,9 @@ module.exports = async (req, res) => {
         const { rows } = await pool.query(`
           WITH grp_agg AS (
             SELECT sg.student_id,
-              COALESCE(json_agg(DISTINCT jsonb_build_object('group_id', sg.group_id, 'group_name', g.name))
+              COALESCE(json_agg(jsonb_build_object('group_id', sg.group_id, 'group_name', g.name))
                 FILTER (WHERE sg.group_id IS NOT NULL), '[]') AS groups
-            FROM student_groups sg
+            FROM (SELECT DISTINCT student_id, group_id FROM student_groups) sg
             LEFT JOIN groups g ON g.id = sg.group_id
             GROUP BY sg.student_id
           ),

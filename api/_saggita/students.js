@@ -331,7 +331,7 @@ module.exports = async (req, res) => {
             JOIN groups gx ON gx.id=sgx.group_id
             JOIN locations l ON l.id=gx.location_id
             WHERE sgx.student_id=s.id AND sgx.active=true
-            ORDER BY sgx.id DESC
+            ORDER BY sgx.student_id DESC
             LIMIT 1
           ) AS city,
 
