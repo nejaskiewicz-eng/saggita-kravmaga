@@ -24,7 +24,7 @@ module.exports = async (req, res) => {
   // ══════════════════════════════════════════════════════════════
   if (route === 'history') {
     if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
-    
+
     try {
       const { search, group_id, page = 1, limit = 50, tab = 'students' } = req.query;
       const offset = (parseInt(page) - 1) * parseInt(limit);
@@ -57,11 +57,16 @@ module.exports = async (req, res) => {
 
         // UWAGA: używamy CTE żeby uniknąć iloczynu kartezjańskiego
         // (wielokrotne JOINy powodowały eksplozję wierszy - np. 685345 grup dla jednego kursanta)
+        // FIX: NIE ROBIMY GROUP BY w głównym SELECT (bo ga.groups powodowało błąd).
         const { rows } = await pool.query(`
           WITH grp_agg AS (
             SELECT sg.student_id,
-              COALESCE(json_agg(jsonb_build_object('group_id', sg.group_id, 'group_name', g.name))
-                FILTER (WHERE sg.group_id IS NOT NULL), '[]') AS groups
+              COALESCE(
+                json_agg(
+                  jsonb_build_object('group_id', sg.group_id, 'group_name', g.name)
+                ) FILTER (WHERE sg.group_id IS NOT NULL),
+                '[]'
+              ) AS groups
             FROM (SELECT DISTINCT student_id, group_id FROM student_groups) sg
             LEFT JOIN groups g ON g.id = sg.group_id
             GROUP BY sg.student_id
@@ -96,8 +101,6 @@ module.exports = async (req, res) => {
           LEFT JOIN att_agg aa ON aa.student_id = s.id
           LEFT JOIN pay_agg pa ON pa.student_id = s.id
           ${whereStr}
-          GROUP BY s.id, aa.total_attendances, aa.last_training,
-                   pa.total_paid, pa.last_payment, pa.payment_count
           ORDER BY s.last_name, s.first_name
           LIMIT $${pi} OFFSET $${pi + 1}
         `, [...vals, parseInt(limit), offset]);
