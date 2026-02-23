@@ -227,20 +227,15 @@ select option{background:#1c1414}
     <nav>
       <a data-view="dashboard" class="active"><span class="nd"></span> Dashboard</a>
       <div class="sl">Kursanci</div>
+      <a data-view="unified-students"><span class="nd"></span> Baza kursantów</a>
       <a data-view="web-registrations"><span class="nd"></span> Zapisy ze strony</a>
-      <a data-view="participants"><span class="nd"></span> Baza kursantów</a>
-      <a data-view="add-participant"><span class="nd"></span> Dodaj kursanta</a>
+      <a data-view="legacy-history"><span class="nd"></span> Archiwum CSV</a>
       <div class="sl">Organizacja</div>
       <a data-view="groups"><span class="nd"></span> Grupy</a>
       <a data-view="schedules"><span class="nd"></span> Grafik zajęć</a>
       <a data-view="locations"><span class="nd"></span> Lokalizacje</a>
       <a data-view="plans"><span class="nd"></span> Cennik</a>
-      
-      <div class="sl">Nowe Funkcje</div>
-      <a data-view="unified-students"><span class="nd"></span> Baza Ujednolicona</a>
-      <a data-view="legacy-history"><span class="nd"></span> Historia (Archiwum)</a>
       <a data-view="instructors"><span class="nd"></span> Instruktorzy</a>
-      
       <div class="sl">Export</div>
       <a id="btn-export"><span class="nd"></span> Pobierz CSV</a>
     </nav>
@@ -450,8 +445,8 @@ function navigate(view){
     schedules:'Grafik zajęć',
     locations:'Lokalizacje',
     plans:'Cennik',
-    'unified-students': 'Ujednolicona Baza Kursantów',
-    'legacy-history': 'Historia (Archiwum)',
+    'unified-students': 'Baza kursantów',
+    'legacy-history': 'Archiwum CSV',
     'instructors': 'Instruktorzy'
   };
   document.getElementById('page-title').textContent=titles[view]||view;
@@ -1680,8 +1675,18 @@ async function deleteLocation(id){
 // BAZA UJEDNOLICONA
 // ══════════════════════════════════════════════════════════════════
 
-let US = { page:1, total:0, limit:60 };
+let US = { page:1, total:0, limit:60, overdue: false };
 let usTimer;
+
+function toggleOverdue() {
+  US.overdue = !US.overdue;
+  US.page = 1;
+  const btn = document.getElementById('us-overdue-btn');
+  const bar = document.getElementById('us-overdue-bar');
+  if (btn) btn.style.background = US.overdue ? 'rgba(220,50,30,0.35)' : 'rgba(220,50,30,0.15)';
+  if (bar) bar.style.display = US.overdue ? 'block' : 'none';
+  fetchUS();
+}
 
 async function loadUnifiedStudents() {
   const c = document.getElementById('content');
@@ -1696,7 +1701,7 @@ async function loadUnifiedStudents() {
 
   c.innerHTML = `
     <div class="sh">
-      <h3>Baza kursantów — ujednolicona</h3>
+      <h3>Baza kursantów</h3>
       <button class="btn btn-primary btn-sm" onclick="openNewStudentModal()">+ Dodaj kursanta</button>
     </div>
     <div class="fb">
@@ -1715,15 +1720,19 @@ async function loadUnifiedStudents() {
         <option value="false">Tylko nieaktywni</option>
       </select>
       <button class="btn btn-secondary btn-sm" onclick="US.page=1;usClear()">✕ Wyczyść</button>
+      <button id="us-overdue-btn" class="btn btn-sm" style="background:rgba(220,50,30,0.15);border:1px solid rgba(220,50,30,0.4);color:#ff6b5b" onclick="toggleOverdue()">⚠️ Zaległości</button>
       <span id="us-count" style="color:var(--dim);font-size:12px"></span>
+    </div>
+    <div id="us-overdue-bar" style="display:none;background:rgba(220,50,30,0.1);border:1px solid rgba(220,50,30,0.3);border-radius:6px;padding:10px 14px;margin-bottom:12px;font-size:13px;color:var(--red-l)">
+      ⚠️ <strong>Tryb: Zaległości</strong> — aktywni kursanci, którzy byli na treningu w ostatnich 60 dniach, ale nie zapłacili od ponad 35 dni (lub wcale).
     </div>
     <div class="tw"><table>
       <thead><tr>
         <th>Kursant</th><th>Kontakt</th><th>Grupy</th><th>Źródło</th>
-        <th>Treningi</th><th>Ostatni trening</th><th>Status płatności</th><th></th>
+        <th>Treningi</th><th>Ostatni trening</th><th>Ostatnia wpłata</th><th>Status płatności</th><th></th>
       </tr></thead>
       <tbody id="us-body">
-        <tr><td colspan="8"><div class="loader"><div class="spinner"></div> Ładowanie...</div></td></tr>
+        <tr><td colspan="9"><div class="loader"><div class="spinner"></div> Ładowanie...</div></td></tr>
       </tbody>
     </table></div>
     <div class="pag" id="us-pag"></div>`;
@@ -1742,7 +1751,7 @@ function usClear() {
 async function fetchUS() {
   const tbody = document.getElementById('us-body');
   if (!tbody) return;
-  tbody.innerHTML = '<tr><td colspan="8"><div class="loader"><div class="spinner"></div></div></td></tr>';
+  tbody.innerHTML = '<tr><td colspan="9"><div class="loader"><div class="spinner"></div></div></td></tr>';
 
   const p = new URLSearchParams({ page: US.page, limit: US.limit });
   const q    = document.getElementById('us-q')?.value;      if(q)    p.set('search', q);
@@ -1750,16 +1759,17 @@ async function fetchUS() {
   const city = document.getElementById('us-city')?.value;   if(city) p.set('city', city);
   const pay  = document.getElementById('us-pay')?.value;    if(pay)  p.set('payment_status', pay);
   const act  = document.getElementById('us-active')?.value; if(act)  p.set('is_active', act);
+  if (US.overdue) p.set('overdue', 'true');
 
   try {
     const d = await aF('/students?' + p.toString());
     const rows = arrRows(d);
     US.total = d.total || rows.length;
     const countEl = document.getElementById('us-count');
-    if (countEl) countEl.textContent = US.total + ' wyników';
+    if (countEl) countEl.textContent = US.total + ' wyników' + (US.overdue ? ' z zaległościami' : '');
 
     if (!rows.length) {
-      tbody.innerHTML = '<tr><td colspan="8"><div class="empty"><strong>Brak wyników</strong>Zmień filtry lub dodaj kursanta.</div></td></tr>';
+      tbody.innerHTML = '<tr><td colspan="9"><div class="empty"><strong>' + (US.overdue ? '✅ Brak zaległości!' : 'Brak wyników') + '</strong>' + (US.overdue ? 'Wszyscy aktywni kursanci mają aktualne płatności.' : 'Zmień filtry lub dodaj kursanta.') + '</div></td></tr>';
       document.getElementById('us-pag').innerHTML = '';
       return;
     }
@@ -1773,10 +1783,24 @@ async function fetchUS() {
           + (r.groups.length>2 ? `<span style="font-size:10px;color:var(--dim)"> +${r.groups.length-2}</span>` : '')
         : '—';
       const payBadge = r.payment_status ? pb(r.payment_status)
-        : (r.legacy_paid > 0 ? `<span class="badge bg">${Number(r.legacy_paid).toFixed(0)} zł hist.</span>` : '—');
-      const inactive = !r.is_active ? ' <span class="badge br">Nieaktywny</span>' : '';
+        : (r.legacy_paid > 0 ? `<span class="badge bg">${Number(r.legacy_paid).toFixed(0)} zł</span>` : '<span class="badge br">brak</span>');
 
-      return `<tr>
+      // Ostatnia wpłata z kolorowaniem
+      let lastPayHtml = '—';
+      if (r.last_payment_date) {
+        const days = r.days_since_payment;
+        const color = days > 60 ? 'var(--red-l)' : days > 35 ? '#f0a500' : 'var(--green)';
+        const icon = days > 60 ? '🔴' : days > 35 ? '🟡' : '🟢';
+        lastPayHtml = `<span style="font-family:monospace;font-size:11px;color:${color}">${icon} ${fd(r.last_payment_date)}</span><br><span style="font-size:10px;color:var(--dim)">${days} dni temu</span>`;
+      } else if (r.legacy_paid == 0 && !r.payment_status) {
+        lastPayHtml = '<span style="color:var(--red-l);font-size:11px">🔴 nigdy</span>';
+      }
+
+      const inactive = !r.is_active ? ' <span class="badge br">Nieaktywny</span>' : '';
+      // Wyróżnienie wiersza zaległości
+      const rowStyle = US.overdue ? 'background:rgba(220,50,30,0.05)' : '';
+
+      return `<tr style="${rowStyle}">
         <td>
           <strong style="color:var(--bright)">${r.first_name} ${r.last_name}</strong>${inactive}
           <br><span style="color:var(--dim);font-size:11px">${r.email||'brak email'}</span>
@@ -1784,8 +1808,9 @@ async function fetchUS() {
         <td style="color:var(--dim);font-size:12px">${r.phone||'—'}</td>
         <td>${groups}</td>
         <td>${srcBadge}</td>
-        <td>${r.total_present||0} <span style="color:var(--muted)">ob.</span></td>
+        <td>${r.total_present||0}<br><span style="font-size:10px;color:var(--dim)">${r.present_60d||0} / 60 dni</span></td>
         <td style="font-size:12px;color:var(--dim)">${r.last_training ? fd(r.last_training) : '—'}</td>
+        <td>${lastPayHtml}</td>
         <td>${payBadge}</td>
         <td>
           <div class="tda">
@@ -1808,7 +1833,7 @@ async function fetchUS() {
       pagEl.innerHTML = '';
     }
   } catch(e) {
-    tbody.innerHTML = `<tr><td colspan="8" style="color:var(--red-l);padding:16px">${e.message}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="9" style="color:var(--red-l);padding:16px">${e.message}</td></tr>`;
   }
 }
 
@@ -2180,13 +2205,28 @@ async function fetchHistTab(tab) {
 
     if (tab === 'students') {
       el.innerHTML = `
-        <div class="fb">
-          <input id="hs-q" type="text" placeholder="Szukaj kursanta legacy…" oninput="hsDebounce()">
+        <div class="fb" style="flex-wrap:wrap;gap:8px;margin-bottom:12px">
+          <input id="hs-q" type="text" placeholder="Szukaj kursanta legacy…" oninput="hsDebounce()" style="flex:1;min-width:200px">
           <button class="btn btn-secondary btn-sm" onclick="fetchHistStudents()">Szukaj</button>
-          <span id="hs-count" style="color:var(--dim);font-size:12px"></span>
+          <select id="hs-status" onchange="hsPage=1;fetchHistStudents()" style="background:var(--bg2);border:1px solid var(--bdr);color:var(--bright);padding:4px 8px;border-radius:4px;font-size:12px">
+            <option value="">Wszyscy</option>
+            <option value="active">Aktywni (trening &lt;60 dni)</option>
+            <option value="no_payment">Brak wpłat 60+ dni</option>
+            <option value="never_paid">Nigdy nie płacili</option>
+          </select>
+          <span id="hs-count" style="color:var(--dim);font-size:12px;line-height:32px"></span>
         </div>
         <div class="tw"><table>
-          <thead><tr><th>Kursant</th><th>Email</th><th>Telefon</th><th>Grupy</th><th>Treningi</th><th>Ostatni</th><th>Wpłacono</th><th></th></tr></thead>
+          <thead><tr>
+            <th>Kursant</th>
+            <th>Email / Tel</th>
+            <th>Grupy</th>
+            <th>Treningi</th>
+            <th>Ostatni trening</th>
+            <th>Ostatnia wpłata</th>
+            <th>Suma wpłat</th>
+            <th></th>
+          </tr></thead>
           <tbody id="hs-body"><tr><td colspan="8"><div class="loader"><div class="spinner"></div></div></td></tr></tbody>
         </table></div>
         <div class="pag" id="hs-pag"></div>`;
@@ -2223,27 +2263,74 @@ async function fetchHistStudents() {
   if (!tbody) return;
   tbody.innerHTML = '<tr><td colspan="8"><div class="loader"><div class="spinner"></div></div></td></tr>';
   const q = document.getElementById('hs-q')?.value || '';
+  const statusFilter = document.getElementById('hs-status')?.value || '';
   try {
     const d = await aF(`/history?tab=students&search=${encodeURIComponent(q)}&page=${hsPage}&limit=60`);
-    const rows = arrRows(d);
+    let rows = arrRows(d);
     const total = d.total || rows.length;
-    const countEl = document.getElementById('hs-count');
-    if (countEl) countEl.textContent = total + ' wyników';
 
-    tbody.innerHTML = rows.length ? rows.map(s => `
+    // Filtrowanie po stronie klienta (status aktywności / płatności)
+    const now = new Date();
+    const MS60 = 60 * 24 * 60 * 60 * 1000;
+    if (statusFilter === 'active') {
+      rows = rows.filter(s => s.last_training && (now - new Date(s.last_training)) < MS60);
+    } else if (statusFilter === 'no_payment') {
+      rows = rows.filter(s => !s.last_payment || (now - new Date(s.last_payment)) > MS60);
+    } else if (statusFilter === 'never_paid') {
+      rows = rows.filter(s => !s.total_paid || Number(s.total_paid) === 0);
+    }
+
+    const countEl = document.getElementById('hs-count');
+    if (countEl) countEl.textContent = (statusFilter ? rows.length + ' / ' : '') + total + ' kursantów';
+
+    function paymentBadge(s) {
+      if (!s.last_payment && (!s.total_paid || Number(s.total_paid) === 0)) {
+        return '<span class="badge br" title="Brak wpłat w historii">brak wpłat</span>';
+      }
+      if (!s.last_payment) return '<span style="color:var(--dim);font-size:11px">—</span>';
+      const daysSince = Math.floor((now - new Date(s.last_payment)) / (24*60*60*1000));
+      const dateStr = fd(s.last_payment);
+      if (daysSince <= 45) {
+        return `<span class="badge bg" title="${daysSince} dni temu">${dateStr}</span>`;
+      } else if (daysSince <= 90) {
+        return `<span class="badge bx" title="${daysSince} dni temu — sprawdź płatność">${dateStr}</span>`;
+      } else {
+        return `<span class="badge br" title="${daysSince} dni temu — możliwa zaległość">${dateStr} ⚠</span>`;
+      }
+    }
+
+    function trainingBadge(s) {
+      if (!s.last_training) return '<span style="color:var(--dim)">—</span>';
+      const daysSince = Math.floor((now - new Date(s.last_training)) / (24*60*60*1000));
+      const dateStr = fd(s.last_training);
+      if (daysSince <= 30) return `<span style="color:var(--green);font-size:11px;font-family:monospace">${dateStr}</span>`;
+      if (daysSince <= 60) return `<span style="color:var(--orange,#f80);font-size:11px;font-family:monospace">${dateStr}</span>`;
+      return `<span style="color:var(--dim);font-size:11px;font-family:monospace">${dateStr}</span>`;
+    }
+
+    tbody.innerHTML = rows.length ? rows.map(s => {
+      const grpArr = Array.isArray(s.groups) ? s.groups : [];
+      // Deduplikacja - może być duplikaty w json_agg
+      const uniqGroups = grpArr.filter((g,i,a) => a.findIndex(x=>x.group_id===g.group_id)===i);
+      const grpHtml = uniqGroups.length
+        ? uniqGroups.slice(0,2).map(g=>`<span class="badge bb" style="font-size:10px;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block;vertical-align:middle">${g.group_name||'?'}</span>`).join(' ')
+          + (uniqGroups.length>2 ? `<span style="font-size:10px;color:var(--dim)"> +${uniqGroups.length-2}</span>` : '')
+        : '<span style="color:var(--dim)">—</span>';
+
+      return `
       <tr>
         <td>
           <strong style="color:var(--bright)">${s.first_name} ${s.last_name}</strong>
-          ${!s.is_active?'<span class="badge br" style="margin-left:4px">Nieaktywny</span>':''}
+          ${!s.is_active ? '<br><span class="badge br" style="font-size:9px">Nieaktywny</span>' : ''}
         </td>
-        <td style="color:var(--dim);font-size:12px">${s.email||'—'}</td>
-        <td style="color:var(--dim);font-size:12px">${s.phone||'—'}</td>
-        <td>${Array.isArray(s.groups)?s.groups.map(g=>`<span class="badge bx" style="font-size:10px">${g.group_name||g.name||'?'}</span>`).join(''):'—'}</td>
-        <td>${s.total_attendances||0}</td>
-        <td style="font-family:monospace;font-size:11px;color:var(--dim)">${s.last_training?fd(s.last_training):'—'}</td>
-        <td><strong>${s.total_paid?Number(s.total_paid).toFixed(0)+' zł':'—'}</strong></td>
+        <td style="font-size:11px;color:var(--dim)">${s.email||'—'}${s.phone?'<br>'+s.phone:''}</td>
+        <td style="max-width:180px">${grpHtml}</td>
+        <td style="text-align:center;font-weight:bold">${s.total_attendances||0}</td>
+        <td>${trainingBadge(s)}</td>
+        <td>${paymentBadge(s)}</td>
+        <td><strong style="color:${Number(s.total_paid)>0?'var(--green)':'var(--dim)'}">${s.total_paid?Number(s.total_paid).toFixed(0)+' zł':'—'}</strong></td>
         <td><button class="bi" onclick="openStudentKartoteka(${s.id})">Kartoteka</button></td>
-      </tr>`).join('')
+      </tr>`;}).join('')
       : '<tr><td colspan="8"><div class="empty">Brak wyników</div></td></tr>';
 
     const pages = Math.ceil(total / 60);

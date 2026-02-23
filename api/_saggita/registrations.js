@@ -47,32 +47,59 @@ module.exports = async (req, res) => {
         }
 
         const whereStr = where.length ? 'WHERE ' + where.join(' AND ') : '';
-        
+        const whereForCount = where.length ? 'WHERE ' + where.join(' AND ') : '';
+
         const countVals = [...vals];
         const { rows: [{ total }] } = await pool.query(
           `SELECT COUNT(DISTINCT s.id)::int AS total FROM students s
            LEFT JOIN student_groups sg ON sg.student_id = s.id
-           ${whereStr}`, countVals
+           ${whereForCount}`, countVals
         );
 
+        // UWAGA: używamy CTE żeby uniknąć iloczynu kartezjańskiego
+        // (wielokrotne JOINy powodowały eksplozję wierszy - np. 685345 grup dla jednego kursanta)
         const { rows } = await pool.query(`
+          WITH grp_agg AS (
+            SELECT sg.student_id,
+              COALESCE(json_agg(DISTINCT jsonb_build_object('group_id', sg.group_id, 'group_name', g.name))
+                FILTER (WHERE sg.group_id IS NOT NULL), '[]') AS groups
+            FROM student_groups sg
+            LEFT JOIN groups g ON g.id = sg.group_id
+            GROUP BY sg.student_id
+          ),
+          att_agg AS (
+            SELECT a.student_id,
+              COUNT(a.id) FILTER (WHERE a.present = true)::int AS total_attendances,
+              MAX(ts.session_date) AS last_training
+            FROM attendances a
+            JOIN training_sessions ts ON ts.id = a.session_id
+            GROUP BY a.student_id
+          ),
+          pay_agg AS (
+            SELECT lp.student_id,
+              COALESCE(SUM(lp.amount), 0)::numeric AS total_paid,
+              MAX(lp.paid_at) AS last_payment,
+              COUNT(lp.id)::int AS payment_count
+            FROM legacy_payments lp
+            GROUP BY lp.student_id
+          )
           SELECT
             s.id, s.legacy_id, s.first_name, s.last_name, s.email, s.phone,
             s.birth_year, s.is_active, s.created_at,
-            COALESCE(json_agg(
-              json_build_object('group_id', sg.group_id, 'group_name', g.name)
-            ) FILTER (WHERE sg.group_id IS NOT NULL), '[]') AS groups,
-            COUNT(DISTINCT a.id) FILTER (WHERE a.present = true)::int AS total_attendances,
-            MAX(ts.session_date) AS last_training,
-            COALESCE(SUM(lp.amount), 0)::numeric AS total_paid
+            COALESCE(ga.groups, '[]') AS groups,
+            COALESCE(aa.total_attendances, 0) AS total_attendances,
+            aa.last_training,
+            COALESCE(pa.total_paid, 0) AS total_paid,
+            pa.last_payment,
+            COALESCE(pa.payment_count, 0) AS payment_count
           FROM students s
           LEFT JOIN student_groups sg ON sg.student_id = s.id
-          LEFT JOIN groups g ON g.id = sg.group_id
-          LEFT JOIN attendances a ON a.student_id = s.id
-          LEFT JOIN training_sessions ts ON ts.id = a.session_id
-          LEFT JOIN legacy_payments lp ON lp.student_id = s.id
+          LEFT JOIN grp_agg ga ON ga.student_id = s.id
+          LEFT JOIN att_agg aa ON aa.student_id = s.id
+          LEFT JOIN pay_agg pa ON pa.student_id = s.id
           ${whereStr}
-          GROUP BY s.id
+          GROUP BY s.id, ga.groups, aa.total_attendances, aa.last_training,
+                   pa.total_paid, pa.last_payment, pa.payment_count
           ORDER BY s.last_name, s.first_name
           LIMIT $${pi} OFFSET $${pi + 1}
         `, [...vals, parseInt(limit), offset]);

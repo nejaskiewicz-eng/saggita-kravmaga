@@ -89,7 +89,7 @@ module.exports = async (req, res) => {
     try {
       const { rows:[student] } = await pool.query(`
         SELECT s.*,
-          COALESCE(json_agg(DISTINCT json_build_object('id',g.id,'name',g.name,'active',sg.active)) FILTER (WHERE g.id IS NOT NULL),'[]') AS groups,
+          COALESCE(json_agg(DISTINCT jsonb_build_object('id',g.id,'name',g.name,'active',sg.active)) FILTER (WHERE g.id IS NOT NULL),'[]') AS groups,
           COUNT(DISTINCT a.id) FILTER (WHERE a.present=true)::int AS total_present,
           COUNT(DISTINCT a.id)::int AS total_sessions,
           ROUND(COUNT(DISTINCT a.id) FILTER (WHERE a.present=true)::numeric/NULLIF(COUNT(DISTINCT a.id),0)*100,0)::int AS attendance_pct,
@@ -116,6 +116,7 @@ module.exports = async (req, res) => {
   // ── GET lista (ujednolicona, z filtrami) ──────────────────────
   if (req.method === 'GET') {
     try {
+      const { overdue } = req.query;
       const conds=[],vals=[];let pi=1;
       if(search){conds.push(`(s.first_name ILIKE $${pi} OR s.last_name ILIKE $${pi} OR s.email ILIKE $${pi} OR s.phone ILIKE $${pi})`);vals.push(`%${search}%`);pi++;}
       if(source&&source!=='all'){conds.push(`s.source=$${pi++}`);vals.push(source);}
@@ -123,15 +124,28 @@ module.exports = async (req, res) => {
       if(group_id){conds.push(`EXISTS(SELECT 1 FROM student_groups sg2 WHERE sg2.student_id=s.id AND sg2.group_id=$${pi++})`);vals.push(parseInt(group_id));}
       if(city){conds.push(`EXISTS(SELECT 1 FROM student_groups sg3 JOIN groups g3 ON g3.id=sg3.group_id JOIN locations l3 ON l3.id=g3.location_id WHERE sg3.student_id=s.id AND l3.city ILIKE $${pi++})`);vals.push(`%${city}%`);}
       if(payment_status&&payment_status!=='all'){conds.push(`EXISTS(SELECT 1 FROM registrations r2 WHERE r2.id=s.registration_id AND r2.payment_status=$${pi++})`);vals.push(payment_status);}
+      // Filtr zaległości: aktywni, byli na treningu w ostatnich 60 dniach, ostatnia wpłata >35 dni lub brak
+      if(overdue==='true'){
+        conds.push(`s.is_active=true`);
+        conds.push(`EXISTS(SELECT 1 FROM attendances a2 JOIN training_sessions ts2 ON ts2.id=a2.session_id WHERE a2.student_id=s.id AND a2.present=true AND ts2.session_date >= CURRENT_DATE - INTERVAL '60 days')`);
+        conds.push(`(
+          (s.registration_id IS NULL AND (SELECT MAX(lp2.paid_at) FROM legacy_payments lp2 WHERE lp2.student_id=s.id) < CURRENT_DATE - INTERVAL '35 days')
+          OR (s.registration_id IS NULL AND NOT EXISTS(SELECT 1 FROM legacy_payments lp3 WHERE lp3.student_id=s.id))
+          OR (s.registration_id IS NOT NULL AND EXISTS(SELECT 1 FROM registrations r3 WHERE r3.id=s.registration_id AND r3.payment_status NOT IN ('paid')))
+        )`);
+      }
       const where=conds.length?'WHERE '+conds.join(' AND '):'';
       const offset=(parseInt(page)-1)*parseInt(limit);
       const {rows:[{total}]}=await pool.query(`SELECT COUNT(*)::int AS total FROM students s ${where}`,vals);
       const {rows}=await pool.query(`
         SELECT s.id,s.legacy_id,s.first_name,s.last_name,s.email,s.phone,s.birth_year,s.is_active,s.source,s.created_at,s.registration_id,
-          COALESCE(json_agg(DISTINCT json_build_object('id',g.id,'name',g.name)) FILTER (WHERE g.id IS NOT NULL),'[]') AS groups,
+          COALESCE(json_agg(DISTINCT jsonb_build_object('id',g.id,'name',g.name)) FILTER (WHERE g.id IS NOT NULL),'[]') AS groups,
           COUNT(DISTINCT a.id) FILTER (WHERE a.present=true)::int AS total_present,
+          COUNT(DISTINCT a.id) FILTER (WHERE a.present=true AND ts.session_date >= CURRENT_DATE - INTERVAL '60 days')::int AS present_60d,
           MAX(ts.session_date) AS last_training,
           COALESCE(SUM(DISTINCT lp.amount),0)::numeric AS legacy_paid,
+          MAX(lp.paid_at) AS last_payment_date,
+          CASE WHEN MAX(lp.paid_at) IS NOT NULL THEN (CURRENT_DATE - MAX(lp.paid_at)::date)::int ELSE NULL END AS days_since_payment,
           r.payment_status,r.total_amount,pp.name AS plan_name,l.city
         FROM students s
         LEFT JOIN student_groups sg ON sg.student_id=s.id AND sg.active=true
