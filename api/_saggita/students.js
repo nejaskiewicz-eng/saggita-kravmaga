@@ -1,6 +1,6 @@
 // api/_saggita/students.js
-// Ujednolicona baza kursantów: legacy (students) + nowe zapisy (registrations)
-// Stabilizacja: brak założeń o kolumnach student_groups (brak id/active), poprawne daty ($::date)
+// SEZONOWA BAZA KURSANTÓW (od 2025-09-01) + możliwość historii przez ?scope=history
+// Stabilne liczenie: ostatni trening / ostatnia wpłata bez mnożenia rekordów
 
 const { getPool } = require('../_lib/db');
 const { requireAuth } = require('../_lib/auth');
@@ -23,8 +23,11 @@ module.exports = async (req, res) => {
     payment_status, is_active,
     page = 1, limit = 60,
     sort = 'recent',
-    overdue
+    overdue,
+    scope // 'season' (domyślnie) | 'history'
   } = req.query;
+
+  const isHistory = scope === 'history';
 
   // ── SUB-ROUTE: płatności ──────────────────────────────────────
   if (id && _route === 'payments') {
@@ -142,7 +145,6 @@ module.exports = async (req, res) => {
         SELECT
           s.*,
 
-          -- grupy (bez założeń o kolumnach typu active)
           COALESCE((
             SELECT json_agg(jsonb_build_object('id', g.id, 'name', g.name) ORDER BY g.name)
             FROM student_groups sg
@@ -150,7 +152,6 @@ module.exports = async (req, res) => {
             WHERE sg.student_id=s.id
           ), '[]'::json) AS groups,
 
-          -- metryki sezonu
           COALESCE((
             SELECT COUNT(*)::int
             FROM attendances a
@@ -176,22 +177,6 @@ module.exports = async (req, res) => {
               AND ts.session_date >= $2::date
           ) AS last_training_season,
 
-          (
-            SELECT
-              CASE
-                WHEN COUNT(*) FILTER (WHERE ts.session_date >= $2::date) = 0 THEN 0
-                ELSE ROUND(
-                  (COUNT(*) FILTER (WHERE a.present=true AND ts.session_date >= $2::date))::numeric
-                  / NULLIF((COUNT(*) FILTER (WHERE ts.session_date >= $2::date))::numeric, 0)
-                  * 100, 0
-                )::int
-              END
-            FROM attendances a
-            JOIN training_sessions ts ON ts.id=a.session_id
-            WHERE a.student_id=s.id
-          ) AS attendance_pct_season,
-
-          -- ostatnia płatność legacy
           (SELECT lp.paid_at FROM legacy_payments lp WHERE lp.student_id=s.id ORDER BY lp.paid_at DESC NULLS LAST, lp.id DESC LIMIT 1) AS last_payment_date,
           (SELECT lp.amount  FROM legacy_payments lp WHERE lp.student_id=s.id ORDER BY lp.paid_at DESC NULLS LAST, lp.id DESC LIMIT 1) AS last_payment_amount
 
@@ -275,6 +260,30 @@ module.exports = async (req, res) => {
         vals.push(payment_status);
       }
 
+      // ✅ DOMYŚLNIE: BAZA SEZONOWA (od 2025-09-01)
+      if (!isHistory) {
+        conds.push(`(
+          EXISTS(
+            SELECT 1
+            FROM attendances aS
+            JOIN training_sessions tsS ON tsS.id=aS.session_id
+            WHERE aS.student_id=s.id AND tsS.session_date >= $${pi}::date
+          )
+          OR EXISTS(
+            SELECT 1
+            FROM legacy_payments lpS
+            WHERE lpS.student_id=s.id AND lpS.paid_at >= $${pi}::date
+          )
+          OR EXISTS(
+            SELECT 1
+            FROM registrations rS
+            WHERE rS.id=s.registration_id AND rS.created_at >= $${pi}::date
+          )
+        )`);
+        vals.push(SEASON_START);
+        pi++;
+      }
+
       if (overdue === 'true') {
         conds.push(`s.is_active=true`);
         conds.push(`EXISTS(
@@ -311,13 +320,17 @@ module.exports = async (req, res) => {
             ? `last_payment_date DESC NULLS LAST, last_name ASC, first_name ASC`
             : `last_training_season DESC NULLS LAST, last_name ASC, first_name ASC`;
 
+      // param sezonu do metryk (zawsze liczymy sezon od 2025-09-01)
+      const seasonParamIndex = pi;
+      const limIndex = pi + 1;
+      const offIndex = pi + 2;
+
       const { rows } = await pool.query(
         `
         SELECT
           s.id, s.legacy_id, s.first_name, s.last_name, s.email, s.phone, s.birth_year,
           s.is_active, s.source, s.created_at, s.registration_id,
 
-          -- miasto (bez sgx.id / bez sgx.active)
           (
             SELECT l.city
             FROM student_groups sgx
@@ -328,7 +341,6 @@ module.exports = async (req, res) => {
             LIMIT 1
           ) AS city,
 
-          -- grupy
           COALESCE((
             SELECT json_agg(jsonb_build_object('id', g.id, 'name', g.name) ORDER BY g.name)
             FROM student_groups sg
@@ -336,40 +348,30 @@ module.exports = async (req, res) => {
             WHERE sg.student_id=s.id
           ), '[]'::json) AS groups,
 
-          -- treningi/obecności od 2025-09-01
           COALESCE((
             SELECT COUNT(*)::int
             FROM attendances a
             JOIN training_sessions ts ON ts.id=a.session_id
-            WHERE a.student_id=s.id AND ts.session_date >= $${pi}::date
+            WHERE a.student_id=s.id AND ts.session_date >= $${seasonParamIndex}::date
           ), 0) AS total_sessions,
 
           COALESCE((
             SELECT COUNT(*)::int
             FROM attendances a
             JOIN training_sessions ts ON ts.id=a.session_id
-            WHERE a.student_id=s.id AND a.present=true AND ts.session_date >= $${pi}::date
+            WHERE a.student_id=s.id AND a.present=true AND ts.session_date >= $${seasonParamIndex}::date
           ), 0) AS total_present,
-
-          COALESCE((
-            SELECT COUNT(*)::int
-            FROM attendances a
-            JOIN training_sessions ts ON ts.id=a.session_id
-            WHERE a.student_id=s.id AND a.present=true AND ts.session_date >= CURRENT_DATE - INTERVAL '60 days'
-          ), 0) AS present_60d,
 
           (
             SELECT MAX(ts.session_date)
             FROM attendances a
             JOIN training_sessions ts ON ts.id=a.session_id
-            WHERE a.student_id=s.id AND ts.session_date >= $${pi}::date
+            WHERE a.student_id=s.id AND ts.session_date >= $${seasonParamIndex}::date
           ) AS last_training_season,
 
-          -- ostatnia wpłata legacy
           (SELECT lp.paid_at FROM legacy_payments lp WHERE lp.student_id=s.id ORDER BY lp.paid_at DESC NULLS LAST, lp.id DESC LIMIT 1) AS last_payment_date,
           (SELECT lp.amount  FROM legacy_payments lp WHERE lp.student_id=s.id ORDER BY lp.paid_at DESC NULLS LAST, lp.id DESC LIMIT 1) AS last_payment_amount,
 
-          -- rejestracja (jeśli kursant z www)
           r.payment_status,
           r.total_amount,
           pp.name AS plan_name
@@ -379,7 +381,7 @@ module.exports = async (req, res) => {
         LEFT JOIN price_plans pp ON pp.id=r.price_plan_id
         ${where}
         ORDER BY ${orderBy}
-        LIMIT $${pi + 1} OFFSET $${pi + 2}
+        LIMIT $${limIndex} OFFSET $${offIndex}
         `,
         [...vals, SEASON_START, parseInt(limit), offset]
       );
