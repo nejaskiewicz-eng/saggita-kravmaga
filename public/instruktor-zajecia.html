@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <title>Zajęcia — Panel Instruktora</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="font-family: Arial; padding:40px;">
+
+<h2>Zajęcia</h2>
+<p><a href="/instruktor.html">← Wróć</a></p>
+
+<div id="header"></div>
+<p id="error" style="color:red;"></p>
+<div id="list"></div>
+
+<script>
+function qs(name) {
+  const url = new URL(window.location.href)
+  return url.searchParams.get(name)
+}
+
+async function savePresence(code, sessionId, studentId, present) {
+  await fetch('/api/instructor/panel?code=' + encodeURIComponent(code), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      session_id: parseInt(sessionId),
+      student_id: parseInt(studentId),
+      present: !!present
+    })
+  })
+}
+
+async function load() {
+  const code = qs('code')
+  const sessionId = qs('session_id')
+
+  const error = document.getElementById('error')
+  const header = document.getElementById('header')
+  const list = document.getElementById('list')
+
+  error.innerText = ''
+  header.innerHTML = ''
+  list.innerHTML = ''
+
+  if (!code || !sessionId) {
+    error.innerText = 'Brak parametrów w linku.'
+    return
+  }
+
+  const res = await fetch(
+    '/api/instructor/panel?code=' + encodeURIComponent(code) +
+    '&session_id=' + encodeURIComponent(sessionId)
+  )
+  const json = await res.json()
+  const rows = json && json.rows ? json.rows : []
+
+  if (!rows.length) {
+    error.innerText = 'Brak danych dla tych zajęć.'
+    return
+  }
+
+  header.innerHTML = `<h3>${rows[0].session_date} — ${rows[0].group_name} (${rows[0].location})</h3>`
+
+  rows.forEach(r => {
+    const div = document.createElement('div')
+    div.style.display = 'flex'
+    div.style.alignItems = 'center'
+    div.style.gap = '12px'
+    div.style.padding = '10px 0'
+    div.style.borderBottom = '1px solid #eee'
+
+    const present = document.createElement('input')
+    present.type = 'checkbox'
+    present.checked = !!r.present
+
+    present.onchange = async () => {
+      await savePresence(code, r.session_id, r.student_id, present.checked)
+    }
+
+    const name = document.createElement('div')
+    name.style.minWidth = '260px'
+    name.innerHTML = `<strong>${r.last_name} ${r.first_name}</strong>`
+
+    const pay = document.createElement('div')
+    pay.innerHTML = `Ostatnia wpłata: <strong>${r.last_payment ? r.last_payment : 'brak'}</strong>`
+
+    div.appendChild(present)
+    div.appendChild(name)
+    div.appendChild(pay)
+    list.appendChild(div)
+  })
+}
+
+load()
+</script>
+
+</body>
+</html>
