@@ -1675,91 +1675,747 @@ async function deleteLocation(id){
 // ================= NOWE FUNKCJE: HISTORIA, STUDENCI, INSTRUKTORZY ========
 // =========================================================================
 
+
+// ══════════════════════════════════════════════════════════════════
+// BAZA UJEDNOLICONA
+// ══════════════════════════════════════════════════════════════════
+
+let US = { page:1, total:0, limit:60 };
+let usTimer;
+
 async function loadUnifiedStudents() {
   const c = document.getElementById('content');
-  c.innerHTML = '<div class="sh"><h3>Wszyscy kursanci (Nowi z Zapisów + Historyczni z CSV)</h3></div>' +
-    '<div class="fb">' +
-      '<input id="us-q" type="text" placeholder="Szukaj (imię, nazwisko, email)...">' +
-      '<button class="btn btn-secondary btn-sm" onclick="fetchUnifiedStudents()">Szukaj</button>' +
-    '</div>' +
-    '<div class="tw"><table>' +
-      '<thead><tr><th>Kursant</th><th>Telefon</th><th>Źródło</th><th>Zapisany do grup</th><th>Obecności</th><th>Ostatnia wizyta</th><th>Status Płatności</th></tr></thead>' +
-      '<tbody id="us-body">' +
-        '<tr><td colspan="7"><div class="loader"><div class="spinner"></div> Ładowanie...</div></td></tr>' +
-      '</tbody>' +
-    '</table></div>';
-  await fetchUnifiedStudents();
+  let groupOpts = '<option value="">Wszystkie grupy</option>';
+  let cityOpts  = '<option value="">Wszystkie miasta</option>';
+  try {
+    const gd = arrRows(await aF('/groups'));
+    gd.forEach(g => { groupOpts += `<option value="${g.id}">${g.name}${g.city?' ('+g.city+')':''}</option>`; });
+    const cities = [...new Set(gd.map(g=>g.city).filter(Boolean))];
+    cities.forEach(c => { cityOpts += `<option value="${c}">${c}</option>`; });
+  } catch(e) {}
+
+  c.innerHTML = `
+    <div class="sh">
+      <h3>Baza kursantów — ujednolicona</h3>
+      <button class="btn btn-primary btn-sm" onclick="openNewStudentModal()">+ Dodaj kursanta</button>
+    </div>
+    <div class="fb">
+      <input id="us-q" type="text" placeholder="Szukaj: imię, nazwisko, email, telefon…" oninput="usDebounce()">
+      <select id="us-grp" onchange="US.page=1;fetchUS()">${groupOpts}</select>
+      <select id="us-city" onchange="US.page=1;fetchUS()">${cityOpts}</select>
+      <select id="us-pay" onchange="US.page=1;fetchUS()">
+        <option value="">Każdy status płatności</option>
+        <option value="paid">Opłacony</option>
+        <option value="unpaid">Nieopłacony</option>
+        <option value="pending">Oczekuje</option>
+      </select>
+      <select id="us-active" onchange="US.page=1;fetchUS()">
+        <option value="">Aktywni i nieaktywni</option>
+        <option value="true">Tylko aktywni</option>
+        <option value="false">Tylko nieaktywni</option>
+      </select>
+      <button class="btn btn-secondary btn-sm" onclick="US.page=1;usClear()">✕ Wyczyść</button>
+      <span id="us-count" style="color:var(--dim);font-size:12px"></span>
+    </div>
+    <div class="tw"><table>
+      <thead><tr>
+        <th>Kursant</th><th>Kontakt</th><th>Grupy</th><th>Źródło</th>
+        <th>Treningi</th><th>Ostatni trening</th><th>Status płatności</th><th></th>
+      </tr></thead>
+      <tbody id="us-body">
+        <tr><td colspan="8"><div class="loader"><div class="spinner"></div> Ładowanie...</div></td></tr>
+      </tbody>
+    </table></div>
+    <div class="pag" id="us-pag"></div>`;
+
+  US.page = 1;
+  await fetchUS();
 }
 
-async function fetchUnifiedStudents() {
+function usDebounce() { clearTimeout(usTimer); usTimer = setTimeout(() => { US.page=1; fetchUS(); }, 380); }
+
+function usClear() {
+  ['us-q','us-grp','us-city','us-pay','us-active'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+  fetchUS();
+}
+
+async function fetchUS() {
   const tbody = document.getElementById('us-body');
-  const qEl = document.getElementById('us-q');
-  const q = qEl ? qEl.value : '';
-  tbody.innerHTML = '<tr><td colspan="7"><div class="loader"><div class="spinner"></div></div></td></tr>';
+  if (!tbody) return;
+  tbody.innerHTML = '<tr><td colspan="8"><div class="loader"><div class="spinner"></div></div></td></tr>';
+
+  const p = new URLSearchParams({ page: US.page, limit: US.limit });
+  const q    = document.getElementById('us-q')?.value;      if(q)    p.set('search', q);
+  const grp  = document.getElementById('us-grp')?.value;    if(grp)  p.set('group_id', grp);
+  const city = document.getElementById('us-city')?.value;   if(city) p.set('city', city);
+  const pay  = document.getElementById('us-pay')?.value;    if(pay)  p.set('payment_status', pay);
+  const act  = document.getElementById('us-active')?.value; if(act)  p.set('is_active', act);
+
   try {
-    const d = await aF('/students?limit=100&search=' + encodeURIComponent(q));
+    const d = await aF('/students?' + p.toString());
     const rows = arrRows(d);
-    if(!rows.length) {
-      tbody.innerHTML = '<tr><td colspan="7"><div class="empty">Brak wyników</div></td></tr>';
+    US.total = d.total || rows.length;
+    const countEl = document.getElementById('us-count');
+    if (countEl) countEl.textContent = US.total + ' wyników';
+
+    if (!rows.length) {
+      tbody.innerHTML = '<tr><td colspan="8"><div class="empty"><strong>Brak wyników</strong>Zmień filtry lub dodaj kursanta.</div></td></tr>';
+      document.getElementById('us-pag').innerHTML = '';
       return;
     }
-    
-    let html = '';
-    for(let i=0; i<rows.length; i++) {
-      const r = rows[i];
-      const sourceBadge = r.source === 'legacy' ? '<span class="badge bx">legacy</span>' : '<span class="badge bb">www</span>';
-      const groupsStr = Array.isArray(r.groups) ? r.groups.map(function(g){return g.name;}).join(', ') : '—';
-      const lastTrain = r.last_training ? fd(r.last_training) : '—';
-      const payStatus = r.payment_status ? pb(r.payment_status) : (r.legacy_paid > 0 ? '<span class="badge bg">Historia: ' + r.legacy_paid + 'zł</span>' : '—');
-      
-      html += '<tr>';
-      html += '<td><strong style="color:var(--bright)">' + r.first_name + ' ' + r.last_name + '</strong><br><span style="color:var(--dim);font-size:11px">' + (r.email||'brak e-mail') + '</span></td>';
-      html += '<td>' + (r.phone||'—') + '</td>';
-      html += '<td>' + sourceBadge + '</td>';
-      html += '<td>' + groupsStr + '</td>';
-      html += '<td>' + (r.total_present||0) + '</td>';
-      html += '<td>' + lastTrain + '</td>';
-      html += '<td>' + payStatus + '</td>';
-      html += '</tr>';
+
+    tbody.innerHTML = rows.map(r => {
+      const srcBadge = r.source==='legacy' ? '<span class="badge bx">legacy</span>'
+                     : r.source==='manual'  ? '<span class="badge bb">ręczny</span>'
+                                            : '<span class="badge bg">www</span>';
+      const groups = Array.isArray(r.groups) && r.groups.length
+        ? r.groups.slice(0,2).map(g=>`<span class="badge bx" style="font-size:10px">${g.name}</span>`).join('')
+          + (r.groups.length>2 ? `<span style="font-size:10px;color:var(--dim)"> +${r.groups.length-2}</span>` : '')
+        : '—';
+      const payBadge = r.payment_status ? pb(r.payment_status)
+        : (r.legacy_paid > 0 ? `<span class="badge bg">${Number(r.legacy_paid).toFixed(0)} zł hist.</span>` : '—');
+      const inactive = !r.is_active ? ' <span class="badge br">Nieaktywny</span>' : '';
+
+      return `<tr>
+        <td>
+          <strong style="color:var(--bright)">${r.first_name} ${r.last_name}</strong>${inactive}
+          <br><span style="color:var(--dim);font-size:11px">${r.email||'brak email'}</span>
+        </td>
+        <td style="color:var(--dim);font-size:12px">${r.phone||'—'}</td>
+        <td>${groups}</td>
+        <td>${srcBadge}</td>
+        <td>${r.total_present||0} <span style="color:var(--muted)">ob.</span></td>
+        <td style="font-size:12px;color:var(--dim)">${r.last_training ? fd(r.last_training) : '—'}</td>
+        <td>${payBadge}</td>
+        <td>
+          <div class="tda">
+            <button class="bi" onclick="openStudentKartoteka(${r.id})">Kartoteka</button>
+            <button class="bi del" onclick="confirmDeleteStudent(${r.id},'${(r.first_name+' '+r.last_name).replace(/'/g,"\\'")}')">Usuń</button>
+          </div>
+        </td>
+      </tr>`;
+    }).join('');
+
+    // Paginacja
+    const pages = Math.ceil(US.total / US.limit);
+    const pagEl = document.getElementById('us-pag');
+    if (pages > 1) {
+      pagEl.innerHTML = `
+        <button ${US.page<=1?'disabled':''} onclick="US.page--;fetchUS()">Wstecz</button>
+        <span class="pi">Strona ${US.page} z ${pages} (${US.total} wyników)</span>
+        <button ${US.page>=pages?'disabled':''} onclick="US.page++;fetchUS()">Dalej</button>`;
+    } else {
+      pagEl.innerHTML = '';
     }
-    tbody.innerHTML = html;
   } catch(e) {
-    tbody.innerHTML = '<tr><td colspan="7" style="color:red">' + e.message + '</td></tr>';
+    tbody.innerHTML = `<tr><td colspan="8" style="color:var(--red-l);padding:16px">${e.message}</td></tr>`;
   }
 }
+
+// ── Kartoteka kursanta (legacy/ujednolicona) ──────────────────
+async function openStudentKartoteka(id) {
+  let s, payments, attendance;
+  try {
+    [s, payments, attendance] = await Promise.all([
+      aF(`/students/${id}`),
+      aF(`/students/${id}/payments`),
+      aF(`/students/${id}/attendance`),
+    ]);
+  } catch(e) { toast('Błąd pobierania danych: ' + e.message, 'error'); return; }
+
+  const legacy  = payments.legacy || [];
+  const regs    = payments.registrations || [];
+  const attRows = attendance.rows || [];
+  const present = attRows.filter(a => a.present).length;
+  const pct     = attRows.length ? Math.round(present / attRows.length * 100) : 0;
+
+  const body = `
+    <div class="kart-header">
+      <div class="kart-avatar">${initials(s.first_name, s.last_name)}</div>
+      <div>
+        <div class="kart-name">${s.first_name||''} ${s.last_name||''}</div>
+        <div class="kart-meta">${s.email||'brak email'} · ${s.phone||'brak tel.'}</div>
+        <div class="kart-badges">
+          ${s.is_active ? '<span class="badge bg">Aktywny</span>' : '<span class="badge br">Nieaktywny</span>'}
+          ${s.source==='legacy'?'<span class="badge bx">Legacy</span>':s.source==='manual'?'<span class="badge bb">Ręczny</span>':'<span class="badge bg">WWW</span>'}
+          ${(s.groups||[]).map(g=>`<span class="badge bx">${g.name}</span>`).join('')}
+        </div>
+      </div>
+    </div>
+
+    <div class="ksec">
+      <div class="ksec-title">Statystyki</div>
+      <div class="stats-grid" style="margin-bottom:0;grid-template-columns:repeat(4,1fr)">
+        <div class="sc green"><div class="label">Treningi</div><div class="value">${s.total_present||0}</div></div>
+        <div class="sc"><div class="label">Frekwencja</div><div class="value">${pct}%</div></div>
+        <div class="sc ${s.total_legacy_paid>0?'green':''}"><div class="label">Wpłacono</div><div class="value" style="font-size:24px">${s.total_legacy_paid?Number(s.total_legacy_paid).toFixed(0)+' zł':'—'}</div></div>
+        <div class="sc"><div class="label">Ostatni trening</div><div class="value" style="font-size:16px;padding-top:4px">${s.last_training?fd(s.last_training):'—'}</div></div>
+      </div>
+    </div>
+
+    <div class="ksec">
+      <div class="ksec-title" style="display:flex;align-items:center;justify-content:space-between">
+        Dane kursanta
+        <button class="bi btn-sm" onclick="saveStudentData(${id})">Zapisz zmiany</button>
+      </div>
+      <div class="fg">
+        <div class="ff"><label>Imię</label><input id="sk-fn" value="${s.first_name||''}"></div>
+        <div class="ff"><label>Nazwisko</label><input id="sk-ln" value="${s.last_name||''}"></div>
+        <div class="ff"><label>Email</label><input id="sk-em" type="email" value="${s.email||''}"></div>
+        <div class="ff"><label>Telefon</label><input id="sk-ph" value="${s.phone||''}"></div>
+        <div class="ff"><label>Rok urodzenia</label><input id="sk-by" type="number" value="${s.birth_year||''}"></div>
+        <div class="ff"><label>Status</label>
+          <select id="sk-ac">
+            <option value="true" ${s.is_active?'selected':''}>Aktywny</option>
+            <option value="false" ${!s.is_active?'selected':''}>Nieaktywny</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    ${s.registration ? `
+    <div class="ksec">
+      <div class="ksec-title">Zapis z systemu (WWW)</div>
+      <div class="fg">
+        <div class="ff"><label>Grupa</label><div class="view-val">${s.registration.group_name||'—'}</div></div>
+        <div class="ff"><label>Karnet</label><div class="view-val">${s.registration.plan_name||'—'}</div></div>
+        <div class="ff"><label>Kwota</label><div class="view-val">${s.registration.total_amount||0} zł</div></div>
+        <div class="ff"><label>Status płatności</label>
+          <select onchange="changeStudentRegPay(${id},${s.registration.id},this.value)">
+            <option value="paid"    ${s.registration.payment_status==='paid'?'selected':''}>Opłacony</option>
+            <option value="unpaid"  ${s.registration.payment_status==='unpaid'?'selected':''}>Nieopłacony</option>
+            <option value="pending" ${s.registration.payment_status==='pending'?'selected':''}>Oczekuje</option>
+            <option value="waived"  ${s.registration.payment_status==='waived'?'selected':''}>Zwolniony</option>
+          </select>
+        </div>
+      </div>
+    </div>` : ''}
+
+    <div class="ksec">
+      <div class="ksec-title" style="display:flex;align-items:center;justify-content:space-between">
+        Płatności ręczne
+        <button class="bi btn-sm" onclick="openAddPayModal(${id})">+ Dodaj płatność</button>
+      </div>
+      ${legacy.length ? `
+        <table width="100%" style="border-collapse:collapse;font-size:12px">
+          <thead><tr>
+            <th style="text-align:left;padding:6px 8px;color:var(--dim);font-size:10px;text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--border)">Data</th>
+            <th style="text-align:left;padding:6px 8px;color:var(--dim);font-size:10px;text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--border)">Kwota</th>
+            <th style="text-align:left;padding:6px 8px;color:var(--dim);font-size:10px;text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--border)">Notatka</th>
+            <th style="border-bottom:1px solid var(--border)"></th>
+          </tr></thead>
+          <tbody>${legacy.map(p => `
+            <tr style="border-top:1px solid var(--border)">
+              <td style="padding:7px 8px;color:var(--dim)">${p.date ? fd(p.date) : '—'}</td>
+              <td style="padding:7px 8px"><strong style="color:var(--bright)">${p.amount} zł</strong></td>
+              <td style="padding:7px 8px;color:var(--dim)">${p.note||'—'}</td>
+              <td style="padding:7px 8px">
+                <div class="tda">
+                  <button class="bi btn-sm" onclick="openEditPayModal(${id},${p.id},${p.amount},'${p.date?String(p.date).slice(0,10):''}','${(p.note||'').replace(/'/g,"\\'")}')">✏</button>
+                  <button class="bi del btn-sm" onclick="deleteStudentPayment(${id},${p.id})">✕</button>
+                </div>
+              </td>
+            </tr>`).join('')}
+          </tbody>
+        </table>` : '<p style="color:var(--dim);font-size:12px;padding:8px 0">Brak płatności ręcznych.</p>'}
+      ${regs.length ? `
+        <div style="margin-top:12px;border-top:1px solid var(--border);padding-top:10px">
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--dim);margin-bottom:8px">Z systemu rejestracji:</div>
+          ${regs.map(p => `
+            <div style="display:flex;gap:12px;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px;align-items:center">
+              <span style="color:var(--dim)">${p.date?fd(p.date):'—'}</span>
+              <strong style="color:var(--bright)">${p.amount} zł</strong>
+              <span style="color:var(--dim)">${p.plan_name||'—'}</span>
+              ${pb(p.status)}
+            </div>`).join('')}
+        </div>` : ''}
+    </div>
+
+    <div class="ksec">
+      <div class="ksec-title">Obecności (ostatnie 100)</div>
+      ${attRows.length ? `
+        <div style="display:flex;gap:20px;padding:10px;background:var(--surface2);border-radius:6px;margin-bottom:12px">
+          <span><strong style="color:var(--green)">${present}</strong> <span style="color:var(--dim);font-size:11px">obecny</span></span>
+          <span><strong style="color:var(--red-l)">${attRows.length-present}</strong> <span style="color:var(--dim);font-size:11px">nieobecny</span></span>
+          <span><strong>${pct}%</strong> <span style="color:var(--dim);font-size:11px">frekwencja</span></span>
+        </div>
+        <div style="max-height:220px;overflow-y:auto">
+          ${attRows.map(a => `
+            <div style="display:flex;align-items:center;gap:10px;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px">
+              <span style="width:9px;height:9px;border-radius:50%;flex-shrink:0;display:inline-block;background:${a.present?'var(--green)':'var(--border2)'}"></span>
+              <span style="font-family:monospace;color:var(--dim);min-width:85px">${fd(a.session_date)}</span>
+              <span style="flex:1;color:var(--dim)">${a.group_name||'—'}</span>
+              <span style="color:${a.present?'var(--green)':'var(--muted)'}">${a.present?'Obecny':'Nieobecny'}</span>
+              <button class="bi btn-sm" title="Zmień" onclick="toggleStudentAtt(${id},${a.id},${!a.present})">${a.present?'✗':'✓'}</button>
+            </div>`).join('')}
+        </div>` : '<p style="color:var(--dim);font-size:12px;padding:8px 0">Brak danych obecności.</p>'}
+    </div>`;
+
+  showModal(`Kartoteka kursanta #${id}`, body,
+    `<button class="btn btn-secondary" onclick="closeModal()">Zamknij</button>
+     <button class="btn btn-primary" style="background:var(--red);border-color:var(--red)" onclick="confirmDeleteStudent(${id},'${(s.first_name+' '+s.last_name).replace(/'/g,"\\'")}')">Usuń kursanta</button>`);
+}
+
+async function saveStudentData(id) {
+  const data = {
+    first_name: document.getElementById('sk-fn')?.value?.trim(),
+    last_name:  document.getElementById('sk-ln')?.value?.trim(),
+    email:      document.getElementById('sk-em')?.value?.trim() || null,
+    phone:      document.getElementById('sk-ph')?.value?.trim() || null,
+    birth_year: parseInt(document.getElementById('sk-by')?.value) || null,
+    is_active:  document.getElementById('sk-ac')?.value === 'true',
+  };
+  try {
+    await aF(`/students/${id}`, { method:'PATCH', body: JSON.stringify(data) });
+    toast('Dane kursanta zapisane');
+    if (CV === 'unified-students') fetchUS();
+  } catch(e) { toast('Błąd: ' + e.message, 'error'); }
+}
+
+async function changeStudentRegPay(studentId, regId, status) {
+  try {
+    await aF(`/students/${studentId}/reg-payment`, { method:'PATCH', body: JSON.stringify({ registration_id: regId, payment_status: status }) });
+    toast('Status płatności zaktualizowany');
+    if (CV === 'unified-students') fetchUS();
+  } catch(e) { toast('Błąd: ' + e.message, 'error'); }
+}
+
+async function toggleStudentAtt(studentId, attId, present) {
+  try {
+    await aF(`/students/${studentId}/attendance/${attId}`, { method:'PATCH', body: JSON.stringify({ present }) });
+    toast('Obecność zmieniona');
+    openStudentKartoteka(studentId);
+  } catch(e) { toast('Błąd: ' + e.message, 'error'); }
+}
+
+function confirmDeleteStudent(id, name) {
+  if (!confirm(`Usunąć kursanta "${name}"?\nJeśli ma historię treningów lub płatności — zostanie zdezaktywowany (nie usunięty).`)) return;
+  deleteStudent(id);
+}
+
+async function deleteStudent(id) {
+  try {
+    const d = await aF(`/students/${id}`, { method:'DELETE' });
+    toast(d.soft ? 'Kursant zdezaktywowany (ma historię)' : 'Kursant usunięty');
+    closeModal();
+    if (CV === 'unified-students') fetchUS();
+  } catch(e) { toast('Błąd: ' + e.message, 'error'); }
+}
+
+// ── Nowy kursant ──────────────────────────────────────────────
+async function openNewStudentModal() {
+  let groupOpts = '<option value="">Brak grupy</option>';
+  try {
+    const gd = arrRows(await aF('/groups'));
+    gd.forEach(g => { groupOpts += `<option value="${g.id}">${g.name}${g.city?' ('+g.city+')':''}</option>`; });
+  } catch(e) {}
+
+  showModal('Nowy kursant', `
+    <div class="fg">
+      <div class="ff"><label>Imię *</label><input id="ns-fn" placeholder="Jan"></div>
+      <div class="ff"><label>Nazwisko *</label><input id="ns-ln" placeholder="Kowalski"></div>
+    </div>
+    <div class="fg">
+      <div class="ff"><label>Email</label><input id="ns-em" type="email" placeholder="jan@email.pl"></div>
+      <div class="ff"><label>Telefon</label><input id="ns-ph" placeholder="600 000 000"></div>
+    </div>
+    <div class="fg">
+      <div class="ff"><label>Rok urodzenia</label><input id="ns-by" type="number" placeholder="1990" min="1950" max="2015"></div>
+      <div class="ff"><label>Przypisz do grupy</label><select id="ns-gr">${groupOpts}</select></div>
+    </div>
+    <div id="ns-err" style="color:var(--red-l);font-size:12px;margin-top:8px;display:none"></div>`,
+    `<button class="btn btn-secondary" onclick="closeModal()">Anuluj</button>
+     <button class="btn btn-primary" onclick="createNewStudent()">Dodaj kursanta</button>`);
+}
+
+async function createNewStudent() {
+  const fn = document.getElementById('ns-fn')?.value?.trim();
+  const ln = document.getElementById('ns-ln')?.value?.trim();
+  const errEl = document.getElementById('ns-err');
+  if (!fn || !ln) { errEl.textContent='Imię i nazwisko są wymagane.'; errEl.style.display='block'; return; }
+  try {
+    await aF('/students', { method:'POST', body: JSON.stringify({
+      first_name: fn, last_name: ln,
+      email:      document.getElementById('ns-em')?.value?.trim() || null,
+      phone:      document.getElementById('ns-ph')?.value?.trim() || null,
+      birth_year: parseInt(document.getElementById('ns-by')?.value) || null,
+      group_id:   document.getElementById('ns-gr')?.value ? parseInt(document.getElementById('ns-gr').value) : null,
+    })});
+    toast('Kursant dodany');
+    closeModal();
+    fetchUS();
+  } catch(e) { errEl.textContent = e.message; errEl.style.display='block'; }
+}
+
+// ── Płatności — modale ────────────────────────────────────────
+let _payStudentId = null, _payId = null;
+
+function openAddPayModal(studentId) {
+  _payStudentId = studentId; _payId = null;
+  showModal('Nowa płatność', `
+    <div class="fg">
+      <div class="ff"><label>Kwota (zł) *</label><input id="pm-amt" type="number" step="0.01" placeholder="120.00"></div>
+      <div class="ff"><label>Data</label><input id="pm-dt" type="date" value="${new Date().toISOString().slice(0,10)}"></div>
+    </div>
+    <div class="ff"><label>Notatka</label><input id="pm-note" placeholder="np. przelew, gotówka…"></div>
+    <div id="pm-err" style="color:var(--red-l);font-size:12px;margin-top:8px;display:none"></div>`,
+    `<button class="btn btn-secondary" onclick="openStudentKartoteka(${studentId})">Anuluj</button>
+     <button class="btn btn-primary" onclick="submitStudentPayment()">Zapisz płatność</button>`);
+}
+
+function openEditPayModal(studentId, pid, amount, date, note) {
+  _payStudentId = studentId; _payId = pid;
+  showModal('Edytuj płatność', `
+    <div class="fg">
+      <div class="ff"><label>Kwota (zł) *</label><input id="pm-amt" type="number" step="0.01" value="${amount}"></div>
+      <div class="ff"><label>Data</label><input id="pm-dt" type="date" value="${date}"></div>
+    </div>
+    <div class="ff"><label>Notatka</label><input id="pm-note" value="${note}"></div>
+    <div id="pm-err" style="color:var(--red-l);font-size:12px;margin-top:8px;display:none"></div>`,
+    `<button class="btn btn-secondary" onclick="openStudentKartoteka(${studentId})">Anuluj</button>
+     <button class="btn btn-primary" onclick="submitStudentPayment()">Zapisz zmiany</button>`);
+}
+
+async function submitStudentPayment() {
+  const amount = parseFloat(document.getElementById('pm-amt')?.value);
+  const date   = document.getElementById('pm-dt')?.value;
+  const note   = document.getElementById('pm-note')?.value || null;
+  const errEl  = document.getElementById('pm-err');
+  if (!amount) { errEl.textContent='Podaj kwotę.'; errEl.style.display='block'; return; }
+  try {
+    if (_payId) {
+      await aF(`/students/${_payStudentId}/payments/${_payId}`, { method:'PATCH', body: JSON.stringify({ amount, paid_at: date, note }) });
+    } else {
+      await aF(`/students/${_payStudentId}/payments`, { method:'POST', body: JSON.stringify({ amount, date, note }) });
+    }
+    toast('Płatność zapisana');
+    openStudentKartoteka(_payStudentId);
+    if (CV === 'unified-students') fetchUS();
+  } catch(e) { errEl.textContent = e.message; errEl.style.display='block'; }
+}
+
+async function deleteStudentPayment(studentId, pid) {
+  if (!confirm('Usunąć tę płatność?')) return;
+  try {
+    await aF(`/students/${studentId}/payments/${pid}`, { method:'DELETE' });
+    toast('Płatność usunięta');
+    openStudentKartoteka(studentId);
+    if (CV === 'unified-students') fetchUS();
+  } catch(e) { toast('Błąd: ' + e.message, 'error'); }
+}
+
+// ══════════════════════════════════════════════════════════════════
+// HISTORIA (ARCHIWUM)
+// ══════════════════════════════════════════════════════════════════
+
+let histTab = 'stats', hsPage = 1, hsTimer;
 
 async function loadHistory() {
   const c = document.getElementById('content');
-  c.innerHTML = '<div class="loader"><div class="spinner"></div></div>';
+  c.innerHTML = `
+    <div class="sh"><h3>Historia — Archiwum CSV</h3></div>
+    <div style="display:flex;gap:4px;margin-bottom:20px">
+      <button class="bi" id="ht-stats"    onclick="switchHistTab('stats')">Statystyki</button>
+      <button class="bi" id="ht-students" onclick="switchHistTab('students')">Kursanci legacy</button>
+      <button class="bi" id="ht-payments" onclick="switchHistTab('payments')">Płatności legacy</button>
+    </div>
+    <div id="hist-content"></div>`;
+
+  // Dodaj styl aktywnej zakładki jeśli nie ma
+  if (!document.getElementById('_ht_style')) {
+    const s = document.createElement('style');
+    s.id = '_ht_style';
+    s.textContent = '.bi.ht-active{background:var(--red-bg);border-color:var(--red-bdr);color:var(--red-l)!important}';
+    document.head.appendChild(s);
+  }
+  switchHistTab(histTab);
+}
+
+function switchHistTab(tab) {
+  histTab = tab;
+  ['stats','students','payments'].forEach(t => {
+    document.getElementById('ht-'+t)?.classList.toggle('ht-active', t === tab);
+  });
+  fetchHistTab(tab);
+}
+
+async function fetchHistTab(tab) {
+  const el = document.getElementById('hist-content');
+  if (!el) return;
+  el.innerHTML = '<div class="loader"><div class="spinner"></div></div>';
+
   try {
-    const d = await aF('/history?tab=stats');
-    let html = '<div class="sh"><h3>Statystyki z poprzedniego systemu (Pliki CSV)</h3></div>';
-    html += '<div class="stats-grid">';
-    html += '<div class="sc accent"><div class="label">Przeniesieni kursanci</div><div class="value">' + (d.summary.legacy_students||0) + '</div></div>';
-    html += '<div class="sc orange"><div class="label">Historia treningów</div><div class="value">' + (d.summary.total_sessions||0) + '</div></div>';
-    html += '<div class="sc green"><div class="label">Historia obecności</div><div class="value">' + (d.summary.total_present||0) + '</div></div>';
-    html += '<div class="sc"><div class="label">Przeniesione wpłaty</div><div class="value">' + (d.summary.total_payments||0) + '</div></div>';
-    html += '</div>';
-    
-    html += '<div class="sh"><h3>Lojalni kursanci (Top obecności historyczne)</h3></div>';
-    html += '<div class="tw"><table><thead><tr><th>Imię i nazwisko</th><th>Liczba obecności z historii</th></tr></thead><tbody>';
-    
-    const top = d.topStudents || [];
-    for(let i=0; i<top.length; i++) {
-      html += '<tr><td><strong style="color:var(--bright)">' + top[i].first_name + ' ' + top[i].last_name + '</strong></td><td>' + top[i].trainings + ' treningów</td></tr>';
+    if (tab === 'stats') {
+      const d = await aF('/history?tab=stats');
+      const sum = d.summary || {};
+      el.innerHTML = `
+        <div class="stats-grid">
+          <div class="sc accent"><div class="label">Kursanci legacy</div><div class="value">${sum.legacy_students||0}</div></div>
+          <div class="sc orange"><div class="label">Sesje treningowe</div><div class="value">${sum.total_sessions||0}</div></div>
+          <div class="sc green"><div class="label">Obecności</div><div class="value">${sum.total_present||0}</div></div>
+          <div class="sc"><div class="label">Wpłaty (szt.)</div><div class="value">${sum.total_payments||0}</div></div>
+          <div class="sc green"><div class="label">Przychód legacy</div><div class="value" style="font-size:28px">${sum.total_revenue?Number(sum.total_revenue).toFixed(0)+' zł':'—'}</div></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+          <div>
+            <div class="sh"><h3>Przychody wg lat</h3></div>
+            <div class="tw"><table>
+              <thead><tr><th>Rok</th><th>Płatności</th><th>Kwota</th></tr></thead>
+              <tbody>${(d.byYear||[]).map(y=>`
+                <tr><td>${y.year}</td><td>${y.payments}</td><td><strong>${Number(y.revenue).toFixed(0)} zł</strong></td></tr>
+              `).join('')}</tbody>
+            </table></div>
+          </div>
+          <div>
+            <div class="sh"><h3>Top 10 — frekwencja</h3></div>
+            <div class="tw"><table>
+              <thead><tr><th>Kursant</th><th>Treningi</th></tr></thead>
+              <tbody>${(d.topStudents||[]).map((s,i)=>`
+                <tr><td>${i+1}. <strong style="color:var(--bright)">${s.first_name} ${s.last_name}</strong></td><td>${s.trainings}</td></tr>
+              `).join('')}</tbody>
+            </table></div>
+          </div>
+        </div>`;
     }
-    
-    html += '</tbody></table></div>';
-    c.innerHTML = html;
+
+    if (tab === 'students') {
+      el.innerHTML = `
+        <div class="fb">
+          <input id="hs-q" type="text" placeholder="Szukaj kursanta legacy…" oninput="hsDebounce()">
+          <button class="btn btn-secondary btn-sm" onclick="fetchHistStudents()">Szukaj</button>
+          <span id="hs-count" style="color:var(--dim);font-size:12px"></span>
+        </div>
+        <div class="tw"><table>
+          <thead><tr><th>Kursant</th><th>Email</th><th>Telefon</th><th>Grupy</th><th>Treningi</th><th>Ostatni</th><th>Wpłacono</th><th></th></tr></thead>
+          <tbody id="hs-body"><tr><td colspan="8"><div class="loader"><div class="spinner"></div></div></td></tr></tbody>
+        </table></div>
+        <div class="pag" id="hs-pag"></div>`;
+      hsPage = 1;
+      fetchHistStudents();
+    }
+
+    if (tab === 'payments') {
+      const d = await aF('/history?tab=payments&limit=100');
+      const rows = arrRows(d);
+      el.innerHTML = `
+        <div class="sh"><h3>Płatności legacy (${d.total||rows.length})</h3></div>
+        <div class="tw"><table>
+          <thead><tr><th>Kursant</th><th>Data</th><th>Kwota</th><th>Notatka</th></tr></thead>
+          <tbody>${rows.length ? rows.map(p=>`
+            <tr>
+              <td><strong style="color:var(--bright)">${p.first_name||'?'} ${p.last_name||''}</strong></td>
+              <td style="font-family:monospace;font-size:12px;color:var(--dim)">${p.paid_at?fd(p.paid_at):'—'}</td>
+              <td><strong>${p.amount||0} zł</strong></td>
+              <td style="color:var(--dim)">${p.note||'—'}</td>
+            </tr>`).join('') : '<tr><td colspan="4"><div class="empty">Brak danych — uruchom migrację CSV.</div></td></tr>'}
+          </tbody>
+        </table></div>`;
+    }
   } catch(e) {
-    c.innerHTML = '<div class="empty">Błąd pobierania historii. Zrób migrację danych z CSV. ' + e.message + '</div>';
+    el.innerHTML = `<div class="empty"><strong>Błąd</strong>${e.message}<br><small>Upewnij się że migracja CSV została uruchomiona.</small></div>`;
   }
 }
 
+function hsDebounce() { clearTimeout(hsTimer); hsTimer = setTimeout(fetchHistStudents, 380); }
+
+async function fetchHistStudents() {
+  const tbody = document.getElementById('hs-body');
+  if (!tbody) return;
+  tbody.innerHTML = '<tr><td colspan="8"><div class="loader"><div class="spinner"></div></div></td></tr>';
+  const q = document.getElementById('hs-q')?.value || '';
+  try {
+    const d = await aF(`/history?tab=students&search=${encodeURIComponent(q)}&page=${hsPage}&limit=60`);
+    const rows = arrRows(d);
+    const total = d.total || rows.length;
+    const countEl = document.getElementById('hs-count');
+    if (countEl) countEl.textContent = total + ' wyników';
+
+    tbody.innerHTML = rows.length ? rows.map(s => `
+      <tr>
+        <td>
+          <strong style="color:var(--bright)">${s.first_name} ${s.last_name}</strong>
+          ${!s.is_active?'<span class="badge br" style="margin-left:4px">Nieaktywny</span>':''}
+        </td>
+        <td style="color:var(--dim);font-size:12px">${s.email||'—'}</td>
+        <td style="color:var(--dim);font-size:12px">${s.phone||'—'}</td>
+        <td>${Array.isArray(s.groups)?s.groups.map(g=>`<span class="badge bx" style="font-size:10px">${g.group_name||g.name||'?'}</span>`).join(''):'—'}</td>
+        <td>${s.total_attendances||0}</td>
+        <td style="font-family:monospace;font-size:11px;color:var(--dim)">${s.last_training?fd(s.last_training):'—'}</td>
+        <td><strong>${s.total_paid?Number(s.total_paid).toFixed(0)+' zł':'—'}</strong></td>
+        <td><button class="bi" onclick="openStudentKartoteka(${s.id})">Kartoteka</button></td>
+      </tr>`).join('')
+      : '<tr><td colspan="8"><div class="empty">Brak wyników</div></td></tr>';
+
+    const pages = Math.ceil(total / 60);
+    const pagEl = document.getElementById('hs-pag');
+    if (pagEl) pagEl.innerHTML = pages > 1 ? `
+      <button ${hsPage<=1?'disabled':''} onclick="hsPage--;fetchHistStudents()">Wstecz</button>
+      <span class="pi">Strona ${hsPage} z ${pages}</span>
+      <button ${hsPage>=pages?'disabled':''} onclick="hsPage++;fetchHistStudents()">Dalej</button>` : '';
+  } catch(e) {
+    tbody.innerHTML = `<tr><td colspan="8" style="color:var(--red-l);padding:16px">${e.message}</td></tr>`;
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════
+// INSTRUKTORZY
+// ══════════════════════════════════════════════════════════════════
+
 async function loadInstructors() {
   const c = document.getElementById('content');
-  c.innerHTML = '<div class="sh"><h3>Konta instruktorów</h3><p style="color:var(--dim);margin-bottom:14px">Aby utworzyć konto dla instruktora, zaloguj się do bazy przez Neon.tech i użyj komendy INSERT INTO.</p></div>' +
-                '<div class="empty">Zarządzanie instruktorami z panelu pojawi się wkrótce!</div>';
+  c.innerHTML = `
+    <div class="sh">
+      <h3>Konta instruktorów</h3>
+      <button class="btn btn-primary btn-sm" onclick="openNewInstructorModal()">+ Nowy instruktor</button>
+    </div>
+    <div id="inst-list"><div class="loader"><div class="spinner"></div></div></div>`;
+  fetchInstructors();
+}
+
+async function fetchInstructors() {
+  const el = document.getElementById('inst-list');
+  if (!el) return;
+  try {
+    const d = await aF('/instructors');
+    const rows = arrRows(d);
+    if (!rows.length) {
+      el.innerHTML = '<div class="empty"><strong>Brak instruktorów</strong>Kliknij przycisk powyżej, żeby dodać pierwszego.</div>';
+      return;
+    }
+    el.innerHTML = `<div class="tw"><table>
+      <thead><tr><th>Instruktor</th><th>Login</th><th>Kontakt</th><th>Grupy</th><th>Status</th><th></th></tr></thead>
+      <tbody>${rows.map(i => `
+        <tr>
+          <td><strong style="color:var(--bright)">${i.first_name} ${i.last_name}</strong></td>
+          <td style="font-family:monospace;font-size:12px;color:var(--dim)">${i.username}</td>
+          <td style="font-size:12px;color:var(--dim)">${i.email||'—'}${i.phone?'<br>'+i.phone:''}</td>
+          <td>${Array.isArray(i.groups)&&i.groups.length ? i.groups.map(g=>`<span class="badge bb" style="font-size:10px">${g.name}</span>`).join('') : '—'}</td>
+          <td>${i.active?'<span class="badge bg">Aktywny</span>':'<span class="badge br">Nieaktywny</span>'}</td>
+          <td><div class="tda">
+            <button class="bi" onclick="openInstructorModal(${i.id})">Edytuj</button>
+            <button class="bi" onclick="toggleInstructor(${i.id},${!i.active})">${i.active?'Dezaktywuj':'Aktywuj'}</button>
+          </div></td>
+        </tr>`).join('')}
+      </tbody>
+    </table></div>`;
+  } catch(e) {
+    el.innerHTML = `<div class="empty"><strong>Błąd</strong>${e.message}</div>`;
+  }
+}
+
+async function openNewInstructorModal() {
+  let groupOpts = '';
+  try { arrRows(await aF('/groups')).forEach(g => { groupOpts += `<option value="${g.id}">${g.name}${g.city?' ('+g.city+')':''}</option>`; }); } catch(e) {}
+
+  showModal('Nowy instruktor', `
+    <div class="fg">
+      <div class="ff"><label>Imię *</label><input id="ni-fn" placeholder="Anna"></div>
+      <div class="ff"><label>Nazwisko *</label><input id="ni-ln" placeholder="Kowalska"></div>
+    </div>
+    <div class="fg">
+      <div class="ff"><label>Login (username) *</label><input id="ni-un" placeholder="anna.kowalska"></div>
+      <div class="ff"><label>Hasło * (min. 8 znaków)</label><input id="ni-pw" type="password" placeholder="••••••••"></div>
+    </div>
+    <div class="fg">
+      <div class="ff"><label>Email</label><input id="ni-em" type="email"></div>
+      <div class="ff"><label>Telefon</label><input id="ni-ph"></div>
+    </div>
+    <div class="ff"><label>Przypisz do grup (Ctrl+klik = wiele)</label>
+      <select id="ni-gr" multiple style="height:90px">${groupOpts}</select>
+    </div>
+    <div id="ni-err" style="color:var(--red-l);font-size:12px;margin-top:8px;display:none"></div>`,
+    `<button class="btn btn-secondary" onclick="closeModal()">Anuluj</button>
+     <button class="btn btn-primary" onclick="createInstructor()">Utwórz konto</button>`);
+}
+
+async function createInstructor() {
+  const fn = document.getElementById('ni-fn')?.value?.trim();
+  const ln = document.getElementById('ni-ln')?.value?.trim();
+  const un = document.getElementById('ni-un')?.value?.trim();
+  const pw = document.getElementById('ni-pw')?.value;
+  const errEl = document.getElementById('ni-err');
+  if (!fn||!ln||!un||!pw) { errEl.textContent='Imię, nazwisko, login i hasło są wymagane.'; errEl.style.display='block'; return; }
+  if (pw.length < 8) { errEl.textContent='Hasło musi mieć co najmniej 8 znaków.'; errEl.style.display='block'; return; }
+  const sel = document.getElementById('ni-gr');
+  const groupIds = sel ? [...sel.selectedOptions].map(o=>parseInt(o.value)) : [];
+  try {
+    await aF('/instructors', { method:'POST', body: JSON.stringify({
+      first_name: fn, last_name: ln, username: un, password: pw,
+      email: document.getElementById('ni-em')?.value?.trim()||null,
+      phone: document.getElementById('ni-ph')?.value?.trim()||null,
+      group_ids: groupIds,
+    })});
+    toast('Konto instruktora utworzone');
+    closeModal();
+    fetchInstructors();
+  } catch(e) { errEl.textContent = e.message; errEl.style.display='block'; }
+}
+
+async function openInstructorModal(id) {
+  let inst, groupOpts = '';
+  try {
+    const [instData, gd] = await Promise.all([aF(`/instructors/${id}`), aF('/groups')]);
+    inst = instData;
+    const instGroupIds = (inst.groups||[]).map(g=>g.id);
+    arrRows(gd).forEach(g => {
+      groupOpts += `<option value="${g.id}" ${instGroupIds.includes(g.id)?'selected':''}>${g.name}${g.city?' ('+g.city+')':''}</option>`;
+    });
+  } catch(e) { toast('Błąd: '+e.message,'error'); return; }
+
+  showModal(`Edytuj: ${inst.first_name} ${inst.last_name}`, `
+    <div class="fg">
+      <div class="ff"><label>Imię</label><input id="ei-fn" value="${inst.first_name||''}"></div>
+      <div class="ff"><label>Nazwisko</label><input id="ei-ln" value="${inst.last_name||''}"></div>
+    </div>
+    <div class="fg">
+      <div class="ff"><label>Email</label><input id="ei-em" type="email" value="${inst.email||''}"></div>
+      <div class="ff"><label>Telefon</label><input id="ei-ph" value="${inst.phone||''}"></div>
+    </div>
+    <div class="fg">
+      <div class="ff"><label>Nowe hasło (puste = bez zmian)</label><input id="ei-pw" type="password" placeholder="••••••••"></div>
+      <div class="ff"><label>Status</label>
+        <select id="ei-ac">
+          <option value="true" ${inst.active?'selected':''}>Aktywny</option>
+          <option value="false" ${!inst.active?'selected':''}>Nieaktywny</option>
+        </select>
+      </div>
+    </div>
+    <div class="ff"><label>Grupy (Ctrl+klik = wiele)</label>
+      <select id="ei-gr" multiple style="height:90px">${groupOpts}</select>
+    </div>
+    <div id="ei-err" style="color:var(--red-l);font-size:12px;margin-top:8px;display:none"></div>`,
+    `<button class="btn btn-secondary" onclick="closeModal()">Anuluj</button>
+     <button class="btn btn-primary" onclick="saveInstructor(${id})">Zapisz zmiany</button>`);
+}
+
+async function saveInstructor(id) {
+  const errEl = document.getElementById('ei-err');
+  const pw = document.getElementById('ei-pw')?.value;
+  if (pw && pw.length < 8) { errEl.textContent='Hasło musi mieć co najmniej 8 znaków.'; errEl.style.display='block'; return; }
+  const sel = document.getElementById('ei-gr');
+  const data = {
+    first_name: document.getElementById('ei-fn')?.value?.trim(),
+    last_name:  document.getElementById('ei-ln')?.value?.trim(),
+    email:      document.getElementById('ei-em')?.value?.trim()||null,
+    phone:      document.getElementById('ei-ph')?.value?.trim()||null,
+    active:     document.getElementById('ei-ac')?.value==='true',
+    group_ids:  sel ? [...sel.selectedOptions].map(o=>parseInt(o.value)) : [],
+  };
+  if (pw) data.password = pw;
+  try {
+    await aF(`/instructors/${id}`, { method:'PATCH', body: JSON.stringify(data) });
+    toast('Dane instruktora zapisane');
+    closeModal();
+    fetchInstructors();
+  } catch(e) { errEl.textContent = e.message; errEl.style.display='block'; }
+}
+
+async function toggleInstructor(id, active) {
+  try {
+    await aF(`/instructors/${id}`, { method:'PATCH', body: JSON.stringify({ active }) });
+    toast(active ? 'Instruktor aktywowany' : 'Instruktor dezaktywowany');
+    fetchInstructors();
+  } catch(e) { toast('Błąd: '+e.message,'error'); }
 }
 
 checkLogin();
