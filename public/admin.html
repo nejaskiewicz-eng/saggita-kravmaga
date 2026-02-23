@@ -532,10 +532,10 @@ async function loadDash(){
           ${arrRows(d.byLoc).map(l=>`
             <tr>
               <td><strong style="color:var(--bright)">${l.city||'—'}</strong></td>
-              <td><a href="#" class="link" onclick="openStudentsByCity('${'${l.city||""}'}', '2025');return false;"><strong>${'${l.total||0}'}</strong></a></td>
-              <td>${pb('paid')} <a href="#" class="link" onclick="openStudentsByCity('${'${l.city||""}'}', '2025');return false;"><strong>${'${l.paid||0}'}</strong></a></td>
-              <td><a href="#" class="link" onclick="openStudentsByCity('${'${l.city||""}'}', '2025');return false;">${'${l.pending||0}'}</a></td>
-              <td><a href="#" class="link" onclick="openStudentsByCity('${'${l.city||""}'}', '2025');return false;">${'${l.waitlist||0}'}</a></td>
+              <td><a href="#" class="link" onclick="openStudentsByCity('${l.city||''}', '2025');return false;"><strong>${l.total||0}</strong></a></td>
+              <td>${pb('paid')} <a href="#" class="link" onclick="openStudentsByCity('${l.city||''}', '2025');return false;"><strong>${l.paid||0}</strong></a></td>
+              <td><a href="#" class="link" onclick="openStudentsByCity('${l.city||''}', '2025');return false;">${l.pending||0}</a></td>
+              <td><a href="#" class="link" onclick="openStudentsByCity('${l.city||''}', '2025');return false;">${l.waitlist||0}</a></td>
             </tr>
           `).join('')}
         </tbody>
