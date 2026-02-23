@@ -41,7 +41,7 @@ module.exports = async (req, res) => {
           pi++;
         }
         if (group_id) {
-          where.push(`sg.group_id = $${pi}`);
+          where.push(`EXISTS(SELECT 1 FROM student_groups sg5 WHERE sg5.student_id=s.id AND sg5.group_id=$${pi})`);
           vals.push(parseInt(group_id));
           pi++;
         }
@@ -52,7 +52,6 @@ module.exports = async (req, res) => {
         const countVals = [...vals];
         const { rows: [{ total }] } = await pool.query(
           `SELECT COUNT(DISTINCT s.id)::int AS total FROM students s
-           LEFT JOIN student_groups sg ON sg.student_id = s.id
            ${whereForCount}`, countVals
         );
 
@@ -93,12 +92,11 @@ module.exports = async (req, res) => {
             pa.last_payment,
             COALESCE(pa.payment_count, 0) AS payment_count
           FROM students s
-          LEFT JOIN student_groups sg ON sg.student_id = s.id
           LEFT JOIN grp_agg ga ON ga.student_id = s.id
           LEFT JOIN att_agg aa ON aa.student_id = s.id
           LEFT JOIN pay_agg pa ON pa.student_id = s.id
           ${whereStr}
-          GROUP BY s.id, ga.groups, aa.total_attendances, aa.last_training,
+          GROUP BY s.id, aa.total_attendances, aa.last_training,
                    pa.total_paid, pa.last_payment, pa.payment_count
           ORDER BY s.last_name, s.first_name
           LIMIT $${pi} OFFSET $${pi + 1}
