@@ -1,54 +1,791 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-  <meta charset="UTF-8">
-  <title>Panel Instruktora</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Panel Instruktora — Krav Maga Saggita</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#0f0b0b;--surface:#1c1414;--surface2:#241c1c;--surface3:#2c2222;
+  --border:#3a2828;--border2:#4a3232;
+  --red:#c42000;--red-l:#e83000;--red-bg:rgba(196,32,0,.12);--red-bdr:rgba(196,32,0,.35);
+  --orange:#e8a500;--or-bg:rgba(232,165,0,.12);--or-bdr:rgba(232,165,0,.35);
+  --green:#2ecc71;--gr-bg:rgba(46,204,113,.1);--gr-bdr:rgba(46,204,113,.3);
+  --blue:#4a9fe8;--bl-bg:rgba(74,159,232,.1);--bl-bdr:rgba(74,159,232,.3);
+  --text:#e8dada;--dim:#9a8080;--muted:#6a5555;--bright:#fff;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;font-size:14px;line-height:1.5}
+
+/* ── SCREENS ── */
+.screen{display:none;min-height:100vh}
+.screen.active{display:flex}
+
+/* ── LOGIN SCREEN ── */
+#screen-login{align-items:center;justify-content:center;background:var(--bg);position:relative;overflow:hidden}
+#screen-login::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 800px 600px at 50% 40%, rgba(196,32,0,.07) 0%, transparent 70%);
+  pointer-events:none
+}
+.login-box{
+  background:var(--surface);border:1px solid var(--border2);border-radius:12px;
+  padding:40px 44px;width:100%;max-width:400px;
+  box-shadow:0 32px 80px rgba(0,0,0,.6);
+  position:relative;z-index:1;
+  animation:fadeUp .35s ease both
+}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.login-logo{text-align:center;margin-bottom:32px}
+.login-logo h1{
+  font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:26px;
+  text-transform:uppercase;letter-spacing:.06em;color:var(--bright);line-height:1.1
+}
+.login-logo h1 em{color:var(--red-l);font-style:normal}
+.login-logo small{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.12em;display:block;margin-top:4px}
+.login-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--dim);margin-bottom:6px;display:block}
+.login-input{
+  width:100%;background:var(--surface2);border:1px solid var(--border2);
+  border-radius:6px;color:var(--text);padding:12px 14px;
+  font-size:15px;font-family:'Barlow Condensed',sans-serif;font-weight:700;
+  letter-spacing:.15em;text-transform:uppercase;outline:none;
+  transition:border-color .15s
+}
+.login-input:focus{border-color:var(--red-l);background:var(--surface3)}
+.login-input::placeholder{color:var(--muted);font-weight:600;letter-spacing:.08em}
+.login-btn{
+  width:100%;margin-top:16px;padding:13px;
+  background:var(--red);border:none;border-radius:6px;
+  color:#fff;font-family:'Barlow Condensed',sans-serif;font-weight:800;
+  font-size:16px;letter-spacing:.1em;text-transform:uppercase;
+  cursor:pointer;transition:background .15s;
+}
+.login-btn:hover{background:var(--red-l)}
+.login-btn:disabled{opacity:.5;cursor:not-allowed}
+.login-error{
+  margin-top:12px;padding:10px 14px;
+  background:var(--red-bg);border:1px solid var(--red-bdr);border-radius:5px;
+  color:#ff6b4a;font-size:12px;font-weight:600;text-align:center;
+  display:none
+}
+.login-error.show{display:block}
+
+/* ── MAIN APP LAYOUT ── */
+#screen-app{flex-direction:row}
+#sidebar{
+  width:220px;min-width:220px;background:var(--surface);
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;height:100vh;position:sticky;top:0
+}
+#sidebar-logo{padding:20px 16px 16px;border-bottom:1px solid var(--border)}
+#sidebar-logo h1{
+  font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:18px;
+  letter-spacing:.03em;color:var(--bright);line-height:1.1;text-transform:uppercase
+}
+#sidebar-logo h1 em{color:var(--red-l);font-style:normal}
+#sidebar-logo small{color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.1em}
+#sidebar-instructor{
+  padding:12px 16px;border-bottom:1px solid var(--border);
+  background:var(--red-bg)
+}
+#sidebar-instructor .si-role{
+  font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;
+  color:var(--red);margin-bottom:2px
+}
+#sidebar-instructor .si-name{
+  font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;color:var(--bright)
+}
+#sidebar-instructor .si-group{
+  font-size:11px;color:var(--dim);margin-top:1px
+}
+nav{flex:1;padding:8px;overflow-y:auto}
+nav a{
+  display:flex;align-items:center;gap:9px;padding:8px 10px;
+  border-radius:5px;color:var(--dim);font-weight:500;font-size:13px;
+  transition:all .15s;cursor:pointer;margin-bottom:1px;text-decoration:none
+}
+nav a:hover{color:var(--bright);background:var(--surface2)}
+nav a.active{color:var(--bright);background:var(--red-bg);border-left:2px solid var(--red-l);padding-left:8px}
+.nav-dot{width:4px;height:4px;border-radius:50%;background:var(--border2);flex-shrink:0;transition:background .15s}
+nav a:hover .nav-dot{background:var(--dim)}
+nav a.active .nav-dot{background:var(--red-l)}
+.nav-section{font-size:10px;font-weight:700;letter-spacing:.12em;color:var(--red);padding:14px 10px 4px;text-transform:uppercase;opacity:.7}
+#sidebar-footer{padding:12px;border-top:1px solid var(--border)}
+.btn-logout{
+  width:100%;padding:7px;background:transparent;
+  border:1px solid var(--border2);border-radius:4px;
+  color:var(--dim);cursor:pointer;font-size:12px;
+  font-family:'Barlow',sans-serif;transition:all .15s
+}
+.btn-logout:hover{border-color:var(--red);color:var(--red);background:var(--red-bg)}
+
+/* ── MAIN CONTENT ── */
+#main{flex:1;display:flex;flex-direction:column;overflow:hidden;height:100vh}
+#topbar{
+  height:50px;min-height:50px;background:var(--surface);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;padding:0 24px;gap:16px
+}
+#topbar-title{
+  font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;
+  color:var(--bright);text-transform:uppercase;letter-spacing:.05em;flex:1
+}
+#topbar-back{
+  display:none;align-items:center;gap:6px;
+  background:var(--surface2);border:1px solid var(--border2);border-radius:5px;
+  padding:6px 12px;color:var(--dim);cursor:pointer;font-size:12px;
+  font-family:'Barlow',sans-serif;font-weight:600;text-transform:uppercase;
+  letter-spacing:.05em;transition:all .15s
+}
+#topbar-back:hover{border-color:var(--red);color:var(--bright)}
+#topbar-back.show{display:flex}
+#content{flex:1;overflow-y:auto;padding:24px}
+
+/* ── PANELS ── */
+.panel{display:none}
+.panel.active{display:block;animation:fadeUp .2s ease both}
+
+/* ── STATS CARDS ── */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;margin-bottom:24px}
+.sc{
+  background:var(--surface);border:1px solid var(--border);border-radius:8px;
+  padding:16px 18px;position:relative;overflow:hidden
+}
+.sc::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--border2)}
+.sc.red::before{background:var(--red-l)}
+.sc.green::before{background:var(--green)}
+.sc.orange::before{background:var(--orange)}
+.sc.blue::before{background:var(--blue)}
+.sc .label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--dim);margin-bottom:6px}
+.sc .value{font-family:'Barlow Condensed',sans-serif;font-size:38px;font-weight:800;line-height:1;color:var(--bright)}
+.sc.red .value{color:var(--red-l)}
+.sc.green .value{color:var(--green)}
+.sc.orange .value{color:var(--orange)}
+.sc.blue .value{color:var(--blue)}
+
+/* ── SECTION HEADER ── */
+.sh{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.sh h3{
+  font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;
+  color:var(--bright);text-transform:uppercase;letter-spacing:.05em;
+  border-left:3px solid var(--red);padding-left:10px
+}
+
+/* ── TABLE ── */
+.tw{background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden}
+table{width:100%;border-collapse:collapse}
+thead th{
+  background:var(--surface2);padding:10px 14px;text-align:left;
+  font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;
+  color:var(--dim);white-space:nowrap;border-bottom:2px solid var(--border2)
+}
+tbody tr{border-top:1px solid var(--border);transition:background .1s}
+tbody tr:hover{background:var(--surface2)}
+tbody td{padding:11px 14px;font-size:13px;vertical-align:middle;color:var(--text)}
+
+/* ── BADGES ── */
+.badge{display:inline-block;padding:3px 8px;border-radius:4px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;line-height:1.4}
+.bg{background:var(--gr-bg);color:var(--green);border:1px solid var(--gr-bdr)}
+.br{background:var(--red-bg);color:#ff6b4a;border:1px solid var(--red-bdr)}
+.bo{background:var(--or-bg);color:var(--orange);border:1px solid var(--or-bdr)}
+.bx{background:var(--surface3);color:var(--dim);border:1px solid var(--border2)}
+.bb{background:var(--bl-bg);color:var(--blue);border:1px solid var(--bl-bdr)}
+
+/* ── BUTTONS ── */
+.btn{
+  display:inline-flex;align-items:center;gap:6px;padding:7px 14px;
+  border-radius:5px;font-size:12px;font-weight:600;cursor:pointer;
+  transition:all .15s;border:none;font-family:'Barlow',sans-serif;
+  text-transform:uppercase;letter-spacing:.05em;line-height:1
+}
+.btn-primary{background:var(--red);color:#fff}.btn-primary:hover{background:var(--red-l)}
+.btn-enter{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:5px 12px;border-radius:4px;font-size:11px;font-weight:700;
+  cursor:pointer;transition:all .15s;
+  background:var(--red-bg);border:1px solid var(--red-bdr);color:var(--red-l);
+  font-family:'Barlow',sans-serif;text-transform:uppercase;letter-spacing:.06em
+}
+.btn-enter:hover{background:var(--red);border-color:var(--red);color:#fff}
+
+/* ── SESSION DATE HEADER ── */
+.session-info{
+  background:var(--surface2);border:1px solid var(--border2);border-radius:8px;
+  padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap
+}
+.si-date{font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:800;color:var(--bright);line-height:1}
+.si-day{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--red-l);margin-top:1px}
+.si-divider{width:1px;height:40px;background:var(--border2)}
+.si-details{flex:1}
+.si-group-name{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;color:var(--bright);text-transform:uppercase}
+.si-location{font-size:12px;color:var(--dim);margin-top:2px}
+.si-counter{margin-left:auto;text-align:right}
+.si-counter .cnt{font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:800;color:var(--green);line-height:1}
+.si-counter .cnt-label{font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:.08em}
+
+/* ── ATTENDANCE ROWS ── */
+.att-row{
+  display:flex;align-items:center;gap:12px;
+  padding:12px 14px;
+  border-top:1px solid var(--border);
+  transition:background .1s
+}
+.att-row:first-child{border-top:none}
+.att-row:hover{background:var(--surface2)}
+.att-checkbox-wrap{flex-shrink:0}
+.att-checkbox{
+  width:22px;height:22px;cursor:pointer;accent-color:var(--red-l);
+}
+.att-name{flex:1;min-width:0}
+.att-name strong{
+  display:block;font-family:'Barlow Condensed',sans-serif;font-weight:700;
+  font-size:15px;color:var(--bright);text-transform:uppercase
+}
+.att-name span{font-size:11px;color:var(--dim)}
+.att-payment{margin-left:auto;text-align:right;flex-shrink:0}
+.att-payment .pay-date{font-size:12px;color:var(--green);font-weight:600}
+.att-payment .pay-none{font-size:11px;color:var(--muted)}
+.att-payment .pay-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.att-saving{
+  width:16px;height:16px;border:2px solid var(--border2);border-top-color:var(--red-l);
+  border-radius:50%;animation:spin .5s linear infinite;flex-shrink:0;display:none
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── EMPTY/LOADING STATES ── */
+.empty{
+  text-align:center;padding:60px 20px;color:var(--muted)
+}
+.empty .empty-icon{font-size:40px;margin-bottom:12px;opacity:.4}
+.empty p{font-size:13px}
+.loading-row{
+  display:flex;align-items:center;gap:10px;padding:14px;color:var(--dim);font-size:13px
+}
+.loading-spin{
+  width:14px;height:14px;border:2px solid var(--border2);border-top-color:var(--red-l);
+  border-radius:50%;animation:spin .5s linear infinite;flex-shrink:0
+}
+
+/* ── TODAY ROW HIGHLIGHT ── */
+tr.today-session td{background:rgba(196,32,0,.05)}
+tr.today-session:hover td{background:var(--surface2)}
+
+/* ── FILTER BAR ── */
+.fb{
+  display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;align-items:center;
+  background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:10px 12px
+}
+.fb input,.fb select{
+  background:var(--surface2);border:1px solid var(--border2);border-radius:4px;
+  color:var(--text);padding:6px 10px;font-size:13px;
+  font-family:'Barlow',sans-serif;outline:none;transition:border-color .15s
+}
+.fb input:focus,.fb select:focus{border-color:var(--red)}
+
+/* ── TOAST ── */
+#toast{
+  position:fixed;bottom:24px;right:24px;z-index:9999;
+  display:flex;flex-direction:column;gap:8px;pointer-events:none
+}
+.toast-item{
+  background:var(--surface);border:1px solid var(--border2);border-radius:7px;
+  padding:12px 16px;font-size:13px;font-weight:600;color:var(--bright);
+  box-shadow:0 8px 24px rgba(0,0,0,.5);
+  animation:toastIn .2s ease both;
+  max-width:280px
+}
+.toast-item.ok{border-color:var(--gr-bdr);color:var(--green)}
+.toast-item.err{border-color:var(--red-bdr);color:#ff6b4a}
+@keyframes toastIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+
+/* ── MOBILE ── */
+@media(max-width:700px){
+  #sidebar{display:none}
+  #content{padding:16px}
+  .stats-grid{grid-template-columns:1fr 1fr}
+  .att-row{flex-wrap:wrap}
+}
+</style>
 </head>
-<body style="font-family: Arial; padding:40px;">
+<body>
 
-<h2>Panel Instruktora</h2>
+<!-- ───────────────────────────── LOGIN SCREEN ───────────────────────────── -->
+<div id="screen-login" class="screen active">
+  <div class="login-box">
+    <div class="login-logo">
+      <h1>Krav Maga <em>Saggita</em></h1>
+      <small>Panel Instruktora</small>
+    </div>
+    <label class="login-label" for="login-code">Kod dostępu</label>
+    <input id="login-code" class="login-input" type="text" placeholder="WROCLAW2026" autocomplete="off" spellcheck="false"/>
+    <button id="login-btn" class="login-btn" onclick="doLogin()">Wejdź</button>
+    <div id="login-error" class="login-error">Nieprawidłowy kod dostępu</div>
+  </div>
+</div>
 
-<input id="code" placeholder="Kod dostępu" />
-<button onclick="login()">Zaloguj</button>
+<!-- ───────────────────────────── APP SCREEN ───────────────────────────── -->
+<div id="screen-app" class="screen">
 
-<p id="error" style="color:red;"></p>
+  <!-- SIDEBAR -->
+  <div id="sidebar">
+    <div id="sidebar-logo">
+      <h1>Krav Maga <em>Saggita</em></h1>
+      <small>Panel Instruktora</small>
+    </div>
+    <div id="sidebar-instructor">
+      <div class="si-role">Instruktor</div>
+      <div class="si-name" id="sb-name">—</div>
+      <div class="si-group" id="sb-group">—</div>
+    </div>
+    <nav>
+      <div class="nav-section">Menu</div>
+      <a id="nav-sessions" class="active" onclick="showPanel('sessions')">
+        <span class="nav-dot"></span>Moje zajęcia
+      </a>
+      <a id="nav-today" onclick="showPanel('today')">
+        <span class="nav-dot"></span>Dzisiejsze zajęcia
+      </a>
+    </nav>
+    <div id="sidebar-footer">
+      <button class="btn-logout" onclick="doLogout()">Wyloguj</button>
+    </div>
+  </div>
 
-<div id="sessions"></div>
+  <!-- MAIN -->
+  <div id="main">
+    <div id="topbar">
+      <div id="topbar-title">Moje zajęcia</div>
+      <button id="topbar-back" onclick="backToSessions()">← Wróć do listy</button>
+    </div>
+    <div id="content">
+
+      <!-- PANEL: SESSIONS LIST -->
+      <div id="panel-sessions" class="panel active">
+        <div class="stats-grid" id="stats-cards"></div>
+        <div class="sh">
+          <h3>Ostatnie zajęcia (30 dni)</h3>
+        </div>
+        <div class="fb">
+          <input type="text" id="filter-search" placeholder="Szukaj daty lub grupy…" oninput="filterSessions()" style="min-width:200px"/>
+        </div>
+        <div class="tw">
+          <table>
+            <thead>
+              <tr>
+                <th>Data</th>
+                <th>Dzień</th>
+                <th>Grupa</th>
+                <th>Lokalizacja</th>
+                <th>Akcja</th>
+              </tr>
+            </thead>
+            <tbody id="sessions-tbody">
+              <tr><td colspan="5"><div class="loading-row"><span class="loading-spin"></span> Ładowanie zajęć…</div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- PANEL: ATTENDANCE -->
+      <div id="panel-attendance" class="panel">
+        <div class="session-info" id="session-info-header"></div>
+        <div class="sh">
+          <h3>Lista kursantów</h3>
+          <span id="att-count" class="badge bx">—</span>
+        </div>
+        <div class="tw">
+          <div id="att-list">
+            <div class="loading-row"><span class="loading-spin"></span> Ładowanie listy…</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PANEL: TODAY (placeholder) -->
+      <div id="panel-today" class="panel">
+        <div class="sh"><h3>Dzisiejsze zajęcia</h3></div>
+        <div class="empty">
+          <div class="empty-icon">📋</div>
+          <p id="today-msg">Sprawdzanie…</p>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /screen-app -->
+
+<div id="toast"></div>
 
 <script>
-async function login() {
-  const code = document.getElementById('code').value.trim()
-  const error = document.getElementById('error')
-  const sessionsDiv = document.getElementById('sessions')
-  error.innerText = ''
-  sessionsDiv.innerHTML = ''
+/* ════════════════════════════════════════════════════════
+   STATE
+════════════════════════════════════════════════════════ */
+let STATE = {
+  code: null,
+  instructor: null,  // { name, group_name, location }
+  sessions: [],
+  currentSession: null
+};
 
-  const res = await fetch('/api/instructor/panel?code=' + encodeURIComponent(code))
-  const json = await res.json()
-  const rows = json && json.rows ? json.rows : []
+const DAYS = ['Niedziela','Poniedziałek','Wtorek','Środa','Czwartek','Piątek','Sobota'];
 
-  if (!rows.length) {
-    error.innerText = 'Nieprawidłowy kod'
-    return
+/* ════════════════════════════════════════════════════════
+   UTILS
+════════════════════════════════════════════════════════ */
+function fmtDate(iso) {
+  if (!iso) return '—';
+  return String(iso).slice(0, 10);
+}
+function fmtDay(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  return DAYS[d.getDay()];
+}
+function isToday(iso) {
+  if (!iso) return false;
+  return String(iso).slice(0, 10) === new Date().toISOString().slice(0, 10);
+}
+function toast(msg, type = 'ok') {
+  const t = document.getElementById('toast');
+  const el = document.createElement('div');
+  el.className = 'toast-item ' + type;
+  el.textContent = msg;
+  t.appendChild(el);
+  setTimeout(() => el.remove(), 2800);
+}
+
+/* ════════════════════════════════════════════════════════
+   LOGIN
+════════════════════════════════════════════════════════ */
+async function doLogin() {
+  const input = document.getElementById('login-code');
+  const btn = document.getElementById('login-btn');
+  const errEl = document.getElementById('login-error');
+  const code = input.value.trim().toUpperCase();
+
+  if (!code) return;
+
+  btn.disabled = true;
+  btn.textContent = 'Sprawdzam…';
+  errEl.classList.remove('show');
+
+  try {
+    const res = await fetch('/api/instructor/panel?code=' + encodeURIComponent(code));
+    const json = await res.json();
+    const rows = json && json.rows ? json.rows : [];
+
+    if (!rows.length) {
+      errEl.classList.add('show');
+      btn.disabled = false;
+      btn.textContent = 'Wejdź';
+      return;
+    }
+
+    STATE.code = code;
+    STATE.sessions = rows;
+
+    // extract instructor info from first row
+    const first = rows[0];
+    STATE.instructor = {
+      group_name: first.group_name || '—',
+      location: first.location || '—'
+    };
+
+    // Update sidebar
+    document.getElementById('sb-name').textContent = code;
+    document.getElementById('sb-group').textContent = first.group_name + ' · ' + first.location;
+
+    // Switch screens
+    document.getElementById('screen-login').classList.remove('active');
+    document.getElementById('screen-app').classList.add('active');
+
+    renderSessions();
+  } catch (e) {
+    errEl.textContent = 'Błąd połączenia z serwerem';
+    errEl.classList.add('show');
+    btn.disabled = false;
+    btn.textContent = 'Wejdź';
+  }
+}
+
+document.getElementById('login-code').addEventListener('keydown', e => {
+  if (e.key === 'Enter') doLogin();
+});
+
+/* ════════════════════════════════════════════════════════
+   LOGOUT
+════════════════════════════════════════════════════════ */
+function doLogout() {
+  STATE = { code: null, instructor: null, sessions: [], currentSession: null };
+  document.getElementById('login-code').value = '';
+  document.getElementById('login-error').classList.remove('show');
+  document.getElementById('screen-app').classList.remove('active');
+  document.getElementById('screen-login').classList.add('active');
+  document.getElementById('login-btn').disabled = false;
+  document.getElementById('login-btn').textContent = 'Wejdź';
+}
+
+/* ════════════════════════════════════════════════════════
+   PANELS
+════════════════════════════════════════════════════════ */
+function showPanel(name) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+
+  document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
+  const navEl = document.getElementById('nav-' + name);
+  if (navEl) navEl.classList.add('active');
+
+  const titles = { sessions: 'Moje zajęcia', attendance: 'Sprawdzanie obecności', today: 'Dzisiejsze zajęcia' };
+  document.getElementById('topbar-title').textContent = titles[name] || name;
+
+  const backBtn = document.getElementById('topbar-back');
+  if (name === 'attendance') {
+    backBtn.classList.add('show');
+  } else {
+    backBtn.classList.remove('show');
   }
 
-  rows.forEach(s => {
-    const div = document.createElement('div')
-    div.style.padding = '12px 0'
-    div.style.borderBottom = '1px solid #ddd'
-    div.innerHTML = `
-      <div><strong>${String(s.session_date).slice(0,10)}</strong> — ${s.group_name} (${s.location})</div>
-      <div>
-        <a href="/instruktor-zajecia.html?code=${encodeURIComponent(code)}&session_id=${s.session_id}">
-          Wejdź
-        </a>
+  if (name === 'today') renderToday();
+}
+
+function backToSessions() {
+  showPanel('sessions');
+}
+
+/* ════════════════════════════════════════════════════════
+   SESSIONS LIST
+════════════════════════════════════════════════════════ */
+function renderSessions() {
+  const sessions = STATE.sessions;
+  const today = sessions.filter(s => isToday(s.session_date));
+  const total = sessions.length;
+
+  // Stats cards
+  document.getElementById('stats-cards').innerHTML = `
+    <div class="sc red">
+      <div class="label">Wszystkich sesji</div>
+      <div class="value">${total}</div>
+    </div>
+    <div class="sc green">
+      <div class="label">Dzisiaj</div>
+      <div class="value">${today.length}</div>
+    </div>
+    <div class="sc blue">
+      <div class="label">Ostatnie 7 dni</div>
+      <div class="value">${sessions.filter(s => {
+        const d = new Date(s.session_date);
+        const now = new Date();
+        return (now - d) / 86400000 <= 7;
+      }).length}</div>
+    </div>
+  `;
+
+  renderSessionsTable(sessions);
+}
+
+function renderSessionsTable(sessions) {
+  const tbody = document.getElementById('sessions-tbody');
+  if (!sessions.length) {
+    tbody.innerHTML = `<tr><td colspan="5"><div class="empty"><div class="empty-icon">📅</div><p>Brak zajęć w ostatnich 30 dniach</p></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = sessions.map(s => {
+    const dateStr = fmtDate(s.session_date);
+    const day = fmtDay(s.session_date);
+    const todayClass = isToday(s.session_date) ? ' class="today-session"' : '';
+    const todayBadge = isToday(s.session_date) ? ' <span class="badge bg">Dziś</span>' : '';
+    return `<tr${todayClass}>
+      <td><strong>${dateStr}</strong>${todayBadge}</td>
+      <td><span class="badge bx">${day}</span></td>
+      <td>${s.group_name || '—'}</td>
+      <td>${s.location || '—'}</td>
+      <td>
+        <button class="btn-enter" onclick="openSession(${s.session_id})">
+          ▶ Wejdź
+        </button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function filterSessions() {
+  const q = document.getElementById('filter-search').value.toLowerCase();
+  if (!q) { renderSessionsTable(STATE.sessions); return; }
+  const filtered = STATE.sessions.filter(s =>
+    fmtDate(s.session_date).includes(q) ||
+    (s.group_name || '').toLowerCase().includes(q) ||
+    (s.location || '').toLowerCase().includes(q)
+  );
+  renderSessionsTable(filtered);
+}
+
+/* ════════════════════════════════════════════════════════
+   OPEN SESSION → ATTENDANCE
+════════════════════════════════════════════════════════ */
+async function openSession(sessionId) {
+  STATE.currentSession = sessionId;
+
+  // find session info
+  const sess = STATE.sessions.find(s => s.session_id == sessionId);
+
+  // Update session header
+  const dateStr = fmtDate(sess ? sess.session_date : null);
+  const dayStr = fmtDay(sess ? sess.session_date : null);
+  const groupName = sess ? (sess.group_name || '—') : '—';
+  const location = sess ? (sess.location || '—') : '—';
+
+  document.getElementById('session-info-header').innerHTML = `
+    <div>
+      <div class="si-date">${dateStr}</div>
+      <div class="si-day">${dayStr}</div>
+    </div>
+    <div class="si-divider"></div>
+    <div class="si-details">
+      <div class="si-group-name">${groupName}</div>
+      <div class="si-location">📍 ${location}</div>
+    </div>
+    <div class="si-counter" id="session-counter">
+      <div class="cnt" id="present-count">—</div>
+      <div class="cnt-label">Obecnych</div>
+    </div>
+  `;
+
+  document.getElementById('att-list').innerHTML = `<div class="loading-row"><span class="loading-spin"></span> Ładowanie listy kursantów…</div>`;
+  document.getElementById('att-count').textContent = '…';
+
+  showPanel('attendance');
+
+  try {
+    const res = await fetch(
+      '/api/instructor/panel?code=' + encodeURIComponent(STATE.code) +
+      '&session_id=' + encodeURIComponent(sessionId)
+    );
+    const json = await res.json();
+    const rows = json && json.rows ? json.rows : [];
+    renderAttendance(rows);
+  } catch (e) {
+    document.getElementById('att-list').innerHTML = `<div class="empty"><div class="empty-icon">⚠️</div><p>Błąd ładowania danych</p></div>`;
+  }
+}
+
+/* ════════════════════════════════════════════════════════
+   RENDER ATTENDANCE LIST
+════════════════════════════════════════════════════════ */
+function renderAttendance(rows) {
+  const list = document.getElementById('att-list');
+  const countBadge = document.getElementById('att-count');
+  const presentCountEl = document.getElementById('present-count');
+
+  if (!rows.length) {
+    list.innerHTML = `<div class="empty"><div class="empty-icon">👥</div><p>Brak kursantów przypisanych do tej grupy</p></div>`;
+    countBadge.textContent = '0';
+    return;
+  }
+
+  countBadge.textContent = rows.length + ' kursantów';
+
+  let presentCount = rows.filter(r => r.present).length;
+  if (presentCountEl) presentCountEl.textContent = presentCount;
+
+  list.innerHTML = rows.map(r => {
+    const checked = r.present ? 'checked' : '';
+    const payDate = r.last_payment ? fmtDate(r.last_payment) : null;
+    const payHtml = payDate
+      ? `<div class="pay-label">Ostatnia wpłata</div><div class="pay-date">${payDate}</div>`
+      : `<div class="pay-none">Brak wpłat</div>`;
+
+    return `<div class="att-row" id="row-${r.student_id}">
+      <div class="att-checkbox-wrap">
+        <input type="checkbox" class="att-checkbox"
+          ${checked}
+          data-sid="${r.student_id}"
+          onchange="saveAttendance(this, ${r.student_id})"
+        />
       </div>
-    `
-    sessionsDiv.appendChild(div)
-  })
+      <div class="att-name">
+        <strong>${r.last_name} ${r.first_name}</strong>
+        <span>ID: ${r.student_id}</span>
+      </div>
+      <div class="att-payment">${payHtml}</div>
+      <div class="att-saving" id="saving-${r.student_id}"></div>
+    </div>`;
+  }).join('');
+}
+
+/* ════════════════════════════════════════════════════════
+   SAVE ATTENDANCE
+════════════════════════════════════════════════════════ */
+async function saveAttendance(checkbox, studentId) {
+  const present = checkbox.checked;
+  const spinEl = document.getElementById('saving-' + studentId);
+  if (spinEl) spinEl.style.display = 'block';
+
+  // update present count
+  updatePresentCount();
+
+  try {
+    const res = await fetch('/api/instructor/panel?code=' + encodeURIComponent(STATE.code), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        session_id: parseInt(STATE.currentSession),
+        student_id: parseInt(studentId),
+        present: present
+      })
+    });
+    const json = await res.json();
+    if (!json.success) throw new Error('Błąd zapisu');
+    toast(present ? '✓ Zapisano obecność' : '○ Nieobecny', present ? 'ok' : 'err');
+  } catch (e) {
+    toast('Błąd zapisu!', 'err');
+    checkbox.checked = !present; // revert
+    updatePresentCount();
+  } finally {
+    if (spinEl) spinEl.style.display = 'none';
+  }
+}
+
+function updatePresentCount() {
+  const checkboxes = document.querySelectorAll('.att-checkbox');
+  let count = 0;
+  checkboxes.forEach(cb => { if (cb.checked) count++; });
+  const el = document.getElementById('present-count');
+  if (el) el.textContent = count;
+}
+
+/* ════════════════════════════════════════════════════════
+   TODAY PANEL
+════════════════════════════════════════════════════════ */
+function renderToday() {
+  const todaySessions = STATE.sessions.filter(s => isToday(s.session_date));
+  const msgEl = document.getElementById('today-msg');
+  const panel = document.getElementById('panel-today');
+
+  if (!todaySessions.length) {
+    msgEl.textContent = 'Nie masz dzisiaj żadnych zaplanowanych zajęć.';
+    return;
+  }
+
+  panel.innerHTML = `
+    <div class="sh"><h3>Dzisiejsze zajęcia — ${new Date().toISOString().slice(0,10)}</h3></div>
+    ${todaySessions.map(s => `
+      <div class="session-info" style="margin-bottom:12px;cursor:pointer" onclick="openSession(${s.session_id})">
+        <div>
+          <div class="si-date" style="font-size:22px">${fmtDate(s.session_date)}</div>
+          <div class="si-day">${fmtDay(s.session_date)}</div>
+        </div>
+        <div class="si-divider"></div>
+        <div class="si-details">
+          <div class="si-group-name">${s.group_name}</div>
+          <div class="si-location">📍 ${s.location}</div>
+        </div>
+        <button class="btn-enter" style="pointer-events:none">▶ Sprawdź obecność</button>
+      </div>
+    `).join('')}
+  `;
 }
 </script>
-
 </body>
 </html>
