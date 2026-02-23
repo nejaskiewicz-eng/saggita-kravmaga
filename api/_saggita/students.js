@@ -24,7 +24,7 @@ module.exports = async (req, res) => {
     payment_status, is_active,
     page = 1, limit = 60,
     sort = 'recent',
-    overdue
+    overdue, season_only
   } = req.query;
 
   // ── SUB-ROUTE: płatności ──────────────────────────────────────
@@ -299,6 +299,25 @@ module.exports = async (req, res) => {
           OR (s.registration_id IS NOT NULL AND EXISTS(
             SELECT 1 FROM registrations r3 WHERE r3.id=s.registration_id AND r3.payment_status NOT IN ('paid')
           ))
+        )`);
+      }
+
+      // Filtr aktywnego sezonu — tylko kursanci z aktywnością od 2025-09-01
+      if (season_only === 'true') {
+        conds.push(`(
+          EXISTS(
+            SELECT 1 FROM attendances a3
+            JOIN training_sessions ts3 ON ts3.id=a3.session_id
+            WHERE a3.student_id=s.id AND ts3.session_date >= '${SEASON_START}'
+          )
+          OR EXISTS(
+            SELECT 1 FROM legacy_payments lp4
+            WHERE lp4.student_id=s.id AND lp4.paid_at >= '${SEASON_START}'
+          )
+          OR EXISTS(
+            SELECT 1 FROM student_groups sg4
+            WHERE sg4.student_id=s.id AND sg4.active=true
+          )
         )`);
       }
 

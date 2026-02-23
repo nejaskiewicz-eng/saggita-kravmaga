@@ -1724,8 +1724,9 @@ async function loadUnifiedStudents() {
   let cityOpts  = '<option value="">Wszystkie miasta</option>';
   try {
     const gd = arrRows(await aF('/groups'));
-    gd.forEach(g => { groupOpts += `<option value="${g.id}">${g.name}${g.city?' ('+g.city+')':''}</option>`; });
-    const cities = [...new Set(gd.map(g=>g.city).filter(Boolean))];
+    const activeGd = gd.filter(g => g.active !== false);
+    activeGd.forEach(g => { groupOpts += `<option value="${g.id}">${g.name}${g.city?' ('+g.city+')':''}</option>`; });
+    const cities = [...new Set(activeGd.map(g=>g.city).filter(Boolean))];
     cities.forEach(c => { cityOpts += `<option value="${c}">${c}</option>`; });
   } catch(e) {}
 
@@ -1743,6 +1744,10 @@ async function loadUnifiedStudents() {
         <option value="paid">Opłacony</option>
         <option value="unpaid">Nieopłacony</option>
         <option value="pending">Oczekuje</option>
+      </select>
+      <select id="us-season" onchange="US.page=1;fetchUS()">
+        <option value="true" selected>Sezon 2025/2026</option>
+        <option value="">Wszyscy kursanci</option>
       </select>
       <select id="us-active" onchange="US.page=1;fetchUS()">
         <option value="">Aktywni i nieaktywni</option>
@@ -1780,6 +1785,7 @@ function usDebounce() { clearTimeout(usTimer); usTimer = setTimeout(() => { US.p
 
 function usClear() {
   ['us-q','us-grp','us-city','us-pay','us-active'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+  const seasonEl = document.getElementById('us-season'); if(seasonEl) seasonEl.value='true';
   fetchUS();
 }
 
@@ -1794,7 +1800,8 @@ async function fetchUS() {
   const city = document.getElementById('us-city')?.value;   if(city) p.set('city', city);
   const pay  = document.getElementById('us-pay')?.value;    if(pay)  p.set('payment_status', pay);
   const act  = document.getElementById('us-active')?.value; if(act)  p.set('is_active', act);
-  const sort = document.getElementById('us-sort')?.value;   if(sort) p.set('sort', sort);
+  const sort   = document.getElementById('us-sort')?.value;   if(sort) p.set('sort', sort);
+  const season = document.getElementById('us-season')?.value; if(season) p.set('season_only', season);
   if (US.overdue) p.set('overdue', 'true');
 
   try {
