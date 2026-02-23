@@ -1719,6 +1719,11 @@ async function loadUnifiedStudents() {
         <option value="true">Tylko aktywni</option>
         <option value="false">Tylko nieaktywni</option>
       </select>
+      <select id="us-sort" onchange="US.page=1;fetchUS()">
+        <option value="recent">Ostatni trening ↓</option>
+        <option value="alpha">Nazwisko A–Z</option>
+        <option value="payment">Ostatnia wpłata ↓</option>
+      </select>
       <button class="btn btn-secondary btn-sm" onclick="US.page=1;usClear()">✕ Wyczyść</button>
       <button id="us-overdue-btn" class="btn btn-sm" style="background:rgba(220,50,30,0.15);border:1px solid rgba(220,50,30,0.4);color:#ff6b5b" onclick="toggleOverdue()">⚠️ Zaległości</button>
       <span id="us-count" style="color:var(--dim);font-size:12px"></span>
@@ -1759,6 +1764,7 @@ async function fetchUS() {
   const city = document.getElementById('us-city')?.value;   if(city) p.set('city', city);
   const pay  = document.getElementById('us-pay')?.value;    if(pay)  p.set('payment_status', pay);
   const act  = document.getElementById('us-active')?.value; if(act)  p.set('is_active', act);
+  const sort = document.getElementById('us-sort')?.value;   if(sort) p.set('sort', sort);
   if (US.overdue) p.set('overdue', 'true');
 
   try {

@@ -14,7 +14,7 @@ module.exports = async (req, res) => {
 
   const pool = getPool();
   const { id, pid, aid, _route, search, source, group_id, city,
-          payment_status, is_active, page = 1, limit = 60 } = req.query;
+          payment_status, is_active, page = 1, limit = 60, sort = 'recent' } = req.query;
 
   // ── SUB-ROUTE: płatności ──────────────────────────────────────
   if (id && _route === 'payments') {
@@ -158,7 +158,7 @@ module.exports = async (req, res) => {
         LEFT JOIN price_plans pp ON pp.id=r.price_plan_id
         ${where}
         GROUP BY s.id,r.payment_status,r.total_amount,pp.name,l.city
-        ORDER BY s.last_name,s.first_name
+        ORDER BY ${sort === 'alpha' ? 's.last_name, s.first_name' : sort === 'payment' ? 'MAX(lp.paid_at) DESC NULLS LAST, s.last_name, s.first_name' : 'MAX(ts.session_date) DESC NULLS LAST, MAX(lp.paid_at) DESC NULLS LAST, s.last_name, s.first_name'}
         LIMIT $${pi} OFFSET $${pi+1}
       `,[...vals,parseInt(limit),offset]);
       return res.status(200).json({rows,total,page:parseInt(page),limit:parseInt(limit)});
