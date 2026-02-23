@@ -1,4 +1,4 @@
-// api/admin-api/students.js  — FUNKCJA #9
+// api/_saggita/students.js
 // Ujednolicona baza kursantów: legacy (students) + nowe zapisy (registrations)
 // Naprawa: poprawne liczenie WPŁAT i OSTATNIEGO TRENINGU (bez "rozmnażania" przez JOIN-y)
 // + metryki sezonu od 2025-09-01
@@ -68,16 +68,16 @@ module.exports = async (req, res) => {
 
     if (req.method === 'PATCH' && pid) {
       const b = req.body || {};
-      const set = [], vals = []; let pi = 1;
+      const set = [], vals = []; let pi2 = 1;
       for (const k of ['amount', 'paid_at', 'note']) {
-        if (k in b) { set.push(`${k}=$${pi++}`); vals.push(b[k]); }
+        if (k in b) { set.push(`${k}=$${pi2++}`); vals.push(b[k]); }
       }
       if (!set.length) return res.status(400).json({ error: 'Brak pól.' });
       vals.push(pid, id);
       try {
         await pool.query(
           `UPDATE legacy_payments SET ${set.join(',')}
-           WHERE id=$${pi} AND student_id=$${pi + 1}`,
+           WHERE id=$${pi2} AND student_id=$${pi2 + 1}`,
           vals
         );
         return res.status(200).json({ success: true });
@@ -143,7 +143,7 @@ module.exports = async (req, res) => {
         SELECT
           s.*,
 
-          -- grupy (tylko aktywne przypisania)
+          -- grupy
           COALESCE((
             SELECT json_agg(jsonb_build_object('id', g.id, 'name', g.name, 'active', sg.active) ORDER BY g.name)
             FROM student_groups sg
@@ -157,7 +157,7 @@ module.exports = async (req, res) => {
             FROM attendances a
             JOIN training_sessions ts ON ts.id=a.session_id
             WHERE a.student_id=s.id
-              AND ts.session_date >= DATE $2
+              AND ts.session_date >= $2::date
           ), 0) AS total_sessions_season,
 
           COALESCE((
@@ -166,7 +166,7 @@ module.exports = async (req, res) => {
             JOIN training_sessions ts ON ts.id=a.session_id
             WHERE a.student_id=s.id
               AND a.present=true
-              AND ts.session_date >= DATE $2
+              AND ts.session_date >= $2::date
           ), 0) AS total_present_season,
 
           (
@@ -174,17 +174,17 @@ module.exports = async (req, res) => {
             FROM attendances a
             JOIN training_sessions ts ON ts.id=a.session_id
             WHERE a.student_id=s.id
-              AND ts.session_date >= DATE $2
+              AND ts.session_date >= $2::date
           ) AS last_training_season,
 
-          -- % obecności sezon (bez dzielenia przez 0)
+          -- % obecności sezon
           (
             SELECT
               CASE
-                WHEN COUNT(*) FILTER (WHERE ts.session_date >= DATE $2) = 0 THEN 0
+                WHEN COUNT(*) FILTER (WHERE ts.session_date >= $2::date) = 0 THEN 0
                 ELSE ROUND(
-                  (COUNT(*) FILTER (WHERE a.present=true AND ts.session_date >= DATE $2))::numeric
-                  / NULLIF((COUNT(*) FILTER (WHERE ts.session_date >= DATE $2))::numeric, 0)
+                  (COUNT(*) FILTER (WHERE a.present=true AND ts.session_date >= $2::date))::numeric
+                  / NULLIF((COUNT(*) FILTER (WHERE ts.session_date >= $2::date))::numeric, 0)
                   * 100, 0
                 )::int
               END
@@ -280,7 +280,7 @@ module.exports = async (req, res) => {
         vals.push(payment_status);
       }
 
-      // Zaległości: aktywni + byli na treningu w 60 dniach + brak wpłaty w 35 dniach (legacy) lub nieopłacona rejestracja
+      // Zaległości
       if (overdue === 'true') {
         conds.push(`s.is_active=true`);
         conds.push(`EXISTS(
@@ -348,14 +348,14 @@ module.exports = async (req, res) => {
             SELECT COUNT(*)::int
             FROM attendances a
             JOIN training_sessions ts ON ts.id=a.session_id
-            WHERE a.student_id=s.id AND ts.session_date >= DATE $${pi}
+            WHERE a.student_id=s.id AND ts.session_date >= $${pi}::date
           ), 0) AS total_sessions,
 
           COALESCE((
             SELECT COUNT(*)::int
             FROM attendances a
             JOIN training_sessions ts ON ts.id=a.session_id
-            WHERE a.student_id=s.id AND a.present=true AND ts.session_date >= DATE $${pi}
+            WHERE a.student_id=s.id AND a.present=true AND ts.session_date >= $${pi}::date
           ), 0) AS total_present,
 
           COALESCE((
@@ -369,7 +369,7 @@ module.exports = async (req, res) => {
             SELECT MAX(ts.session_date)
             FROM attendances a
             JOIN training_sessions ts ON ts.id=a.session_id
-            WHERE a.student_id=s.id AND ts.session_date >= DATE $${pi}
+            WHERE a.student_id=s.id AND ts.session_date >= $${pi}::date
           ) AS last_training_season,
 
           -- ostatnia wpłata legacy (data + kwota z tego samego rekordu)
@@ -430,14 +430,14 @@ module.exports = async (req, res) => {
   if (req.method === 'PATCH' && id) {
     const b = req.body || {};
     const set = [], vals = [];
-    let pi = 1;
+    let pi3 = 1;
     for (const k of ['first_name', 'last_name', 'email', 'phone', 'birth_year', 'is_active']) {
-      if (k in b) { set.push(`${k}=$${pi++}`); vals.push(b[k]); }
+      if (k in b) { set.push(`${k}=$${pi3++}`); vals.push(b[k]); }
     }
     if (!set.length) return res.status(400).json({ error: 'Brak pól.' });
     vals.push(id);
     try {
-      await pool.query(`UPDATE students SET ${set.join(',')} WHERE id=$${pi}`, vals);
+      await pool.query(`UPDATE students SET ${set.join(',')} WHERE id=$${pi3}`, vals);
       return res.status(200).json({ success: true });
     } catch (e) { return res.status(500).json({ error: e.message }); }
   }
