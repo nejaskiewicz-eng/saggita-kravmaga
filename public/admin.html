@@ -409,7 +409,14 @@ function showApp(){
 }
 async function checkLogin(){
   if(!TOKEN) return showLogin();
-  try{ await aF('/stats'); showApp(); }catch{ showLogin(); }
+  try{ await aF('/stats'); showApp();
+  // auto-przejście z linków z dashboardu (klik w lokalizacje)
+  try{
+    if(location.hash==='#students'){
+      navigate('unified-students');
+    }
+  }catch(e){}
+ }catch{ showLogin(); }
 }
 
 document.getElementById('login-btn').addEventListener('click',async()=>{
@@ -506,7 +513,7 @@ function openStudentsByCity(city, season){
     u.searchParams.set('page','1');
     history.pushState({},'',u.toString());
     // przejście do widoku kursantów + reload
-    navigate('students');
+    navigate('unified-students');
   }catch(e){
     console.error(e);
     toast('Nie udało się otworzyć listy kursantów','error');
