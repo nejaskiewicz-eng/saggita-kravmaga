@@ -445,6 +445,10 @@ tbody td{padding:10px 14px;font-size:13px;vertical-align:middle;color:var(--text
 const DAYS=['Niedziela','Poniedziałek','Wtorek','Środa','Czwartek','Piątek','Sobota'];
 const MONTHS=['Styczeń','Luty','Marzec','Kwiecień','Maj','Czerwiec','Lipiec','Sierpień','Wrzesień','Październik','Listopad','Grudzień'];
 const SEASON='2025-09-01';
+function pad2(n){return String(n).padStart(2,'0');}
+function dateISO(d){return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate());}
+function todayISO(){return dateISO(new Date());}
+
 let S={token:null,inst:null,groups:[],sessions:[],students:[],calDate:new Date(),calSessions:[],curPanel:'dashboard',payTarget:null,prevPanel:'sessions'};
 
 /* ── SIDEBAR MOBILE ── */
@@ -547,7 +551,7 @@ async function loadDashboard(){
     const dow=d.getDay();
     for(const g of S.groups){
       for(const sch of(g.schedules||[])){
-        if(sch.day_of_week==dow)upcoming.push({date:d.toISOString().slice(0,10),day:DAYS[dow],group:g.name,time:sch.time_label||'',loc:g.location_city,gid:g.id});
+        if(sch.day_of_week==dow)upcoming.push({date:dateISO(d),day:DAYS[dow],group:g.name,time:sch.time_label||'',loc:g.location_city,gid:g.id});
       }
     }
   }
@@ -568,7 +572,7 @@ async function loadDashboard(){
         </div>
       </div>
     </div>`).join('')||'<div class="empty"><div class="empty-icon">📋</div><p>Brak grup</p></div>';
-  const td=today.toISOString().slice(0,10);
+  const td=dateISO(today);
   document.getElementById('dash-upcoming').innerHTML=upcoming.length?upcoming.map(s=>`<tr>
     <td><strong>${s.date}</strong>${s.date===td?' <span class="badge bg">Dziś</span>':''}</td>
     <td><span class="badge bx">${s.day}</span></td>
@@ -614,7 +618,7 @@ function renderCal(){
   document.getElementById('cal-month').textContent=`${MONTHS[m]} ${y}`;
   const firstDow=new Date(y,m,1).getDay();
   const daysInMonth=new Date(y,m+1,0).getDate();
-  const today=new Date().toISOString().slice(0,10);
+  const today=todayISO();
   const sessIdx={};
   (S.calSessions||[]).forEach(s=>{const k=(s.session_date||'').slice(0,10);if(!sessIdx[k])sessIdx[k]=[];sessIdx[k].push(s);});
   // planned DOWs
@@ -656,7 +660,7 @@ async function loadSessions(){
   const tb=document.getElementById('sess-tbody');
   tb.innerHTML=`<tr><td colspan="6"><div class="loading"><span class="spin"></span> Ładowanie…</div></td></tr>`;
   const d=await api(url);S.sessions=d.rows||[];
-  const td=new Date().toISOString().slice(0,10);
+  const td=todayISO();
   if(!S.sessions.length){tb.innerHTML=`<tr><td colspan="6"><div class="empty"><div class="empty-icon">📅</div><p>Brak sesji</p></div></td></tr>`;return;}
   tb.innerHTML=S.sessions.map(s=>{
     const dt=(s.session_date||'').slice(0,10);
@@ -898,7 +902,7 @@ function openPayModal(sid,name){
   S.payTarget={id:sid,name};
   document.getElementById('mo-pay-title').textContent=`Dodaj wpłatę — ${name}`;
   document.getElementById('p-amt').value='';
-  document.getElementById('p-dt').value=new Date().toISOString().slice(0,10);
+  document.getElementById('p-dt').value=todayISO();
   document.getElementById('p-nt').value='';
   openMo('mo-pay');
 }
