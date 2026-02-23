@@ -18,7 +18,7 @@ module.exports = async (req, res) => {
   try {
     const pool = getPool();
 
-    // Ogólne liczniki
+    // Ogólne liczniki — nowe zapisy (registrations)
     const { rows: [totals] } = await pool.query(`
       SELECT
         COUNT(*)::int AS total,
@@ -29,28 +29,45 @@ module.exports = async (req, res) => {
       WHERE status != 'cancelled'
     `);
 
-    // Według lokalizacji
+    // Według lokalizacji — legacy (aktywni kursanci w grupach) + rejestracje
     const { rows: byLoc } = await pool.query(`
       SELECT
         l.city,
-        COUNT(r.id)::int AS total,
-        COUNT(r.id) FILTER (WHERE r.payment_status='paid')::int AS paid,
-        COUNT(r.id) FILTER (WHERE r.payment_status IN ('unpaid','pending') AND r.is_waitlist=false)::int AS pending,
-        COUNT(r.id) FILTER (WHERE r.is_waitlist=true)::int AS waitlist
+        (
+          COUNT(DISTINCT r.id) FILTER (WHERE r.status != 'cancelled')
+          + COUNT(DISTINCT s.id) FILTER (WHERE s.is_active = true AND s.registration_id IS NULL)
+        )::int AS total,
+        (
+          COUNT(DISTINCT r.id) FILTER (WHERE r.payment_status='paid' AND r.status != 'cancelled')
+        )::int AS paid,
+        (
+          COUNT(DISTINCT r.id) FILTER (WHERE r.payment_status IN ('unpaid','pending') AND r.is_waitlist=false AND r.status != 'cancelled')
+        )::int AS pending,
+        (
+          COUNT(DISTINCT r.id) FILTER (WHERE r.is_waitlist=true AND r.status != 'cancelled')
+        )::int AS waitlist
       FROM locations l
-      LEFT JOIN registrations r ON r.location_id = l.id AND r.status != 'cancelled'
+      LEFT JOIN registrations r ON r.location_id = l.id
+      LEFT JOIN groups g2 ON g2.location_id = l.id AND g2.active = true
+      LEFT JOIN student_groups sg ON sg.group_id = g2.id AND sg.active = true
+      LEFT JOIN students s ON s.id = sg.student_id
       WHERE l.active = true
       GROUP BY l.city ORDER BY l.city
     `);
 
-    // Obłożenie grup
+    // Obłożenie grup — legacy + rejestracje
     const { rows: byGroup } = await pool.query(`
       SELECT
         l.city, g.name, g.max_capacity,
-        COUNT(r.id) FILTER (WHERE r.is_waitlist=false AND r.status != 'cancelled')::int AS registered
+        (
+          COUNT(DISTINCT r.id) FILTER (WHERE r.is_waitlist=false AND r.status != 'cancelled')
+          + COUNT(DISTINCT s.id) FILTER (WHERE s.is_active = true AND s.registration_id IS NULL)
+        )::int AS registered
       FROM groups g
       LEFT JOIN locations l ON l.id = g.location_id
       LEFT JOIN registrations r ON r.group_id = g.id
+      LEFT JOIN student_groups sg ON sg.group_id = g.id AND sg.active = true
+      LEFT JOIN students s ON s.id = sg.student_id
       WHERE g.active = true
       GROUP BY l.city, g.name, g.max_capacity ORDER BY l.city, g.name
     `);
