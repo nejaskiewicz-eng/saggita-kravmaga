@@ -2,6 +2,10 @@
 // Obsługuje: instructor-auth, instructor-panel, instructor-attendance,
 //            instructor-students, instructor-calendar
 // ZERO nowych funkcji Vercel — routowane przez api/saggita.js
+//
+// WAŻNE: odcinamy historię sprzed sezonu po stronie DB poprzez widoki:
+// - payments_since_2025_09_01
+// - training_sessions_since_2025_09_01
 
 'use strict';
 const { getPool } = require('../_lib/db');
@@ -26,7 +30,8 @@ function verifyJWT(tok, s) {
   if (sig !== exp) throw new Error('Nieważny token');
   const pad = b.length % 4;
   return JSON.parse(Buffer.from(
-    (pad ? b + '='.repeat(4-pad) : b).replace(/-/g,'+').replace(/_/g,'/'), 'base64'
+    (pad ? b + '='.repeat(4-pad) : b).replace(/-/g,'+').replace(/_/g,'/'),
+    'base64'
   ).toString());
 }
 function auth(req) {
@@ -102,34 +107,34 @@ module.exports = async (req, res) => {
     if (route === 'groups' && req.method === 'GET') {
       try {
         const { rows } = await pool.query(`
-          SELECT g.id, g.name, g.category, g.age_range, g.notes,
-            l.id AS location_id, l.city AS location_city, l.name AS location_name,
-            COUNT(DISTINCT sg.student_id) FILTER (WHERE sg.active=true)::int AS student_count,
-            COALESCE(json_agg(
-              json_build_object('id',s.id,'day_of_week',s.day_of_week,'day_name',s.day_name,
-                'time_start',s.time_start,'time_end',s.time_end,'time_label',s.time_label)
-              ORDER BY s.day_of_week, s.time_start
-            ) FILTER (WHERE s.id IS NOT NULL), '[]') AS schedules
+          SELECT g.id, g.name, g.location_id,
+                 l.city AS location_city, l.name AS location_name,
+                 (SELECT COUNT(*) FROM student_groups sg WHERE sg.group_id=g.id AND sg.active=true)::int AS student_count,
+                 COALESCE((
+                   SELECT json_agg(json_build_object(
+                     'id', s.id,
+                     'day_of_week', s.day_of_week,
+                     'day_name', s.day_name,
+                     'time_label', s.time_label
+                   ) ORDER BY s.day_of_week, s.time_label)
+                   FROM schedules s WHERE s.group_id=g.id
+                 ), '[]'::json) AS schedules
           FROM groups g
-          LEFT JOIN locations l     ON l.id=g.location_id
-          LEFT JOIN student_groups sg ON sg.group_id=g.id
-          LEFT JOIN schedules s     ON s.group_id=g.id AND s.active=true
-          WHERE g.active=true
-          GROUP BY g.id, l.id
-          ORDER BY l.city, g.name
+          LEFT JOIN locations l ON l.id=g.location_id
+          ORDER BY l.city NULLS LAST, g.name
         `);
         return res.status(200).json({ rows });
       } catch(e) { return res.status(500).json({ error:e.message }); }
     }
 
-    // GET /api/instructor/groups/:id/students
-    if (route === 'students' && id && req.method === 'GET') {
+    // GET /api/instructor/group/:id/students (w praktyce: /api/instructor/groups?id=...)
+    if (route === 'group-students' && req.method === 'GET') {
       try {
         const { rows } = await pool.query(`
           SELECT s.id, s.first_name, s.last_name, s.email, s.phone, s.birth_year, s.is_active,
-            (SELECT MAX(lp.paid_at) FROM legacy_payments lp WHERE lp.student_id=s.id)::date AS last_payment,
-            (SELECT SUM(lp.amount) FROM legacy_payments lp WHERE lp.student_id=s.id AND lp.paid_at>=$2)::numeric AS paid_season,
-            (SELECT COUNT(*) FROM attendances a JOIN training_sessions ts ON ts.id=a.session_id
+            (SELECT MAX(lp.paid_at) FROM payments_since_2025_09_01 lp WHERE lp.student_id=s.id)::date AS last_payment,
+            (SELECT SUM(lp.amount) FROM payments_since_2025_09_01 lp WHERE lp.student_id=s.id AND lp.paid_at>=$2)::numeric AS paid_season,
+            (SELECT COUNT(*) FROM attendances a JOIN training_sessions_since_2025_09_01 ts ON ts.id=a.session_id
              WHERE a.student_id=s.id AND ts.session_date>=$2 AND a.present=true)::int AS att_season
           FROM students s
           JOIN student_groups sg ON sg.student_id=s.id AND sg.group_id=$1 AND sg.active=true
@@ -139,21 +144,20 @@ module.exports = async (req, res) => {
       } catch(e) { return res.status(500).json({ error:e.message }); }
     }
 
-    // GET /api/instructor/payments
+    // GET /api/instructor/payments  (SEZON TYLKO Z WIDOKU)
     if (route === 'payments' && req.method === 'GET') {
       try {
         const { rows } = await pool.query(`
           SELECT lp.id, lp.amount, lp.paid_at::date AS paid_at, lp.note,
             s.id AS student_id, s.first_name, s.last_name,
             g.name AS group_name, l.city AS location_city
-          FROM legacy_payments lp
+          FROM payments_since_2025_09_01 lp
           JOIN students s ON s.id=lp.student_id
           LEFT JOIN student_groups sg ON sg.student_id=s.id AND sg.active=true
           LEFT JOIN groups g ON g.id=sg.group_id
           LEFT JOIN locations l ON l.id=g.location_id
-          WHERE lp.paid_at>=$1
           ORDER BY lp.paid_at DESC LIMIT 300
-        `, [SEASON]);
+        `);
         return res.status(200).json({ rows });
       } catch(e) { return res.status(500).json({ error:e.message }); }
     }
@@ -174,217 +178,166 @@ module.exports = async (req, res) => {
               g.name AS group_name, l.city AS location_city, l.name AS location_name,
               COUNT(a.id) FILTER (WHERE a.present=true)::int AS present_count,
               COUNT(a.id)::int AS total_marked
-            FROM training_sessions ts
-            LEFT JOIN groups g ON g.id=ts.group_id
+            FROM training_sessions_since_2025_09_01 ts
+            JOIN groups g ON g.id=ts.group_id
             LEFT JOIN locations l ON l.id=g.location_id
             LEFT JOIN attendances a ON a.session_id=ts.id
-            WHERE ts.session_date>=$1`;
-          const p=[from||SEASON]; let pi=2;
-          if (to)       { q+=` AND ts.session_date<=$${pi++}`; p.push(to); }
-          if (group_id) { q+=` AND ts.group_id=$${pi++}`;     p.push(group_id); }
-          q+=' GROUP BY ts.id,g.id,l.id ORDER BY ts.session_date DESC LIMIT 400';
-          const { rows } = await pool.query(q, p);
+            WHERE ts.session_date >= $1
+          `;
+          const params = [from || SEASON];
+          if (to) { params.push(to); q += ` AND ts.session_date <= $${params.length}`; }
+          if (group_id) { params.push(group_id); q += ` AND ts.group_id = $${params.length}`; }
+          q += ` GROUP BY ts.id, g.name, l.city, l.name ORDER BY ts.session_date DESC LIMIT 400`;
+          const { rows } = await pool.query(q, params);
           return res.status(200).json({ rows });
         } catch(e) { return res.status(500).json({ error:e.message }); }
       }
 
+      // POST tworzy sesję w PRAWDZIWEJ tabeli training_sessions (nie w widoku)
       if (req.method === 'POST') {
         try {
           const { group_id, session_date } = req.body || {};
-          if (!group_id || !session_date)
-            return res.status(400).json({ error: 'Brak group_id lub session_date.' });
-          const { rows:[sess] } = await pool.query(`
-            INSERT INTO training_sessions (group_id, session_date)
-            VALUES ($1,$2)
-            ON CONFLICT (group_id, session_date) DO UPDATE SET group_id=EXCLUDED.group_id
-            RETURNING *
-          `, [group_id, session_date]);
-          return res.status(201).json(sess);
+          if (!group_id || !session_date) return res.status(400).json({ error:'Brak danych' });
+          const { rows:[x] } = await pool.query(
+            `INSERT INTO training_sessions (group_id, session_date)
+             VALUES ($1,$2)
+             ON CONFLICT (group_id, session_date) DO UPDATE SET session_date=EXCLUDED.session_date
+             RETURNING id`, [group_id, session_date]
+          );
+          return res.status(200).json({ id:x.id });
         } catch(e) { return res.status(500).json({ error:e.message }); }
       }
+      return res.status(405).end();
     }
 
-    if (route === 'attendance' && id) {
-      if (req.method === 'GET') {
-        try {
-          const { rows } = await pool.query(`
-            SELECT s.id AS student_id, s.first_name, s.last_name,
-              a.id AS attendance_id, a.present,
-              (SELECT MAX(lp.paid_at) FROM legacy_payments lp WHERE lp.student_id=s.id)::date AS last_payment
-            FROM student_groups sg
-            JOIN training_sessions ts ON ts.id=$1
-            JOIN students s ON s.id=sg.student_id AND s.is_active=true
-            LEFT JOIN attendances a ON a.session_id=$1 AND a.student_id=s.id
-            WHERE sg.group_id=ts.group_id AND sg.active=true
-            ORDER BY s.last_name, s.first_name
-          `, [id]);
-          return res.status(200).json({ rows });
-        } catch(e) { return res.status(500).json({ error:e.message }); }
-      }
+    // GET /api/instructor/sessions/:id/attendance
+    if (route === 'attendance' && req.method === 'GET') {
+      try {
+        const { rows } = await pool.query(`
+          SELECT s.id AS student_id, s.first_name, s.last_name,
+            COALESCE(a.present,false) AS present,
+            (SELECT MAX(lp.paid_at) FROM payments_since_2025_09_01 lp WHERE lp.student_id=s.id)::date AS last_payment
+          FROM student_groups sg
+          JOIN students s ON s.id=sg.student_id
+          LEFT JOIN attendances a ON a.session_id=$1 AND a.student_id=s.id
+          WHERE sg.group_id=$2 AND sg.active=true
+          ORDER BY s.last_name, s.first_name
+        `, [id, req.query.group_id]);
+        return res.status(200).json({ rows });
+      } catch(e) { return res.status(500).json({ error:e.message }); }
+    }
 
-      if (req.method === 'POST') {
-        try {
-          const { student_id, present } = req.body || {};
-          if (!student_id) return res.status(400).json({ error: 'Brak student_id.' });
-          await pool.query(`
-            INSERT INTO attendances (session_id,student_id,present)
-            VALUES ($1,$2,$3)
-            ON CONFLICT (session_id,student_id) DO UPDATE SET present=EXCLUDED.present
-          `, [parseInt(id), parseInt(student_id), !!present]);
-          return res.status(200).json({ success:true });
-        } catch(e) { return res.status(500).json({ error:e.message }); }
-      }
+    // POST /api/instructor/sessions/:id/attendance
+    if (route === 'attendance' && req.method === 'POST') {
+      try {
+        const { student_id, present } = req.body || {};
+        if (!student_id) return res.status(400).json({ error:'Brak student_id' });
+        await pool.query(`
+          INSERT INTO attendances (session_id, student_id, present)
+          VALUES ($1,$2,$3)
+          ON CONFLICT (session_id, student_id)
+          DO UPDATE SET present=EXCLUDED.present
+        `, [id, student_id, !!present]);
+        return res.status(200).json({ ok:true });
+      } catch(e) { return res.status(500).json({ error:e.message }); }
     }
 
     return res.status(400).json({ error: 'Nieznana trasa attendance.' });
   }
 
-  /* ══ STUDENTS: CRUD + płatności + obecności ══════════════════ */
+  /* ══ STUDENTS (instruktor) ═══════════════════════════════════ */
   if (mod === 'instructor-students') {
     try { auth(req); } catch(e) { return res.status(401).json({ error:e.message }); }
 
-    // płatności
-    if (id && route === 'payments') {
-      if (req.method === 'GET') {
-        try {
-          const { rows } = await pool.query(
-            `SELECT id,amount,paid_at::date AS paid_at,note
-             FROM legacy_payments WHERE student_id=$1 ORDER BY paid_at DESC`, [id]);
-          return res.status(200).json({ rows });
-        } catch(e) { return res.status(500).json({ error:e.message }); }
-      }
-      if (req.method === 'POST') {
+    // GET /api/instructor/students/:id/payments
+    if (route === 'student-payments' && req.method === 'GET') {
+      try {
+        const { rows } = await pool.query(
+          `SELECT id, amount, paid_at, note
+           FROM legacy_payments WHERE student_id=$1 ORDER BY paid_at DESC`, [id]
+        );
+        return res.status(200).json({ rows });
+      } catch(e) { return res.status(500).json({ error:e.message }); }
+    }
+
+    // POST /api/instructor/students/:id/payments
+    if (route === 'student-payments' && req.method === 'POST') {
+      try {
         const { amount, date, note } = req.body || {};
-        if (!amount) return res.status(400).json({ error: 'Kwota wymagana.' });
-        try {
-          const { rows:[p] } = await pool.query(
-            `INSERT INTO legacy_payments (student_id,amount,paid_at,note) VALUES ($1,$2,$3,$4) RETURNING *`,
-            [id, parseFloat(amount), date||new Date().toISOString().slice(0,10), note||null]);
-          return res.status(201).json(p);
-        } catch(e) { return res.status(500).json({ error:e.message }); }
-      }
-      if (req.method === 'DELETE' && pid) {
-        try {
-          await pool.query(`DELETE FROM legacy_payments WHERE id=$1 AND student_id=$2`, [pid, id]);
-          return res.status(200).json({ success:true });
-        } catch(e) { return res.status(500).json({ error:e.message }); }
-      }
-    }
-
-    // obecności kursanta
-    if (id && route === 'attendance' && req.method === 'GET') {
-      try {
-        const { rows } = await pool.query(`
-          SELECT a.id, a.present, ts.session_date, ts.id AS session_id, g.name AS group_name
-          FROM attendances a
-          JOIN training_sessions ts ON ts.id=a.session_id
-          LEFT JOIN groups g ON g.id=ts.group_id
-          WHERE a.student_id=$1 AND ts.session_date>=$2
-          ORDER BY ts.session_date DESC LIMIT 100
-        `, [id, SEASON]);
-        return res.status(200).json({ rows });
+        if (!amount) return res.status(400).json({ error:'Podaj kwotę' });
+        const paidAt = date ? new Date(date) : new Date();
+        const { rows:[x] } = await pool.query(
+          `INSERT INTO legacy_payments (student_id,amount,paid_at,note) VALUES ($1,$2,$3,$4) RETURNING *`,
+          [id, amount, paidAt, note || null]
+        );
+        return res.status(200).json(x);
       } catch(e) { return res.status(500).json({ error:e.message }); }
     }
 
-    // GET szczegóły
-    if (id && req.method === 'GET') {
+    // DELETE /api/instructor/students/:id/payments?pid=...
+    if (route === 'student-payments' && req.method === 'DELETE') {
       try {
-        const { rows:[s] } = await pool.query(`
-          SELECT s.*,
-            COALESCE((
-              SELECT json_agg(json_build_object('id',g.id,'name',g.name,'active',sg.active))
-              FROM student_groups sg JOIN groups g ON g.id=sg.group_id WHERE sg.student_id=s.id
-            ),'[]') AS groups,
-            (SELECT MAX(lp.paid_at) FROM legacy_payments lp WHERE lp.student_id=s.id)::date AS last_payment,
-            (SELECT SUM(lp.amount) FROM legacy_payments lp WHERE lp.student_id=s.id AND lp.paid_at>=$2)::numeric AS paid_season,
-            (SELECT COUNT(*) FROM attendances a
-             JOIN training_sessions ts ON ts.id=a.session_id
-             WHERE a.student_id=s.id AND ts.session_date>=$2 AND a.present=true)::int AS att_season
-          FROM students s WHERE s.id=$1
-        `, [id, SEASON]);
-        if (!s) return res.status(404).json({ error: 'Nie znaleziono.' });
-        return res.status(200).json(s);
+        if (!pid) return res.status(400).json({ error:'Brak pid' });
+        await pool.query(`DELETE FROM legacy_payments WHERE id=$1 AND student_id=$2`, [pid, id]);
+        return res.status(200).json({ ok:true });
       } catch(e) { return res.status(500).json({ error:e.message }); }
     }
 
-    // POST nowy kursant
-    if (req.method === 'POST') {
-      const b = req.body || {};
-      if (!b.first_name||!b.last_name)
-        return res.status(400).json({ error: 'Imię i nazwisko są wymagane.' });
+    // PATCH /api/instructor/students/:id
+    if (route === 'student' && req.method === 'PATCH') {
       try {
-        const { rows:[s] } = await pool.query(`
-          INSERT INTO students (first_name,last_name,email,phone,birth_year,is_active,source)
-          VALUES ($1,$2,$3,$4,$5,true,'instructor') RETURNING *
-        `, [b.first_name.trim(),b.last_name.trim(),b.email||null,b.phone||null,b.birth_year||null]);
-        if (b.group_id)
-          await pool.query(`INSERT INTO student_groups (student_id,group_id,active) VALUES ($1,$2,true) ON CONFLICT DO NOTHING`, [s.id, b.group_id]);
-        return res.status(201).json(s);
+        const b = req.body || {};
+        await pool.query(
+          `UPDATE students
+           SET first_name=$2,last_name=$3,phone=$4,email=$5,birth_year=$6
+           WHERE id=$1`,
+          [id, b.first_name, b.last_name, b.phone || null, b.email || null, b.birth_year || null]
+        );
+        return res.status(200).json({ ok:true });
       } catch(e) { return res.status(500).json({ error:e.message }); }
     }
 
-    // PATCH edycja
-    if (id && req.method === 'PATCH') {
-      const b = req.body||{};
-      const set=[],vals=[]; let pi=1;
-      for (const k of ['first_name','last_name','email','phone','birth_year','is_active']) {
-        if (k in b) { set.push(`${k}=$${pi++}`); vals.push(b[k]); }
-      }
-      if (!set.length) return res.status(400).json({ error: 'Brak pól.' });
-      vals.push(id);
+    // DELETE /api/instructor/students/:id  (soft delete jeśli ma historię)
+    if (route === 'student' && req.method === 'DELETE') {
       try {
-        await pool.query(`UPDATE students SET ${set.join(',')} WHERE id=$${pi}`, vals);
-        return res.status(200).json({ success:true });
-      } catch(e) { return res.status(500).json({ error:e.message }); }
-    }
-
-    // DELETE kursant
-    if (id && req.method === 'DELETE') {
-      try {
-        const { rows:[x] } = await pool.query(`
-          SELECT (SELECT COUNT(*) FROM attendances WHERE student_id=$1)::int AS att,
-                 (SELECT COUNT(*) FROM legacy_payments WHERE student_id=$1)::int AS pay
+        const { rows:[h] } = await pool.query(`
+          SELECT
+            (SELECT COUNT(*) FROM attendances WHERE student_id=$1)::int AS att,
+            (SELECT COUNT(*) FROM legacy_payments WHERE student_id=$1)::int AS pay
         `, [id]);
-        if ((x?.att||0)>0||(x?.pay||0)>0) {
+        if ((h.att||0) > 0 || (h.pay||0) > 0) {
           await pool.query(`UPDATE students SET is_active=false WHERE id=$1`, [id]);
-          return res.status(200).json({ success:true, soft:true });
+          return res.status(200).json({ ok:true, soft:true });
         }
-        await pool.query(`DELETE FROM student_groups WHERE student_id=$1`, [id]);
         await pool.query(`DELETE FROM students WHERE id=$1`, [id]);
-        return res.status(200).json({ success:true, soft:false });
+        return res.status(200).json({ ok:true, soft:false });
       } catch(e) { return res.status(500).json({ error:e.message }); }
     }
 
-    return res.status(405).end();
-  }
-
-  /* ══ CALENDAR ════════════════════════════════════════════════ */
-  if (mod === 'instructor-calendar') {
-    try { auth(req); } catch(e) { return res.status(401).json({ error:e.message }); }
-
-    if (req.method === 'GET') {
+    // POST /api/instructor/students
+    if (route === 'students' && req.method === 'POST') {
       try {
-        const { group_id } = req.query;
-        const yearEnd = new Date().getFullYear() + '-12-31';
-        let q = `
-          SELECT ts.id AS session_id, ts.session_date::date AS session_date, ts.group_id,
-            g.name AS group_name, l.city AS location_city,
-            COUNT(a.id) FILTER (WHERE a.present=true)::int AS present_count,
-            COUNT(a.id)::int AS total_marked
-          FROM training_sessions ts
-          LEFT JOIN groups g ON g.id=ts.group_id
-          LEFT JOIN locations l ON l.id=g.location_id
-          LEFT JOIN attendances a ON a.session_id=ts.id
-          WHERE ts.session_date BETWEEN $1 AND $2`;
-        const p=[SEASON, yearEnd]; let pi=3;
-        if (group_id) { q+=` AND ts.group_id=$${pi++}`; p.push(group_id); }
-        q+=' GROUP BY ts.id,g.id,l.id ORDER BY ts.session_date';
-        const { rows } = await pool.query(q, p);
-        return res.status(200).json({ rows });
+        const { first_name, last_name, phone, email, birth_year, group_id } = req.body || {};
+        if (!first_name || !last_name) return res.status(400).json({ error:'Imię i nazwisko są wymagane' });
+        const { rows:[s] } = await pool.query(
+          `INSERT INTO students (first_name,last_name,phone,email,birth_year,is_active,source)
+           VALUES ($1,$2,$3,$4,$5,true,'manual') RETURNING id`,
+          [first_name, last_name, phone || null, email || null, birth_year || null]
+        );
+        if (group_id) {
+          await pool.query(
+            `INSERT INTO student_groups (student_id, group_id, active)
+             VALUES ($1,$2,true)
+             ON CONFLICT (student_id, group_id) DO UPDATE SET active=true`,
+            [s.id, group_id]
+          );
+        }
+        return res.status(200).json({ id:s.id });
       } catch(e) { return res.status(500).json({ error:e.message }); }
     }
-    return res.status(405).end();
+
+    return res.status(400).json({ error:'Nieznana trasa students.' });
   }
 
-  return res.status(404).json({ error: 'Nieznany moduł: ' + mod });
+  return res.status(400).json({ error:'Nieznany moduł.' });
 };
