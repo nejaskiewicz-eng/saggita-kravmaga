@@ -29,10 +29,13 @@ module.exports = async (req, res) => {
   // ── SCHEDULE: /api/schedule (domyślnie) ──────────────────────
   try {
     const { rows: locs } = await pool.query(
-      `SELECT id, city, name, slug, address FROM locations WHERE active = true ORDER BY sort_order, city`
+      `SELECT id, city, name, slug, address
+       FROM locations
+       WHERE active = true
+       ORDER BY sort_order, city`
     );
 
-    // UWAGA: Aktualizacja! Liczymy nowe rejestracje ORAZ kursantów przeniesionych z legacy
+    // Liczymy nowe rejestracje ORAZ kursantów przeniesionych z legacy
     const { rows: groups } = await pool.query(`
       SELECT
         g.id, g.location_id, g.name, g.category, g.age_range,
@@ -55,17 +58,28 @@ module.exports = async (req, res) => {
 
     const { rows: scheds } = await pool.query(`
       SELECT id, group_id, day_of_week, day_name, time_start, time_end, time_label, address
-      FROM schedules WHERE active = true ORDER BY day_of_week, time_start
+      FROM schedules
+      WHERE active = true
+      ORDER BY day_of_week, time_start
     `);
 
     const result = locs.map(loc => {
       const locGroups = groups
         .filter(g => g.location_id === loc.id)
-        .map(g => ({
-          ...g,
-          available: Math.max(0, (g.max_capacity || 0) - g.registered),
-          schedules: scheds.filter(s => s.group_id === g.id),
-        }));
+        .map(g => {
+          const schedulesForGroup = scheds.filter(s => s.group_id === g.id);
+
+          // KLUCZOWE: nie pokazuj grup bez terminów — żeby nie myliły na stronie zapisów
+          if (!schedulesForGroup.length) return null;
+
+          return {
+            ...g,
+            available: Math.max(0, (g.max_capacity || 0) - g.registered),
+            schedules: schedulesForGroup,
+          };
+        })
+        .filter(Boolean);
+
       return { ...loc, groups: locGroups };
     });
 
