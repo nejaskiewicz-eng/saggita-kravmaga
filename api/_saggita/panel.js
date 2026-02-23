@@ -101,28 +101,32 @@ module.exports = async (req, res) => {
 
   /* ══ PANEL: grupy, statystyki, płatności ═════════════════════ */
   if (mod === 'instructor-panel') {
-    try { auth(req); } catch(e) { return res.status(401).json({ error:e.message }); }
+    let P;
+    try { P = auth(req); } catch(e) { return res.status(401).json({ error:e.message }); }
 
     // GET /api/instructor/groups
     if (route === 'groups' && req.method === 'GET') {
       try {
         const { rows } = await pool.query(`
-          SELECT g.id, g.name, g.location_id,
-                 l.city AS location_city, l.name AS location_name,
-                 (SELECT COUNT(*) FROM student_groups sg WHERE sg.group_id=g.id AND sg.active=true)::int AS student_count,
-                 COALESCE((
-                   SELECT json_agg(json_build_object(
-                     'id', s.id,
-                     'day_of_week', s.day_of_week,
-                     'day_name', s.day_name,
-                     'time_label', s.time_label
-                   ) ORDER BY s.day_of_week, s.time_label)
-                   FROM schedules s WHERE s.group_id=g.id
-                 ), '[]'::json) AS schedules
-          FROM groups g
-          LEFT JOIN locations l ON l.id=g.location_id
-          ORDER BY l.city NULLS LAST, g.name
-        `);
+          SELECT g.id, g.name, g.category, g.age_range, g.notes,
+            l.id AS location_id, l.city AS location_city, l.name AS location_name,
+            COUNT(DISTINCT sg.student_id) FILTER (WHERE sg.active=true)::int AS student_count,
+            COALESCE(json_agg(
+              json_build_object('id',s.id,'day_of_week',s.day_of_week,'day_name',s.day_name,
+                'time_start',s.time_start,'time_end',s.time_end,'time_label',s.time_label)
+              ORDER BY s.day_of_week, s.time_start
+            ) FILTER (WHERE s.id IS NOT NULL), '[]') AS schedules
+          FROM instructor_groups ig
+          JOIN groups g         ON g.id = ig.group_id
+          LEFT JOIN locations l ON l.id = g.location_id
+          LEFT JOIN student_groups sg ON sg.group_id = g.id
+          LEFT JOIN schedules s ON s.group_id = g.id AND s.active=true
+          WHERE ig.instructor_id = $1
+            AND ig.active = true
+            AND g.active = true
+          GROUP BY g.id, l.id
+          ORDER BY l.city, g.name
+        `, [P.sub]);
         return res.status(200).json({ rows });
       } catch(e) { return res.status(500).json({ error:e.message }); }
     }
@@ -167,7 +171,8 @@ module.exports = async (req, res) => {
 
   /* ══ ATTENDANCE: sesje + obecności ══════════════════════════ */
   if (mod === 'instructor-attendance') {
-    try { auth(req); } catch(e) { return res.status(401).json({ error:e.message }); }
+    let P;
+    try { P = auth(req); } catch(e) { return res.status(401).json({ error:e.message }); }
 
     if (route === 'sessions') {
       if (req.method === 'GET') {
@@ -247,7 +252,8 @@ module.exports = async (req, res) => {
 
   /* ══ STUDENTS (instruktor) ═══════════════════════════════════ */
   if (mod === 'instructor-students') {
-    try { auth(req); } catch(e) { return res.status(401).json({ error:e.message }); }
+    let P;
+    try { P = auth(req); } catch(e) { return res.status(401).json({ error:e.message }); }
 
     // GET /api/instructor/students/:id/payments
     if (route === 'student-payments' && req.method === 'GET') {
