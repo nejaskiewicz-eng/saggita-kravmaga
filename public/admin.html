@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>Panel Admina — Krav Maga Saggita</title>
 <style>
+.link{color:var(--bright);text-decoration:underline;text-underline-offset:3px}
+.link:hover{opacity:.85}
+
 @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600&display=swap');
 :root{
   --bg:#0f0b0b;--surface:#1c1414;--surface2:#241c1c;--surface3:#2c2222;
@@ -490,6 +493,26 @@ document.getElementById('btn-export').addEventListener('click', async ()=>{
   }
 });
 
+
+function openStudentsByCity(city, season){
+  try{
+    // Ustawiamy filtry w URL (admin.html trzyma stan w querystring)
+    const u = new URL(location.href);
+    u.hash = '#students';
+    if(city) u.searchParams.set('city', city);
+    else u.searchParams.delete('city');
+    if(season) u.searchParams.set('season', season);
+    else u.searchParams.delete('season');
+    u.searchParams.set('page','1');
+    history.pushState({},'',u.toString());
+    // przejście do widoku kursantów + reload
+    navigate('students');
+  }catch(e){
+    console.error(e);
+    toast('Nie udało się otworzyć listy kursantów','error');
+  }
+}
+
 async function loadDash(){
   const c=document.getElementById('content');
   try{
@@ -509,10 +532,10 @@ async function loadDash(){
           ${arrRows(d.byLoc).map(l=>`
             <tr>
               <td><strong style="color:var(--bright)">${l.city||'—'}</strong></td>
-              <td><strong>${l.total||0}</strong></td>
-              <td>${pb('paid')} <strong>${l.paid||0}</strong></td>
-              <td>${l.pending||0}</td>
-              <td>${l.waitlist||0}</td>
+              <td><a href="#" class="link" onclick="openStudentsByCity('${'${l.city||""}'}', '2025');return false;"><strong>${'${l.total||0}'}</strong></a></td>
+              <td>${pb('paid')} <a href="#" class="link" onclick="openStudentsByCity('${'${l.city||""}'}', '2025');return false;"><strong>${'${l.paid||0}'}</strong></a></td>
+              <td><a href="#" class="link" onclick="openStudentsByCity('${'${l.city||""}'}', '2025');return false;">${'${l.pending||0}'}</a></td>
+              <td><a href="#" class="link" onclick="openStudentsByCity('${'${l.city||""}'}', '2025');return false;">${'${l.waitlist||0}'}</a></td>
             </tr>
           `).join('')}
         </tbody>
