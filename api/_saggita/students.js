@@ -1,5 +1,6 @@
 // api/admin-api/students.js  — FUNKCJA #9
 // Ujednolicona baza kursantów + FILTR SEZONU 2025/2026
+// FIX: kwoty legacy_paid nie mogą się multiplikować przez JOINy → liczymy subquery.
 
 const { getPool } = require('../_lib/db');
 const { requireAuth } = require('../_lib/auth');
@@ -14,10 +15,19 @@ module.exports = async (req, res) => {
   catch (e) { return res.status(401).json({ error: 'Unauthorized: ' + e.message }); }
 
   const pool = getPool();
-  const { id, search, source, group_id, city,
-          payment_status, is_active,
-          page = 1, limit = 60, sort = 'recent',
-          season } = req.query;
+  const {
+    id,
+    search,
+    source,
+    group_id,
+    city,
+    payment_status,
+    is_active,
+    page = 1,
+    limit = 60,
+    sort = 'recent',
+    season
+  } = req.query;
 
   // ─────────────────────────────────────────────
   // GET LISTA – WERSJA SEZONOWA
@@ -70,7 +80,8 @@ module.exports = async (req, res) => {
         vals.push(payment_status);
       }
 
-      // ─── KLUCZOWE: FILTR SEZONU 2025/2026 ───
+      // ─── FILTR SEZONU 2025/2026 ───
+      // aktywny sezonowo = ma jakiekolwiek wpisy obecności w zakresie dat
       if (season === '2025') {
         conds.push(`
           EXISTS (
@@ -101,19 +112,36 @@ module.exports = async (req, res) => {
           s.email,
           s.phone,
           s.is_active,
+
           MAX(ts.session_date) AS last_training,
+
           COUNT(DISTINCT a.id) FILTER (WHERE a.present = true) AS total_present,
           COUNT(DISTINCT a.id) AS total_sessions,
-          MAX(lp.paid_at) AS last_payment_date,
-          COALESCE(SUM(lp.amount), 0)::numeric AS legacy_paid,
+
+          -- FIX: SUM płatności liczony w podzapytaniu (bez multiplikacji przez JOINy)
+          COALESCE((
+            SELECT SUM(lp2.amount)
+            FROM legacy_payments lp2
+            WHERE lp2.student_id = s.id
+          ), 0)::numeric AS legacy_paid,
+
+          -- ostatnia wpłata też w podzapytaniu (pewniejsze)
+          (
+            SELECT MAX(lp3.paid_at)
+            FROM legacy_payments lp3
+            WHERE lp3.student_id = s.id
+          ) AS last_payment_date,
+
           l.city
+
         FROM students s
         LEFT JOIN attendances a ON a.student_id = s.id
         LEFT JOIN training_sessions ts ON ts.id = a.session_id
-        LEFT JOIN legacy_payments lp ON lp.student_id = s.id
+
         LEFT JOIN student_groups sg ON sg.student_id = s.id
         LEFT JOIN groups g ON g.id = sg.group_id
         LEFT JOIN locations l ON l.id = g.location_id
+
         ${where}
         GROUP BY s.id, l.city
         ORDER BY MAX(ts.session_date) DESC NULLS LAST
