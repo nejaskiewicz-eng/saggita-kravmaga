@@ -54,6 +54,8 @@
     { "source": "/api/instructor/groups",                   "destination": "/api/saggita?_module=instructor-panel&_route=groups" },
     { "source": "/api/instructor/payments",                 "destination": "/api/saggita?_module=instructor-panel&_route=payments" },
     { "source": "/api/instructor/sessions/:id/attendance",  "destination": "/api/saggita?_module=instructor-attendance&_route=attendance&id=:id" },
-    { "source": "/api/instructor/sessions",                 "destination": "/api/saggita?_module=instructor-attendance&_route=sessions" }
+    { "source": "/api/instructor/sessions",                 "destination": "/api/saggita?_module=instructor-attendance&_route=sessions" },
+
+    { "source": "/api/instructor/panel",                    "destination": "/api/saggita?_module=instructor-panel" }
   ]
 }
