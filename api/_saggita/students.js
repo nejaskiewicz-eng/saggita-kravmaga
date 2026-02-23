@@ -1,7 +1,6 @@
 // api/_saggita/students.js
 // Ujednolicona baza kursantów: legacy (students) + nowe zapisy (registrations)
-// Naprawa: poprawne liczenie WPŁAT i OSTATNIEGO TRENINGU (bez "rozmnażania" przez JOIN-y)
-// + metryki sezonu od 2025-09-01
+// Stabilizacja: brak założeń o kolumnach student_groups (brak id/active), poprawne daty ($::date)
 
 const { getPool } = require('../_lib/db');
 const { requireAuth } = require('../_lib/auth');
@@ -143,15 +142,15 @@ module.exports = async (req, res) => {
         SELECT
           s.*,
 
-          -- grupy
+          -- grupy (bez założeń o kolumnach typu active)
           COALESCE((
-            SELECT json_agg(jsonb_build_object('id', g.id, 'name', g.name, 'active', sg.active) ORDER BY g.name)
+            SELECT json_agg(jsonb_build_object('id', g.id, 'name', g.name) ORDER BY g.name)
             FROM student_groups sg
             JOIN groups g ON g.id=sg.group_id
             WHERE sg.student_id=s.id
           ), '[]'::json) AS groups,
 
-          -- metryki sezonu (od 2025-09-01)
+          -- metryki sezonu
           COALESCE((
             SELECT COUNT(*)::int
             FROM attendances a
@@ -177,7 +176,6 @@ module.exports = async (req, res) => {
               AND ts.session_date >= $2::date
           ) AS last_training_season,
 
-          -- % obecności sezon
           (
             SELECT
               CASE
@@ -193,12 +191,9 @@ module.exports = async (req, res) => {
             WHERE a.student_id=s.id
           ) AS attendance_pct_season,
 
-          -- ostatnia płatność legacy (data + kwota z tego samego rekordu)
+          -- ostatnia płatność legacy
           (SELECT lp.paid_at FROM legacy_payments lp WHERE lp.student_id=s.id ORDER BY lp.paid_at DESC NULLS LAST, lp.id DESC LIMIT 1) AS last_payment_date,
-          (SELECT lp.amount  FROM legacy_payments lp WHERE lp.student_id=s.id ORDER BY lp.paid_at DESC NULLS LAST, lp.id DESC LIMIT 1) AS last_payment_amount,
-
-          -- suma legacy (informacyjnie)
-          COALESCE((SELECT SUM(lp.amount)::numeric FROM legacy_payments lp WHERE lp.student_id=s.id), 0)::numeric AS total_legacy_paid
+          (SELECT lp.amount  FROM legacy_payments lp WHERE lp.student_id=s.id ORDER BY lp.paid_at DESC NULLS LAST, lp.id DESC LIMIT 1) AS last_payment_amount
 
         FROM students s
         WHERE s.id=$1
@@ -232,7 +227,7 @@ module.exports = async (req, res) => {
     }
   }
 
-  // ── GET lista (ujednolicona, z filtrami) ──────────────────────
+  // ── GET lista ────────────────────────────────────────────────
   if (req.method === 'GET') {
     try {
       const conds = [];
@@ -280,7 +275,6 @@ module.exports = async (req, res) => {
         vals.push(payment_status);
       }
 
-      // Zaległości
       if (overdue === 'true') {
         conds.push(`s.is_active=true`);
         conds.push(`EXISTS(
@@ -303,7 +297,6 @@ module.exports = async (req, res) => {
       }
 
       const where = conds.length ? `WHERE ${conds.join(' AND ')}` : '';
-
       const offset = (parseInt(page) - 1) * parseInt(limit);
 
       const { rows: [{ total }] } = await pool.query(
@@ -324,23 +317,23 @@ module.exports = async (req, res) => {
           s.id, s.legacy_id, s.first_name, s.last_name, s.email, s.phone, s.birth_year,
           s.is_active, s.source, s.created_at, s.registration_id,
 
-          -- miasto (z aktywnej grupy jeśli jest)
+          -- miasto (bez sgx.id / bez sgx.active)
           (
             SELECT l.city
             FROM student_groups sgx
             JOIN groups gx ON gx.id=sgx.group_id
             JOIN locations l ON l.id=gx.location_id
-            WHERE sgx.student_id=s.id AND sgx.active=true
-            ORDER BY sgx.id DESC
+            WHERE sgx.student_id=s.id
+            ORDER BY sgx.group_id DESC
             LIMIT 1
           ) AS city,
 
-          -- grupy (aktywnie przypisane)
+          -- grupy
           COALESCE((
             SELECT json_agg(jsonb_build_object('id', g.id, 'name', g.name) ORDER BY g.name)
             FROM student_groups sg
             JOIN groups g ON g.id=sg.group_id
-            WHERE sg.student_id=s.id AND sg.active=true
+            WHERE sg.student_id=s.id
           ), '[]'::json) AS groups,
 
           -- treningi/obecności od 2025-09-01
@@ -372,7 +365,7 @@ module.exports = async (req, res) => {
             WHERE a.student_id=s.id AND ts.session_date >= $${pi}::date
           ) AS last_training_season,
 
-          -- ostatnia wpłata legacy (data + kwota z tego samego rekordu)
+          -- ostatnia wpłata legacy
           (SELECT lp.paid_at FROM legacy_payments lp WHERE lp.student_id=s.id ORDER BY lp.paid_at DESC NULLS LAST, lp.id DESC LIMIT 1) AS last_payment_date,
           (SELECT lp.amount  FROM legacy_payments lp WHERE lp.student_id=s.id ORDER BY lp.paid_at DESC NULLS LAST, lp.id DESC LIMIT 1) AS last_payment_amount,
 
