@@ -360,7 +360,7 @@ function go(page) {
   const n=$('ni-'+page); if(n)n.classList.add('on');
   S.page=page;
   if(page==='groups'){S.grpId=null;S.studId=null;}
-  if(page==='sess'){S.sessId=null;}
+  // sessId preserved - reset only via breadcrumb
   render(page);
 }
 function render(page) {
@@ -710,7 +710,10 @@ async function createSess(gid, date) {
 function openSessFromCal(sessId,gid,date,name){
   S.sessId=sessId;
   S.sessData={session_id:sessId,group_id:gid,session_date:date,group_name:name};
-  go('sess');
+  document.querySelectorAll(".ni").forEach(el=>el.classList.remove("on"));
+  const n=document.getElementById("ni-sess"); if(n)n.classList.add("on");
+  S.page="sess";
+  renderAtt();
 }
 
 // ── SESSIONS ──────────────────────────────────────────────────
