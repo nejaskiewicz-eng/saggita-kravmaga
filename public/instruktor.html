@@ -775,7 +775,11 @@ async function renderAtt() {
 
   try {
     const d=await api(`/api/instructor/sessions/${sess.session_id}/attendance?group_id=${sess.group_id}`);
-    const st=d.rows||[];
+    const st=(d.rows||[]).sort((a,b)=>{
+      const da=a.last_payment?new Date(normISO(a.last_payment)):new Date(0);
+      const db=b.last_payment?new Date(normISO(b.last_payment)):new Date(0);
+      return db-da;
+    });
     const pres=st.filter(s=>s.present).length;
 
     $('pb').innerHTML=`
