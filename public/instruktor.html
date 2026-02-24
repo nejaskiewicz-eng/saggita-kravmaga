@@ -637,11 +637,12 @@ function fillCalGrid(y,m,sessions) {
   const groups = S.calGid ? S.groups.filter(g=>g.id==S.calGid) : S.groups;
   const schedMap={}; // "YYYY-MM-DD" → [{group, sched}]
   groups.forEach(g=>{
-    (g.schedules||[]).forEach(sch=>{
-      const dow=Number(sch.day_of_week); // 0=Mon
+    const seenDow=new Set();
+    (g.schedules||[]).filter(s=>{if(seenDow.has(s.day_of_week))return false;seenDow.add(s.day_of_week);return true;}).forEach(sch=>{
+      const dow=Number(sch.day_of_week);
       for(let d=1;d<=daysInM;d++){
         const date=new Date(y,m,d);
-        const wd=date.getDay()===0?6:date.getDay()-1; // 0=Mon
+        const wd=date.getDay()===0?6:date.getDay()-1;
         if(wd===dow){
           const iso=toISO(date);
           if(!schedMap[iso])schedMap[iso]=[];
