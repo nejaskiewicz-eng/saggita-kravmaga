@@ -165,6 +165,10 @@ tr:hover td{background:var(--panel2)}
 .cpill{display:block;padding:2px 5px;font-size:9px;font-weight:700;margin-bottom:2px;cursor:pointer;text-overflow:ellipsis;overflow:hidden;white-space:nowrap}
 .cpill-s{background:var(--gsoft);color:#3dd68c;border-left:2px solid var(--green)}
 .cpill-s:hover{background:rgba(26,153,82,.25)}
+.cpill-f{background:rgba(176,128,0,.15);color:#e6a817;border-left:2px solid #b08000}
+.cpill-f:hover{background:rgba(176,128,0,.25)}
+.cpill-f{background:var(--ysoft);color:#e6a817;border-left:2px solid var(--yellow)}
+.cpill-f:hover{background:rgba(176,128,0,.25)}
 .cpill-p{background:var(--asoft);color:#ff6b4a;border-left:2px solid var(--accent)}
 .cpill-p:hover{background:rgba(200,35,10,.25)}
 .cal-legend{display:flex;gap:14px;margin-top:12px;font-size:10px;color:var(--dim)}
@@ -674,8 +678,12 @@ function fillCalGrid(y,m,sessions) {
     let html=`<div class="cgc-d">${d}</div>`;
     if(hasSess) {
       smap[iso].forEach(s=>{
-        const gname=(s.group_name||'').replace('2025/2026','25/26').replace(' - ','—');
-        html+=`<span class="cpill cpill-s" onclick="openSessFromCal(${s.session_id},${s.group_id},'${normISO(s.session_date)}','${esc(s.group_name||'')}')">✓ ${esc(gname)} (${s.present_count||0}/${s.total_marked||0})</span>`;
+        const isFuture=normISO(s.session_date)>todayISO();
+        const isFuture=normISO(s.session_date)>todayISO();
+        const gname=(s.group_name||"").replace("2025/2026","25/26").replace(" - ","—");
+        const pillCls=isFuture?"cpill-f":"cpill-s";
+        const pillIco=isFuture?"⏳":"✓";
+        html+=`<span class="cpill ${pillCls}" onclick="openSessFromCal(${s.session_id},${s.group_id},'${normISO(s.session_date)}','${esc(s.group_name||'')}')">${pillIco} ${esc(gname)} (${s.present_count||0}/${s.total_marked||0})</span>`;
       });
     }
     if(hasSched) {
