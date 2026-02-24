@@ -679,7 +679,6 @@ function fillCalGrid(y,m,sessions) {
     if(hasSess) {
       smap[iso].forEach(s=>{
         const isFuture=normISO(s.session_date)>todayISO();
-        const isFuture=normISO(s.session_date)>todayISO();
         const gname=(s.group_name||"").replace("2025/2026","25/26").replace(" - ","—");
         const pillCls=isFuture?"cpill-f":"cpill-s";
         const pillIco=isFuture?"⏳":"✓";
