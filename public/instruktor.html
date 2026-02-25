@@ -393,7 +393,7 @@ function renderDash() {
   const total = S.groups.reduce((s,g)=>s+(g.student_count||0),0);
   const todayDow = new Date().getDay(); // 0=Sun
   const tdow0 = todayDow===0?6:todayDow-1; // 0=Mon
-  const todayGs = S.groups.filter(g=>(g.schedules||[]).some(s=>Number(s.day_of_week)===tdow0));
+  const todayGs = S.groups.filter(g=>(g.schedules||[]).some(s=>Number(s.day_of_week)===tdow0+1)); // DB: 1=Mon ISO
 
   $('pb').innerHTML = `
     <div class="stats">
@@ -408,7 +408,8 @@ function renderDash() {
 }
 
 function gcardHTML(g) {
-  const sch=(g.schedules||[]).map(s=>`<strong>${s.day_name||DAYS_FULL[s.day_of_week]}</strong>&nbsp;${s.time_label||''}`).join('<br>');
+  const _seen1=new Set();
+  const sch=(g.schedules||[]).filter(s=>{const k=`${s.day_of_week}|${(s.time_label||String(s.time_start||'')).slice(0,5)}`;return _seen1.has(k)?false:(_seen1.add(k),true);}).map(s=>`<strong>${s.day_name||DAYS_FULL[s.day_of_week]}</strong>&nbsp;${s.time_label||''}`).join('<br>');
   return `<div class="gc" onclick="openGrp(${g.id})">
     <div class="gc-city">${esc(g.location_city||'')} / ${esc(g.location_name||'')}</div>
     <div class="gc-name">${esc(g.name)}</div>
@@ -444,7 +445,8 @@ function renderGrpStudents() {
   $('ph-t').textContent = esc(g.name||'Kursanci');
   $('ph-s').textContent = `${esc(g.location_city||'')} — ${esc(g.location_name||'')}`;
 
-  const sch=(g.schedules||[]).map(s=>`${s.day_name||DAYS_FULL[s.day_of_week]} ${s.time_label||''}`).join(', ');
+  const _seen2=new Set();
+  const sch=(g.schedules||[]).filter(s=>{const k=`${s.day_of_week}|${(s.time_label||String(s.time_start||'')).slice(0,5)}`;return _seen2.has(k)?false:(_seen2.add(k),true);}).map(s=>`${s.day_name||DAYS_FULL[s.day_of_week]} ${s.time_label||''}`).join(', ');
   const st = S.grpStudents;
 
   $('pb').innerHTML = `
@@ -642,12 +644,12 @@ function fillCalGrid(y,m,sessions) {
   const schedMap={}; // "YYYY-MM-DD" → [{group, sched}]
   groups.forEach(g=>{
     const seenDow=new Set();
-    (g.schedules||[]).filter(s=>{if(seenDow.has(s.day_of_week))return false;seenDow.add(s.day_of_week);return true;}).forEach(sch=>{
+    (g.schedules||[]).filter(s=>{const k=`${s.day_of_week}|${(s.time_label||String(s.time_start||'')).slice(0,5)}`;if(seenDow.has(k))return false;seenDow.add(k);return true;}).forEach(sch=>{
       const dow=Number(sch.day_of_week);
       for(let d=1;d<=daysInM;d++){
         const date=new Date(y,m,d);
         const wd=date.getDay()===0?6:date.getDay()-1;
-        if(wd===dow){
+        if(wd===dow-1){  // DB: 1=Mon ISO; wd: 0=Mon JS
           const iso=toISO(date);
           if(!schedMap[iso])schedMap[iso]=[];
           schedMap[iso].push({group:g,sched:sch});
@@ -688,7 +690,7 @@ function fillCalGrid(y,m,sessions) {
     if(hasSched) {
       schedMap[iso].forEach(({group:g,sched:sch})=>{
         const gname=g.name.replace('2025/2026','25/26').replace(' - ','—');
-        html+=`<span class="cpill cpill-p" onclick="createSess(${g.id},'${iso}')">+ ${esc(gname)} ${sch.time_label||''}</span>`;
+        html+=`<span class="cpill cpill-f" onclick="createSess(${g.id},'${iso}')">+ ${esc(gname)} ${sch.time_label||''}</span>`;
       });
     }
     c.innerHTML=html;
