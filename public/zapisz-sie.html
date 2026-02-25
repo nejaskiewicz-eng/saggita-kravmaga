@@ -154,12 +154,98 @@ a{text-decoration:none;color:inherit}
 .badge--warn{color:#e8a500;border-color:rgba(232,165,0,0.40);background:rgba(232,165,0,0.10);}
 .badge--closed{color:#9a9a9a;border-color:rgba(255,255,255,0.12);background:rgba(0,0,0,0.20);}
 
+/* ── GROUP CARD BODY (3-column layout) ── */
+.group-card__body{
+  display:grid;
+  grid-template-columns:1fr 210px;
+  align-items:stretch;
+}
+
+@media(max-width:700px){
+  .group-card__body{
+    grid-template-columns:1fr;
+  }
+  .group-card__info{
+    border-left:none !important;
+    border-top:1px solid rgba(255,255,255,0.10);
+  }
+}
+
 /* ── SLOTS GRID ── */
 .group-card__slots{
   display:grid;
-  grid-template-columns:repeat(auto-fill, minmax(260px,1fr));
+  grid-template-columns:repeat(auto-fill, minmax(240px,1fr));
   gap:1px;
   background:rgba(255,255,255,0.10);
+}
+
+/* ── INFO PANEL ── */
+.group-card__info{
+  border-left:1px solid rgba(255,255,255,0.10);
+  background:rgba(0,0,0,0.18);
+  padding:16px 14px;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+
+.info-panel__label{
+  font-weight:800;
+  font-size:.60rem;
+  letter-spacing:.18em;
+  text-transform:uppercase;
+  color:rgba(255,255,255,0.36);
+  margin-bottom:2px;
+  padding-bottom:8px;
+  border-bottom:1px solid rgba(255,255,255,0.08);
+}
+
+.info-btn{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:10px 12px;
+  font-weight:800;
+  font-size:.64rem;
+  letter-spacing:.10em;
+  text-transform:uppercase;
+  color:rgba(255,255,255,0.80);
+  border:1px solid rgba(255,255,255,0.16);
+  background:rgba(0,0,0,0.26);
+  cursor:pointer;
+  transition:transform 200ms ease, border-color 200ms ease, background 200ms ease, color 200ms ease;
+  text-decoration:none;
+}
+.info-btn:hover{
+  border-color:rgba(var(--accent-rgb),0.55);
+  background:rgba(var(--accent-rgb),0.10);
+  color:#fff;
+  transform:translateY(-1px);
+}
+.info-btn__icon{
+  font-size:.88rem;
+  flex-shrink:0;
+  opacity:.80;
+}
+.info-btn--map .info-btn__icon{opacity:1;}
+.info-btn--placeholder{
+  opacity:.55;
+  border-style:dashed;
+  cursor:default;
+}
+.info-btn--placeholder:hover{
+  transform:none;
+  border-color:rgba(255,255,255,0.16);
+  background:rgba(0,0,0,0.26);
+  color:rgba(255,255,255,0.80);
+}
+.info-btn--placeholder::after{
+  content:'wkrótce';
+  margin-left:auto;
+  font-size:.55rem;
+  letter-spacing:.08em;
+  color:rgba(255,255,255,0.30);
+  font-weight:700;
 }
 
 .slot{
@@ -806,13 +892,54 @@ function buildPanels() {
       head.appendChild(meta);
       card.appendChild(head);
 
+      // ── Detect group type ──
+      const gName = (group.name || '').toUpperCase();
+      const isKids = /KIDS|YOUNG|DZIECI/.test(gName);
+
+      // ── Info panel builder ──
+      function buildInfoPanel() {
+        const infoDiv = document.createElement('div');
+        infoDiv.className = 'group-card__info';
+
+        infoDiv.innerHTML = `
+          <div class="info-panel__label">Informacje</div>
+
+          <a class="info-btn info-btn--map" href="#" onclick="return false;" title="Sprawdź dojazd">
+            <span class="info-btn__icon">📍</span>Sprawdź dojazd
+          </a>
+
+          <a class="info-btn info-btn--placeholder" title="Regulamin — PDF wkrótce">
+            <span class="info-btn__icon">📄</span>Regulamin
+          </a>
+
+          ${isKids ? `
+          <a class="info-btn info-btn--placeholder" title="Wzór umowy — PDF wkrótce">
+            <span class="info-btn__icon">📝</span>Wzór umowy
+          </a>
+          <a class="info-btn info-btn--placeholder" title="Wzór zgody na udział — PDF wkrótce">
+            <span class="info-btn__icon">✍️</span>Wzór zgody na udział
+          </a>
+          ` : `
+          <a class="info-btn info-btn--placeholder" title="Oświadczenie o niekaralności — PDF wkrótce">
+            <span class="info-btn__icon">🔏</span>Oświadczenie o niekaralności
+          </a>
+          `}
+        `;
+
+        return infoDiv;
+      }
+
       if (isVIP) {
+        const body = document.createElement('div');
+        body.className = 'group-card__body';
+
+        const vipContent = document.createElement('div');
         const info = document.createElement('div');
         info.className = 'vip-info';
         info.innerHTML = `<strong>${group.notes || 'Zajęcia indywidualne.'}</strong><br>
           Skontaktuj się z nami, aby ustalić termin:<br>📞 510 930 460 · ✉ biuro@akademiaobrony.pl<br><br>
           Możesz też zapisać się na listę rezerwową — podaj preferowany termin.`;
-        card.appendChild(info);
+        vipContent.appendChild(info);
 
         const vipBtn = document.createElement('div');
         vipBtn.style.cssText = 'padding:0 18px 18px';
@@ -823,17 +950,24 @@ function buildPanels() {
         b.textContent = 'Zapisz się na listę rezerwową →';
         b.addEventListener('click', () => selectSlot(loc.id, loc.city, group.id, group.name, null, null, null, true));
         vipBtn.appendChild(b);
-        card.appendChild(vipBtn);
+        vipContent.appendChild(vipBtn);
+
+        body.appendChild(vipContent);
+        body.appendChild(buildInfoPanel());
+        card.appendChild(body);
 
       } else {
         const schedules = Array.isArray(group.schedules) ? group.schedules : [];
+
+        const body = document.createElement('div');
+        body.className = 'group-card__body';
 
         // jeżeli brak terminów — pokaż czytelną informację zamiast pustki
         if(!schedules.length){
           const empty = document.createElement('div');
           empty.className = 'vip-info';
           empty.innerHTML = `<strong>Brak dodanych terminów</strong><br>Jeśli widzisz je w panelu admin, to znaczy, że endpoint, z którego korzysta ta strona, nie zwraca ich w tym formacie.`;
-          card.appendChild(empty);
+          body.appendChild(empty);
         } else {
           const slotsWrap = document.createElement('div');
           slotsWrap.className = 'group-card__slots';
@@ -873,8 +1007,11 @@ function buildPanels() {
             slotsWrap.appendChild(slot);
           });
 
-          card.appendChild(slotsWrap);
+          body.appendChild(slotsWrap);
         }
+
+        body.appendChild(buildInfoPanel());
+        card.appendChild(body);
       }
 
       grid.appendChild(card);
