@@ -619,6 +619,36 @@ a{text-decoration:none;color:inherit}
   font-weight:700;font-size:.88rem;color:var(--text-muted);
 }
 
+/* VIP card — red+blue gradient */
+.group-card--vip{
+  background:linear-gradient(145deg, rgba(178,25,0,0.10) 0%, rgba(26,111,212,0.12) 50%, rgba(0,0,0,0.24) 100%);
+  box-shadow:0 0 0 1px rgba(140,40,220,0.30) inset, var(--shadow-card);
+}
+.btn-vip-contact{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:100%;
+  padding:14px 22px;
+  border-radius:var(--radius-xs);
+  font-family:'Open Sans',sans-serif;
+  font-weight:800;
+  font-size:.80rem;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  color:#fff;
+  background:linear-gradient(135deg, rgba(178,25,0,0.90) 0%, rgba(100,20,160,0.85) 50%, rgba(26,111,212,0.90) 100%);
+  border:1px solid rgba(160,80,255,0.45);
+  box-shadow:0 4px 20px rgba(140,0,200,0.30), 0 0 40px rgba(178,25,0,0.15);
+  text-decoration:none;
+  transition:transform 150ms ease, filter 150ms ease, box-shadow 150ms ease;
+}
+.btn-vip-contact:hover{
+  transform:translateY(-2px);
+  filter:brightness(1.12);
+  box-shadow:0 8px 32px rgba(140,0,200,0.45), 0 0 50px rgba(178,25,0,0.25);
+}
+
 /* mobile */
 @media(max-width:600px){
   .group-card__head{padding:14px 16px;}
@@ -931,7 +961,36 @@ function buildPanels() {
 
     const groups = Array.isArray(loc.groups) ? loc.groups : [];
     if (!groups.length) {
-      panel.innerHTML = '<p style="color:rgba(255,255,255,0.56);padding:24px 0;font-weight:600">Brak grup dla tej lokalizacji.</p>';
+      const locCity = (loc.city || loc.name || '').toLowerCase();
+      if (locCity.includes('wałbrzych') || locCity.includes('walbrzych')) {
+        const vipGrid = document.createElement('div');
+        vipGrid.className = 'sched-grid';
+        vipGrid.innerHTML = `
+          <div class="group-card group-card--vip">
+            <div class="group-card__head" style="background:linear-gradient(135deg,rgba(178,25,0,0.18),rgba(26,111,212,0.18));border-bottom-color:rgba(140,60,200,0.35);">
+              <div class="group-card__name" style="color:#e06aff;text-shadow:0 0 20px rgba(200,80,255,0.4);">⚡ Zajęcia indywidualne VIP</div>
+              <div class="group-card__meta">
+                <span class="badge" style="color:rgba(255,160,230,.90);border-color:rgba(160,30,212,0.45);background:rgba(140,0,200,0.14);">Wałbrzych</span>
+                <span class="badge badge--blue">Indywidualne 1:1</span>
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;background:linear-gradient(160deg,rgba(178,25,0,0.08) 0%,rgba(26,111,212,0.10) 100%);">
+              <div class="vip-info" style="padding:24px 22px 12px;">
+                <strong style="color:#fff;font-size:1rem;">Trening dopasowany do Ciebie — termin ustalamy razem.</strong><br><br>
+                Zajęcia 1:1 z instruktorem, program układany pod Twoje cele. Idealne dla zapracowanych, osób wracających po przerwie i tych, którzy chcą szybkich efektów.<br><br>
+                <span style="color:rgba(255,255,255,0.60);">📞 <strong style="color:#fff">510 930 460</strong> &nbsp;·&nbsp; ✉️ <strong style="color:#fff">biuro@akademiaobrony.pl</strong></span>
+              </div>
+              <div style="padding:0 22px 24px;">
+                <a href="mailto:biuro@akademiaobrony.pl?subject=Zajęcia%20VIP%20Wałbrzych&body=Dzień%20dobry%2C%20chciałbym%2Fa%20umówić%20się%20na%20zajęcia%20indywidualne%20VIP%20w%20Wałbrzychu." class="btn-vip-contact">
+                  Skontaktuj się — umów termin →
+                </a>
+              </div>
+            </div>
+          </div>`;
+        panel.appendChild(vipGrid);
+      } else {
+        panel.innerHTML = '<p style="color:rgba(255,255,255,0.56);padding:24px 0;font-weight:600">Brak grup dla tej lokalizacji.</p>';
+      }
       container.appendChild(panel);
       return;
     }
@@ -1439,8 +1498,20 @@ async function init() {
 
     allPrices = Array.isArray(pricesPayload) ? pricesPayload : (Array.isArray(pricesPayload?.rows) ? pricesPayload.rows : []);
 
+    const CITY_ORDER = ['Świdnica','Wałbrzych','Wrocław'];
+    function sortLocations(locs) {
+      return [...locs].sort((a,b) => {
+        const ai = CITY_ORDER.indexOf(a.city||a.name||'');
+        const bi = CITY_ORDER.indexOf(b.city||b.name||'');
+        if(ai === -1 && bi === -1) return (a.city||'').localeCompare(b.city||'','pl');
+        if(ai === -1) return 1;
+        if(bi === -1) return -1;
+        return ai - bi;
+      });
+    }
+
     if (looksNested(schedPayload)) {
-      allData = schedPayload;
+      allData = sortLocations(schedPayload);
     } else {
       const flatSchedules = normalizeSchedulesPayload(schedPayload);
       const [locations, groups] = await Promise.all([
@@ -1451,11 +1522,11 @@ async function init() {
       const locArr = Array.isArray(locations) ? locations : (Array.isArray(locations?.rows) ? locations.rows : []);
       const grpArr = Array.isArray(groups) ? groups : (Array.isArray(groups?.rows) ? groups.rows : []);
 
-      allData = buildNestedFromFlat({
+      allData = sortLocations(buildNestedFromFlat({
         locations: locArr,
         groups: grpArr,
         schedules: flatSchedules,
-      });
+      }));
     }
 
     buildTabs();

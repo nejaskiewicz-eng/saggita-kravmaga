@@ -408,7 +408,7 @@ function renderDash() {
 }
 
 function gcardHTML(g) {
-  const seen=new Set();const sch=(g.schedules||[]).filter(s=>{if(seen.has(s.day_of_week))return false;seen.add(s.day_of_week);return true;}).map(s=>`<strong>${s.day_name||DAYS_FULL[s.day_of_week]}</strong>&nbsp;${s.time_label||''}`).join('<br>');
+  const sch=(g.schedules||[]).map(s=>`<strong>${s.day_name||DAYS_FULL[s.day_of_week]}</strong>&nbsp;${s.time_label||''}`).join('<br>');
   return `<div class="gc" onclick="openGrp(${g.id})">
     <div class="gc-city">${esc(g.location_city||'')} / ${esc(g.location_name||'')}</div>
     <div class="gc-name">${esc(g.name)}</div>
@@ -444,7 +444,7 @@ function renderGrpStudents() {
   $('ph-t').textContent = esc(g.name||'Kursanci');
   $('ph-s').textContent = `${esc(g.location_city||'')} — ${esc(g.location_name||'')}`;
 
-  const seen2=new Set();const sch=(g.schedules||[]).filter(s=>{if(seen2.has(s.day_of_week))return false;seen2.add(s.day_of_week);return true;}).map(s=>`${s.day_name||DAYS_FULL[s.day_of_week]} ${s.time_label||''}`).join(', ');
+  const sch=(g.schedules||[]).map(s=>`${s.day_name||DAYS_FULL[s.day_of_week]} ${s.time_label||''}`).join(', ');
   const st = S.grpStudents;
 
   $('pb').innerHTML = `
