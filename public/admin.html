@@ -204,6 +204,30 @@ select option{background:#1c1414}
   .mf .btn{width:100%; justify-content:center}
 }
 
+
+/* ── Grupy — lista checkboxów ── */
+.grp-chk-list{
+  display:grid;grid-template-columns:1fr 1fr;gap:1px;
+  max-height:180px;overflow-y:auto;
+  border:1px solid var(--line2);background:var(--line2);
+  margin-top:4px;
+}
+.grp-chk-item{
+  display:flex;align-items:center;gap:8px;
+  padding:7px 10px;background:var(--bg2);
+  cursor:pointer;transition:background .1s;
+  font-size:12px;
+}
+.grp-chk-item:hover{background:var(--panel2);}
+.grp-chk-item input[type=checkbox]{
+  width:14px;height:14px;
+  accent-color:var(--accent);
+  cursor:pointer;flex-shrink:0;
+}
+.grp-chk-city{
+  font-size:9px;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--dim);margin-left:auto;
+}
 </style>
 </head>
 <body>
@@ -2434,8 +2458,8 @@ async function fetchInstructors() {
 }
 
 async function openNewInstructorModal() {
-  let groupOpts = '';
-  try { arrRows(await aF('/groups')).forEach(g => { groupOpts += `<option value="${g.id}">${g.name}${g.city?' ('+g.city+')':''}</option>`; }); } catch(e) {}
+  let allGroups = [];
+  try { allGroups = arrRows(await aF('/groups')); } catch(e) {}
 
   showModal('Nowy instruktor', `
     <div class="fg">
@@ -2450,8 +2474,8 @@ async function openNewInstructorModal() {
       <div class="ff"><label>Email</label><input id="ni-em" type="email"></div>
       <div class="ff"><label>Telefon</label><input id="ni-ph"></div>
     </div>
-    <div class="ff"><label>Przypisz do grup (Ctrl+klik = wiele)</label>
-      <select id="ni-gr" multiple style="height:90px">${groupOpts}</select>
+    <div class="ff"><label>Przypisz do grup</label>
+      ${buildGroupCheckboxes(allGroups, [], 'ni')}
     </div>
     <div id="ni-err" style="color:var(--red-l);font-size:12px;margin-top:8px;display:none"></div>`,
     `<button class="btn btn-secondary" onclick="closeModal()">Anuluj</button>
@@ -2466,8 +2490,7 @@ async function createInstructor() {
   const errEl = document.getElementById('ni-err');
   if (!fn||!ln||!un||!pw) { errEl.textContent='Imię, nazwisko, login i hasło są wymagane.'; errEl.style.display='block'; return; }
   if (pw.length < 8) { errEl.textContent='Hasło musi mieć co najmniej 8 znaków.'; errEl.style.display='block'; return; }
-  const sel = document.getElementById('ni-gr');
-  const groupIds = sel ? [...sel.selectedOptions].map(o=>parseInt(o.value)) : [];
+  const groupIds = getCheckedGroupIds('ni');
   try {
     await aF('/instructors', { method:'POST', body: JSON.stringify({
       first_name: fn, last_name: ln, username: un, password: pw,
@@ -2482,15 +2505,14 @@ async function createInstructor() {
 }
 
 async function openInstructorModal(id) {
-  let inst, groupOpts = '';
+  let inst, allGroups = [];
   try {
     const [instData, gd] = await Promise.all([aF(`/instructors/${id}`), aF('/groups')]);
     inst = instData;
-    const instGroupIds = (inst.groups||[]).map(g=>g.id);
-    arrRows(gd).forEach(g => {
-      groupOpts += `<option value="${g.id}" ${instGroupIds.includes(g.id)?'selected':''}>${g.name}${g.city?' ('+g.city+')':''}</option>`;
-    });
+    allGroups = arrRows(gd);
   } catch(e) { toast('Błąd: '+e.message,'error'); return; }
+
+  const instGroupIds = (inst.groups||[]).map(g=>g.id);
 
   showModal(`Edytuj: ${inst.first_name} ${inst.last_name}`, `
     <div class="fg">
@@ -2510,8 +2532,8 @@ async function openInstructorModal(id) {
         </select>
       </div>
     </div>
-    <div class="ff"><label>Grupy (Ctrl+klik = wiele)</label>
-      <select id="ei-gr" multiple style="height:90px">${groupOpts}</select>
+    <div class="ff"><label>Przypisane grupy</label>
+      ${buildGroupCheckboxes(allGroups, instGroupIds, 'ei')}
     </div>
     <div id="ei-err" style="color:var(--red-l);font-size:12px;margin-top:8px;display:none"></div>`,
     `<button class="btn btn-secondary" onclick="closeModal()">Anuluj</button>
@@ -2522,14 +2544,13 @@ async function saveInstructor(id) {
   const errEl = document.getElementById('ei-err');
   const pw = document.getElementById('ei-pw')?.value;
   if (pw && pw.length < 8) { errEl.textContent='Hasło musi mieć co najmniej 8 znaków.'; errEl.style.display='block'; return; }
-  const sel = document.getElementById('ei-gr');
   const data = {
     first_name: document.getElementById('ei-fn')?.value?.trim(),
     last_name:  document.getElementById('ei-ln')?.value?.trim(),
     email:      document.getElementById('ei-em')?.value?.trim()||null,
     phone:      document.getElementById('ei-ph')?.value?.trim()||null,
     active:     document.getElementById('ei-ac')?.value==='true',
-    group_ids:  sel ? [...sel.selectedOptions].map(o=>parseInt(o.value)) : [],
+    group_ids:  getCheckedGroupIds('ei'),
   };
   if (pw) data.password = pw;
   try {
@@ -2549,6 +2570,37 @@ async function toggleInstructor(id, active) {
 }
 
 checkLogin();
+
+function buildGroupCheckboxes(groups, selectedIds, prefix) {
+  const sel = new Set((selectedIds||[]).map(Number));
+  // group by city
+  const byCityOrder = [];
+  const cityMap = {};
+  groups.forEach(g => {
+    const city = g.city || g.location_city || '';
+    if (!cityMap[city]) { cityMap[city] = []; byCityOrder.push(city); }
+    cityMap[city].push(g);
+  });
+  let html = '<div class="grp-chk-list" id="' + prefix + '-grp-list">';
+  byCityOrder.forEach(city => {
+    cityMap[city].forEach(g => {
+      const chk = sel.has(g.id) ? 'checked' : '';
+      html += `<label class="grp-chk-item">
+        <input type="checkbox" value="${g.id}" ${chk}>
+        <span>${g.name||''}</span>
+        ${city ? `<span class="grp-chk-city">${city}</span>` : ''}
+      </label>`;
+    });
+  });
+  html += '</div>';
+  return html;
+}
+
+function getCheckedGroupIds(prefix) {
+  const list = document.getElementById(prefix + '-grp-list');
+  if (!list) return [];
+  return [...list.querySelectorAll('input[type=checkbox]:checked')].map(i => parseInt(i.value));
+}
 </script>
 </body>
 </html>

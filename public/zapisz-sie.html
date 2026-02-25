@@ -619,10 +619,10 @@ a{text-decoration:none;color:inherit}
   font-weight:700;font-size:.88rem;color:var(--text-muted);
 }
 
-/* VIP card — red+blue gradient */
+/* VIP card — red-to-blue gradient */
 .group-card--vip{
-  background:linear-gradient(145deg, rgba(178,25,0,0.10) 0%, rgba(26,111,212,0.12) 50%, rgba(0,0,0,0.24) 100%);
-  box-shadow:0 0 0 1px rgba(140,40,220,0.30) inset, var(--shadow-card);
+  background:linear-gradient(135deg, rgba(178,25,0,0.12) 0%, rgba(0,0,0,0.20) 50%, rgba(26,111,212,0.12) 100%);
+  box-shadow:0 0 0 1px rgba(100,100,255,0.18) inset, var(--shadow-card);
 }
 .btn-vip-contact{
   display:inline-flex;
@@ -637,16 +637,16 @@ a{text-decoration:none;color:inherit}
   letter-spacing:.06em;
   text-transform:uppercase;
   color:#fff;
-  background:linear-gradient(135deg, rgba(178,25,0,0.90) 0%, rgba(100,20,160,0.85) 50%, rgba(26,111,212,0.90) 100%);
-  border:1px solid rgba(160,80,255,0.45);
-  box-shadow:0 4px 20px rgba(140,0,200,0.30), 0 0 40px rgba(178,25,0,0.15);
+  background:linear-gradient(90deg, #B21900 0%, #1A6FD4 100%);
+  border:1px solid rgba(100,130,255,0.40);
+  box-shadow:0 4px 20px rgba(26,111,212,0.22), 0 4px 20px rgba(178,25,0,0.18);
   text-decoration:none;
   transition:transform 150ms ease, filter 150ms ease, box-shadow 150ms ease;
 }
 .btn-vip-contact:hover{
   transform:translateY(-2px);
-  filter:brightness(1.12);
-  box-shadow:0 8px 32px rgba(140,0,200,0.45), 0 0 50px rgba(178,25,0,0.25);
+  filter:brightness(1.10);
+  box-shadow:0 8px 30px rgba(26,111,212,0.35), 0 8px 30px rgba(178,25,0,0.28);
 }
 
 /* mobile */
@@ -967,22 +967,22 @@ function buildPanels() {
         vipGrid.className = 'sched-grid';
         vipGrid.innerHTML = `
           <div class="group-card group-card--vip">
-            <div class="group-card__head" style="background:linear-gradient(135deg,rgba(178,25,0,0.18),rgba(26,111,212,0.18));border-bottom-color:rgba(140,60,200,0.35);">
-              <div class="group-card__name" style="color:#e06aff;text-shadow:0 0 20px rgba(200,80,255,0.4);">⚡ Zajęcia indywidualne VIP</div>
+            <div class="group-card__head" style="background:linear-gradient(135deg,rgba(178,25,0,0.16) 0%,rgba(26,111,212,0.16) 100%);border-bottom-color:rgba(100,130,255,0.25);">
+              <div class="group-card__name" style="background:linear-gradient(90deg,#FF6B4A,#5BA8FF);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Zajęcia indywidualne VIP</div>
               <div class="group-card__meta">
-                <span class="badge" style="color:rgba(255,160,230,.90);border-color:rgba(160,30,212,0.45);background:rgba(140,0,200,0.14);">Wałbrzych</span>
+                <span class="badge badge--red">Wałbrzych</span>
                 <span class="badge badge--blue">Indywidualne 1:1</span>
               </div>
             </div>
-            <div style="display:flex;flex-direction:column;background:linear-gradient(160deg,rgba(178,25,0,0.08) 0%,rgba(26,111,212,0.10) 100%);">
+            <div style="display:flex;flex-direction:column;background:linear-gradient(135deg,rgba(178,25,0,0.06) 0%,rgba(0,0,0,0.10) 50%,rgba(26,111,212,0.06) 100%);">
               <div class="vip-info" style="padding:24px 22px 12px;">
                 <strong style="color:#fff;font-size:1rem;">Trening dopasowany do Ciebie — termin ustalamy razem.</strong><br><br>
                 Zajęcia 1:1 z instruktorem, program układany pod Twoje cele. Idealne dla zapracowanych, osób wracających po przerwie i tych, którzy chcą szybkich efektów.<br><br>
-                <span style="color:rgba(255,255,255,0.60);">📞 <strong style="color:#fff">510 930 460</strong> &nbsp;·&nbsp; ✉️ <strong style="color:#fff">biuro@akademiaobrony.pl</strong></span>
+                <span style="color:rgba(255,255,255,0.60);">Tel: <strong style="color:#fff">510 930 460</strong> &nbsp;&middot;&nbsp; Email: <strong style="color:#fff">biuro@akademiaobrony.pl</strong></span>
               </div>
               <div style="padding:0 22px 24px;">
-                <a href="mailto:biuro@akademiaobrony.pl?subject=Zajęcia%20VIP%20Wałbrzych&body=Dzień%20dobry%2C%20chciałbym%2Fa%20umówić%20się%20na%20zajęcia%20indywidualne%20VIP%20w%20Wałbrzychu." class="btn-vip-contact">
-                  Skontaktuj się — umów termin →
+                <a href="mailto:biuro@akademiaobrony.pl?subject=Zaj%C4%99cia%20VIP%20Wa%C5%82brzych&body=Dzie%C5%84%20dobry%2C%20chcia%C5%82bym%2Fa%20um%C3%B3wi%C4%87%20si%C4%99%20na%20zaj%C4%99cia%20indywidualne%20VIP%20w%20Wa%C5%82brzychu." class="btn-vip-contact">
+                  Skontaktuj się — umów termin
                 </a>
               </div>
             </div>
@@ -1498,7 +1498,7 @@ async function init() {
 
     allPrices = Array.isArray(pricesPayload) ? pricesPayload : (Array.isArray(pricesPayload?.rows) ? pricesPayload.rows : []);
 
-    const CITY_ORDER = ['Świdnica','Wałbrzych','Wrocław'];
+    const CITY_ORDER = ['Świdnica','Wrocław','Wałbrzych'];
     function sortLocations(locs) {
       return [...locs].sort((a,b) => {
         const ai = CITY_ORDER.indexOf(a.city||a.name||'');
