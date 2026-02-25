@@ -1046,10 +1046,28 @@ function buildPanels() {
         const infoDiv = document.createElement('div');
         infoDiv.className = 'group-card__info';
 
+        // Build Google Maps URL from first available address in schedules, or fall back to hardcoded by group name, or city
+        const firstAddr = (group.schedules||[]).map(s=>s.address).find(a=>a);
+        const gName = (group.name||'').toUpperCase();
+        const ADDR_FALLBACK = {
+          'KIDS':   'Świdnica, ul. Długa 33',
+          'YOUNG':  'Świdnica, ul. Długa 33',
+          'DZIECI': 'Świdnica, ul. Długa 33',
+        };
+        let hardcoded = null;
+        if(!firstAddr) {
+          if(/KIDS|YOUNG|DZIECI/.test(gName)) hardcoded = 'Świdnica, ul. Długa 33';
+          else if(/DOROŚLI|MLODZIEŻ|MŁODZIEŻ|DOROSLI/.test(gName) && /ŚWIDNICA|SWIDNICA/.test((loc.city||'').toUpperCase())) hardcoded = 'Świdnica, ul. Jodłowa 21';
+        }
+        const mapsQuery = firstAddr || hardcoded || loc.address || loc.city || '';
+        const mapsUrl = mapsQuery
+          ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapsQuery)}`
+          : null;
+
         infoDiv.innerHTML = `
           <div class="info-panel__label">Informacje</div>
 
-          <a class="info-btn info-btn--map" href="#" onclick="return false;" title="Sprawdź dojazd">
+          <a class="info-btn info-btn--map" ${mapsUrl ? `href="${mapsUrl}" target="_blank" rel="noopener"` : `href="#" onclick="return false;"`} title="Sprawdź dojazd">
             <span class="info-btn__icon">📍</span>Sprawdź dojazd
           </a>
 
