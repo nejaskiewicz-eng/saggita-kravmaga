@@ -1158,12 +1158,21 @@ function selectSlot(locId, cityName, groupId, groupName, schedId, dayName, timeL
   section.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-// ── Prices ───────────────────────────────────────────────────────
+// ── Price helpers (spójne z zapisz-sie-cennik.html) ──────────────
+const norm       = (v)=>String(v||'').trim().toLowerCase();
+const isKidsPlan = (p)=>{ const c=norm(p.category); return c.includes('kid')||c.includes('dziec'); };
+const isOneTime  = (p)=>!Number(p.months||0);
+const isSchoolYr = (p)=>isKidsPlan(p) && Number(p.months||0)>=10;
+const isMultiMo  = (p)=>Number(p.months||0)>=3;
+const monthlyR   = (p)=>Number(p.months||0)>1 ? Number(p.price)/Number(p.months) : Number(p.price);
+const hasFee     = (p, isNew)=> !isOneTime(p) && isNew && Number(p.signup_fee||0)>0;
+const money      = (v)=>Number(v||0).toLocaleString('pl-PL',{minimumFractionDigits:0,maximumFractionDigits:2});
+
 function buildPriceOptions(category) {
   const container = document.getElementById('priceOptions');
   container.innerHTML = '';
 
-  // Sprawdź czy zaznaczono "Posiadam karnet"
+  // Checkbox "Posiadam karnet"
   const hasMembership = document.getElementById('f_has_membership')?.checked;
   if (hasMembership) {
     container.innerHTML = '<p style="color:rgba(255,255,255,0.76);font-size:.9rem;font-weight:600;">✓ Posiadasz karnet — rezerwacja bez płatności</p>';
@@ -1171,34 +1180,83 @@ function buildPriceOptions(category) {
   }
 
   const isNew = document.getElementById('f_new')?.value !== 'false';
-  const cats = category === 'kids' ? ['kids'] : category === 'vip' ? ['adults','discount'] : ['adults','discount','service'];
+  const rows = (allPrices || []);
 
-  const relevant = (allPrices || []).filter(p => cats.includes(p.category));
+  // Filtruj tak samo jak cennik — kids osobno, adults osobno
+  const isKidsCat = category === 'kids';
+  const relevant = isKidsCat
+    ? rows.filter(p => isKidsPlan(p))
+    : rows.filter(p => !isKidsPlan(p));
+
   if (!relevant.length) {
     container.innerHTML = '<p style="color:rgba(255,255,255,0.56);font-size:.82rem">Brak planów cennikowych dla tej grupy.</p>';
     return;
   }
 
+  relevant.sort((a,b)=>Number(a.price||0)-Number(b.price||0));
+
+  // Referencja 1 miesiąca dorosłych do rabatu
+  const adult1m = !isKidsCat ? rows.filter(p=>!isKidsPlan(p)).find(p=>Number(p.months||0)===1) : null;
+  const adult1mPrice = adult1m ? Number(adult1m.price) : null;
+
   relevant.forEach((plan, i) => {
-    const total = parseFloat(plan.price || 0) + (isNew ? parseFloat(plan.signup_fee || 0) : 0);
-    const monthLabel = plan.months ? `${plan.months} mies.` : 'jednorazowo';
+    const months  = Number(plan.months||0);
+    const fee     = hasFee(plan, isNew) ? Number(plan.signup_fee||0) : 0;
+    const monthly = monthlyR(plan);
+
+    let priceHtml = '';
+    let subHtml   = '';
+    let badgeHtml = '';
+
+    if (isOneTime(plan)) {
+      priceHtml = `<div class="price-card__price">${money(plan.price)}<small>zł</small></div>`;
+      subHtml   = `<div class="price-card__extra">Brak opłaty wpisowej<br>Pojedyncze zajęcia</div>`;
+    } else if (isSchoolYr(plan)) {
+      priceHtml = `<div class="price-card__price">180<small>zł / mies.</small></div>`;
+      const total = 180 * months;
+      subHtml = `<div class="price-card__extra">Do ${months} miesięcy — od 180 do ${money(total)} zł łącznie`;
+      if (fee>0) subHtml += `<br>+ wpisowe ${money(fee)} zł dla nowych`;
+      subHtml += `</div>`;
+    } else if (isMultiMo(plan) && !isKidsCat) {
+      const discPct = adult1mPrice ? Math.round((1 - monthly/adult1mPrice)*100) : null;
+      priceHtml = `<div class="price-card__price">${money(Math.round(monthly))}<small>zł / mies.</small></div>`;
+      subHtml = `<div class="price-card__extra">łącznie ${money(plan.price)} zł za ${months} mies.`;
+      if (fee>0) subHtml += `<br>+ wpisowe ${money(fee)} zł dla nowych`;
+      subHtml += `</div>`;
+      if (discPct>0) badgeHtml = `<span style="display:inline-flex;align-items:center;padding:2px 8px;border-radius:999px;background:rgba(46,204,113,0.18);border:1px solid rgba(46,204,113,0.35);color:#2ecc71;font-size:11px;font-weight:800">-${discPct}%</span>`;
+    } else {
+      priceHtml = `<div class="price-card__price">${money(Math.round(monthly))}<small>zł / mies.</small></div>`;
+      if (fee>0) subHtml = `<div class="price-card__extra">+ wpisowe ${money(fee)} zł dla nowych`;
+      if (plan.description) subHtml = (subHtml||'<div class="price-card__extra">') + (fee>0?'<br>':'') + plan.description + '</div>';
+      else if (subHtml) subHtml += '</div>';
+    }
+
+    if (plan.description && !subHtml.includes(plan.description)) {
+      subHtml += `<div class="price-card__extra" style="margin-top:3px">${plan.description}</div>`;
+    }
 
     const card = document.createElement('label');
     card.className = 'price-card';
+    if (i === 0) card.classList.add('selected');
 
     const input = document.createElement('input');
-    input.type = 'radio';
-    input.name = 'price_plan';
+    input.type  = 'radio';
+    input.name  = 'price_plan';
     input.value = plan.id;
+    if (i === 0) input.checked = true;
+    card.appendChild(input);
 
-    if (i === 0) { input.checked = true; card.classList.add('selected'); }
-
-    card.innerHTML = `
-      <div class="price-card__name">${String(plan.name || '').replace(' — ', '<br>')}</div>
-      <div class="price-card__price">${Number.isFinite(total) ? total.toFixed(0) : '0'} zł</div>
-      <div class="price-card__extra">${monthLabel}${isNew && Number(plan.signup_fee||0) > 0 ? ` (w tym ${plan.signup_fee} zł wpisowe)` : ''}${plan.description ? '<br>' + plan.description : ''}</div>
+    card.innerHTML += `
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:4px">
+        <div>
+          <div class="price-card__name">${plan.name || ''}</div>
+          <div style="font-size:.68rem;font-weight:600;color:rgba(255,255,255,0.40);margin-top:1px">${isOneTime(plan)?'jednorazowo':months>1?`${months} mies.`:'1 mies.'}</div>
+        </div>
+        ${badgeHtml}
+      </div>
+      ${priceHtml}
+      ${subHtml}
     `;
-    card.prepend(input);
 
     card.addEventListener('click', () => {
       qsa('.price-card').forEach(c => c.classList.remove('selected'));
