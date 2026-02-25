@@ -1036,21 +1036,6 @@ function buildPanels() {
         b.className = 'badge badge--closed';
         b.textContent = 'Nabór zamknięty';
         meta.appendChild(b);
-      } else if (isFull) {
-        const b = document.createElement('span');
-        b.className = 'badge badge--warn';
-        b.textContent = 'Lista rezerwowa';
-        meta.appendChild(b);
-      } else if (typeof group.available === 'number' && group.available <= 3) {
-        const b = document.createElement('span');
-        b.className = 'badge badge--warn';
-        b.textContent = `Ostatnie ${group.available} miejsc`;
-        meta.appendChild(b);
-      } else if (typeof group.available === 'number') {
-        const b = document.createElement('span');
-        b.className = isKids ? 'badge badge--blue' : 'badge badge--red';
-        b.textContent = `${group.available} wolnych miejsc`;
-        meta.appendChild(b);
       }
 
       head.appendChild(meta);
