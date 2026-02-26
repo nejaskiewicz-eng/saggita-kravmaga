@@ -1,9 +1,9 @@
 // api/register.js  — Funkcja #3
 // POST /api/register → zapis kursanta, zwraca dane płatności
 const { getPool } = require('./_lib/db');
-const { sendMail, mailAdmin } = require('./_lib/mail');
+const { sendMail, mailAdmin, mailPaymentDoc, mailWaitlist } = require('./_lib/mail');
 
-const BANK_ACCOUNT = process.env.BANK_ACCOUNT || 'PL00 0000 0000 0000 0000 0000 0000';
+const BANK_ACCOUNT = process.env.BANK_ACCOUNT || '21 1140 2004 0000 3902 3890 8895';
 const BANK_NAME    = process.env.BANK_NAME    || 'Akademia Obrony Saggita';
 const ADMIN_EMAIL  = process.env.ADMIN_EMAIL  || 'biuro@akademiaobrony.pl';
 
@@ -109,11 +109,16 @@ module.exports = async (req, res) => {
       sendMail({ to: ADMIN_EMAIL, ...mailAdmin(mailData) }),
     ];
 
-    // Dla listy rezerwowej wyślij od razu mail do kursanta
-    // Dla normalnego zapisu mail idzie dopiero przy wyborze metody płatności (action.js)
+    // Wyślij mail do kursanta zawsze — niezależnie od tego czy kliknie przycisk płatności
     if (is_waitlist) {
-      const { mailWaitlist } = require('./_lib/mail');
       mails.push(sendMail({ to: b.email, ...mailWaitlist(mailData) }));
+    } else {
+      // Mail z potwierdzeniem przyjęcia zapisu + dane do przelewu
+      mails.push(sendMail({ to: b.email, ...mailPaymentDoc({
+        ...mailData,
+        doc_url: '',
+        online_url: '',
+      }) }));
     }
 
     Promise.all(mails).catch(e => console.error('[register/mail]', e));

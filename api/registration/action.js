@@ -1,7 +1,7 @@
 const { getPool } = require('../_lib/db');
 const { sendMail, mailPaymentDoc, mailPayOnlineChosen, mailPaymentConfirmed } = require('../_lib/mail');
 
-const BANK_ACCOUNT = process.env.BANK_ACCOUNT || 'PL00 0000 0000 0000 0000 0000 0000';
+const BANK_ACCOUNT = process.env.BANK_ACCOUNT || '21 1140 2004 0000 3902 3890 8895';
 const BANK_NAME    = process.env.BANK_NAME    || 'Akademia Obrony Saggita';
 const SITE_URL     = process.env.SITE_URL     || 'https://akademiaobrony.pl';
 const API_BASE     = process.env.API_URL      || `${SITE_URL}/api`;
