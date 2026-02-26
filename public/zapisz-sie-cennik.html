@@ -1286,8 +1286,17 @@ function preparePaymentUI(){
   if(feeAmt>0) breakdown += ` + <strong>${money(feeAmt)} zł</strong> (opłata wpisowa)`;
   breakdown += ` = <strong>${money(amount)} zł łącznie</strong>`;
 
+  const BANK_ACCOUNT = '21 1140 2004 0000 3902 3890 8895';
+  const BANK_NAME    = 'Akademia Obrony Saggita';
+
   text.innerHTML = `Kwota do zapłaty: ${breakdown}<br>
-    <span style="opacity:.6;font-size:12px">Ref: <code>${ref||'—'}</code></span>`;
+    <span style="opacity:.6;font-size:12px">Ref: <code>${ref||'—'}</code></span>
+    <div style="margin-top:12px;padding:12px 14px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.10);border-radius:8px;font-size:13px;line-height:2">
+      <span style="font-weight:800;font-size:.65rem;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,0.45)">Dane do przelewu</span><br>
+      <strong>Numer konta:</strong> <code style="font-size:13px;letter-spacing:.04em">${registrationResult?.bank_account || BANK_ACCOUNT}</code><br>
+      <strong>Odbiorca:</strong> ${registrationResult?.bank_name || BANK_NAME}<br>
+      <strong>Tytuł:</strong> ${ref||'—'}
+    </div>`;
   help.textContent = 'Możesz opłacić online albo pobrać dokument do przelewu.';
 
   payBtn.disabled = false;

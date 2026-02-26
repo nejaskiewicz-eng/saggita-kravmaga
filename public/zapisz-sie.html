@@ -575,8 +575,24 @@ a{text-decoration:none;color:inherit}
   padding:40px 36px;
   display:none;
   box-shadow:var(--shadow-deep), inset 0 1px 0 rgba(255,255,255,0.06);
+  position:relative;
 }
 .confirm-box.visible{display:block;}
+.confirm-box__close{
+  position:absolute;top:16px;right:16px;
+  background:rgba(255,255,255,0.06);
+  border:1px solid rgba(255,255,255,0.14);
+  color:rgba(255,255,255,0.55);
+  width:34px;height:34px;border-radius:50%;
+  font-size:1rem;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:background 150ms,color 150ms,border-color 150ms;
+}
+.confirm-box__close:hover{
+  background:rgba(178,25,0,0.18);
+  color:#fff;
+  border-color:rgba(178,25,0,0.55);
+}
 .confirm-box__icon{font-size:3rem;margin-bottom:18px;}
 .confirm-box__h2{
   font-family:'Montserrat',sans-serif;font-weight:700;
@@ -794,14 +810,15 @@ a{text-decoration:none;color:inherit}
   </section>
 
   <div class="confirm-box" id="confirmBox">
+    <button class="confirm-box__close" onclick="closeConfirmBox()" title="Zamknij">✕</button>
     <div class="confirm-box__icon">✓</div>
     <h2 class="confirm-box__h2">Zapis<em> przyjęty</em></h2>
     <p class="confirm-box__text" id="confirmText">Dziękujemy za zapis! Skontaktujemy się w celu potwierdzenia miejsca.</p>
     <div class="confirm-box__ref" id="confirmRef"></div>
     <div class="confirm-box__transfer" id="confirmTransfer" style="display:none"></div>
     <div id="confirmActions" style="display:none;gap:10px;flex-wrap:wrap;margin-top:18px"></div>
-    <p class="confirm-box__note">Zachowaj powyższy kod
-    </div>
+    <p class="confirm-box__note">Zachowaj powyższy numer referencyjny — przyda się w razie pytań o płatność.</p>
+  </div>
 
 </main>
 
@@ -1429,6 +1446,12 @@ document.getElementById('regForm').addEventListener('submit', async (e) => {
   }
 });
 
+function closeConfirmBox() {
+  document.getElementById('confirmBox').classList.remove('visible');
+  document.getElementById('formSection').style.display = 'block';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
 function showMsg(text, type) {
   const msg = document.getElementById('formMsg');
   msg.textContent = text;
@@ -1448,14 +1471,17 @@ function showConfirmation(data, first, last) {
 
   document.getElementById('confirmRef').textContent = data.payment_ref || '';
 
+  const BANK_ACCOUNT = '21 1140 2004 0000 3902 3890 8895';
+  const BANK_NAME    = 'Akademia Obrony Saggita';
+
   if (!isWaitlist && data.total_amount) {
     const div = document.getElementById('confirmTransfer');
     div.innerHTML = `
       <div><span class="lbl">Kwota do wpłaty</span><br><span class="val" style="font-size:1.4rem;font-weight:900;color:var(--accent)">${parseFloat(data.total_amount).toFixed(2)} zł</span></div>
       <br>
-      <div><span class="lbl">Numer konta</span><br><span class="val">${data.bank_account || ''}</span></div>
-      <div><span class="lbl">Odbiorca</span><br><span class="val">${data.bank_name || ''}</span></div>
-      <div><span class="lbl">Tytuł przelewu</span><br><span class="val">${data.transfer_title || ''}</span></div>
+      <div><span class="lbl">Numer konta</span><br><span class="val" style="font-family:monospace;letter-spacing:.04em">${data.bank_account || BANK_ACCOUNT}</span></div>
+      <div><span class="lbl">Odbiorca</span><br><span class="val">${data.bank_name || BANK_NAME}</span></div>
+      <div><span class="lbl">Tytuł przelewu</span><br><span class="val">${data.transfer_title || data.payment_ref || ''}</span></div>
       <br>
       <small style="color:rgba(255,255,255,0.56)">Przelew wyślij najpóźniej do ostatniego dnia poprzedzającego miesiąc rozliczeniowy.</small>
     `;
