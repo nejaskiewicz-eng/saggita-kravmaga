@@ -5,7 +5,7 @@ const SITE_URL = process.env.SITE_URL || 'https://akademiaobrony.pl';
 
 async function sendMail({ to, subject, html }) {
   const key  = process.env.RESEND_API_KEY;
-  const from = 'Krav Maga Saggita <biuro@akademiaobrony.pl>';
+  const from = process.env.MAIL_FROM || 'Akademia Obrony Saggita <onboarding@resend.dev>';
   if (!key) { console.warn('[mail] Brak RESEND_API_KEY'); return; }
   try {
     const res = await fetch('https://api.resend.com/emails', {
@@ -62,7 +62,9 @@ p{line-height:1.6;font-size:14px;margin:10px 0}
 }
 
 function ftr() {
-  return `<div class="ftr"><strong>Akademia Obrony Saggita</strong><br>
+  return `<div class="ftr">
+<p style="margin-bottom:8px;font-size:12px;color:#aaa">To jest wiadomość automatyczna. W razie jakichkolwiek pytań prosimy o kontakt na <a href="mailto:biuro@akademiaobrony.pl" style="color:#aaa">biuro@akademiaobrony.pl</a>.</p>
+<strong>Akademia Obrony Saggita</strong><br>
 <a href="mailto:biuro@akademiaobrony.pl">biuro@akademiaobrony.pl</a> &nbsp;·&nbsp; 510 930 460<br>
 <a href="${SITE_URL}">${SITE_URL}</a></div>`;
 }
@@ -75,10 +77,10 @@ function mailPaymentConfirmed({ first_name, payment_ref, plan_name, group_name, 
   const hasFee  = parseFloat(signup_fee || 0) > 0;
 
   return {
-    subject: '✅ Płatność potwierdzona — Krav Maga Saggita',
+    subject: '✅ Akademia Obrony Saggita — potwierdzenie rezerwacji',
     html: `<!DOCTYPE html><html lang="pl"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width">${baseStyle()}</head><body>
 <div class="wrap">
-<div class="hdr"><div class="brand">Krav Maga Saggita</div><h1>Płatność potwierdzona <span class="accent">✓</span></h1></div>
+<div class="hdr"><div class="brand">Akademia Obrony Saggita</div><h1>Potwierdzenie rezerwacji <span class="accent">✓</span></h1></div>
 <div class="body">
 <p class="hi">Cześć <strong>${first_name}</strong>! 👊</p>
 <p>Twoja płatność została zaksięgowana. Jesteś oficjalnie zapisany/a. Do zobaczenia na macie!</p>
@@ -111,10 +113,10 @@ function mailPaymentDoc({ first_name, payment_ref, plan_name, group_name, city,
   total_amount, bank_account, bank_name, doc_url, online_url }) {
 
   return {
-    subject: `Dokument płatniczy — Krav Maga Saggita (${payment_ref})`,
+    subject: `Akademia Obrony Saggita — potwierdzenie rezerwacji (${payment_ref})`,
     html: `<!DOCTYPE html><html lang="pl"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width">${baseStyle()}</head><body>
 <div class="wrap">
-<div class="hdr"><div class="brand">Krav Maga Saggita</div><h1>Rezerwacja przyjęta</h1></div>
+<div class="hdr"><div class="brand">Akademia Obrony Saggita</div><h1>Potwierdzenie rezerwacji</h1></div>
 <div class="body">
 <p class="hi">Cześć <strong>${first_name}</strong>!</p>
 <p>Twoja rezerwacja w grupie <strong>${group_name}</strong> (${city}) została przyjęta. Czekamy na Twoją wpłatę.</p>
@@ -150,10 +152,10 @@ function mailPayOnlineChosen({ first_name, payment_ref, plan_name, group_name, c
   total_amount, pay_url }) {
 
   return {
-    subject: `Dokończ płatność — Krav Maga Saggita (${payment_ref})`,
+    subject: `Akademia Obrony Saggita — potwierdzenie rezerwacji (${payment_ref})`,
     html: `<!DOCTYPE html><html lang="pl"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width">${baseStyle()}</head><body>
 <div class="wrap">
-<div class="hdr"><div class="brand">Krav Maga Saggita</div><h1>Dokończ płatność online</h1></div>
+<div class="hdr"><div class="brand">Akademia Obrony Saggita</div><h1>Potwierdzenie rezerwacji — dokończ płatność</h1></div>
 <div class="body">
 <p class="hi">Cześć <strong>${first_name}</strong>!</p>
 <p>Wybrałeś/aś płatność online za zapis do grupy <strong>${group_name}</strong> (${city}). Kliknij poniższy przycisk, żeby dokończyć — na wypadek, gdyby przekierowanie nie zadziałało.</p>
@@ -180,7 +182,7 @@ function mailAdmin({ first_name, last_name, email, phone, group_name, city,
     subject: `Nowy zapis${is_waitlist ? ' (lista rez.)' : ''} — ${first_name} ${last_name}`,
     html: `<!DOCTYPE html><html lang="pl"><head><meta charset="UTF-8">${baseStyle()}</head><body>
 <div class="wrap">
-<div class="hdr"><div class="brand">Panel admina</div><h1>Nowy zapis${is_waitlist ? ' <span class="accent">(lista rez.)</span>' : ''}</h1></div>
+<div class="hdr"><div class="brand">Akademia Obrony Saggita — Panel admina</div><h1>Nowy zapis${is_waitlist ? ' <span class="accent">(lista rez.)</span>' : ''}</h1></div>
 <div class="body">
 <div class="card">
   <div class="row"><b>Kursant</b><span>${first_name} ${last_name}</span></div>
@@ -198,10 +200,10 @@ function mailAdmin({ first_name, last_name, email, phone, group_name, city,
 // ── MAIL 5: Lista rezerwowa ───────────────────────────────────────────────────
 function mailWaitlist({ first_name, payment_ref, group_name, city }) {
   return {
-    subject: 'Lista rezerwowa — Krav Maga Saggita',
+    subject: 'Akademia Obrony Saggita — potwierdzenie rezerwacji (lista rezerwowa)',
     html: `<!DOCTYPE html><html lang="pl"><head><meta charset="UTF-8">${baseStyle()}</head><body>
 <div class="wrap">
-<div class="hdr"><div class="brand">Krav Maga Saggita</div><h1>Lista rezerwowa</h1></div>
+<div class="hdr"><div class="brand">Akademia Obrony Saggita</div><h1>Potwierdzenie rezerwacji — lista rezerwowa</h1></div>
 <div class="body">
 <p class="hi">Cześć <strong>${first_name}</strong>!</p>
 <p>Twój zapis na <strong>listę rezerwową</strong> w grupie <strong>${group_name}</strong> (${city}) został przyjęty.</p>
