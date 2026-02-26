@@ -61,6 +61,7 @@
     { "source": "/api/instructor/students/:id/payments/:pid", "destination": "/api/saggita?_module=instructor-students&id=:id&_route=payments&pid=:pid" },
     { "source": "/api/instructor/students/:id/payments",      "destination": "/api/saggita?_module=instructor-students&id=:id&_route=payments" },
     { "source": "/api/instructor/students/:id/attendance",    "destination": "/api/saggita?_module=instructor-students&id=:id&_route=attendance" },
+    { "source": "/api/instructor/students/:id/groups",        "destination": "/api/saggita?_module=instructor-students&id=:id&_route=groups" },
     { "source": "/api/instructor/students/:id",               "destination": "/api/saggita?_module=instructor-students&id=:id" },
     { "source": "/api/instructor/students",                   "destination": "/api/saggita?_module=instructor-students" },
 

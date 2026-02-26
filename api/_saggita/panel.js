@@ -343,6 +343,72 @@ module.exports = async (req, res) => {
       } catch(e) { return res.status(500).json({ error:e.message }); }
     }
 
+
+    // GET /api/instructor/students/:id/groups — grupy instruktora + czy kursant jest w każdej
+    if (route === 'groups' && req.method === 'GET') {
+      try {
+        const { rows } = await pool.query(`
+          SELECT g.id, g.name, g.category,
+            l.city AS location_city,
+            COALESCE(sg.active, false) AS student_active
+          FROM instructor_groups ig
+          JOIN groups g ON g.id = ig.group_id
+          LEFT JOIN locations l ON l.id = g.location_id
+          LEFT JOIN student_groups sg ON sg.student_id=$2 AND sg.group_id=g.id
+          WHERE ig.instructor_id=$1 AND g.active=true
+          ORDER BY l.city, g.name
+        `, [P.sub, id]);
+        return res.status(200).json({ rows });
+      } catch(e) { console.error('[student-groups GET]',e); return res.status(500).json({ error:e.message }); }
+    }
+
+    // POST /api/instructor/students/:id/groups — przenieś/dodaj/usuń z grupy
+    // body: { group_id, action: 'add'|'remove'|'move', from_group_id? }
+    if (route === 'groups' && req.method === 'POST') {
+      try {
+        const { group_id, action, from_group_id } = req.body || {};
+        if (!group_id) return res.status(400).json({ error: 'Brak group_id' });
+
+        // Weryfikacja dostępu do grupy docelowej
+        const { rows:[chk] } = await pool.query(
+          `SELECT 1 FROM instructor_groups WHERE instructor_id=$1 AND group_id=$2`,
+          [P.sub, group_id]
+        );
+        if (!chk) return res.status(403).json({ error: 'Brak dostępu do tej grupy' });
+
+        if (action === 'remove') {
+          await pool.query(
+            `UPDATE student_groups SET active=false WHERE student_id=$1 AND group_id=$2`,
+            [id, group_id]
+          );
+          return res.status(200).json({ ok: true, action: 'removed' });
+        }
+
+        if (action === 'move' && from_group_id) {
+          // Weryfikacja dostępu do grupy źródłowej
+          const { rows:[chkFrom] } = await pool.query(
+            `SELECT 1 FROM instructor_groups WHERE instructor_id=$1 AND group_id=$2`,
+            [P.sub, from_group_id]
+          );
+          if (!chkFrom) return res.status(403).json({ error: 'Brak dostępu do grupy źródłowej' });
+
+          await pool.query(
+            `UPDATE student_groups SET active=false WHERE student_id=$1 AND group_id=$2`,
+            [id, from_group_id]
+          );
+        }
+
+        // Dodaj / aktywuj w grupie docelowej
+        await pool.query(
+          `INSERT INTO student_groups (student_id, group_id, active)
+           VALUES ($1,$2,true)
+           ON CONFLICT (student_id, group_id) DO UPDATE SET active=true`,
+          [id, group_id]
+        );
+        return res.status(200).json({ ok: true, action: action === 'move' ? 'moved' : 'added' });
+      } catch(e) { console.error('[student-groups POST]',e); return res.status(500).json({ error:e.message }); }
+    }
+
     // PATCH /api/instructor/students/:id  (brak _route)
     if (!route && id && req.method === 'PATCH') {
       try {

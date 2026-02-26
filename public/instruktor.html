@@ -112,6 +112,7 @@ tr:hover td{background:var(--panel2)}
 .bx-g{background:var(--gsoft);color:#3dd68c;border:1px solid var(--gborder)}
 .bx-r{background:var(--asoft);color:#ff6b4a;border:1px solid var(--aborder)}
 .bx-d{background:var(--panel2);color:var(--dim);border:1px solid var(--line)}
+.eg-row{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--brd);border-radius:8px;background:var(--panel2)}
 .bx-y{background:var(--ysoft);color:#e6a817;border:1px solid var(--yborder)}
 .bx-b{background:var(--bsoft);color:#6ba3f5;border:1px solid rgba(26,96,200,.3)}
 
@@ -943,8 +944,33 @@ async function doAddStud(){
   }catch(e){alert('Błąd: '+e.message);}
 }
 
-function moEditStud(){
+async function moEditStud(){
   const s=S.studData;
+  // Pobierz grupy instruktora z info czy kursant jest w każdej
+  let grpRows=[];
+  try{ const d=await api(`/api/instructor/students/${s.id}/groups`); grpRows=d.rows||[]; }
+  catch(e){ console.warn('Błąd ładowania grup:',e); }
+  S._editGrpRows = grpRows;
+
+  // Grupy w których kursant jest aktywny
+  const activeGrps = grpRows.filter(g=>g.student_active);
+  // Lista grup do wyboru przy przeniesieniu
+  const grpOpts = grpRows.map(g=>`<option value="${g.id}">${esc(g.location_city)} — ${esc(g.name)}</option>`).join('');
+
+  // Sekcja grup — każda aktywna z przyciskiem przenieś + usuń
+  const grpRows_html = activeGrps.length===0
+    ? `<div style="color:var(--dim);font-size:.85rem;padding:6px 0">Kursant nie jest przypisany do żadnej grupy.</div>`
+    : activeGrps.map(g=>`
+      <div class="eg-row" id="egr-${g.id}">
+        <span class="bx bx-g" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(g.location_city)} — ${esc(g.name)}</span>
+        <button class="btn btn-xs btn-o" onclick="moMoveStud(${s.id},${g.id},'${esc(g.name)}')">Przenieś →</button>
+        <button class="btn btn-xs btn-ghost" onclick="doRemoveFromGroup(${s.id},${g.id},this)" title="Usuń z grupy">✕</button>
+      </div>`).join('');
+
+  // Dodaj do dodatkowej grupy (nie wychodząc z aktualnej)
+  const addableGrps = grpRows.filter(g=>!g.student_active);
+  const addOpts = addableGrps.map(g=>`<option value="${g.id}">${esc(g.location_city)} — ${esc(g.name)}</option>`).join('');
+
   showMo('EDYTUJ KURSANTA',`
     <div class="ff2">
       <div class="ff"><label>Imię *</label><input id="e-fn" value="${esc(s.first_name||'')}"></div>
@@ -954,10 +980,78 @@ function moEditStud(){
       <div class="ff"><label>Telefon</label><input id="e-ph" value="${esc(s.phone||'')}"></div>
       <div class="ff"><label>E-mail</label><input id="e-em" value="${esc(s.email||'')}"></div>
     </div>
-    <div class="ff"><label>Rok urodzenia</label><input id="e-by" type="number" value="${s.birth_year||''}"></div>`,
+    <div class="ff"><label>Rok urodzenia</label><input id="e-by" type="number" value="${s.birth_year||''}"></div>
+    <div style="margin-top:18px;border-top:1px solid var(--brd);padding-top:14px">
+      <div class="section-hd" style="margin-bottom:10px">GRUPY KURSANTA</div>
+      <div id="eg-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px">
+        ${grpRows_html}
+      </div>
+      ${addableGrps.length>0?`
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <select id="e-add-gp" style="flex:1;min-width:150px">
+          <option value="">— dodaj do grupy —</option>
+          ${addOpts}
+        </select>
+        <button class="btn btn-g btn-sm" onclick="doAddToGroup(${s.id})">+ Dodaj</button>
+      </div>`:''}
+    </div>`,
     `<button class="btn btn-o" onclick="closeMo()">Anuluj</button>
-     <button class="btn btn-r" onclick="doEditStud(${s.id})">Zapisz</button>`);
+     <button class="btn btn-r" onclick="doEditStud(${s.id})">Zapisz dane</button>`);
 }
+
+// Przenieś kursanta do innej grupy (modal w modalu)
+function moMoveStud(sid, fromGid, fromName){
+  // Pobierz grupy do których można przenieść (wszystkie instruktora oprócz aktualnej)
+  const availGroups = (S._editGrpRows||[]).filter(g=>g.id!==fromGid);
+  if(!availGroups.length){alert('Brak innych grup do których można przenieść.');return;}
+  const opts = availGroups.map(g=>`<option value="${g.id}">${esc(g.location_city)} — ${esc(g.name)}</option>`).join('');
+  showMo('PRZENIEŚ DO INNEJ GRUPY',`
+    <p style="margin:0 0 14px;color:var(--dim)">Kursant zostanie <strong>usunięty z: ${esc(fromName)}</strong> i dodany do wybranej grupy.</p>
+    <div class="ff"><label>Przenieś do grupy</label>
+      <select id="mv-gp">${opts}</select>
+    </div>`,
+    `<button class="btn btn-o" onclick="moEditStud()">← Wróć</button>
+     <button class="btn btn-r" onclick="doMoveStud(${sid},${fromGid})">Przenieś</button>`);
+}
+
+async function doMoveStud(sid, fromGid){
+  const toGid = $('mv-gp').value;
+  if(!toGid){alert('Wybierz grupę docelową.');return;}
+  try{
+    await api(`/api/instructor/students/${sid}/groups`,'POST',{
+      group_id:Number(toGid), action:'move', from_group_id:fromGid
+    });
+    closeMo();
+    // Odśwież listę — wróć do grupy z której przenosiliśmy lub do kursanta
+    if(S.grpId===fromGid){ openGrp(Number(toGid)); }
+    else { openStud(sid); }
+  }catch(e){alert('Błąd: '+e.message);}
+}
+
+async function doRemoveFromGroup(sid, gid, btn){
+  if(!confirm('Usunąć kursanta z tej grupy?'))return;
+  try{
+    await api(`/api/instructor/students/${sid}/groups`,'POST',{
+      group_id:gid, action:'remove'
+    });
+    // Usuń wiersz z UI bez zamykania modala
+    const row=document.getElementById('egr-'+gid);
+    if(row) row.remove();
+  }catch(e){alert('Błąd: '+e.message);}
+}
+
+async function doAddToGroup(sid){
+  const gid=$('e-add-gp').value;
+  if(!gid){alert('Wybierz grupę.');return;}
+  try{
+    await api(`/api/instructor/students/${sid}/groups`,'POST',{
+      group_id:Number(gid), action:'add'
+    });
+    closeMo();
+    openStud(sid);
+  }catch(e){alert('Błąd: '+e.message);}
+}
+
 async function doEditStud(id){
   const fn=$('e-fn').value.trim(),ln=$('e-ln').value.trim();
   if(!fn||!ln){alert('Imię i nazwisko są wymagane.');return;}
