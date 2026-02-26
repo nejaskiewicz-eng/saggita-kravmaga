@@ -119,6 +119,14 @@ a{text-decoration:none;color:inherit}
 .loc-panel{display:none;}
 .loc-panel.active{display:block;}
 .sched-grid{display:grid;gap:14px;margin-bottom:42px;}
+.sched-grid--two-col{
+  grid-template-columns:1fr 1fr;
+}
+@media(max-width:860px){
+  .sched-grid--two-col{
+    grid-template-columns:1fr;
+  }
+}
 
 /* ── GROUP CARD ── */
 .group-card{
@@ -216,9 +224,13 @@ a{text-decoration:none;color:inherit}
 /* ── GROUP CARD BODY ── */
 .group-card__body{
   display:grid;
-  grid-template-columns:1fr 260px;
+  grid-template-columns:1fr 220px;
   align-items:stretch;
   flex:1;
+}
+@media(max-width:900px){
+  .sched-grid--two-col .group-card__body{ grid-template-columns:1fr; }
+  .sched-grid--two-col .group-card__info{ border-left:none !important; border-top:1px solid rgba(255,255,255,0.08); }
 }
 @media(max-width:700px){
   .group-card__body{ grid-template-columns:1fr; }
@@ -1019,7 +1031,10 @@ function buildPanels() {
     }
 
     const grid = document.createElement('div');
-    grid.className = 'sched-grid';
+    // Two-column layout when there are both adults and kids groups
+    const hasAdults = groups.some(g => !/KIDS|YOUNG|DZIECI/.test((g.name||'').toUpperCase()) && g.category !== 'vip');
+    const hasKids   = groups.some(g => /KIDS|YOUNG|DZIECI/.test((g.name||'').toUpperCase()));
+    grid.className = 'sched-grid' + (hasAdults && hasKids ? ' sched-grid--two-col' : '');
 
     groups.forEach(group => {
       const isVIP = group.category === 'vip';
