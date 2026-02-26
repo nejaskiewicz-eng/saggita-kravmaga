@@ -217,7 +217,86 @@ tr:hover td{background:var(--panel2)}
 .divider{height:1px;background:var(--line);margin:14px 0}
 .section-hd{font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:var(--dim);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between}
 
-@media(max-width:600px){#sb{display:none}.pg2{grid-template-columns:1fr}}
+/* ─── MOBILE NAV ──────────────────────────────────────────────── */
+#mob-bar{display:none;position:fixed;top:0;left:0;right:0;z-index:500;background:var(--panel);border-bottom:1px solid var(--line);height:52px;align-items:center;padding:0 12px;gap:10px}
+#mob-bar .mb-brand{font-size:13px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:#fff;flex:1}
+#mob-bar .mb-brand em{color:var(--accent);font-style:normal}
+#ham{background:none;border:1px solid var(--line2);color:var(--text);width:38px;height:38px;font-size:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;font-family:inherit}
+#sb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:998}
+
+/* ─── BOTTOM NAV (mobile) ─────────────────────────────────────── */
+#bot-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:500;background:var(--panel);border-top:1px solid var(--line);height:58px;align-items:center;justify-content:space-around}
+.bn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:6px 4px;cursor:pointer;color:var(--dim);font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;border:none;background:none;font-family:inherit}
+.bn.on{color:var(--accent)}
+.bn-ico{font-size:18px;line-height:1}
+
+@media(max-width:700px){
+  #sb{display:none}
+  #mob-bar{display:flex}
+  #bot-nav{display:flex}
+  #app.on{flex-direction:column;padding-top:52px;padding-bottom:58px}
+  #main{min-height:0}
+  #pb{padding:14px 12px}
+  .ph{padding:10px 12px 8px}
+  .ph-title{font-size:15px}
+
+  /* Stats — 2 cols */
+  .stats{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .sc{min-width:0;padding:10px 12px}
+  .sc-v{font-size:20px}
+
+  /* Group cards — single col */
+  .gcards{grid-template-columns:1fr}
+
+  /* Tables → card layout */
+  .tw{overflow-x:unset}
+  .tw table,.tw thead,.tw tbody,.tw th,.tw td,.tw tr{display:block}
+  .tw thead tr{display:none}
+  .tw tbody tr{background:var(--panel);border:1px solid var(--line);margin-bottom:8px;padding:10px 12px}
+  .tw tbody tr:hover td{background:transparent}
+  .tw td{padding:4px 0;font-size:12px;border:none;display:flex;justify-content:space-between;align-items:center;gap:8px;min-height:28px}
+  .tw td::before{content:attr(data-label);font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--dim);flex-shrink:0;min-width:90px}
+  .tw td:last-child{justify-content:flex-end;padding-top:10px;margin-top:6px;border-top:1px solid var(--line)}
+  .tw td:last-child::before{display:none}
+
+  .pg2{grid-template-columns:1fr}
+  .ff2{grid-template-columns:1fr}
+
+  /* Attendance */
+  .att-row{grid-template-columns:40px 1fr;grid-template-rows:auto auto;gap:6px 10px;padding:10px 12px}
+  .att-pay{grid-column:2;font-size:11px}
+  .att-chk{width:34px;height:34px;font-size:16px;grid-row:1/3;align-self:center}
+
+  /* Calendar */
+  .cal-head{flex-wrap:wrap;gap:6px}
+  .cal-title{font-size:14px;min-width:100%;order:-1}
+  .cal-filt{width:100%}
+  .cal-filt select{width:100%}
+  .cgc{min-height:50px;padding:3px 2px}
+  .cgc-d{font-size:10px}
+  .cpill{font-size:8px;padding:1px 3px}
+  .cal-legend{flex-direction:column;gap:5px;font-size:10px}
+
+  /* Toolbar */
+  .bar{flex-direction:column;align-items:stretch}
+  .bar input,.bar select{max-width:none;width:100%}
+  .sep{display:none}
+  .bar .btn{width:100%;justify-content:center}
+
+  /* Modal */
+  .mo{padding:8px}
+  .md{max-width:100%;max-height:95vh}
+
+  .bc{font-size:10px;flex-wrap:wrap}
+  .prow{flex-wrap:wrap;gap:4px}
+  #ph-act .btn{font-size:11px;padding:6px 10px}
+}
+
+@media(max-width:380px){
+  .cgh{font-size:8px;padding:5px 0}
+  .cgc{min-height:42px}
+  .cpill{display:none}
+}
 </style>
 </head>
 <body>
@@ -236,6 +315,23 @@ tr:hover td{background:var(--panel2)}
       <div id="li-e" class="lerr"></div>
     </div>
   </div>
+</div>
+
+<!-- MOBILE TOP BAR -->
+<div id="mob-bar" style="display:none">
+  <button id="ham" onclick="toggleSb()">☰</button>
+  <div class="mb-brand">KM <em>SAGGITA</em></div>
+  <button class="btn btn-ghost btn-xs" onclick="logout()">Wyloguj</button>
+</div>
+<div id="sb-overlay" onclick="closeSb()"></div>
+
+<!-- MOBILE BOTTOM NAV -->
+<div id="bot-nav" style="display:none">
+  <button class="bn on" id="bn-dash"   onclick="go('dash')" ><span class="bn-ico">▣</span>Główna</button>
+  <button class="bn"    id="bn-groups" onclick="go('groups')"><span class="bn-ico">◈</span>Grupy</button>
+  <button class="bn"    id="bn-cal"    onclick="go('cal')"   ><span class="bn-ico">⊡</span>Kalendarz</button>
+  <button class="bn"    id="bn-sess"   onclick="go('sess')"  ><span class="bn-ico">☑</span>Sesje</button>
+  <button class="bn"    id="bn-pays"   onclick="go('pays')"  ><span class="bn-ico">₴</span>Płatności</button>
 </div>
 
 <!-- APP -->
@@ -344,12 +440,32 @@ function setAuth(tok, inst) {
   localStorage.setItem('it',tok);
   localStorage.setItem('ii',JSON.stringify(inst));
   $('sb-name').textContent=(inst.first_name||'')+' '+(inst.last_name||'');
+  showMobileBars(true);
 }
 function logout() {
   S.token=null; S.inst=null;
   localStorage.removeItem('it'); localStorage.removeItem('ii');
   $('app').classList.remove('on');
   $('pg-login').style.display='flex';
+  showMobileBars(false);
+}
+function showMobileBars(show) {
+  const d = show ? 'flex' : 'none';
+  $('mob-bar').style.display = d;
+  $('bot-nav').style.display = d;
+}
+function toggleSb() {
+  const sb = $('sb'), ov = $('sb-overlay');
+  const open = sb.style.display === 'flex';
+  if(open) { sb.style.display='none'; ov.style.display='none'; }
+  else {
+    sb.style.cssText='display:flex;position:fixed;top:0;bottom:0;left:0;z-index:999;width:220px';
+    ov.style.display='block';
+  }
+}
+function closeSb() {
+  $('sb').style.cssText='';
+  $('sb-overlay').style.display='none';
 }
 
 // ── LOAD ──────────────────────────────────────────────────────
@@ -362,10 +478,12 @@ async function loadAll() {
 // ── NAVIGATION ────────────────────────────────────────────────
 function go(page) {
   document.querySelectorAll('.ni').forEach(el=>el.classList.remove('on'));
+  document.querySelectorAll('.bn').forEach(el=>el.classList.remove('on'));
   const n=$('ni-'+page); if(n)n.classList.add('on');
+  const bn=$('bn-'+page); if(bn)bn.classList.add('on');
   S.page=page;
   if(page==='groups'){S.grpId=null;S.studId=null;}
-  // sessId preserved - reset only via breadcrumb
+  closeSb();
   render(page);
 }
 function render(page) {
@@ -479,15 +597,15 @@ function studRowHTML(s) {
   const payLabel = s.last_payment ? fd(s.last_payment) : '—';
   const active = s.is_active!==false;
   return `<tr>
-    <td class="td-main">
+    <td data-label="Nazwisko, Imię" class="td-main">
       <a href="#" onclick="event.preventDefault();openStud(${s.id})" style="color:var(--text);font-weight:700">${esc(s.last_name)}, ${esc(s.first_name)}</a>
       ${!active?'<span class="bx bx-d" style="margin-left:6px">nieaktywny</span>':''}
     </td>
-    <td class="td-dim">${s.birth_year||'—'}</td>
-    <td class="td-dim">${s.phone?esc(s.phone):'—'}</td>
-    <td>${s.last_payment?`<span class="${payClass}">${payLabel}</span>`:payLabel}</td>
-    <td>${s.att_season||0}</td>
-    <td>${s.paid_season?Number(s.paid_season).toFixed(0)+' zł':'—'}</td>
+    <td data-label="Ur."class="td-dim">${s.birth_year||'—'}</td>
+    <td data-label="Telefon" class="td-dim">${s.phone?esc(s.phone):'—'}</td>
+    <td data-label="Ost. wpłata">${s.last_payment?`<span class="${payClass}">${payLabel}</span>`:payLabel}</td>
+    <td data-label="Obecności">${s.att_season||0}</td>
+    <td data-label="Sezon (zł)">${s.paid_season?Number(s.paid_season).toFixed(0)+' zł':'—'}</td>
     <td><button class="btn btn-o btn-xs" onclick="openStud(${s.id})">Kartoteka →</button></td>
   </tr>`;
 }
@@ -570,10 +688,10 @@ function renderStud() {
       <thead><tr><th>Data</th><th>Grupa</th><th>Lokalizacja</th><th>Obecność</th></tr></thead>
       <tbody>
         ${att.slice(0,60).map(a=>`<tr>
-          <td>${fd(a.session_date)}</td>
-          <td>${esc(a.group_name||'')}</td>
-          <td>${esc(a.city||'')}</td>
-          <td>${a.present?'<span class="bx bx-g">✓ Obecny</span>':'<span class="bx bx-r">✗ Nieobecny</span>'}</td>
+          <td data-label="Data">${fd(a.session_date)}</td>
+          <td data-label="Grupa">${esc(a.group_name||'')}</td>
+          <td data-label="Lokalizacja">${esc(a.city||'')}</td>
+          <td data-label="Obecność">${a.present?'<span class="bx bx-g">✓ Obecny</span>':'<span class="bx bx-r">✗ Nieobecny</span>'}</td>
         </tr>`).join('')}
       </tbody>
     </table></div>`}`;
@@ -756,12 +874,12 @@ async function renderSess() {
           const dayLbl=DAYS_SHORT[dow0]||'?';
           const pct=s.total_marked>0?Math.round(s.present_count/s.total_marked*100):0;
           return`<tr>
-            <td class="td-main">${fd(dt)}</td>
-            <td class="td-dim">${dayLbl}</td>
-            <td>${esc(s.group_name||'')}</td>
-            <td class="td-dim">${esc(s.location_city||'')}${s.location_name?' / '+esc(s.location_name):''}</td>
-            <td>${s.total_marked||0}</td>
-            <td>${s.total_marked>0?`<span class="bx ${s.present_count>0?'bx-g':'bx-r'}">${s.present_count||0} (${pct}%)</span>`:'<span class="bx bx-d">—</span>'}</td>
+            <td data-label="Data" class="td-main">${fd(dt)}</td>
+            <td data-label="Dzień" class="td-dim">${dayLbl}</td>
+            <td data-label="Grupa">${esc(s.group_name||'')}</td>
+            <td data-label="Lokalizacja" class="td-dim">${esc(s.location_city||'')}${s.location_name?' / '+esc(s.location_name):''}</td>
+            <td data-label="Oznaczonych">${s.total_marked||0}</td>
+            <td data-label="Obecnych">${s.total_marked>0?`<span class="bx ${s.present_count>0?'bx-g':'bx-r'}">${s.present_count||0} (${pct}%)</span>`:'<span class="bx bx-d">—</span>'}</td>
             <td><button class="btn btn-o btn-xs" onclick="openSessById(${s.session_id},${s.group_id},'${dt}','${esc(s.group_name||'')}')">Obecności →</button></td>
           </tr>`;
         }).join('')}
@@ -864,11 +982,11 @@ async function renderPays() {
       <thead><tr><th>Data</th><th>Kursant</th><th>Grupa</th><th>Kwota</th><th>Uwaga</th></tr></thead>
       <tbody id="ptb">
         ${S.payments.map(p=>`<tr>
-          <td class="td-dim">${fd(p.paid_at)}</td>
-          <td class="td-main"><a href="#" onclick="event.preventDefault();openStud(${p.student_id})" style="color:var(--text)">${esc(p.last_name||'')}, ${esc(p.first_name||'')}</a></td>
-          <td class="td-dim">${esc(p.location_city||'')} — ${esc(p.group_name||'')}</td>
-          <td><strong>${Number(p.amount||0).toFixed(0)} zł</strong></td>
-          <td class="td-dim">${p.note?esc(p.note):''}</td>
+          <td data-label="Data" class="td-dim">${fd(p.paid_at)}</td>
+          <td data-label="Kursant" class="td-main"><a href="#" onclick="event.preventDefault();openStud(${p.student_id})" style="color:var(--text)">${esc(p.last_name||'')}, ${esc(p.first_name||'')}</a></td>
+          <td data-label="Grupa" class="td-dim">${esc(p.location_city||'')} — ${esc(p.group_name||'')}</td>
+          <td data-label="Kwota"><strong>${Number(p.amount||0).toFixed(0)} zł</strong></td>
+          <td data-label="Uwaga" class="td-dim">${p.note?esc(p.note):''}</td>
         </tr>`).join('')}
       </tbody>
     </table></div>`}`;
