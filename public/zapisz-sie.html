@@ -120,11 +120,21 @@ a{text-decoration:none;color:inherit}
 .loc-panel.active{display:block;}
 .sched-grid{display:grid;gap:14px;margin-bottom:42px;}
 .sched-grid--two-col{
-  grid-template-columns:1fr 1fr;
+  display:flex;
+  flex-direction:row;
+  align-items:flex-start;
+  gap:14px;
+}
+.sched-grid--two-col .group-col{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+  min-width:0;
 }
 @media(max-width:860px){
   .sched-grid--two-col{
-    grid-template-columns:1fr;
+    flex-direction:column;
   }
 }
 
@@ -1031,10 +1041,20 @@ function buildPanels() {
     }
 
     const grid = document.createElement('div');
-    // Two-column layout when there are both adults and kids groups
     const hasAdults = groups.some(g => !/KIDS|YOUNG|DZIECI/.test((g.name||'').toUpperCase()) && g.category !== 'vip');
     const hasKids   = groups.some(g => /KIDS|YOUNG|DZIECI/.test((g.name||'').toUpperCase()));
-    grid.className = 'sched-grid' + (hasAdults && hasKids ? ' sched-grid--two-col' : '');
+    const twoCol = hasAdults && hasKids;
+    grid.className = 'sched-grid' + (twoCol ? ' sched-grid--two-col' : '');
+
+    let kidsCol = null, adultsCol = null;
+    if (twoCol) {
+      kidsCol = document.createElement('div');
+      kidsCol.className = 'group-col';
+      adultsCol = document.createElement('div');
+      adultsCol.className = 'group-col';
+      grid.appendChild(kidsCol);   // kids left
+      grid.appendChild(adultsCol); // adults right
+    }
 
     groups.forEach(group => {
       const isVIP = group.category === 'vip';
@@ -1215,7 +1235,12 @@ function buildPanels() {
         card.appendChild(body);
       }
 
-      grid.appendChild(card);
+      if (twoCol) {
+        const isKidsCard = /KIDS|YOUNG|DZIECI/.test((group.name||'').toUpperCase());
+        (isKidsCard ? kidsCol : adultsCol).appendChild(card);
+      } else {
+        grid.appendChild(card);
+      }
     });
 
     panel.appendChild(grid);
