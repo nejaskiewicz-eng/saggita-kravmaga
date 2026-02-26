@@ -133,11 +133,27 @@ select option{background:#1c1414}
 /* ═════════════════════════════════════════════════════════════
    MOBILE / RESPONSYWNOŚĆ (panel admina)
    ═════════════════════════════════════════════════════════════ */
-#btn-menu{display:none; min-width:44px; min-height:36px; justify-content:center}
+#btn-menu{display:none; min-width:44px; min-height:44px; justify-content:center; font-size:18px}
 #sb-overlay{display:none}
-
 .tw{overflow-x:auto; -webkit-overflow-scrolling:touch}
-.tw table{min-width:920px}
+
+/* Bottom navigation (mobile only) */
+#bot-nav-admin{
+  display:none; position:fixed; bottom:0; left:0; right:0; z-index:1400;
+  background:var(--surface); border-top:1px solid var(--border);
+  height:58px; align-items:center; justify-content:space-around;
+}
+.bna{
+  flex:1; display:flex; flex-direction:column; align-items:center;
+  justify-content:center; gap:2px; padding:6px 2px; cursor:pointer;
+  color:var(--dim); font-size:9px; font-weight:700; text-transform:uppercase;
+  letter-spacing:.05em; border:none; background:none;
+  font-family:'Barlow',sans-serif; transition:color .15s;
+}
+.bna.active{color:var(--red-l)}
+.bna-ico{font-size:17px; line-height:1}
+
+/* ── 980px breakpoint ── */
 @media (max-width: 980px){
   :root{--sw:280px}
   #content{padding:16px}
@@ -169,7 +185,7 @@ select option{background:#1c1414}
   .lb{width:min(92vw,360px); padding:28px}
   #toasts{left:16px; right:16px; bottom:16px}
   .toast{max-width:none}
-  .md{max-width: 96vw}
+  .md{max-width:96vw}
   .mh{padding:14px 16px}
   .mb{padding:16px}
   .mf{padding:12px 16px}
@@ -179,14 +195,83 @@ select option{background:#1c1414}
   thead th{padding:10px 12px}
   tbody td{padding:10px 12px}
 }
+
+/* ── 700px breakpoint — full mobile ── */
+@media (max-width: 700px){
+  #app{padding-bottom:58px}
+  #bot-nav-admin{display:flex}
+  #topbar h2{font-size:17px}
+  .sc .value{font-size:32px}
+  .sc{padding:14px 16px}
+  .stats-grid{grid-template-columns:1fr 1fr}
+
+  /* Tables → card layout */
+  .tw{overflow-x:unset}
+  .tw table, .tw thead, .tw tbody, .tw th, .tw td, .tw tr{display:block}
+  .tw thead tr{display:none}
+  .tw tbody tr{
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:8px; margin-bottom:10px; padding:12px 14px;
+    position:relative;
+  }
+  .tw tbody tr:hover{background:var(--surface)}
+  .tw td{
+    padding:5px 0; font-size:13px; border:none;
+    display:flex; justify-content:space-between; align-items:center;
+    gap:8px; min-height:30px;
+  }
+  .tw td::before{
+    content:attr(data-label); font-size:10px; font-weight:700;
+    text-transform:uppercase; letter-spacing:.08em; color:var(--dim);
+    flex-shrink:0; min-width:90px;
+  }
+  .tw td:last-child{
+    justify-content:stretch; padding-top:10px; margin-top:6px;
+    border-top:1px solid var(--border);
+  }
+  .tw td:last-child::before{display:none}
+  .tda{flex-wrap:wrap; gap:4px}
+  .tda .bi{flex:1; justify-content:center; min-height:38px}
+
+  /* Filters */
+  .fb{flex-direction:column; align-items:stretch; gap:8px}
+  .fb input,.fb select,.fb button{width:100%; min-width:0}
+
+  /* Bulk actions */
+  .bulk-actions{flex-direction:column; align-items:stretch}
+  .bulk-actions .btn{width:100%; justify-content:center}
+
+  /* Buttons larger for touch */
+  .btn,.bi{min-height:44px}
+  .btn{padding:12px 14px}
+  .btn-sm{padding:10px 12px; font-size:12px}
+  .bi{padding:10px 12px; font-size:12px}
+
+  /* Modal full screen */
+  .md{max-width:100%; border-radius:0; max-height:100vh}
+  .mf{flex-direction:column; align-items:stretch}
+  .mf .btn{width:100%; justify-content:center}
+  .mh{padding:14px 16px}
+
+  /* Karta kursanta */
+  .kart-header{flex-direction:column; align-items:flex-start; gap:10px}
+  .fg{grid-template-columns:1fr}
+  .fg .full{grid-column:1}
+
+  /* Pagination */
+  .pag{flex-wrap:wrap}
+  .pag button{flex:1; min-height:44px}
+}
+
 @media (max-width: 420px){
-  #topbar h2{font-size:20px}
-  .sc .value{font-size:36px}
+  #topbar h2{font-size:15px}
+  #content{padding:12px}
+  .sc .value{font-size:28px}
+  #toasts{right:auto; left:50%; transform:translateX(-50%); bottom:70px; width:min(92vw,420px)}
+  .toast{max-width:100%}
 }
 
 @media (max-width: 860px){
-  #toasts{right:auto; left:50%; transform:translateX(-50%); bottom:14px; width:min(92vw,420px);}
-  .toast{max-width:100%}
   .fb{flex-direction:column; align-items:stretch; gap:10px}
   .fb input,.fb select,.fb button{width:100%; min-width:0}
   .bulk-actions{flex-direction:column; align-items:stretch}
@@ -272,6 +357,16 @@ select option{background:#1c1414}
     </div>
   </aside>
   <div id="sb-overlay" onclick="toggleSidebar(false)"></div>
+
+  <!-- MOBILE BOTTOM NAV -->
+  <nav id="bot-nav-admin">
+    <button class="bna active" data-view="dashboard"         onclick="switchBotNav('dashboard')">        <span class="bna-ico">▣</span>Dashboard</button>
+    <button class="bna"        data-view="unified-students"  onclick="switchBotNav('unified-students')"> <span class="bna-ico">◈</span>Kursanci</button>
+    <button class="bna"        data-view="web-registrations" onclick="switchBotNav('web-registrations')"><span class="bna-ico">✉</span>Zapisy</button>
+    <button class="bna"        data-view="groups"            onclick="switchBotNav('groups')">           <span class="bna-ico">⬡</span>Grupy</button>
+    <button class="bna"        data-view="more"              onclick="toggleSidebar()">                  <span class="bna-ico">≡</span>Więcej</button>
+  </nav>
+
   <main id="main">
     <div id="topbar">
       <button id="btn-menu" class="bi" type="button" aria-label="Menu" onclick="toggleSidebar()">☰</button>
@@ -2601,6 +2696,49 @@ function getCheckedGroupIds(prefix) {
   if (!list) return [];
   return [...list.querySelectorAll('input[type=checkbox]:checked')].map(i => parseInt(i.value));
 }
+
+// ── MOBILE: bottom nav sync ──────────────────────────────────
+function switchBotNav(view) {
+  navigate(view);
+  syncBotNav(view);
+}
+function syncBotNav(view) {
+  document.querySelectorAll('#bot-nav-admin .bna[data-view]').forEach(b => {
+    b.classList.toggle('active', b.dataset.view === view);
+  });
+}
+
+// Patch navigate to also sync bottom nav
+const _origNavigate = navigate;
+window.navigate = function(view) {
+  _origNavigate(view);
+  syncBotNav(view);
+};
+
+// ── MOBILE: auto data-label on tables ───────────────────────
+// Adds data-label attrs to td elements based on column headers
+// Called after any table is rendered into #content
+function applyTableLabels(root) {
+  root = root || document.getElementById('content');
+  if (!root) return;
+  root.querySelectorAll('.tw table').forEach(table => {
+    const ths = Array.from(table.querySelectorAll('thead th')).map(th => th.textContent.trim());
+    table.querySelectorAll('tbody tr').forEach(tr => {
+      Array.from(tr.querySelectorAll('td')).forEach((td, i) => {
+        if (ths[i]) td.setAttribute('data-label', ths[i]);
+      });
+    });
+  });
+}
+
+// Observe #content for DOM changes and apply labels automatically
+(function() {
+  const content = document.getElementById('content');
+  if (!content) return;
+  const obs = new MutationObserver(() => applyTableLabels(content));
+  obs.observe(content, { childList: true, subtree: true });
+})();
+
 </script>
 </body>
 </html>
