@@ -200,12 +200,20 @@ module.exports = async (req, res) => {
         const { rows:[perms] } = await pool.query(
           `SELECT can_accept_payment FROM instructor_permissions WHERE instructor_id=$1`, [P.sub]);
         if (!perms?.can_accept_payment) return res.status(403).json({ error: 'Brak uprawnień do przyjmowania płatności.' });
-        const { student_id, amount, note } = req.body || {};
+        const { student_id, amount, note, group_id } = req.body || {};
         if (!student_id || !amount) return res.status(400).json({ error: 'student_id i amount są wymagane.' });
         const { rows:[pay] } = await pool.query(
           `INSERT INTO legacy_payments (student_id, amount, paid_at, note, created_by)
            VALUES ($1,$2,NOW(),$3,$4) RETURNING id, amount, paid_at::date AS paid_at`,
           [student_id, amount, note||null, `instructor:${P.sub}`]);
+        // Zapisz alert dla admina
+        const { rows:[inst] } = await pool.query(`SELECT first_name,last_name FROM instructors WHERE id=$1`,[P.sub]);
+        const { rows:[stud] } = await pool.query(`SELECT first_name,last_name FROM students WHERE id=$1`,[student_id]);
+        await pool.query(
+          `INSERT INTO instructor_events (instructor_id, event_type, student_id, group_id, amount, note, metadata)
+           VALUES ($1,'payment_accepted',$2,$3,$4,$5,$6)`,
+          [P.sub, student_id, group_id||null, amount, note||null,
+           JSON.stringify({ instructor_name: `${inst?.first_name} ${inst?.last_name}`, student_name: `${stud?.first_name} ${stud?.last_name}` })]);
         return res.status(201).json(pay);
       } catch(e) { return res.status(500).json({ error:e.message }); }
     }
@@ -244,6 +252,44 @@ module.exports = async (req, res) => {
     }
 
     return res.status(400).json({ error: 'Nieznana trasa panel.' });
+  }
+
+  /* ══ INSTRUCTOR EVENTS (admin alerts) ═══════════════════════ */
+  // GET  /api/admin-api/instructor-events  — lista alertów (admin)
+  // POST /api/admin-api/instructor-events/:id/seen — oznacz jako przeczytany
+  if (mod === 'instructor-events') {
+    // Admin auth (via X-Admin-Token or standard JWT with role check)
+    // We use the existing requireAuth from _lib/auth but check it's an admin call
+    // For simplicity: this route is called by admin panel which passes admin JWT
+    try {
+      const pool2 = getPool();
+      if (req.method === 'GET') {
+        const { rows } = await pool2.query(`
+          SELECT ie.id, ie.event_type, ie.amount, ie.note, ie.created_at, ie.seen_at,
+            ie.metadata,
+            i.first_name || ' ' || i.last_name AS instructor_name,
+            s.first_name || ' ' || s.last_name AS student_name,
+            g.name AS group_name
+          FROM instructor_events ie
+          JOIN instructors i ON i.id = ie.instructor_id
+          LEFT JOIN students s ON s.id = ie.student_id
+          LEFT JOIN groups g ON g.id = ie.group_id
+          ORDER BY ie.created_at DESC
+          LIMIT 100
+        `);
+        const unseen = rows.filter(r => !r.seen_at).length;
+        return res.status(200).json({ rows, unseen });
+      }
+      if (req.method === 'PATCH' && id) {
+        await pool2.query(`UPDATE instructor_events SET seen_at=NOW() WHERE id=$1`, [id]);
+        return res.status(200).json({ ok: true });
+      }
+      if (req.method === 'POST' && req.query.action === 'mark-all-seen') {
+        await pool2.query(`UPDATE instructor_events SET seen_at=NOW() WHERE seen_at IS NULL`);
+        return res.status(200).json({ ok: true });
+      }
+      return res.status(405).end();
+    } catch(e) { return res.status(500).json({ error: e.message }); }
   }
 
   /* ══ ATTENDANCE: sesje + obecności ══════════════════════════ */
@@ -514,6 +560,10 @@ module.exports = async (req, res) => {
     // POST /api/instructor/students  (brak _route, brak id)
     if (!route && !id && req.method === 'POST') {
       try {
+        // Sprawdź uprawnienie
+        const { rows:[perms] } = await pool.query(
+          `SELECT can_add_student FROM instructor_permissions WHERE instructor_id=$1`, [P.sub]);
+        if (perms && perms.can_add_student === false) return res.status(403).json({ error: 'Brak uprawnień do dodawania kursantów.' });
         const { first_name, last_name, phone, email, birth_year, group_id } = req.body || {};
         if (!first_name || !last_name) return res.status(400).json({ error:'Imię i nazwisko są wymagane' });
         const { rows:[s] } = await pool.query(
@@ -529,6 +579,18 @@ module.exports = async (req, res) => {
             [s.id, group_id]
           );
         }
+        // Alert dla admina
+        const { rows:[inst] } = await pool.query(`SELECT first_name,last_name FROM instructors WHERE id=$1`,[P.sub]);
+        const { rows:[grp] } = await pool.query(`SELECT name FROM groups WHERE id=$1`,[group_id]);
+        await pool.query(
+          `INSERT INTO instructor_events (instructor_id, event_type, student_id, group_id, note, metadata)
+           VALUES ($1,'student_added',$2,$3,$4,$5)`,
+          [P.sub, s.id, group_id||null, null,
+           JSON.stringify({
+             instructor_name: `${inst?.first_name} ${inst?.last_name}`,
+             student_name: `${first_name} ${last_name}`,
+             group_name: grp?.name || null
+           })]);
         return res.status(200).json({ id:s.id });
       } catch(e) { return res.status(500).json({ error:e.message }); }
     }

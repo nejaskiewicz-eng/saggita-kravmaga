@@ -446,12 +446,16 @@ function setAuth(tok, inst, perms) {
 }
 function applyPermNav() {
   // Ukryj zakładki na podstawie uprawnień
-  // Grupy zawsze widoczne ale z filtrowaniem
-  // Płatności — tylko jeśli can_see_payments
   const payNav = document.getElementById('ni-pays');
   if (payNav) payNav.style.display = S.perms.can_see_payments ? '' : 'none';
   const payBn = document.getElementById('bn-pays');
   if (payBn) payBn.style.display = S.perms.can_see_payments ? '' : 'none';
+
+  // Jeśli can_see_groups=false — ukryj "Grupy & Kursanci" z nav (dostęp tylko z dashboardu w dniu zajęć)
+  const grpNav = document.getElementById('ni-groups');
+  if (grpNav) grpNav.style.display = S.perms.can_see_groups ? '' : 'none';
+  const grpBn = document.getElementById('bn-groups');
+  if (grpBn) grpBn.style.display = S.perms.can_see_groups ? '' : 'none';
 }
 function logout() {
   S.token=null; S.inst=null;
@@ -548,16 +552,29 @@ function renderDash() {
 function gcardHTML(g) {
   const _seen1=new Set();
   const sch=(g.schedules||[]).filter(s=>{const k=`${s.day_of_week}|${(s.time_label||String(s.time_start||'')).slice(0,5)}`;return _seen1.has(k)?false:(_seen1.add(k),true);}).map(s=>`<strong>${s.day_name||DAYS_FULL[s.day_of_week]}</strong>&nbsp;${s.time_label||''}`).join('<br>');
-  return `<div class="gc" onclick="openGrp(${g.id})">
+  const showCount = S.perms.can_see_student_count;
+
+  // Sprawdź czy dzisiaj są zajęcia tej grupy
+  const todayDow = new Date().getDay(); // 0=Sun
+  const todayIso = todayDow===0 ? 7 : todayDow; // DB: 1=Mon..7=Sun (ISO)
+  const hasClassToday = (g.schedules||[]).some(s => Number(s.day_of_week) === todayIso);
+
+  // Przycisk "Kursanci" — tylko jeśli ma pełny dostęp LUB dzisiaj ma zajęcia
+  const canOpenStudents = S.perms.can_see_groups || hasClassToday;
+
+  return `<div class="gc" onclick="${canOpenStudents ? `openGrp(${g.id})` : ''}">
     <div class="gc-city">${esc(g.location_city||'')} / ${esc(g.location_name||'')}</div>
     <div class="gc-name">${esc(g.name)}</div>
     <div class="gc-meta">
-      <span>Kursantów: <strong style="color:var(--text)">${g.student_count||0}</strong></span>
+      ${showCount ? `<span>Kursantów: <strong style="color:var(--text)">${g.student_count||0}</strong></span>` : ''}
       ${g.age_range?`<span>Wiek: <strong style="color:var(--text)">${esc(g.age_range)}</strong></span>`:''}
     </div>
     <div class="gc-sched">${sch||'<span style="color:var(--dim2)">Brak grafiku</span>'}</div>
     <div class="gc-foot">
-      <button class="btn btn-r btn-sm" onclick="event.stopPropagation();openGrp(${g.id})">Kursanci</button>
+      ${canOpenStudents
+        ? `<button class="btn btn-r btn-sm" onclick="event.stopPropagation();openGrp(${g.id})">Kursanci</button>`
+        : `<span style="font-size:11px;color:var(--dim2);padding:4px 0">Dostępne w dniu zajęć</span>`
+      }
       <button class="btn btn-o btn-sm" onclick="event.stopPropagation();openCalGrp(${g.id})">Kalendarz</button>
     </div>
   </div>`;
@@ -569,11 +586,23 @@ function renderGroups() {
 }
 
 async function openGrp(gid) {
+  // Sprawdź uprawnienia — bez can_see_groups dostęp tylko w dniu zajęć
+  if (!S.perms.can_see_groups) {
+    const g = S.groups.find(x=>x.id==gid);
+    const todayDow = new Date().getDay();
+    const todayIso = todayDow===0 ? 7 : todayDow;
+    const hasClassToday = (g?.schedules||[]).some(s => Number(s.day_of_week) === todayIso);
+    if (!hasClassToday) {
+      $('pb').innerHTML=`<div class="empty"><strong>Brak dostępu</strong>Lista kursantów dostępna tylko w dniu zajęć.</div>`;
+      return;
+    }
+  }
   S.grpId=gid; S.studId=null;
   $('pb').innerHTML='<div class="loading">Ładowanie kursantów...</div>';
   try {
     const d = await api(`/api/instructor/groups/${gid}/students`);
     S.grpStudents = d.rows||[];
+    if (d.permissions) { S.perms = {...S.perms, ...d.permissions}; }
     renderGrpStudents();
   } catch(e) { $('pb').innerHTML=`<div class="empty">Błąd: ${esc(e.message)}</div>`; }
 }
@@ -587,6 +616,32 @@ function renderGrpStudents() {
   const sch=(g.schedules||[]).filter(s=>{const k=`${s.day_of_week}|${(s.time_label||String(s.time_start||'')).slice(0,5)}`;return _seen2.has(k)?false:(_seen2.add(k),true);}).map(s=>`${s.day_name||DAYS_FULL[s.day_of_week]} ${s.time_label||''}`).join(', ');
   const st = S.grpStudents;
 
+  // Tryb ograniczony — tylko widok zajęć (bez kartotek, bez pełnej tabeli)
+  if (!S.perms.can_see_groups) {
+    $('pb').innerHTML = `
+      <div class="bc"><span>${esc(g.name||'')}</span></div>
+      ${sch?`<div class="ib" style="margin-bottom:12px"><div class="ir"><span class="ir-l">Grafik</span><span class="ir-v">${esc(sch)}</span></div></div>`:''}
+      <div style="margin-bottom:14px;font-size:12px;color:var(--dim2)">Widok zajęć — ${new Date().toLocaleDateString('pl-PL',{weekday:'long',day:'numeric',month:'long'})}</div>
+      <div class="tw"><table>
+        <thead><tr>
+          <th>Nazwisko, Imię</th>
+          ${S.perms.can_see_payments ? '<th>Ostatnia wpłata</th>' : ''}
+          ${S.perms.can_accept_payment ? '<th>Wpłata</th>' : ''}
+        </tr></thead>
+        <tbody>${st.map(s => {
+          const days = daysAgo(s.last_payment);
+          const payClass = days===null?'':(days>35?'bx bx-r':'bx bx-g');
+          return `<tr>
+            <td><strong>${esc(s.last_name)}, ${esc(s.first_name)}</strong>${!s.is_active?'<span class="bx bx-d" style="margin-left:6px">nieaktywny</span>':''}</td>
+            ${S.perms.can_see_payments ? `<td>${s.last_payment?`<span class="${payClass}">${fd(s.last_payment)}</span>`:'—'}</td>` : ''}
+            ${S.perms.can_accept_payment ? `<td><button class="btn btn-xs" style="padding:3px 10px;font-size:11px;background:rgba(46,204,113,.15);border:1px solid rgba(46,204,113,.4);color:#2ecc71" onclick="moAcceptPayment(${s.id},'${esc(s.first_name)} ${esc(s.last_name)}')">+ Wpłata</button></td>` : ''}
+          </tr>`;
+        }).join('')}</tbody>
+      </table></div>`;
+    return;
+  }
+
+  // Tryb pełny (can_see_groups=true)
   $('pb').innerHTML = `
     <div class="bc"><a onclick="go('groups')">Grupy</a><span class="bc-sep">›</span><span>${esc(g.name||'')}</span></div>
     ${sch?`<div class="ib" style="margin-bottom:12px"><div class="ir"><span class="ir-l">Grafik</span><span class="ir-v">${esc(sch)}</span></div></div>`:''}
@@ -928,22 +983,30 @@ async function renderAtt() {
       return db-da;
     });
     const pres=st.filter(s=>s.present).length;
+    const anyMarked = pres > 0 || st.some(s=>s.present===false && s._touched);
+
+    // Czy obecność jest wymagana — można opuścić dopiero po zaznaczeniu min 1 osoby
+    // lub kliknięciu "Brak kursantów" (gdy lista pusta)
+    const attRequired = S.perms.can_mark_attendance && st.length > 0;
 
     $('pb').innerHTML=`
+      ${attRequired ? `<div style="background:rgba(232,165,0,.12);border:1px solid rgba(232,165,0,.4);border-radius:6px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:var(--orange);display:flex;align-items:center;gap:8px">
+        <span>⚠</span><strong>Wymagane sprawdzenie obecności</strong> — zaznacz obecnych przed opuszczeniem widoku.
+      </div>` : ''}
       <div class="bc">
-        <a onclick="S.sessId=null;renderSess()">Sesje</a><span class="bc-sep">›</span>
+        <a onclick="tryLeaveSess()" style="cursor:pointer">Sesje</a><span class="bc-sep">›</span>
         <span>${esc(sess.group_name||'')} — ${dateStr}</span>
       </div>
       <div class="stats" style="margin-bottom:14px">
-        <div class="sc g"><div class="sc-l">Obecnych</div><div class="sc-v">${pres}</div></div>
+        <div class="sc g"><div class="sc-l">Obecnych</div><div class="sc-v" id="att-pres-cnt">${pres}</div></div>
         <div class="sc"><div class="sc-l">Na liście</div><div class="sc-v">${st.length}</div></div>
-        <div class="sc b"><div class="sc-l">Frekwencja</div><div class="sc-v">${st.length?Math.round(pres/st.length*100):0}%</div></div>
+        <div class="sc b"><div class="sc-l">Frekwencja</div><div class="sc-v" id="att-pct">${st.length?Math.round(pres/st.length*100):0}%</div></div>
       </div>
       <div class="bar" style="margin-bottom:10px">
         <button class="btn btn-g btn-sm" onclick="markAll(true)">✓ Wszyscy obecni</button>
         <button class="btn btn-o btn-sm" onclick="markAll(false)">✗ Odznacz wszystkich</button>
         <div class="sep"></div>
-        <span style="font-size:11px;color:var(--dim)">${st.length} kursantów — kliknij kwadrat, aby zaznaczyć</span>
+        ${S.perms.can_add_student ? `<button class="btn btn-r btn-sm" onclick="moAddStud(${sess.group_id})">+ Dodaj z ulicy</button>` : ''}
       </div>
       <div class="att-list" id="attlist">
         ${st.map(s=>`
@@ -951,10 +1014,39 @@ async function renderAtt() {
             <div class="att-chk ${s.present?'on':''}" id="chk-${s.student_id}" onclick="toggleAtt(${sess.session_id},${s.student_id},this)">${s.present?'✓':''}</div>
             <div class="att-name">${esc(s.last_name)}, ${esc(s.first_name)}</div>
             ${S.perms.can_see_payments ? `<div class="att-pay ${daysAgo(s.last_payment)>35?'late':''}">Wpłata: ${fd(s.last_payment)}</div>` : ''}
-            ${S.perms.can_accept_payment ? `<button class="btn btn-xs" style="padding:3px 8px;font-size:10px;background:rgba(46,204,113,.15);border:1px solid rgba(46,204,113,.4);color:#2ecc71" onclick="moAcceptPayment(${s.student_id},'${esc(s.first_name)} ${esc(s.last_name)}')">+ Wpłata</button>` : ''}
+            ${S.perms.can_accept_payment ? `<button class="btn btn-xs" style="padding:3px 8px;font-size:10px;background:rgba(46,204,113,.15);border:1px solid rgba(46,204,113,.4);color:#2ecc71" onclick="moAcceptPayment(${s.student_id},'${esc(s.first_name)} ${esc(s.last_name)}',${sess.group_id})">+ Wpłata</button>` : ''}
           </div>`).join('')}
+      </div>
+      <div style="margin-top:16px;text-align:right">
+        <button class="btn btn-r" id="att-done-btn" onclick="confirmAttDone()" ${pres===0&&st.length>0?'style="opacity:.5"':''}>
+          ✓ Zapisz obecność i wróć
+        </button>
       </div>`;
+    // Zapisz stan
+    S._attRequired = attRequired;
+    S._attStudents = st;
   } catch(e){ $('pb').innerHTML=`<div class="empty">Błąd: ${esc(e.message)}</div>`; }
+}
+
+function tryLeaveSess() {
+  // Sprawdź czy zaznaczono obecność
+  if (S._attRequired) {
+    const presNow = S._attStudents ? S._attStudents.filter(s=>document.getElementById('chk-'+s.student_id)?.classList.contains('on')).length : 0;
+    if (presNow === 0) {
+      if (!confirm('Nie zaznaczono żadnych obecności. Czy na pewno chcesz wyjść bez zapisu?')) return;
+    }
+  }
+  S.sessId=null; S._attRequired=false; S._attStudents=null;
+  renderSess();
+}
+
+function confirmAttDone() {
+  const presNow = S._attStudents ? S._attStudents.filter(s=>document.getElementById('chk-'+s.student_id)?.classList.contains('on')).length : 0;
+  if (presNow === 0 && S._attStudents && S._attStudents.length > 0) {
+    if (!confirm('Nie zaznaczono żadnych obecności. Zapisać mimo to?')) return;
+  }
+  S.sessId=null; S._attRequired=false; S._attStudents=null;
+  renderSess();
 }
 
 async function toggleAtt(sessId, studId, el) {
@@ -1050,7 +1142,7 @@ async function doCreateSess(){
 }
 
 // ── PRZYJMIJ PŁATNOŚĆ (instruktor) ────────────────────────────
-function moAcceptPayment(studentId, studentName) {
+function moAcceptPayment(studentId, studentName, groupId) {
   const mo = document.createElement('div');
   mo.className = 'mo';
   mo.id = 'mo-pay';
@@ -1071,22 +1163,21 @@ function moAcceptPayment(studentId, studentName) {
       </div>
       <div class="mf">
         <button class="btn btn-secondary" onclick="document.getElementById('mo-pay').remove()">Anuluj</button>
-        <button class="btn btn-primary" onclick="doAcceptPayment(${studentId})">Zapisz wpłatę</button>
+        <button class="btn btn-primary" onclick="doAcceptPayment(${studentId},${groupId||'null'})">Zapisz wpłatę</button>
       </div>
     </div>`;
   document.body.appendChild(mo);
   setTimeout(() => document.getElementById('pay-amount')?.focus(), 50);
 }
 
-async function doAcceptPayment(studentId) {
+async function doAcceptPayment(studentId, groupId) {
   const amount = parseFloat(document.getElementById('pay-amount')?.value);
   const note = document.getElementById('pay-note')?.value?.trim();
   const errEl = document.getElementById('pay-err');
   if (!amount || amount <= 0) { errEl.textContent='Podaj prawidłową kwotę.'; errEl.style.display='block'; return; }
   try {
-    await api('/api/instructor/accept-payment','POST',{ student_id:studentId, amount, note:note||null });
+    await api('/api/instructor/accept-payment','POST',{ student_id:studentId, amount, note:note||null, group_id:groupId||null });
     document.getElementById('mo-pay')?.remove();
-    // Odśwież widok
     if (S.sessId) renderAtt();
   } catch(e) { errEl.textContent=e.message; errEl.style.display='block'; }
 }
