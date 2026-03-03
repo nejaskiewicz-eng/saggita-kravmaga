@@ -398,7 +398,7 @@ const SEASON = '2025-09-01';
 
 // ── STATE ─────────────────────────────────────────────────────
 const S = {
-  token:null, inst:null,
+  token:null, inst:null, perms:{},
   groups:[], sessions:[], payments:[],
   page:'dash',
   calY: new Date().getFullYear(), calM: new Date().getMonth(), calGid: null,
@@ -429,18 +429,29 @@ async function login() {
   if(!u||!p){err.textContent='Podaj login i hasło.';err.classList.add('show');return;}
   try {
     const d = await api('/api/instructor/login','POST',{username:u,password:p});
-    setAuth(d.token, d.instructor);
+    setAuth(d.token, d.instructor, d.permissions||{});
     $('pg-login').style.display='none';
     $('app').classList.add('on');
     await loadAll();
   } catch(e) { err.textContent=e.message; err.classList.add('show'); }
 }
-function setAuth(tok, inst) {
-  S.token=tok; S.inst=inst;
+function setAuth(tok, inst, perms) {
+  S.token=tok; S.inst=inst; S.perms=perms||{};
   localStorage.setItem('it',tok);
   localStorage.setItem('ii',JSON.stringify(inst));
+  localStorage.setItem('ip',JSON.stringify(S.perms));
   $('sb-name').textContent=(inst.first_name||'')+' '+(inst.last_name||'');
+  applyPermNav();
   showMobileBars(true);
+}
+function applyPermNav() {
+  // Ukryj zakładki na podstawie uprawnień
+  // Grupy zawsze widoczne ale z filtrowaniem
+  // Płatności — tylko jeśli can_see_payments
+  const payNav = document.getElementById('ni-pays');
+  if (payNav) payNav.style.display = S.perms.can_see_payments ? '' : 'none';
+  const payBn = document.getElementById('bn-pays');
+  if (payBn) payBn.style.display = S.perms.can_see_payments ? '' : 'none';
 }
 function logout() {
   S.token=null; S.inst=null;
@@ -470,7 +481,12 @@ function closeSb() {
 
 // ── LOAD ──────────────────────────────────────────────────────
 async function loadAll() {
-  try { const d=await api('/api/instructor/groups'); S.groups=d.rows||[]; }
+  try {
+    const d=await api('/api/instructor/groups');
+    S.groups=d.rows||[];
+    // Zaktualizuj uprawnienia z odpowiedzi
+    if (d.permissions) { S.perms = d.permissions; applyPermNav(); }
+  }
   catch(e) { console.error(e); }
   render('dash');
 }
@@ -509,6 +525,7 @@ function render(page) {
 
 // ── DASHBOARD ─────────────────────────────────────────────────
 function renderDash() {
+  const showCount = S.perms.can_see_student_count;
   const total = S.groups.reduce((s,g)=>s+(g.student_count||0),0);
   const todayDow = new Date().getDay(); // 0=Sun
   const tdow0 = todayDow===0?6:todayDow-1; // 0=Mon
@@ -516,8 +533,8 @@ function renderDash() {
 
   $('pb').innerHTML = `
     <div class="stats">
-      <div class="sc b"><div class="sc-l">Twoje grupy</div><div class="sc-v">${S.groups.length}</div></div>
-      <div class="sc g"><div class="sc-l">Kursanci łącznie</div><div class="sc-v">${total}</div></div>
+      ${S.perms.can_see_groups ? `<div class="sc b"><div class="sc-l">Twoje grupy</div><div class="sc-v">${S.groups.length}</div></div>` : ''}
+      ${showCount ? `<div class="sc g"><div class="sc-l">Kursanci łącznie</div><div class="sc-v">${total}</div></div>` : ''}
       <div class="sc y"><div class="sc-l">Sezon od</div><div class="sc-v" style="font-size:15px">01.09.2025</div></div>
     </div>
     ${todayGs.length ? `<div class="section-hd">DZISIAJ MASZ ZAJĘCIA</div>
@@ -574,7 +591,7 @@ function renderGrpStudents() {
     <div class="bar">
       <input type="search" placeholder="Szukaj po nazwisku..." id="ss" oninput="filterStud()">
       <div class="sep"></div>
-      <button class="btn btn-r btn-sm" onclick="moAddStud(${g.id})">+ Dodaj kursanta</button>
+      <button class="btn btn-r btn-sm" onclick="moAddStud(${g.id})" ${S.perms.can_add_student===false?'style="display:none"':''}>+ Dodaj kursanta</button>
     </div>
     ${st.length===0?'<div class="empty">Brak kursantów w tej grupie.</div>':`
     <div class="tw"><table>
@@ -931,13 +948,15 @@ async function renderAtt() {
           <div class="att-row ${s.present?'present':'absent'}" id="atr-${s.student_id}">
             <div class="att-chk ${s.present?'on':''}" id="chk-${s.student_id}" onclick="toggleAtt(${sess.session_id},${s.student_id},this)">${s.present?'✓':''}</div>
             <div class="att-name">${esc(s.last_name)}, ${esc(s.first_name)}</div>
-            <div class="att-pay ${daysAgo(s.last_payment)>35?'late':''}">Wpłata: ${fd(s.last_payment)}</div>
+            ${S.perms.can_see_payments ? `<div class="att-pay ${daysAgo(s.last_payment)>35?'late':''}">Wpłata: ${fd(s.last_payment)}</div>` : ''}
+            ${S.perms.can_accept_payment ? `<button class="btn btn-xs" style="padding:3px 8px;font-size:10px;background:rgba(46,204,113,.15);border:1px solid rgba(46,204,113,.4);color:#2ecc71" onclick="moAcceptPayment(${s.student_id},'${esc(s.first_name)} ${esc(s.last_name)}')">+ Wpłata</button>` : ''}
           </div>`).join('')}
       </div>`;
   } catch(e){ $('pb').innerHTML=`<div class="empty">Błąd: ${esc(e.message)}</div>`; }
 }
 
 async function toggleAtt(sessId, studId, el) {
+  if (!S.perms.can_mark_attendance) { alert('Brak uprawnień do oznaczania obecności.'); return; }
   const wasOn=el.classList.contains('on');
   const now=!wasOn;
   el.classList.toggle('on',now);
@@ -1026,6 +1045,48 @@ async function doCreateSess(){
     closeMo();
     openSessById(d.id,Number(gid),dt,S.groups.find(x=>x.id==gid)?.name||'');
   }catch(e){alert('Błąd: '+e.message);}
+}
+
+// ── PRZYJMIJ PŁATNOŚĆ (instruktor) ────────────────────────────
+function moAcceptPayment(studentId, studentName) {
+  const mo = document.createElement('div');
+  mo.className = 'mo';
+  mo.id = 'mo-pay';
+  mo.innerHTML = `
+    <div class="md" style="max-width:380px">
+      <div class="mh"><h3>💰 Przyjmij wpłatę</h3><button onclick="document.getElementById('mo-pay').remove()" style="background:none;border:none;color:var(--dim);font-size:20px;cursor:pointer">✕</button></div>
+      <div class="mb">
+        <div style="font-size:13px;color:var(--dim);margin-bottom:16px">Kursant: <strong style="color:var(--bright)">${studentName}</strong></div>
+        <div class="ff" style="margin-bottom:12px">
+          <label>Kwota (zł) *</label>
+          <input id="pay-amount" type="number" min="1" max="9999" step="1" placeholder="100" style="background:var(--surface2);border:1px solid var(--border2);border-radius:5px;color:var(--bright);padding:9px 11px;font-size:14px;font-family:inherit;width:100%;outline:none">
+        </div>
+        <div class="ff">
+          <label>Notatka (opcjonalnie)</label>
+          <input id="pay-note" placeholder="np. gotówka" style="background:var(--surface2);border:1px solid var(--border2);border-radius:5px;color:var(--bright);padding:9px 11px;font-size:13px;font-family:inherit;width:100%;outline:none">
+        </div>
+        <div id="pay-err" style="color:#ff6b4a;font-size:12px;margin-top:10px;display:none"></div>
+      </div>
+      <div class="mf">
+        <button class="btn btn-secondary" onclick="document.getElementById('mo-pay').remove()">Anuluj</button>
+        <button class="btn btn-primary" onclick="doAcceptPayment(${studentId})">Zapisz wpłatę</button>
+      </div>
+    </div>`;
+  document.body.appendChild(mo);
+  setTimeout(() => document.getElementById('pay-amount')?.focus(), 50);
+}
+
+async function doAcceptPayment(studentId) {
+  const amount = parseFloat(document.getElementById('pay-amount')?.value);
+  const note = document.getElementById('pay-note')?.value?.trim();
+  const errEl = document.getElementById('pay-err');
+  if (!amount || amount <= 0) { errEl.textContent='Podaj prawidłową kwotę.'; errEl.style.display='block'; return; }
+  try {
+    await api('/api/instructor/accept-payment','POST',{ student_id:studentId, amount, note:note||null });
+    document.getElementById('mo-pay')?.remove();
+    // Odśwież widok
+    if (S.sessId) renderAtt();
+  } catch(e) { errEl.textContent=e.message; errEl.style.display='block'; }
 }
 
 function moAddStud(gid){
@@ -1225,14 +1286,14 @@ async function doDelPay(sid,pid){
 
 // ── INIT ──────────────────────────────────────────────────────
 (function init(){
-  const tok=localStorage.getItem('it'), ii=localStorage.getItem('ii');
+  const tok=localStorage.getItem('it'), ii=localStorage.getItem('ii'), ip=localStorage.getItem('ip');
   if(tok&&ii){
     try{
-      setAuth(tok,JSON.parse(ii));
+      setAuth(tok, JSON.parse(ii), ip ? JSON.parse(ip) : {});
       $('pg-login').style.display='none';
       $('app').classList.add('on');
       loadAll();
-    }catch(e){localStorage.removeItem('it');localStorage.removeItem('ii');}
+    }catch(e){localStorage.removeItem('it');localStorage.removeItem('ii');localStorage.removeItem('ip');}
   }
 })();
 </script>

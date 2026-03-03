@@ -114,6 +114,80 @@ module.exports = async (req, res) => {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  // ── UPRAWNIENIA INSTRUKTORA ───────────────────────────────────
+  if (type === 'instructor-permissions') {
+    const instId = id || req.body?.instructor_id;
+
+    if (req.method === 'GET' && id) {
+      try {
+        const { rows:[p] } = await pool.query(
+          `SELECT * FROM instructor_permissions WHERE instructor_id=$1`, [id]);
+        return res.status(200).json(p || {});
+      } catch(e) { return res.status(500).json({ error: e.message }); }
+    }
+
+    if (req.method === 'PATCH' && id) {
+      const b = req.body || {};
+      const allowed = ['can_see_groups','can_see_student_count','can_see_payments',
+                       'can_accept_payment','can_add_student','can_mark_attendance'];
+      try {
+        const set = [], vals = []; let pi = 1;
+        for (const k of allowed) if (k in b) { set.push(`${k}=$${pi++}`); vals.push(b[k]); }
+        if (set.length) {
+          vals.push(id);
+          await pool.query(
+            `INSERT INTO instructor_permissions (instructor_id) VALUES ($1) ON CONFLICT (instructor_id) DO NOTHING`,
+            [id]);
+          await pool.query(`UPDATE instructor_permissions SET ${set.join(',')}, updated_at=NOW() WHERE instructor_id=$${pi}`, vals);
+        }
+        return res.status(200).json({ success: true });
+      } catch(e) { return res.status(500).json({ error: e.message }); }
+    }
+
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  // ── PRZYPISANIE KURSANTÓW DO INSTRUKTORA ─────────────────────
+  if (type === 'instructor-students') {
+    if (req.method === 'GET' && id) {
+      try {
+        // Pobierz kursantów z grup instruktora + zaznacz czy przypisani
+        const { rows } = await pool.query(`
+          SELECT DISTINCT s.id, s.first_name, s.last_name, s.is_active,
+            g.id AS group_id, g.name AS group_name,
+            EXISTS(
+              SELECT 1 FROM instructor_students ist
+              WHERE ist.instructor_id=$1 AND ist.student_id=s.id
+            ) AS assigned
+          FROM students s
+          JOIN student_groups sg ON sg.student_id=s.id AND sg.active=true
+          JOIN groups g ON g.id=sg.group_id
+          JOIN instructor_groups ig ON ig.group_id=g.id AND ig.instructor_id=$1
+          WHERE s.is_active=true
+          ORDER BY g.name, s.last_name, s.first_name
+        `, [id]);
+        return res.status(200).json({ rows });
+      } catch(e) { return res.status(500).json({ error: e.message }); }
+    }
+
+    if (req.method === 'POST' && id) {
+      // Zapisz pełną listę przypisanych kursantów (zastąp)
+      const { student_ids } = req.body || {};
+      if (!Array.isArray(student_ids)) return res.status(400).json({ error: 'student_ids wymagane' });
+      try {
+        await pool.query(`DELETE FROM instructor_students WHERE instructor_id=$1`, [id]);
+        for (const sid of student_ids) {
+          await pool.query(
+            `INSERT INTO instructor_students (instructor_id, student_id) VALUES ($1,$2) ON CONFLICT DO NOTHING`,
+            [id, sid]);
+        }
+        return res.status(200).json({ success: true, count: student_ids.length });
+      } catch(e) { return res.status(500).json({ error: e.message }); }
+    }
+
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
   // ── groups (single), schedules, locations ─────────────────────
   const CONFIG = {
     groups: {

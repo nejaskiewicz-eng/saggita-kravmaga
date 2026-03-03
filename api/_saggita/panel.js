@@ -76,13 +76,17 @@ module.exports = async (req, res) => {
           return res.status(401).json({ error: 'Nieprawidłowy login lub hasło.' });
         const secret = process.env.JWT_SECRET;
         if (!secret) throw new Error('Brak JWT_SECRET');
+        // Pobierz uprawnienia instruktora
+        const { rows:[perms] } = await pool.query(
+          `SELECT * FROM instructor_permissions WHERE instructor_id=$1`, [i.id]);
         const token = makeJWT({
           sub:i.id, username:i.username, role:'instructor',
           iat:Math.floor(Date.now()/1000)
         }, secret);
         return res.status(200).json({
           token,
-          instructor:{id:i.id, username:i.username, first_name:i.first_name, last_name:i.last_name, email:i.email}
+          instructor:{id:i.id, username:i.username, first_name:i.first_name, last_name:i.last_name, email:i.email},
+          permissions: perms || {}
         });
       } catch(e) { console.error('[inst/login]',e); return res.status(500).json({ error:e.message }); }
     }
@@ -108,6 +112,11 @@ module.exports = async (req, res) => {
     // GET /api/instructor/groups
     if (route === 'groups' && req.method === 'GET') {
       try {
+        // Pobierz uprawnienia instruktora
+        const { rows:[perms] } = await pool.query(
+          `SELECT * FROM instructor_permissions WHERE instructor_id=$1`, [P.sub]);
+        const perm = perms || {};
+
         const { rows } = await pool.query(`
           SELECT g.id, g.name, g.category, g.age_range, g.notes,
             l.id AS location_id, l.city AS location_city, l.name AS location_name,
@@ -127,14 +136,40 @@ module.exports = async (req, res) => {
           GROUP BY g.id, l.id
           ORDER BY l.city, g.name
         `, [P.sub]);
-        return res.status(200).json({ rows });
+
+        // Jeśli nie widzi liczby kursantów — wyzeruj
+        if (!perm.can_see_student_count) {
+          rows.forEach(r => { r.student_count = null; });
+        }
+
+        return res.status(200).json({ rows, permissions: perm });
       } catch(e) { console.error('[groups]',e); return res.status(500).json({ error:e.message }); }
+    }
+
+    // GET /api/instructor/permissions
+    if (route === 'permissions' && req.method === 'GET') {
+      try {
+        const { rows:[perms] } = await pool.query(
+          `SELECT * FROM instructor_permissions WHERE instructor_id=$1`, [P.sub]);
+        return res.status(200).json(perms || {});
+      } catch(e) { return res.status(500).json({ error:e.message }); }
     }
 
     // GET /api/instructor/groups/:id/students  (_route=students)
     if (route === 'students' && req.method === 'GET') {
       try {
-        const { rows } = await pool.query(`
+        // Sprawdź czy instruktor ma filtrowanie kursantów
+        const { rows:[perms] } = await pool.query(
+          `SELECT * FROM instructor_permissions WHERE instructor_id=$1`, [P.sub]);
+        const perm = perms || {};
+
+        // Sprawdź czy instruktor_students istnieje dla tego instruktora
+        const { rows:assignedRows } = await pool.query(
+          `SELECT student_id FROM instructor_students WHERE instructor_id=$1`, [P.sub]);
+        const hasAssigned = assignedRows.length > 0;
+        const assignedIds = new Set(assignedRows.map(r => r.student_id));
+
+        let q = `
           SELECT s.id, s.first_name, s.last_name, s.email, s.phone, s.birth_year, s.is_active,
             (SELECT MAX(lp.paid_at) FROM legacy_payments lp WHERE lp.student_id=s.id AND lp.paid_at>=$2)::date AS last_payment,
             (SELECT COALESCE(SUM(lp.amount),0) FROM legacy_payments lp WHERE lp.student_id=s.id AND lp.paid_at>=$2)::numeric AS paid_season,
@@ -144,15 +179,49 @@ module.exports = async (req, res) => {
           FROM students s
           JOIN student_groups sg ON sg.student_id=s.id AND sg.group_id=$1 AND sg.active=true
           ORDER BY s.last_name, s.first_name
-        `, [id, SEASON]);
-        return res.status(200).json({ rows });
+        `;
+        const { rows } = await pool.query(q, [id, SEASON]);
+
+        // Filtruj do przypisanych kursantów jeśli lista jest ustawiona
+        const filtered = hasAssigned ? rows.filter(r => assignedIds.has(r.id)) : rows;
+
+        // Ukryj płatności jeśli brak uprawnienia
+        if (!perm.can_see_payments) {
+          filtered.forEach(r => { r.last_payment = null; r.paid_season = null; });
+        }
+
+        return res.status(200).json({ rows: filtered, permissions: perm });
       } catch(e) { console.error('[group-students]',e); return res.status(500).json({ error:e.message }); }
+    }
+
+    // POST /api/instructor/payments  — przyjęcie płatności
+    if (route === 'accept-payment' && req.method === 'POST') {
+      try {
+        const { rows:[perms] } = await pool.query(
+          `SELECT can_accept_payment FROM instructor_permissions WHERE instructor_id=$1`, [P.sub]);
+        if (!perms?.can_accept_payment) return res.status(403).json({ error: 'Brak uprawnień do przyjmowania płatności.' });
+        const { student_id, amount, note } = req.body || {};
+        if (!student_id || !amount) return res.status(400).json({ error: 'student_id i amount są wymagane.' });
+        const { rows:[pay] } = await pool.query(
+          `INSERT INTO legacy_payments (student_id, amount, paid_at, note, created_by)
+           VALUES ($1,$2,NOW(),$3,$4) RETURNING id, amount, paid_at::date AS paid_at`,
+          [student_id, amount, note||null, `instructor:${P.sub}`]);
+        return res.status(201).json(pay);
+      } catch(e) { return res.status(500).json({ error:e.message }); }
     }
 
     // GET /api/instructor/payments
     if (route === 'payments' && req.method === 'GET') {
       try {
-        // Filtrujemy tylko kursantów z grup instruktora
+        const { rows:[perms] } = await pool.query(
+          `SELECT can_see_payments FROM instructor_permissions WHERE instructor_id=$1`, [P.sub]);
+        if (!perms?.can_see_payments) return res.status(200).json({ rows: [], hidden: true });
+
+        // Filtrujemy tylko kursantów przypisanych do instruktora (jeśli lista ustawiona)
+        const { rows:assignedRows } = await pool.query(
+          `SELECT student_id FROM instructor_students WHERE instructor_id=$1`, [P.sub]);
+        const hasAssigned = assignedRows.length > 0;
+        const assignedIds = assignedRows.map(r => r.student_id);
         const { rows } = await pool.query(`
           SELECT lp.id, lp.amount, lp.paid_at::date AS paid_at, lp.note,
             s.id AS student_id, s.first_name, s.last_name,
@@ -166,9 +235,10 @@ module.exports = async (req, res) => {
             AND g.id IN (
               SELECT group_id FROM instructor_groups WHERE instructor_id=$2
             )
+            ${hasAssigned ? `AND s.id = ANY($3::int[])` : ''}
           ORDER BY lp.paid_at DESC
           LIMIT 500
-        `, [SEASON, P.sub]);
+        `, hasAssigned ? [SEASON, P.sub, assignedIds] : [SEASON, P.sub]);
         return res.status(200).json({ rows });
       } catch(e) { console.error('[payments]',e); return res.status(500).json({ error:e.message }); }
     }
