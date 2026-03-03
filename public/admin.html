@@ -2556,6 +2556,13 @@ async function openNewInstructorModal() {
   let allGroups = [];
   try { allGroups = arrRows(await aF('/groups')); } catch(e) {}
 
+  function pc(key, label) {
+    return `<label style="display:flex;align-items:center;gap:9px;padding:8px 10px;background:var(--surface2);border-radius:5px;cursor:pointer;margin-bottom:4px">
+      <input type="checkbox" id="np-${key}" style="width:15px;height:15px;accent-color:var(--red-l);cursor:pointer">
+      <span style="font-size:12px;color:var(--text)">${label}</span>
+    </label>`;
+  }
+
   showModal('Nowy instruktor', `
     <div class="fg">
       <div class="ff"><label>Imię *</label><input id="ni-fn" placeholder="Anna"></div>
@@ -2569,8 +2576,19 @@ async function openNewInstructorModal() {
       <div class="ff"><label>Email</label><input id="ni-em" type="email"></div>
       <div class="ff"><label>Telefon</label><input id="ni-ph"></div>
     </div>
-    <div class="ff"><label>Przypisz do grup</label>
+    <div class="ff"><label>Przypisz do grup (tylko aktywne)</label>
       ${buildGroupCheckboxes(allGroups, [], 'ni')}
+    </div>
+    <div class="ksec">
+      <div class="ksec-title">🔐 Uprawnienia</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px">
+        ${pc('can_see_groups','Widzi listę grup')}
+        ${pc('can_see_student_count','Widzi liczbę kursantów')}
+        ${pc('can_see_payments','Widzi płatności')}
+        ${pc('can_accept_payment','Może przyjmować płatności')}
+        ${pc('can_add_student','Może dodawać kursantów')}
+        ${pc('can_mark_attendance','Może oznaczać obecność')}
+      </div>
     </div>
     <div id="ni-err" style="color:var(--red-l);font-size:12px;margin-top:8px;display:none"></div>`,
     `<button class="btn btn-secondary" onclick="closeModal()">Anuluj</button>
@@ -2586,13 +2604,21 @@ async function createInstructor() {
   if (!fn||!ln||!un||!pw) { errEl.textContent='Imię, nazwisko, login i hasło są wymagane.'; errEl.style.display='block'; return; }
   if (pw.length < 8) { errEl.textContent='Hasło musi mieć co najmniej 8 znaków.'; errEl.style.display='block'; return; }
   const groupIds = getCheckedGroupIds('ni');
+  const permKeys = ['can_see_groups','can_see_student_count','can_see_payments','can_accept_payment','can_add_student','can_mark_attendance'];
   try {
-    await aF('/instructors', { method:'POST', body: JSON.stringify({
+    const inst = await aF('/instructors', { method:'POST', body: JSON.stringify({
       first_name: fn, last_name: ln, username: un, password: pw,
       email: document.getElementById('ni-em')?.value?.trim()||null,
       phone: document.getElementById('ni-ph')?.value?.trim()||null,
       group_ids: groupIds,
     })});
+    // Zapisz uprawnienia
+    const permsData = {};
+    permKeys.forEach(k => {
+      const el = document.getElementById('np-'+k);
+      if (el) permsData[k] = el.checked;
+    });
+    await aF(`/resource?type=instructor-permissions&id=${inst.id}`, { method:'PATCH', body: JSON.stringify(permsData) });
     toast('Konto instruktora utworzone');
     closeModal();
     fetchInstructors();
@@ -2735,10 +2761,11 @@ checkLogin();
 
 function buildGroupCheckboxes(groups, selectedIds, prefix) {
   const sel = new Set((selectedIds||[]).map(Number));
-  // group by city
+  // Tylko aktywne grupy
+  const activeGroups = groups.filter(g => g.active !== false);
   const byCityOrder = [];
   const cityMap = {};
-  groups.forEach(g => {
+  activeGroups.forEach(g => {
     const city = g.city || g.location_city || '';
     if (!cityMap[city]) { cityMap[city] = []; byCityOrder.push(city); }
     cityMap[city].push(g);
