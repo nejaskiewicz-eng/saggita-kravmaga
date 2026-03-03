@@ -461,7 +461,9 @@ function logout() {
   showMobileBars(false);
 }
 function showMobileBars(show) {
-  const d = show ? 'flex' : 'none';
+  // Pokazuj tylko na mobile (<=768px)
+  const isMobile = window.innerWidth <= 768;
+  const d = (show && isMobile) ? 'flex' : 'none';
   $('mob-bar').style.display = d;
   $('bot-nav').style.display = d;
 }
@@ -1285,6 +1287,11 @@ async function doDelPay(sid,pid){
 }
 
 // ── INIT ──────────────────────────────────────────────────────
+// Reaguj na zmianę rozmiaru okna
+window.addEventListener('resize', () => {
+  if (S.token) showMobileBars(true);
+});
+
 (function init(){
   const tok=localStorage.getItem('it'), ii=localStorage.getItem('ii'), ip=localStorage.getItem('ip');
   if(tok&&ii){
