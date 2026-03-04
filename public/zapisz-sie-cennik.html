@@ -135,6 +135,17 @@ h1{
   font-size:11px;color:rgba(255,255,255,0.38);line-height:1.4;
   font-style:italic;
 }
+/* Koszyk — zmiana 4: pulsuje i rośnie po dodaniu pozycji */
+@keyframes cartGlow{
+  0%,100%{ box-shadow:var(--shadow-card), 0 10px 0px rgba(26,111,212,0), inset 0 1px 0 rgba(255,255,255,0.08); }
+  50%    { box-shadow:var(--shadow-card), 0 18px 38px rgba(26,111,212,0.55), inset 0 1px 0 rgba(255,255,255,0.10); }
+}
+.cart-inline.has-item{
+  border-color:rgba(26,111,212,0.45);
+  animation: cartGlow 2.2s ease-in-out infinite;
+  transition: max-height 0.4s ease, border-color 0.3s ease, padding 0.3s ease;
+}
+
 /* cart state: empty */
 .cart-inline.empty .cart-inline__service{color:rgba(255,255,255,0.3);font-style:italic;font-weight:400}
 .cart-inline.empty .cart-inline__price{color:rgba(255,255,255,0.18)}
@@ -258,18 +269,21 @@ h1{
 
 /* === DZIECI — niebieska kolumna === */
 .price-col.kids{
-  background:linear-gradient(145deg, rgba(26,111,212,0.10) 0%, rgba(0,0,0,0.28) 60%);
-  box-shadow:0 0 0 1px rgba(26,111,212,0.20) inset, var(--shadow-card);
+  background:linear-gradient(145deg, rgba(26,111,212,0.13) 0%, rgba(0,0,0,0.28) 60%);
+  /* zmiana 1: ramka kolumny w kolorze przycisku Wybierz */
+  box-shadow:0 0 0 1px rgba(26,111,212,0.55) inset, var(--shadow-card);
 }
 .price-col.kids .price-col__head{
-  background:rgba(26,111,212,0.12);
-  border-bottom-color:rgba(26,111,212,0.22);
+  /* zmiana 1: nagłówek (Dzieci + meta) tło i dolna krawędź = kolor btn-kids */
+  background:rgba(26,111,212,0.22);
+  border-bottom-color:rgba(26,111,212,0.55);
 }
 .price-col.kids .price-col__title{color:var(--blue-light)}
 .price-col.kids .price-col__meta{
-  background:rgba(26,111,212,0.18);
-  border:1px solid rgba(26,111,212,0.32);
-  color:rgba(130,190,255,0.90);
+  /* zmiana 1: badge (np. "3 pozycje") = kolor btn-kids */
+  background:rgba(26,111,212,0.38);
+  border:1px solid rgba(26,111,212,0.70);
+  color:rgba(160,210,255,0.96);
 }
 
 /* KARTY POZYCJI CENNIKA */
@@ -299,12 +313,12 @@ h1{
 }
 .adults .priceCard:hover{box-shadow:0 6px 24px rgba(178,25,0,0.25)}
 
-/* Karta dzieci */
+/* Karta dzieci — zmiana 2: ramka = kolor przycisku Wybierz */
 .kids .priceCard{
-  background:rgba(26,111,212,0.09);
-  border:1px solid rgba(26,111,212,0.20);
+  background:rgba(26,111,212,0.11);
+  border:1px solid rgba(26,111,212,0.50);
 }
-.kids .priceCard:hover{box-shadow:0 6px 24px rgba(26,111,212,0.25)}
+.kids .priceCard:hover{box-shadow:0 6px 24px rgba(26,111,212,0.35)}
 
 .priceCard__top{
   display:flex;align-items:flex-start;justify-content:space-between;gap:10px;
@@ -367,17 +381,17 @@ h1{
   box-shadow:0 6px 20px rgba(178,25,0,0.45);
 }
 
-/* Przycisk Wybierz — Dzieci */
+/* Przycisk Wybierz — Dzieci — zmiana 2: ciemniejszy niebieski */
 .btn-kids{
-  background:linear-gradient(135deg, rgba(26,111,212,0.80), rgba(91,168,255,0.55));
-  border-color:rgba(26,111,212,0.65);
+  background:linear-gradient(135deg, #1056A8, #0d4990);
+  border-color:rgba(16,86,168,0.90);
   color:#fff;
-  box-shadow:0 4px 14px rgba(26,111,212,0.30);
+  box-shadow:0 4px 14px rgba(8,40,110,0.55);
 }
 .btn-kids:hover{
-  background:linear-gradient(135deg, rgba(26,111,212,0.95), rgba(91,168,255,0.70));
-  border-color:rgba(91,168,255,0.70);
-  box-shadow:0 6px 20px rgba(26,111,212,0.45);
+  background:linear-gradient(135deg, #0e5ab8, #0b4099);
+  border-color:rgba(14,90,184,1);
+  box-shadow:0 8px 24px rgba(8,40,110,0.70);
 }
 
 /* Przycisk CTA "Przejdź do wyboru terminu" */
@@ -617,6 +631,51 @@ h1{
 
   <!-- STEP 2 -->
   <section class="panel hidden" id="step2" style="margin-top:14px">
+
+  <!-- VIP PANEL: pojawia się gdy wybrana lokalizacja = Wałbrzych -->
+  <div id="vipPanel" class="hidden" style="
+    background:linear-gradient(145deg,rgba(16,86,168,0.18) 0%,rgba(0,0,0,0.35) 100%);
+    border:1px solid rgba(26,111,212,0.50);
+    border-radius:var(--radius);
+    overflow:hidden;
+    box-shadow:var(--shadow-deep);
+  ">
+    <div class="panelHead" style="background:rgba(26,111,212,0.18);border-bottom-color:rgba(26,111,212,0.40)">
+      <div>
+        <h2 style="color:#7ec8ff">Zajęcia VIP — Wałbrzych</h2>
+        <p>Szczególny rodzaj zajęć w bardzo kameralnej grupie (maks. 8 osób). Zajęcia trwają 2h i są personalizowane — dostosowujemy je dokładnie pod Twoje potrzeby i możliwości.</p>
+        <p style="margin-top:6px;color:rgba(255,255,255,0.55);font-size:12px">📅 Piątki 19:00–21:00 &nbsp;·&nbsp; Zapisy otwarte — wycena indywidualna</p>
+      </div>
+      <button class="btn btnSmall ghost" onclick="document.getElementById('f_location').value='';rebuildGroups()">Wstecz</button>
+    </div>
+    <div class="panelBody">
+      <div class="formGrid">
+        <div class="field">
+          <label>Imię i nazwisko *</label>
+          <input id="vip_name" type="text" placeholder="np. Jan Kowalski">
+        </div>
+        <div class="field">
+          <label>Telefon *</label>
+          <input id="vip_phone" type="tel" placeholder="np. 600 000 000">
+        </div>
+        <div class="field full">
+          <label>Email *</label>
+          <input id="vip_email" type="email" placeholder="np. jan@email.pl">
+        </div>
+        <div class="field full">
+          <label>Dodatkowe informacje (opcjonalnie)</label>
+          <textarea id="vip_notes" placeholder="Np. doświadczenie, cele, pytania…"></textarea>
+        </div>
+      </div>
+      <div style="margin-top:10px;padding:10px 14px;background:rgba(26,111,212,0.08);border:1px solid rgba(26,111,212,0.22);border-radius:10px;font-size:12px;color:rgba(255,255,255,0.55)">
+        Po wysłaniu zgłoszenia skontaktujemy się z Tobą w krótce w celu ustalenia szczegółów i wyceny.
+      </div>
+      <div class="footerBar" style="margin-top:14px">
+        <button class="btn btnSmall" style="background:linear-gradient(135deg,#1056A8,#0d4990);border-color:rgba(16,86,168,0.90);color:#fff;box-shadow:0 4px 14px rgba(8,40,110,0.55);padding:12px 20px;font-size:14px" id="vipSubmitBtn" onclick="submitVip()">Zapisz się na Zajęcia VIP →</button>
+      </div>
+    </div>
+  </div>
+  <!-- / VIP PANEL -->
     <div class="panelHead">
       <div>
         <h2>2) Lokalizacja, grupa i termin</h2>
@@ -625,6 +684,7 @@ h1{
       <button class="btn btnSmall ghost" id="back1">Wstecz</button>
     </div>
     <div class="panelBody">
+    <div id="standardStep2Form">
       <div class="formGrid">
         <!-- Selector miesięcy — widoczny tylko dla karnetu rok szkolny -->
         <div class="field full" id="fieldMonths" style="display:none">
@@ -671,6 +731,7 @@ h1{
       <div class="footerBar">
         <button class="btn" id="goStep3" disabled>Dalej: dane</button>
       </div>
+    </div><!-- /standardStep2Form -->
     </div>
   </section>
 
@@ -998,7 +1059,18 @@ function updateCartPrice(){
   const fee = hasFee(selectedPlan, isNew) ? Number(selectedPlan.signup_fee||0) : 0;
   const total = base + fee;
 
-  document.getElementById('cartPrice').innerHTML = `${money(total)}<small> zł</small>`;
+  // zmiana 5: koszyk pokazuje stawka × miesiące, nie łączną kwotę
+  let cartDisplayHtml = '';
+  if(isOneTime(selectedPlan)){
+    cartDisplayHtml = `${money(base)}<small> zł</small>`;
+  } else if(isSchoolYear(selectedPlan)){
+    cartDisplayHtml = `180<small> zł/mies.</small><span style="font-size:14px;font-weight:600;color:rgba(255,255,255,0.55);margin-left:4px">× ${months} mies.</span>`;
+  } else if(Number(selectedPlan.months||0)>1){
+    cartDisplayHtml = `${money(Math.round(monthlyRate(selectedPlan)))}<small> zł/mies.</small><span style="font-size:14px;font-weight:600;color:rgba(255,255,255,0.55);margin-left:4px">× ${selectedPlan.months} mies.</span>`;
+  } else {
+    cartDisplayHtml = `${money(base)}<small> zł/mies.</small>`;
+  }
+  document.getElementById('cartPrice').innerHTML = cartDisplayHtml;
 
   let hint = '';
   if(isOneTime(selectedPlan))             hint = 'Jednorazowe — brak opłaty wpisowej';
@@ -1020,6 +1092,7 @@ function selectPlan(id){
   // Aktualizuj koszyk
   const cart = document.getElementById('cartInline');
   cart.classList.remove('empty');
+  cart.classList.add('has-item'); // zmiana 4: pulsowanie
   document.getElementById('cartServiceName').textContent = p.name;
   updateCartPrice();
 
@@ -1041,6 +1114,7 @@ function clearCart(){
 
   const cart = document.getElementById('cartInline');
   cart.classList.add('empty');
+  cart.classList.remove('has-item'); // zmiana 4
   document.getElementById('cartServiceName').textContent = 'Nie wybrano jeszcze';
   document.getElementById('cartPrice').innerHTML = '— <small>zł</small>';
   document.getElementById('cartHint').textContent = 'Wybierz ofertę z cennika poniżej';
@@ -1080,17 +1154,39 @@ function rebuildGroups(){
   const grpSel=document.getElementById('f_group');
   const schSel=document.getElementById('f_schedule');
   const gh=document.getElementById('groupHelp');
+  const vipPanel=document.getElementById('vipPanel');
+  const standardForm=document.getElementById('standardStep2Form');
 
   if(!locId){
     grpSel.innerHTML = `<option value="">Najpierw wybierz lokalizację</option>`;
     schSel.innerHTML = `<option value="">— wybierz termin (opcjonalnie) —</option>`;
     gh.textContent='—';
+    if(vipPanel) vipPanel.classList.add('hidden');
+    if(standardForm) standardForm.classList.remove('hidden');
     validateStep2();
     return;
   }
 
   const loc = scheduleData.find(l=>Number(l.id)===locId);
-  const groups = (loc?.groups || []).filter(g=>g.active!==false);
+
+  // zmiana 7: Wałbrzych → VIP panel
+  if(loc && norm(loc.city).includes('wałbrzych')){
+    if(vipPanel) vipPanel.classList.remove('hidden');
+    if(standardForm) standardForm.classList.add('hidden');
+    return;
+  }
+  if(vipPanel) vipPanel.classList.add('hidden');
+  if(standardForm) standardForm.classList.remove('hidden');
+
+  const groups = (loc?.groups || []).filter(g=>{
+    if(g.active===false) return false;
+    // zmiana 6: jeśli wybrany plan to dzieci, pokaż tylko grupy dziecięce
+    if(selectedPlan && isKidsPlan(selectedPlan)){
+      const n = norm((g.name||'')+' '+(g.category||''));
+      return n.includes('kid')||n.includes('young')||n.includes('dzieci')||n.includes('dziec')||n.includes('junior')||n.includes('młodz');
+    }
+    return true;
+  });
 
   if(!groups.length){
     grpSel.innerHTML = `<option value="">Brak grup w tej lokalizacji</option>`;
@@ -1372,6 +1468,48 @@ async function downloadPaymentDoc(payment_ref){
   const url = `${API}/registration/action?payment_ref=${encodeURIComponent(payment_ref)}`;
   window.open(url, '_blank');
   toast('Dokument otwarty · mail z potwierdzeniem wysłany na Twoją skrzynkę','ok',4000);
+}
+
+// zmiana 7: VIP Wałbrzych — wyślij przez Formspree
+async function submitVip(){
+  const name  = document.getElementById('vip_name').value.trim();
+  const phone = document.getElementById('vip_phone').value.trim();
+  const email = document.getElementById('vip_email').value.trim();
+  const notes = document.getElementById('vip_notes').value.trim();
+
+  if(!name || !phone || !email){
+    toast('Uzupełnij imię, email i telefon','err'); return;
+  }
+
+  const btn = document.getElementById('vipSubmitBtn');
+  btn.disabled = true;
+  const orig = btn.innerHTML;
+  btn.innerHTML = `<span class="spin"></span> Wysyłam…`;
+
+  try{
+    const fd = new FormData();
+    fd.append('_subject', 'Zajęcia VIP Wałbrzych — nowe zgłoszenie');
+    fd.append('name',  name);
+    fd.append('email', email);
+    fd.append('phone', phone);
+    fd.append('zajecia', 'Zajęcia VIP — Wałbrzych (Piątki 19:00–21:00)');
+    if(notes) fd.append('notes', notes);
+
+    const r = await fetch('https://formspree.io/f/xpqjgjnv',{
+      method:'POST', headers:{Accept:'application/json'}, body: fd
+    });
+    if(!r.ok) throw new Error('Błąd serwera');
+
+    toast('Zgłoszenie wysłane! Skontaktujemy się wkrótce 🎉','ok',5000);
+    document.getElementById('vip_name').value='';
+    document.getElementById('vip_phone').value='';
+    document.getElementById('vip_email').value='';
+    document.getElementById('vip_notes').value='';
+  }catch(e){
+    toast('Błąd wysyłki — napisz na biuro@akademiaobrony.pl','err',5000);
+  }finally{
+    btn.disabled=false; btn.innerHTML=orig;
+  }
 }
 
 async function loadAll(){

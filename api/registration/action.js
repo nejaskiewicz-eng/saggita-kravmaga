@@ -32,7 +32,10 @@ module.exports = async (req, res) => {
 
       if (!r) return res.status(404).json({ error: 'Nie znaleziono zapisu.' });
 
-      const date   = new Date().toLocaleDateString('pl-PL');
+      // zmiana 8: korekta adresu Świdnica
+      if (r.city && String(r.city).toLowerCase().includes('świdnica')) {
+        r.location_address = 'ul. Długa 33, 58-100 Świdnica';
+      }
       const amount = parseFloat(r.total_amount || 0).toFixed(2);
       const onlineUrl = `${SITE_URL}/kvcennik`;
 
@@ -107,6 +110,11 @@ Kontakt: <strong>biuro@akademiaobrony.pl</strong> · <strong>510 930 460</strong
       `, [payment_ref]);
 
       if (!r) return res.status(404).json({ error: 'Nie znaleziono zapisu.' });
+
+      // zmiana 8: korekta adresu Świdnica
+      if (r.city && String(r.city).toLowerCase().includes('świdnica')) {
+        r.location_address = 'ul. Długa 33, 58-100 Świdnica';
+      }
 
       // Zaktualizuj rekord
       await pool.query(
