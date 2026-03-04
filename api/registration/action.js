@@ -237,6 +237,8 @@ ${!isScheduleDoc ? `<a href="${onlineUrl}" class="online-btn">💳 Przejdź do p
         online_url:   onlineUrl,
       };
 
+      console.log('[action] action:', action, 'pMode:', pMode, 'email:', r.email, 'months:', pMonths, 'signup_fee:', pSignupFee);
+
       if (action === 'download_doc') {
         // Mail z danymi do przelewu — wysyłany po kliknięciu zielonego przycisku
         userMail = mailKursant(contractData);
@@ -262,11 +264,19 @@ ${!isScheduleDoc ? `<a href="${onlineUrl}" class="online-btn">💳 Przejdź do p
         });
       }
 
+      console.log('[action] userMail subject:', userMail?.subject, 'to:', r.email);
       if (userMail) {
-        sendMail({ to: r.email, ...userMail }).catch(e => console.error('[action/mail]', e));
+        try {
+          const mailResult = await sendMail({ to: r.email, ...userMail });
+          console.log('[action/mail] sent to:', r.email, 'action:', action, 'result:', mailResult);
+        } catch (mailErr) {
+          console.error('[action/mail] FAILED:', mailErr.message);
+          // Zwróć błąd żeby frontend wiedział że mail nie poszedł
+          return res.status(500).json({ error: 'Mail nie został wysłany: ' + mailErr.message, action });
+        }
       }
 
-      return res.status(200).json({ success: true, action });
+      return res.status(200).json({ success: true, action, email_sent: !!userMail });
     } catch (e) {
       console.error('[action]', e);
       return res.status(500).json({ error: e.message });

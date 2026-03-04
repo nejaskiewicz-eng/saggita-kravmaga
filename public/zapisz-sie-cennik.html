@@ -1161,7 +1161,7 @@ h1{
         <div style="font-size:13px;font-weight:700;color:rgba(255,255,255,0.7);letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px">Wybierz sposób rozliczenia</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
 
-          <label id="payModeFullCard" style="cursor:pointer;border:2px solid rgba(255,255,255,0.12);border-radius:14px;padding:16px 18px;background:rgba(255,255,255,0.03);transition:border-color .2s,background .2s;display:flex;flex-direction:column;gap:6px">
+          <label id="payModeFullCard" style="cursor:pointer;border:2px solid rgba(255,255,255,0.12);border-radius:14px;padding:16px 18px;background:rgba(255,255,255,0.03);transition:border-color .2s,background .2s;display:flex;flex-direction:column;gap:6px" onclick="setTimeout(onPayModeChange,0)">
             <input type="radio" name="payMode" value="full" style="display:none" onchange="onPayModeChange()">
             <div style="display:flex;align-items:center;gap:8px">
               <span id="payModeFullIcon" style="width:18px;height:18px;border-radius:50%;border:2px solid rgba(255,255,255,0.3);flex-shrink:0;transition:all .2s"></span>
@@ -1171,7 +1171,7 @@ h1{
             <div id="payModeFullPrice" style="font-size:18px;font-weight:800;color:var(--white);margin-top:4px">—</div>
           </label>
 
-          <label id="payModeMonthCard" style="cursor:pointer;border:2px solid rgba(255,255,255,0.12);border-radius:14px;padding:16px 18px;background:rgba(255,255,255,0.03);transition:border-color .2s,background .2s;display:flex;flex-direction:column;gap:6px">
+          <label id="payModeMonthCard" style="cursor:pointer;border:2px solid rgba(255,255,255,0.12);border-radius:14px;padding:16px 18px;background:rgba(255,255,255,0.03);transition:border-color .2s,background .2s;display:flex;flex-direction:column;gap:6px" onclick="setTimeout(onPayModeChange,0)">
             <input type="radio" name="payMode" value="monthly" style="display:none" onchange="onPayModeChange()">
             <div style="display:flex;align-items:center;gap:8px">
               <span id="payModeMonthIcon" style="width:18px;height:18px;border-radius:50%;border:2px solid rgba(255,255,255,0.3);flex-shrink:0;transition:all .2s"></span>
@@ -2017,6 +2017,13 @@ async function confirmAndFinish(payment_ref){
   btn.innerHTML = `<span class="spin"></span> Wysyłam potwierdzenie…`;
 
   const p = getPaymentModePayload();
+  // Jeśli payment_mode jest null (radio nie zaznaczone) — odczytaj z UI
+  if (!p.payment_mode) {
+    const monthCard = document.getElementById('payModeMonthCard');
+    const isMonthlyVisible = monthCard && (monthCard.style.border || '').includes('148,0,0');
+    p.payment_mode = isMonthlyVisible ? 'monthly' : 'full';
+  }
+  console.log('[confirmAndFinish] payment_mode:', p.payment_mode, 'payload:', p);
   // Dobierz akcję do wybranej metody płatności
   const action = p.payment_mode === 'monthly' ? 'schedule_doc' : 'download_doc';
 
