@@ -1916,6 +1916,7 @@ function getPaymentModePayload(){
     payment_mode:  mode,
     months:        months,
     monthly_rate:  rate,
+    signup_fee:    feeAmt,
     reminders:     document.getElementById('chkReminders')?.checked !== false,
   };
 }
@@ -1990,7 +1991,8 @@ async function downloadPaymentDoc(payment_ref){
 
 function downloadScheduleDoc(payment_ref, monthlyRate, months){
   // Tylko otwórz dokument — mail zostanie wysłany po kliknięciu zielonego przycisku
-  const url = `${API}/registration/action?payment_ref=${encodeURIComponent(payment_ref)}&action=schedule_doc&months=${months}&monthly_rate=${monthlyRate}`;
+  const feeAmt = Number(selected._feeAmount || 0);
+  const url = `${API}/registration/action?payment_ref=${encodeURIComponent(payment_ref)}&action=schedule_doc&months=${months}&monthly_rate=${monthlyRate}&signup_fee=${feeAmt}`;
   window.open(url, '_blank');
   toast('Harmonogram wpłat otwarty 📅 — potwierdź rejestrację zielonym przyciskiem','ok',4000);
 }

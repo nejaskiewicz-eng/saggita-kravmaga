@@ -175,6 +175,78 @@ ${pay_url ? `<div style="margin:20px 0;text-align:center">
   };
 }
 
+
+// ── MAIL 2b: Płatność miesięczna — harmonogram wpłat ────────────────────────
+function mailMonthlySchedule({ first_name, payment_ref, plan_name, group_name, city,
+  total_amount, bank_account, bank_name, months, monthly_rate, signup_fee, reminders }) {
+
+  const fee = parseFloat(signup_fee || 0);
+  const rate = parseFloat(monthly_rate || 0);
+  const firstAmt = rate + fee;
+
+  // Generuj wiersze harmonogramu z datami (ostatni dzień miesiąca poprzedzającego)
+  const now = new Date();
+  const day = now.getDate();
+  const startOffset = day > 15 ? 1 : 0;
+  let rows = '';
+  for (let i = 0; i < months; i++) {
+    const mo = startOffset + i;
+    const d = new Date(now.getFullYear(), now.getMonth() + mo, 1);
+    const label = d.toLocaleDateString('pl-PL', { month: 'long', year: 'numeric' });
+    const amt = i === 0 ? firstAmt : rate;
+    let deadline;
+    if (i === 0 && startOffset === 0) {
+      deadline = 'w ciągu 3 dni roboczych';
+    } else {
+      const prevEnd = new Date(now.getFullYear(), now.getMonth() + mo, 0);
+      deadline = 'do ' + prevEnd.toLocaleDateString('pl-PL', { day: 'numeric', month: 'long', year: 'numeric' });
+    }
+    rows += `<tr><td style="padding:8px 10px;border:1px solid #eee">${i+1}.</td><td style="padding:8px 10px;border:1px solid #eee">${label}</td><td style="padding:8px 10px;border:1px solid #eee">${deadline}</td><td style="padding:8px 10px;border:1px solid #eee;font-weight:bold;color:#c42000">${fmt(amt)}</td></tr>`;
+  }
+
+  return {
+    subject: `Akademia Obrony Saggita — rezerwacja i harmonogram wpłat (${payment_ref})`,
+    html: `<!DOCTYPE html><html lang="pl"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width">${baseStyle()}</head><body>
+<div class="wrap">
+<div class="hdr"><div class="brand">Akademia Obrony Saggita</div><h1>Potwierdzenie rezerwacji — płatność miesięczna</h1></div>
+<div class="body">
+<p class="hi">Cześć <strong>${first_name}</strong>!</p>
+<p>Twoja rezerwacja w grupie <strong>${group_name}</strong> (${city}) została przyjęta. Wybrałeś/aś płatność miesięczną.</p>
+<div class="card">
+  <div class="card-title">Co zapisano</div>
+  <div class="row"><b>Karnet</b><span>${plan_name || '—'}</span></div>
+  <div class="row"><b>Grupa</b><span>${group_name || '—'}</span></div>
+  <div class="row"><b>Miasto</b><span>${city || '—'}</span></div>
+  <div class="row total-row"><b>Pierwsza wpłata</b><span>${fmt(firstAmt)}${fee > 0 ? ` (${fmt(rate)} karnet + ${fmt(fee)} wpisowe)` : ''}</span></div>
+</div>
+<h3 style="margin:20px 0 8px;font-size:15px">📅 Harmonogram wpłat</h3>
+<table style="width:100%;border-collapse:collapse;font-size:13px">
+<thead><tr style="background:#1a1a1a;color:#fff">
+<th style="padding:8px 10px;text-align:left">#</th>
+<th style="padding:8px 10px;text-align:left">Miesiąc</th>
+<th style="padding:8px 10px;text-align:left">Termin</th>
+<th style="padding:8px 10px;text-align:left">Kwota</th>
+</tr></thead>
+<tbody>${rows}</tbody>
+</table>
+<p style="font-size:12px;color:#666;margin-top:6px">Łącznie za cały okres: <strong>${fmt(total_amount)} zł</strong></p>
+<div class="card" style="margin-top:16px">
+  <div class="card-title">Dane do przelewu</div>
+  <div class="row"><b>Numer konta</b><span style="font-family:monospace;font-size:13px">${bank_account}</span></div>
+  <div class="row"><b>Odbiorca</b><span>${bank_name}</span></div>
+  <div class="row"><b>Tytuł przelewu</b><span style="font-weight:700;color:#c42000">${payment_ref} — ${first_name}</span></div>
+  <div class="row"><b>Kwota (1. wpłata)</b><span style="font-weight:700">${fmt(firstAmt)}</span></div>
+</div>
+<div class="alert">
+  <strong>⏱ Masz 3 dni robocze</strong> na pierwszą wpłatę. Po tym czasie rezerwacja przepada automatycznie.<br><br>
+  Po przelewie wyślij potwierdzenie na: <a href="mailto:biuro@akademiaobrony.pl"><strong>biuro@akademiaobrony.pl</strong></a> — to przyspiesza weryfikację.
+</div>
+${reminders ? '<p style="font-size:13px;color:#555">✅ <strong>Przypomnienia mailowe</strong> — dostaniesz maila 3 dni przed każdą kolejną wpłatą.</p>' : ''}
+<p>Numer referencyjny: <span class="ref">${payment_ref}</span></p>
+</div>${ftr()}</div></body></html>`,
+  };
+}
+
 // ── MAIL 4: Admin — nowy zapis ───────────────────────────────────────────────
 function mailAdmin({ first_name, last_name, email, phone, group_name, city,
   payment_ref, total_amount, plan_name, is_waitlist }) {
@@ -220,5 +292,5 @@ module.exports = {
   mailPayOnlineChosen,
   mailAdmin,
   mailWaitlist,
-  mailKursant: (d) => d.is_waitlist ? mailWaitlist(d) : mailPaymentDoc({ ...d, doc_url: '', online_url: '' }),
+  mailKursant: (d) => d.is_waitlist ? mailWaitlist(d) : (d.payment_mode === 'monthly' ? mailMonthlySchedule(d) : mailPaymentDoc({ ...d, doc_url: '', online_url: '' })),
 };

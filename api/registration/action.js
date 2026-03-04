@@ -153,7 +153,7 @@ ${!isScheduleDoc ? `<a href="${onlineUrl}" class="online-btn">💳 Przejdź do p
   // ── POST: akcja (wybór metody płatności / potwierdzenie) ──────────────────
   if (req.method === 'POST') {
     try {
-      const { payment_ref, action, pay_url, payment_mode, months, monthly_rate, reminders } = req.body || {};
+      const { payment_ref, action, pay_url, payment_mode, months, monthly_rate, signup_fee: bodySignupFee, reminders } = req.body || {};
       if (!payment_ref) return res.status(400).json({ error: 'Brak payment_ref' });
       const VALID = ['pay_online', 'download_doc', 'payment_confirmed', 'schedule_doc'];
       if (!VALID.includes(action)) return res.status(400).json({ error: 'Nieprawidłowa akcja' });
@@ -200,7 +200,8 @@ ${!isScheduleDoc ? `<a href="${onlineUrl}" class="online-btn">💳 Przejdź do p
       const pMonths      = parseInt(months || r.months || 1);
       const pMonthlyRate = monthly_rate ? parseFloat(monthly_rate)
                          : (pMonths > 1 ? Math.round(parseFloat(r.total_amount||0) / pMonths) : parseFloat(r.total_amount||0));
-      const pSignupFee   = parseFloat(r.signup_fee || 0);
+      // signup_fee: frontend przekazuje przez body, fallback do DB
+      const pSignupFee   = bodySignupFee !== undefined ? parseFloat(bodySignupFee) : parseFloat(r.signup_fee || 0);
       const pMode        = payment_mode || r.payment_mode || null;
       const pReminders   = reminders !== false;
 
