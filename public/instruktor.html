@@ -1,621 +1,1812 @@
 <!DOCTYPE html>
 <html lang="pl">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Panel Instruktora — Krav Maga Saggita</title>
-<style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --bg:#0b0b0d;
-  --bg2:#111115;
-  --panel:#16161c;
-  --panel2:#1e1e26;
-  --line:#252530;
-  --line2:#2e2e3e;
-  --text:#dddde8;
-  --dim:#7777a0;
-  --dim2:#4a4a6a;
-  --accent:#c8230a;
-  --accent2:#e53015;
-  --asoft:rgba(200,35,10,.15);
-  --aborder:rgba(200,35,10,.35);
-  --green:#1a9952;
-  --gsoft:rgba(26,153,82,.15);
-  --gborder:rgba(26,153,82,.35);
-  --yellow:#b08000;
-  --ysoft:rgba(176,128,0,.15);
-  --yborder:rgba(176,128,0,.35);
-  --blue:#1a60c8;
-  --bsoft:rgba(26,96,200,.12);
-  --sbw:210px;
-}
-html,body{height:100%;background:var(--bg);color:var(--text);font-family:'SF Pro Text',-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;font-size:13px;line-height:1.5}
-button{cursor:pointer;font-family:inherit;font-size:13px}
-input,select,textarea{font-family:inherit;font-size:13px}
-a{color:inherit;text-decoration:none}
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Panel Instruktora — Krav Maga Saggita</title>
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
 
-/* ─── LOGIN ─────────────────────────────────────────────────── */
-#pg-login{display:flex;height:100vh;align-items:center;justify-content:center;background:var(--bg)}
-#pg-login::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 500px 350px at 50% 35%,rgba(200,35,10,.07),transparent 65%);pointer-events:none}
-.lbox{position:relative;background:var(--panel);border:1px solid var(--line2);width:340px;padding:36px 32px 32px}
-.lbrand{font-size:18px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:#fff;margin-bottom:4px}
-.lbrand span{color:var(--accent)}
-.lsub{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--dim);margin-bottom:28px}
-.lf label{display:block;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);margin-bottom:5px}
-.lf input{width:100%;background:var(--bg2);border:1px solid var(--line2);padding:9px 11px;color:var(--text);outline:none;margin-bottom:12px}
-.lf input:focus{border-color:var(--accent)}
-.lbtn{width:100%;padding:11px;background:var(--accent);border:none;color:#fff;font-weight:700;font-size:13px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;margin-top:4px;transition:background .15s}
-.lbtn:hover{background:var(--accent2)}
-.lerr{margin-top:10px;padding:8px 10px;background:var(--asoft);border:1px solid var(--aborder);color:#ff7a5a;font-size:11px;font-weight:600;display:none}
-.lerr.show{display:block}
+    :root {
+      --bg: #0b0b0d;
+      --bg2: #111115;
+      --panel: #16161c;
+      --panel2: #1e1e26;
+      --line: #252530;
+      --line2: #2e2e3e;
+      --text: #dddde8;
+      --dim: #7777a0;
+      --dim2: #4a4a6a;
+      --accent: #c8230a;
+      --accent2: #e53015;
+      --asoft: rgba(200, 35, 10, .15);
+      --aborder: rgba(200, 35, 10, .35);
+      --green: #1a9952;
+      --gsoft: rgba(26, 153, 82, .15);
+      --gborder: rgba(26, 153, 82, .35);
+      --yellow: #b08000;
+      --ysoft: rgba(176, 128, 0, .15);
+      --yborder: rgba(176, 128, 0, .35);
+      --blue: #1a60c8;
+      --bsoft: rgba(26, 96, 200, .12);
+      --sbw: 210px;
+    }
 
-/* ─── APP ────────────────────────────────────────────────────── */
-#app{display:none;height:100vh;flex-direction:row}
-#app.on{display:flex}
+    html,
+    body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      font-size: 13px;
+      line-height: 1.5
+    }
 
-/* Sidebar */
-#sb{width:var(--sbw);min-width:var(--sbw);background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column}
-.sb-top{padding:18px 16px 14px;border-bottom:1px solid var(--line)}
-.sb-brand{font-size:14px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:#fff}
-.sb-brand em{color:var(--accent);font-style:normal}
-.sb-who{margin-top:6px}
-.sb-who strong{display:block;font-size:12px;font-weight:700;color:var(--text)}
-.sb-who span{font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:.08em}
-.sb-nav{padding:10px 8px;flex:1}
-.sb-sec{font-size:9px;text-transform:uppercase;letter-spacing:.14em;color:var(--dim2);padding:8px 8px 4px;margin-top:4px}
-.ni{display:flex;align-items:center;gap:9px;padding:8px 10px;color:var(--dim);cursor:pointer;font-size:12px;font-weight:500;transition:all .12s;border-left:2px solid transparent;margin-bottom:1px}
-.ni:hover{color:var(--text);background:var(--panel2)}
-.ni.on{color:var(--text);border-left-color:var(--accent);background:var(--asoft)}
-.ni-ico{font-size:13px;width:16px;text-align:center;flex-shrink:0}
-.sb-bot{padding:10px 8px;border-top:1px solid var(--line)}
-.lout{width:100%;padding:7px 10px;background:transparent;border:1px solid var(--line2);color:var(--dim);font-size:11px;text-transform:uppercase;letter-spacing:.08em;transition:all .12s}
-.lout:hover{border-color:var(--aborder);color:var(--accent)}
+    button {
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 13px
+    }
 
-/* Main */
-#main{flex:1;overflow:hidden;display:flex;flex-direction:column;-webkit-overflow-scrolling:touch}
-.ph{padding:16px 22px 12px;border-bottom:1px solid var(--line);flex-shrink:0;display:flex;align-items:flex-end;gap:12px}
-.ph-title{font-size:17px;font-weight:800;letter-spacing:-.01em;flex:1}
-.ph-sub{font-size:11px;color:var(--dim);margin-bottom:1px}
-#pb{flex:1;overflow-y:auto;padding:20px 22px;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain}
+    input,
+    select,
+    textarea {
+      font-family: inherit;
+      font-size: 13px
+    }
 
-/* ─── COMPONENTS ─────────────────────────────────────────────── */
-.stats{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
-.sc{background:var(--panel);border:1px solid var(--line);padding:8px 12px;min-width:110px}
-.sc-l{font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--dim);margin-bottom:3px}
-.sc-v{font-size:18px;font-weight:900;color:var(--text);line-height:1}
-.sc.g{border-color:var(--gborder);background:var(--gsoft)}
-.sc.r{border-color:var(--aborder);background:var(--asoft)}
-.sc.b{border-color:rgba(26,96,200,.3);background:var(--bsoft)}
-.sc.y{border-color:var(--yborder);background:var(--ysoft)}
+    a {
+      color: inherit;
+      text-decoration: none
+    }
 
-/* Buttons */
-.btn{display:inline-flex;align-items:center;gap:5px;padding:7px 13px;border:none;font-weight:600;font-size:12px;letter-spacing:.03em;cursor:pointer;transition:all .12s;white-space:nowrap}
-.btn-r{background:var(--accent);color:#fff}.btn-r:hover{background:var(--accent2)}
-.btn-g{background:var(--green);color:#fff}.btn-g:hover{filter:brightness(1.1)}
-.btn-o{background:transparent;border:1px solid var(--line2);color:var(--text)}.btn-o:hover{border-color:var(--line2);background:var(--panel2)}
-.btn-ghost{background:transparent;border:1px solid var(--aborder);color:var(--accent)}.btn-ghost:hover{background:var(--asoft)}
-.btn-sm{padding:5px 9px;font-size:11px}
-.btn-xs{padding:3px 7px;font-size:10px}
+    /* ─── LOGIN ─────────────────────────────────────────────────── */
+    #pg-login {
+      display: flex;
+      height: 100vh;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg)
+    }
 
-/* Table */
-.tw{overflow-x:auto}
-table{width:100%;border-collapse:collapse}
-th{text-align:left;font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--dim);padding:8px 12px;border-bottom:1px solid var(--line);font-weight:600}
-td{padding:9px 12px;border-bottom:1px solid var(--line);font-size:12px;vertical-align:middle}
-tr:hover td{background:var(--panel2)}
-.td-main{font-weight:600;color:var(--text)}
-.td-dim{color:var(--dim)}
+    #pg-login::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(ellipse 500px 350px at 50% 35%, rgba(200, 35, 10, .07), transparent 65%);
+      pointer-events: none
+    }
 
-/* Badges */
-.bx{display:inline-block;padding:2px 7px;font-size:10px;font-weight:700;letter-spacing:.04em}
-.bx-g{background:var(--gsoft);color:#3dd68c;border:1px solid var(--gborder)}
-.bx-r{background:var(--asoft);color:#ff6b4a;border:1px solid var(--aborder)}
-.bx-d{background:var(--panel2);color:var(--dim);border:1px solid var(--line)}
-.eg-row{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--brd);border-radius:8px;background:var(--panel2)}
-.bx-y{background:var(--ysoft);color:#e6a817;border:1px solid var(--yborder)}
-.bx-b{background:var(--bsoft);color:#6ba3f5;border:1px solid rgba(26,96,200,.3)}
+    .lbox {
+      position: relative;
+      background: var(--panel);
+      border: 1px solid var(--line2);
+      width: 340px;
+      padding: 36px 32px 32px
+    }
 
-/* Toolbar */
-.bar{display:flex;gap:8px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
-.bar input,.bar select{background:var(--panel);border:1px solid var(--line2);padding:7px 10px;color:var(--text);outline:none}
-.bar input:focus,.bar select:focus{border-color:var(--accent)}
-.bar input[type=search]{flex:1;min-width:180px;max-width:260px}
-.sep{flex:1}
+    .lbrand {
+      font-size: 18px;
+      font-weight: 900;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: #fff;
+      margin-bottom: 4px
+    }
 
-/* Breadcrumb */
-.bc{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--dim);margin-bottom:14px}
-.bc a{cursor:pointer;color:var(--dim)}.bc a:hover{color:var(--text)}
-.bc-sep{color:var(--dim2)}
+    .lbrand span {
+      color: var(--accent)
+    }
 
-/* Group cards */
-.gcards{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
-.gc{background:var(--panel);border:1px solid var(--line);padding:16px;cursor:pointer;transition:all .12s;border-top:3px solid var(--accent)}
-.gc:hover{border-color:var(--aborder);background:var(--panel2)}
-.gc-city{font-size:9px;text-transform:uppercase;letter-spacing:.12em;color:var(--accent);margin-bottom:4px}
-.gc-name{font-size:15px;font-weight:800;margin-bottom:10px;line-height:1.2}
-.gc-meta{display:flex;gap:14px;font-size:11px;color:var(--dim);margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--line)}
-.gc-sched{font-size:11px;color:var(--dim);line-height:1.9;margin-bottom:12px}
-.gc-sched strong{color:var(--text)}
-.gc-foot{display:flex;gap:6px}
+    .lsub {
+      font-size: 10px;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      color: var(--dim);
+      margin-bottom: 28px
+    }
 
-/* Info blocks */
-.ib{background:var(--panel);border:1px solid var(--line);padding:14px 16px;margin-bottom:12px}
-.ib h4{font-size:9px;text-transform:uppercase;letter-spacing:.12em;color:var(--dim);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--line)}
-.ir{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--line);font-size:12px}
-.ir:last-child{border:none}
-.ir-l{color:var(--dim)}
-.ir-v{font-weight:700}
-.pg2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .lf label {
+      display: block;
+      font-size: 10px;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--dim);
+      margin-bottom: 5px
+    }
 
-/* Calendar */
-.cal-head{display:flex;align-items:center;gap:10px;margin-bottom:14px}
-.cal-title{font-size:16px;font-weight:900;letter-spacing:-.01em;flex:1}
-.cal-nav button{padding:5px 10px;background:var(--panel);border:1px solid var(--line2);color:var(--text);font-size:12px}
-.cal-nav button:hover{border-color:var(--accent);color:var(--accent)}
-.cal-filt select{background:var(--panel);border:1px solid var(--line2);padding:6px 10px;color:var(--text);outline:none}
-.cgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:var(--line)}
-.cgh{background:var(--bg);text-align:center;font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--dim);padding:7px 0}
-.cgc{background:var(--panel);min-height:72px;padding:5px 6px;position:relative}
-.cgc.other{background:var(--bg);opacity:.4}
-.cgc.today{background:var(--panel2)}
-.cgc.today .cgc-d{color:var(--accent);font-weight:900}
-.cgc.clickable{cursor:pointer;-webkit-tap-highlight-color:rgba(0,0,0,0)}
-.cgc.clickable:active{background:var(--panel2)}
-.cgc.clickable:hover{background:var(--panel2)}
-.cgc-d{font-size:11px;font-weight:700;margin-bottom:3px}
-.cpill{display:block;width:100%;box-sizing:border-box;padding:2px 5px;font-size:9px;font-weight:700;margin-bottom:2px;cursor:pointer;text-overflow:ellipsis;overflow:hidden;white-space:nowrap;border:none;border-radius:0;background:none;text-align:left;font-family:inherit;-webkit-appearance:none;appearance:none;-webkit-tap-highlight-color:rgba(0,0,0,0);touch-action:manipulation;color:inherit;line-height:1.4}
-.cpill-s{background:var(--gsoft);color:#3dd68c;border-left:2px solid var(--green)}
-.cpill-s:hover,.cpill-s:active{background:rgba(26,153,82,.25)}
-.cpill-f{background:var(--ysoft);color:#e6a817;border-left:2px solid var(--yellow)}
-.cpill-f:hover,.cpill-f:active{background:rgba(176,128,0,.25)}
-.cpill-p{background:var(--asoft);color:#ff6b4a;border-left:2px solid var(--accent)}
-.cpill-p:hover{background:rgba(200,35,10,.25)}
-.cal-legend{display:flex;gap:14px;margin-top:12px;font-size:10px;color:var(--dim)}
-.cal-legend span{display:inline-flex;align-items:center;gap:5px}
-.cal-legend em{display:inline-block;width:10px;height:10px;font-style:normal}
+    .lf input {
+      width: 100%;
+      background: var(--bg2);
+      border: 1px solid var(--line2);
+      padding: 9px 11px;
+      color: var(--text);
+      outline: none;
+      margin-bottom: 12px
+    }
 
-/* Attendance */
-.att-list{display:flex;flex-direction:column;gap:1px;max-height:calc(100vh - 280px);overflow-y:auto}
-.att-row{display:grid;grid-template-columns:36px 1fr auto auto;align-items:center;gap:10px;padding:8px 12px;background:var(--panel);border-left:2px solid transparent;transition:all .1s}
-.att-row:hover{background:var(--panel2)}
-.att-row.present{border-left-color:var(--green);background:var(--gsoft)}
-.att-row.absent{border-left-color:transparent}
-.att-chk{width:24px;height:24px;border:2px solid var(--line2);background:var(--bg2);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .12s;font-size:13px;font-weight:900;flex-shrink:0}
-.att-chk:hover{border-color:var(--green)}
-.att-chk.on{background:var(--green);border-color:var(--green);color:#fff}
-.att-name{font-weight:600;font-size:13px}
-.att-pay{font-size:11px;color:var(--dim);text-align:right}
-.att-pay.late{color:#ff6b4a;font-weight:600}
+    .lf input:focus {
+      border-color: var(--accent)
+    }
 
-/* Payment rows */
-.prow{display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--panel);border-bottom:1px solid var(--line)}
-.prow:hover{background:var(--panel2)}
-.prow-amt{font-weight:800;font-size:14px;min-width:55px}
-.prow-dt{font-size:11px;color:var(--dim);width:80px}
-.prow-name{flex:1;font-size:12px}
-.prow-note{flex:1;font-size:11px;color:var(--dim);text-align:right}
+    .lbtn {
+      width: 100%;
+      padding: 11px;
+      background: var(--accent);
+      border: none;
+      color: #fff;
+      font-weight: 700;
+      font-size: 13px;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      cursor: pointer;
+      margin-top: 4px;
+      transition: background .15s
+    }
 
-/* Modal */
-.mo{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;display:flex;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto;-webkit-overflow-scrolling:touch}
-.md{background:var(--panel);border:1px solid var(--line2);width:100%;max-width:440px;max-height:90vh;overflow-y:auto}
-.md-h{padding:15px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between}
-.md-title{font-size:14px;font-weight:800;text-transform:uppercase;letter-spacing:.04em}
-.md-x{background:none;border:none;color:var(--dim);font-size:18px;cursor:pointer;padding:0 2px}.md-x:hover{color:var(--text)}
-.md-b{padding:18px}
-.md-f{padding:12px 18px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:8px}
-.ff{margin-bottom:13px}
-.ff label{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--dim);margin-bottom:5px}
-.ff input,.ff select{width:100%;background:var(--bg2);border:1px solid var(--line2);padding:9px 10px;color:var(--text);outline:none}
-.ff input:focus,.ff select:focus{border-color:var(--accent)}
-.ff2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .lbtn:hover {
+      background: var(--accent2)
+    }
 
-/* Misc */
-.empty{text-align:center;padding:40px 20px;color:var(--dim);font-size:13px}
-.loading{text-align:center;padding:40px;color:var(--dim)}
-.divider{height:1px;background:var(--line);margin:14px 0}
-.section-hd{font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:var(--dim);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between}
+    .lerr {
+      margin-top: 10px;
+      padding: 8px 10px;
+      background: var(--asoft);
+      border: 1px solid var(--aborder);
+      color: #ff7a5a;
+      font-size: 11px;
+      font-weight: 600;
+      display: none
+    }
 
-/* ─── MOBILE NAV ──────────────────────────────────────────────── */
-#mob-bar{display:none;position:fixed;top:0;left:0;right:0;z-index:500;background:var(--panel);border-bottom:1px solid var(--line);height:calc(52px + env(safe-area-inset-top));padding:env(safe-area-inset-top) 12px 0 12px;align-items:center;gap:10px}
-#mob-bar .mb-brand{font-size:13px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:#fff;flex:1}
-#mob-bar .mb-brand em{color:var(--accent);font-style:normal}
-#ham{background:none;border:1px solid var(--line2);color:var(--text);width:38px;height:38px;font-size:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;font-family:inherit}
-#sb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:998}
+    .lerr.show {
+      display: block
+    }
 
-/* ─── BOTTOM NAV (mobile) ─────────────────────────────────────── */
-#bot-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:500;background:var(--panel);border-top:1px solid var(--line);height:calc(58px + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom);align-items:center;justify-content:space-around}
-.bn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:6px 4px;cursor:pointer;color:var(--dim);font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;border:none;background:none;font-family:inherit}
-.bn.on{color:var(--accent)}
-.bn-ico{font-size:18px;line-height:1}
+    /* ─── APP ────────────────────────────────────────────────────── */
+    #app {
+      display: none;
+      height: 100vh;
+      flex-direction: row
+    }
 
-@media(max-width:700px){
-  #sb{display:none}
-  #mob-bar{display:flex}
-  #bot-nav{display:flex}
-  #app.on{flex-direction:column;padding-top:calc(52px + env(safe-area-inset-top));padding-bottom:calc(58px + env(safe-area-inset-bottom))}
-  #main{min-height:0}
-  #pb{padding:14px 12px}
-  .ph{padding:10px 12px 8px}
-  .ph-title{font-size:15px}
+    #app.on {
+      display: flex
+    }
 
-  /* Stats — 2 cols */
-  .stats{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-  .sc{min-width:0;padding:10px 12px}
-  .sc-v{font-size:20px}
+    /* Sidebar */
+    #sb {
+      width: var(--sbw);
+      min-width: var(--sbw);
+      background: var(--panel);
+      border-right: 1px solid var(--line);
+      display: flex;
+      flex-direction: column
+    }
 
-  /* Group cards — single col */
-  .gcards{grid-template-columns:1fr}
+    .sb-top {
+      padding: 18px 16px 14px;
+      border-bottom: 1px solid var(--line)
+    }
 
-  /* Tables → card layout */
-  .tw{overflow-x:unset}
-  .tw table,.tw thead,.tw tbody,.tw th,.tw td,.tw tr{display:block}
-  .tw thead tr{display:none}
-  .tw tbody tr{background:var(--panel);border:1px solid var(--line);margin-bottom:8px;padding:10px 12px}
-  .tw tbody tr:hover td{background:transparent}
-  .tw td{padding:4px 0;font-size:12px;border:none;display:flex;justify-content:space-between;align-items:center;gap:8px;min-height:28px}
-  .tw td::before{content:attr(data-label);font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--dim);flex-shrink:0;min-width:90px}
-  .tw td:last-child{justify-content:flex-end;padding-top:10px;margin-top:6px;border-top:1px solid var(--line)}
-  .tw td:last-child::before{display:none}
+    .sb-brand {
+      font-size: 14px;
+      font-weight: 900;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: #fff
+    }
 
-  .pg2{grid-template-columns:1fr}
-  .ff2{grid-template-columns:1fr}
+    .sb-brand em {
+      color: var(--accent);
+      font-style: normal
+    }
 
-  /* Attendance */
-  .att-row{grid-template-columns:40px 1fr;grid-template-rows:auto auto;gap:6px 10px;padding:10px 12px}
-  .att-pay{grid-column:2;font-size:11px}
-  .att-chk{width:34px;height:34px;font-size:16px;grid-row:1/3;align-self:center}
+    .sb-who {
+      margin-top: 6px
+    }
 
-  /* Calendar */
-  .cal-head{flex-wrap:wrap;gap:6px}
-  .cal-title{font-size:14px;min-width:100%;order:-1}
-  .cal-filt{width:100%}
-  .cal-filt select{width:100%}
-  .cgc{min-height:50px;padding:3px 2px}
-  .cgc-d{font-size:10px}
-  .cpill{font-size:8px;padding:1px 3px}
-  .cal-legend{flex-direction:column;gap:5px;font-size:10px}
+    .sb-who strong {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text)
+    }
 
-  /* Toolbar */
-  .bar{flex-direction:column;align-items:stretch}
-  .bar input,.bar select{max-width:none;width:100%}
-  .sep{display:none}
-  .bar .btn{width:100%;justify-content:center}
+    .sb-who span {
+      font-size: 10px;
+      color: var(--dim);
+      text-transform: uppercase;
+      letter-spacing: .08em
+    }
 
-  /* Modal */
-  .mo{padding:8px}
-  .md{max-width:100%;max-height:95vh}
+    .sb-nav {
+      padding: 10px 8px;
+      flex: 1
+    }
 
-  .bc{font-size:10px;flex-wrap:wrap}
-  .prow{flex-wrap:wrap;gap:4px}
-  #ph-act .btn{font-size:11px;padding:6px 10px}
-}
+    .sb-sec {
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: .14em;
+      color: var(--dim2);
+      padding: 8px 8px 4px;
+      margin-top: 4px
+    }
 
-@media(max-width:380px){
-  .cgh{font-size:8px;padding:5px 0}
-  .cgc{min-height:42px}
-  .cpill{display:none}
-}
-/* naprawa przewijania listy przy dolnym menu */
-body{
-padding-bottom:120px;
-}
+    .ni {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 8px 10px;
+      color: var(--dim);
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 500;
+      transition: all .12s;
+      border-left: 2px solid transparent;
+      margin-bottom: 1px
+    }
 
-/* wymuszenie prawidłowego scrolla strony */
-html,body{
-overflow-y:auto;
-}
-/* ===== TRYB INSTRUKTORA — MINIMALNY PANEL ===== */
+    .ni:hover {
+      color: var(--text);
+      background: var(--panel2)
+    }
 
-/* usuń statystyki */
-.stats{
-display:none !important;
-}
+    .ni.on {
+      color: var(--text);
+      border-left-color: var(--accent);
+      background: var(--asoft)
+    }
 
-/* zmniejsz nagłówek */
-h1{
-font-size:18px !important;
-margin-bottom:4px !important;
-}
+    .ni-ico {
+      font-size: 13px;
+      width: 16px;
+      text-align: center;
+      flex-shrink: 0
+    }
 
-/* zmniejsz opis */
-.subtitle{
-font-size:12px !important;
-margin-bottom:8px !important;
-}
+    .sb-bot {
+      padding: 10px 8px;
+      border-top: 1px solid var(--line)
+    }
 
-/* zmniejsz przyciski */
-button{
-padding:10px 12px !important;
-font-size:14px !important;
-margin-bottom:6px !important;
-}
+    .lout {
+      width: 100%;
+      padding: 7px 10px;
+      background: transparent;
+      border: 1px solid var(--line2);
+      color: var(--dim);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      transition: all .12s
+    }
 
-/* zmniejsz odstępy */
-.container,
-.wrap,
-main{
-padding-top:10px !important;
-}
+    .lout:hover {
+      border-color: var(--aborder);
+      color: var(--accent)
+    }
 
-/* lista kursantów bliżej góry */
-.student-list,
-.list{
-margin-top:6px !important;
-}
-/* ===== JEDEN SCROLL NA CAŁĄ STRONĘ ===== */
+    /* Main */
+    #main {
+      flex: 1;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      -webkit-overflow-scrolling: touch
+    }
 
-/* wyłącz scroll w layoutach aplikacji */
-main,
-.container,
-.wrap,
-.page,
-.content,
-.app,
-.pb{
-height:auto !important;
-max-height:none !important;
-overflow:visible !important;
-}
+    .ph {
+      padding: 16px 22px 12px;
+      border-bottom: 1px solid var(--line);
+      flex-shrink: 0;
+      display: flex;
+      align-items: flex-end;
+      gap: 12px
+    }
 
-/* lista kursantów */
-.student-list,
-.list,
-.attendance-list,
-#students,
-#kursanci{
-height:auto !important;
-max-height:none !important;
-overflow:visible !important;
-}
+    .ph-title {
+      font-size: 17px;
+      font-weight: 800;
+      letter-spacing: -.01em;
+      flex: 1
+    }
 
-/* scroll tylko na stronie */
-html,
-body{
-height:auto !important;
-overflow-y:auto !important;
-}
-</style>
+    .ph-sub {
+      font-size: 11px;
+      color: var(--dim);
+      margin-bottom: 1px
+    }
+
+    #pb {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 22px;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior-y: contain
+    }
+
+    /* ─── COMPONENTS ─────────────────────────────────────────────── */
+    .stats {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+      flex-wrap: wrap
+    }
+
+    .sc {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      padding: 8px 12px;
+      min-width: 110px
+    }
+
+    .sc-l {
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      color: var(--dim);
+      margin-bottom: 3px
+    }
+
+    .sc-v {
+      font-size: 18px;
+      font-weight: 900;
+      color: var(--text);
+      line-height: 1
+    }
+
+    .sc.g {
+      border-color: var(--gborder);
+      background: var(--gsoft)
+    }
+
+    .sc.r {
+      border-color: var(--aborder);
+      background: var(--asoft)
+    }
+
+    .sc.b {
+      border-color: rgba(26, 96, 200, .3);
+      background: var(--bsoft)
+    }
+
+    .sc.y {
+      border-color: var(--yborder);
+      background: var(--ysoft)
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 7px 13px;
+      border: none;
+      font-weight: 600;
+      font-size: 12px;
+      letter-spacing: .03em;
+      cursor: pointer;
+      transition: all .12s;
+      white-space: nowrap
+    }
+
+    .btn-r {
+      background: var(--accent);
+      color: #fff
+    }
+
+    .btn-r:hover {
+      background: var(--accent2)
+    }
+
+    .btn-g {
+      background: var(--green);
+      color: #fff
+    }
+
+    .btn-g:hover {
+      filter: brightness(1.1)
+    }
+
+    .btn-o {
+      background: transparent;
+      border: 1px solid var(--line2);
+      color: var(--text)
+    }
+
+    .btn-o:hover {
+      border-color: var(--line2);
+      background: var(--panel2)
+    }
+
+    .btn-ghost {
+      background: transparent;
+      border: 1px solid var(--aborder);
+      color: var(--accent)
+    }
+
+    .btn-ghost:hover {
+      background: var(--asoft)
+    }
+
+    .btn-sm {
+      padding: 5px 9px;
+      font-size: 11px
+    }
+
+    .btn-xs {
+      padding: 3px 7px;
+      font-size: 10px
+    }
+
+    /* Table */
+    .tw {
+      overflow-x: auto
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse
+    }
+
+    th {
+      text-align: left;
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      color: var(--dim);
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--line);
+      font-weight: 600
+    }
+
+    td {
+      padding: 9px 12px;
+      border-bottom: 1px solid var(--line);
+      font-size: 12px;
+      vertical-align: middle
+    }
+
+    tr:hover td {
+      background: var(--panel2)
+    }
+
+    .td-main {
+      font-weight: 600;
+      color: var(--text)
+    }
+
+    .td-dim {
+      color: var(--dim)
+    }
+
+    /* Badges */
+    .bx {
+      display: inline-block;
+      padding: 2px 7px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .04em
+    }
+
+    .bx-g {
+      background: var(--gsoft);
+      color: #3dd68c;
+      border: 1px solid var(--gborder)
+    }
+
+    .bx-r {
+      background: var(--asoft);
+      color: #ff6b4a;
+      border: 1px solid var(--aborder)
+    }
+
+    .bx-d {
+      background: var(--panel2);
+      color: var(--dim);
+      border: 1px solid var(--line)
+    }
+
+    .eg-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      border: 1px solid var(--brd);
+      border-radius: 8px;
+      background: var(--panel2)
+    }
+
+    .bx-y {
+      background: var(--ysoft);
+      color: #e6a817;
+      border: 1px solid var(--yborder)
+    }
+
+    .bx-b {
+      background: var(--bsoft);
+      color: #6ba3f5;
+      border: 1px solid rgba(26, 96, 200, .3)
+    }
+
+    /* Toolbar */
+    .bar {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 14px;
+      flex-wrap: wrap
+    }
+
+    .bar input,
+    .bar select {
+      background: var(--panel);
+      border: 1px solid var(--line2);
+      padding: 7px 10px;
+      color: var(--text);
+      outline: none
+    }
+
+    .bar input:focus,
+    .bar select:focus {
+      border-color: var(--accent)
+    }
+
+    .bar input[type=search] {
+      flex: 1;
+      min-width: 180px;
+      max-width: 260px
+    }
+
+    .sep {
+      flex: 1
+    }
+
+    /* Breadcrumb */
+    .bc {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      color: var(--dim);
+      margin-bottom: 14px
+    }
+
+    .bc a {
+      cursor: pointer;
+      color: var(--dim)
+    }
+
+    .bc a:hover {
+      color: var(--text)
+    }
+
+    .bc-sep {
+      color: var(--dim2)
+    }
+
+    /* Group cards */
+    .gcards {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 12px
+    }
+
+    .gc {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      padding: 16px;
+      cursor: pointer;
+      transition: all .12s;
+      border-top: 3px solid var(--accent)
+    }
+
+    .gc:hover {
+      border-color: var(--aborder);
+      background: var(--panel2)
+    }
+
+    .gc-city {
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: .12em;
+      color: var(--accent);
+      margin-bottom: 4px
+    }
+
+    .gc-name {
+      font-size: 15px;
+      font-weight: 800;
+      margin-bottom: 10px;
+      line-height: 1.2
+    }
+
+    .gc-meta {
+      display: flex;
+      gap: 14px;
+      font-size: 11px;
+      color: var(--dim);
+      margin-bottom: 10px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--line)
+    }
+
+    .gc-sched {
+      font-size: 11px;
+      color: var(--dim);
+      line-height: 1.9;
+      margin-bottom: 12px
+    }
+
+    .gc-sched strong {
+      color: var(--text)
+    }
+
+    .gc-foot {
+      display: flex;
+      gap: 6px
+    }
+
+    /* Info blocks */
+    .ib {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      padding: 14px 16px;
+      margin-bottom: 12px
+    }
+
+    .ib h4 {
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: .12em;
+      color: var(--dim);
+      margin-bottom: 10px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--line)
+    }
+
+    .ir {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 0;
+      border-bottom: 1px solid var(--line);
+      font-size: 12px
+    }
+
+    .ir:last-child {
+      border: none
+    }
+
+    .ir-l {
+      color: var(--dim)
+    }
+
+    .ir-v {
+      font-weight: 700
+    }
+
+    .pg2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px
+    }
+
+    /* Calendar */
+    .cal-head {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px
+    }
+
+    .cal-title {
+      font-size: 16px;
+      font-weight: 900;
+      letter-spacing: -.01em;
+      flex: 1
+    }
+
+    .cal-nav button {
+      padding: 5px 10px;
+      background: var(--panel);
+      border: 1px solid var(--line2);
+      color: var(--text);
+      font-size: 12px
+    }
+
+    .cal-nav button:hover {
+      border-color: var(--accent);
+      color: var(--accent)
+    }
+
+    .cal-filt select {
+      background: var(--panel);
+      border: 1px solid var(--line2);
+      padding: 6px 10px;
+      color: var(--text);
+      outline: none
+    }
+
+    .cgrid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 1px;
+      background: var(--line)
+    }
+
+    .cgh {
+      background: var(--bg);
+      text-align: center;
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      color: var(--dim);
+      padding: 7px 0
+    }
+
+    .cgc {
+      background: var(--panel);
+      min-height: 72px;
+      padding: 5px 6px;
+      position: relative
+    }
+
+    .cgc.other {
+      background: var(--bg);
+      opacity: .4
+    }
+
+    .cgc.today {
+      background: var(--panel2)
+    }
+
+    .cgc.today .cgc-d {
+      color: var(--accent);
+      font-weight: 900
+    }
+
+    .cgc.clickable {
+      cursor: pointer;
+      -webkit-tap-highlight-color: rgba(0, 0, 0, 0)
+    }
+
+    .cgc.clickable:active {
+      background: var(--panel2)
+    }
+
+    .cgc.clickable:hover {
+      background: var(--panel2)
+    }
+
+    .cgc-d {
+      font-size: 11px;
+      font-weight: 700;
+      margin-bottom: 3px
+    }
+
+    .cpill {
+      display: block;
+      width: 100%;
+      box-sizing: border-box;
+      padding: 2px 5px;
+      font-size: 9px;
+      font-weight: 700;
+      margin-bottom: 2px;
+      cursor: pointer;
+      text-overflow: ellipsis;
+      overflow: hidden;
+      white-space: nowrap;
+      border: none;
+      border-radius: 0;
+      background: none;
+      text-align: left;
+      font-family: inherit;
+      -webkit-appearance: none;
+      appearance: none;
+      -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+      touch-action: manipulation;
+      color: inherit;
+      line-height: 1.4
+    }
+
+    .cpill-s {
+      background: var(--gsoft);
+      color: #3dd68c;
+      border-left: 2px solid var(--green)
+    }
+
+    .cpill-s:hover,
+    .cpill-s:active {
+      background: rgba(26, 153, 82, .25)
+    }
+
+    .cpill-f {
+      background: var(--ysoft);
+      color: #e6a817;
+      border-left: 2px solid var(--yellow)
+    }
+
+    .cpill-f:hover,
+    .cpill-f:active {
+      background: rgba(176, 128, 0, .25)
+    }
+
+    .cpill-p {
+      background: var(--asoft);
+      color: #ff6b4a;
+      border-left: 2px solid var(--accent)
+    }
+
+    .cpill-p:hover {
+      background: rgba(200, 35, 10, .25)
+    }
+
+    .cal-legend {
+      display: flex;
+      gap: 14px;
+      margin-top: 12px;
+      font-size: 10px;
+      color: var(--dim)
+    }
+
+    .cal-legend span {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px
+    }
+
+    .cal-legend em {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      font-style: normal
+    }
+
+    /* Attendance */
+    .att-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+      max-height: calc(100vh - 280px);
+      overflow-y: auto
+    }
+
+    .att-row {
+      display: grid;
+      grid-template-columns: 36px 1fr auto auto;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      background: var(--panel);
+      border-left: 2px solid transparent;
+      transition: all .1s
+    }
+
+    .att-row:hover {
+      background: var(--panel2)
+    }
+
+    .att-row.present {
+      border-left-color: var(--green);
+      background: var(--gsoft)
+    }
+
+    .att-row.absent {
+      border-left-color: transparent
+    }
+
+    .att-chk {
+      width: 24px;
+      height: 24px;
+      border: 2px solid var(--line2);
+      background: var(--bg2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all .12s;
+      font-size: 13px;
+      font-weight: 900;
+      flex-shrink: 0
+    }
+
+    .att-chk:hover {
+      border-color: var(--green)
+    }
+
+    .att-chk.on {
+      background: var(--green);
+      border-color: var(--green);
+      color: #fff
+    }
+
+    .att-name {
+      font-weight: 600;
+      font-size: 13px
+    }
+
+    .att-pay {
+      font-size: 11px;
+      color: var(--dim);
+      text-align: right
+    }
+
+    .att-pay.late {
+      color: #ff6b4a;
+      font-weight: 600
+    }
+
+    /* Payment rows */
+    .prow {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 12px;
+      background: var(--panel);
+      border-bottom: 1px solid var(--line)
+    }
+
+    .prow:hover {
+      background: var(--panel2)
+    }
+
+    .prow-amt {
+      font-weight: 800;
+      font-size: 14px;
+      min-width: 55px
+    }
+
+    .prow-dt {
+      font-size: 11px;
+      color: var(--dim);
+      width: 80px
+    }
+
+    .prow-name {
+      flex: 1;
+      font-size: 12px
+    }
+
+    .prow-note {
+      flex: 1;
+      font-size: 11px;
+      color: var(--dim);
+      text-align: right
+    }
+
+    /* Modal */
+    .mo {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .75);
+      z-index: 200;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 20px;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch
+    }
+
+    .md {
+      background: var(--panel);
+      border: 1px solid var(--line2);
+      width: 100%;
+      max-width: 440px;
+      max-height: 90vh;
+      overflow-y: auto
+    }
+
+    .md-h {
+      padding: 15px 18px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between
+    }
+
+    .md-title {
+      font-size: 14px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .04em
+    }
+
+    .md-x {
+      background: none;
+      border: none;
+      color: var(--dim);
+      font-size: 18px;
+      cursor: pointer;
+      padding: 0 2px
+    }
+
+    .md-x:hover {
+      color: var(--text)
+    }
+
+    .md-b {
+      padding: 18px
+    }
+
+    .md-f {
+      padding: 12px 18px;
+      border-top: 1px solid var(--line);
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px
+    }
+
+    .ff {
+      margin-bottom: 13px
+    }
+
+    .ff label {
+      display: block;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--dim);
+      margin-bottom: 5px
+    }
+
+    .ff input,
+    .ff select {
+      width: 100%;
+      background: var(--bg2);
+      border: 1px solid var(--line2);
+      padding: 9px 10px;
+      color: var(--text);
+      outline: none
+    }
+
+    .ff input:focus,
+    .ff select:focus {
+      border-color: var(--accent)
+    }
+
+    .ff2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px
+    }
+
+    /* Misc */
+    .empty {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--dim);
+      font-size: 13px
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: var(--dim)
+    }
+
+    .divider {
+      height: 1px;
+      background: var(--line);
+      margin: 14px 0
+    }
+
+    .section-hd {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: .12em;
+      color: var(--dim);
+      margin-bottom: 10px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between
+    }
+
+    /* ─── MOBILE NAV ──────────────────────────────────────────────── */
+    #mob-bar {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 500;
+      background: var(--panel);
+      border-bottom: 1px solid var(--line);
+      height: calc(52px + env(safe-area-inset-top));
+      padding: env(safe-area-inset-top) 12px 0 12px;
+      align-items: center;
+      gap: 10px
+    }
+
+    #mob-bar .mb-brand {
+      font-size: 13px;
+      font-weight: 900;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: #fff;
+      flex: 1
+    }
+
+    #mob-bar .mb-brand em {
+      color: var(--accent);
+      font-style: normal
+    }
+
+    #ham {
+      background: none;
+      border: 1px solid var(--line2);
+      color: var(--text);
+      width: 38px;
+      height: 38px;
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      cursor: pointer;
+      font-family: inherit
+    }
+
+    #sb-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .65);
+      z-index: 998
+    }
+
+    /* ─── BOTTOM NAV (mobile) ─────────────────────────────────────── */
+    #bot-nav {
+      display: none;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 500;
+      background: var(--panel);
+      border-top: 1px solid var(--line);
+      height: calc(58px + env(safe-area-inset-bottom));
+      padding-bottom: env(safe-area-inset-bottom);
+      align-items: center;
+      justify-content: space-around
+    }
+
+    .bn {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      padding: 6px 4px;
+      cursor: pointer;
+      color: var(--dim);
+      font-size: 9px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      border: none;
+      background: none;
+      font-family: inherit
+    }
+
+    .bn.on {
+      color: var(--accent)
+    }
+
+    .bn-ico {
+      font-size: 18px;
+      line-height: 1
+    }
+
+    @media(max-width:700px) {
+      #sb {
+        display: none
+      }
+
+      #mob-bar {
+        display: flex
+      }
+
+      #bot-nav {
+        display: flex
+      }
+
+      #app.on {
+        flex-direction: column;
+        padding-top: calc(52px + env(safe-area-inset-top));
+        padding-bottom: calc(58px + env(safe-area-inset-bottom))
+      }
+
+      #main {
+        min-height: 0
+      }
+
+      #pb {
+        padding: 14px 12px
+      }
+
+      .ph {
+        padding: 10px 12px 8px
+      }
+
+      .ph-title {
+        font-size: 15px
+      }
+
+      /* Stats — 2 cols */
+      .stats {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px
+      }
+
+      .sc {
+        min-width: 0;
+        padding: 10px 12px
+      }
+
+      .sc-v {
+        font-size: 20px
+      }
+
+      /* Group cards — single col */
+      .gcards {
+        grid-template-columns: 1fr
+      }
+
+      /* Tables → card layout */
+      .tw {
+        overflow-x: unset
+      }
+
+      .tw table,
+      .tw thead,
+      .tw tbody,
+      .tw th,
+      .tw td,
+      .tw tr {
+        display: block
+      }
+
+      .tw thead tr {
+        display: none
+      }
+
+      .tw tbody tr {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        margin-bottom: 8px;
+        padding: 10px 12px
+      }
+
+      .tw tbody tr:hover td {
+        background: transparent
+      }
+
+      .tw td {
+        padding: 4px 0;
+        font-size: 12px;
+        border: none;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 8px;
+        min-height: 28px
+      }
+
+      .tw td::before {
+        content: attr(data-label);
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: .08em;
+        color: var(--dim);
+        flex-shrink: 0;
+        min-width: 90px
+      }
+
+      .tw td:last-child {
+        justify-content: flex-end;
+        padding-top: 10px;
+        margin-top: 6px;
+        border-top: 1px solid var(--line)
+      }
+
+      .tw td:last-child::before {
+        display: none
+      }
+
+      .pg2 {
+        grid-template-columns: 1fr
+      }
+
+      .ff2 {
+        grid-template-columns: 1fr
+      }
+
+      /* Attendance */
+      .att-list {
+        max-height: none;
+        overflow-y: visible
+      }
+
+      .att-row {
+        grid-template-columns: 40px 1fr;
+        grid-template-rows: auto auto;
+        gap: 6px 10px;
+        padding: 12px;
+        margin-bottom: 6px;
+        border-radius: 8px;
+        border: 1px solid var(--line);
+        cursor: pointer;
+        -webkit-tap-highlight-color: rgba(0, 0, 0, 0)
+      }
+
+      .att-pay {
+        grid-column: 2;
+        font-size: 11px
+      }
+
+      .att-chk {
+        width: 34px;
+        height: 34px;
+        font-size: 16px;
+        grid-row: 1/3;
+        align-self: center;
+        pointer-events: none
+      }
+
+      /* Calendar */
+      .cal-head {
+        flex-wrap: wrap;
+        gap: 6px
+      }
+
+      .cal-title {
+        font-size: 14px;
+        min-width: 100%;
+        order: -1
+      }
+
+      .cal-filt {
+        width: 100%
+      }
+
+      .cal-filt select {
+        width: 100%
+      }
+
+      .cgc {
+        min-height: 50px;
+        padding: 3px 2px
+      }
+
+      .cgc-d {
+        font-size: 10px
+      }
+
+      .cpill {
+        font-size: 8px;
+        padding: 1px 3px
+      }
+
+      .cal-legend {
+        flex-direction: column;
+        gap: 5px;
+        font-size: 10px
+      }
+
+      /* Toolbar */
+      .bar {
+        flex-direction: column;
+        align-items: stretch
+      }
+
+      .bar input,
+      .bar select {
+        max-width: none;
+        width: 100%
+      }
+
+      .sep {
+        display: none
+      }
+
+      .bar .btn {
+        width: 100%;
+        justify-content: center
+      }
+
+      /* Modal */
+      .mo {
+        padding: 8px
+      }
+
+      .md {
+        max-width: 100%;
+        max-height: 95vh
+      }
+
+      .bc {
+        font-size: 10px;
+        flex-wrap: wrap
+      }
+
+      .prow {
+        flex-wrap: wrap;
+        gap: 4px
+      }
+
+      #ph-act .btn {
+        font-size: 11px;
+        padding: 6px 10px
+      }
+    }
+
+    @media(max-width:380px) {
+      .cgh {
+        font-size: 8px;
+        padding: 5px 0
+      }
+
+      .cgc {
+        min-height: 42px
+      }
+
+      .cpill {
+        display: none
+      }
+    }
+
+    /* naprawa przewijania listy przy dolnym menu */
+    body {
+      padding-bottom: 120px;
+    }
+
+    /* wymuszenie prawidłowego scrolla strony */
+    html,
+    body {
+      overflow-y: auto;
+    }
+
+    /* ===== TRYB INSTRUKTORA — MINIMALNY PANEL ===== */
+
+    /* usuń statystyki */
+    .stats {
+      display: none !important;
+    }
+
+    /* zmniejsz nagłówek */
+    h1 {
+      font-size: 18px !important;
+      margin-bottom: 4px !important;
+    }
+
+    /* zmniejsz opis */
+    .subtitle {
+      font-size: 12px !important;
+      margin-bottom: 8px !important;
+    }
+
+    /* zmniejsz przyciski */
+    button {
+      padding: 10px 12px !important;
+      font-size: 14px !important;
+      margin-bottom: 6px !important;
+    }
+
+    /* zmniejsz odstępy */
+    .container,
+    .wrap,
+    main {
+      padding-top: 10px !important;
+    }
+
+    /* lista kursantów bliżej góry */
+    .student-list,
+    .list {
+      margin-top: 6px !important;
+    }
+
+    /* ===== JEDEN SCROLL NA CAŁĄ STRONĘ ===== */
+
+    /* wyłącz scroll w layoutach aplikacji */
+    main,
+    .container,
+    .wrap,
+    .page,
+    .content,
+    .app,
+    .pb {
+      height: auto !important;
+      max-height: none !important;
+      overflow: visible !important;
+    }
+
+    /* lista kursantów */
+    .student-list,
+    .list,
+    .attendance-list,
+    .att-list,
+    #attlist,
+    #students,
+    #kursanci {
+      height: auto !important;
+      max-height: none !important;
+      overflow: visible !important;
+    }
+
+    /* scroll tylko na stronie */
+    html,
+    body {
+      height: auto !important;
+      overflow-y: auto !important;
+    }
+  </style>
 </head>
+
 <body>
 
-<!-- LOGIN -->
-<div id="pg-login">
-  <div class="lbox">
-    <div class="lbrand">KRAV MAGA <em>SAGGITA</em></div>
-    <div class="lsub">Panel Instruktora</div>
-    <div class="lf">
-      <label>Login</label>
-      <input id="li-u" type="text" autocomplete="username" placeholder="login">
-      <label>Hasło</label>
-      <input id="li-p" type="password" autocomplete="current-password" placeholder="••••••" onkeydown="if(event.key==='Enter')login()">
-      <button class="lbtn" onclick="login()">Zaloguj się</button>
-      <div id="li-e" class="lerr"></div>
-    </div>
-  </div>
-</div>
-
-<!-- MOBILE TOP BAR -->
-<div id="mob-bar" style="display:none">
-  <button id="ham" onclick="toggleSb()">☰</button>
-  <div class="mb-brand">KM <em>SAGGITA</em></div>
-  <button class="btn btn-ghost btn-xs" onclick="logout()">Wyloguj</button>
-</div>
-<div id="sb-overlay" onclick="closeSb()"></div>
-
-<!-- MOBILE BOTTOM NAV -->
-<div id="bot-nav" style="display:none">
-  <button class="bn on" id="bn-dash"   onclick="go('dash')" ><span class="bn-ico">▣</span>Główna</button>
-  <button class="bn"    id="bn-groups" onclick="go('groups')"><span class="bn-ico">◈</span>Grupy</button>
-  <button class="bn"    id="bn-cal"    onclick="go('cal')"   ><span class="bn-ico">⊡</span>Kalendarz</button>
-  <button class="bn"    id="bn-sess"   onclick="go('sess')"  ><span class="bn-ico">☑</span>Sesje</button>
-  <button class="bn"    id="bn-pays"   onclick="go('pays')"  ><span class="bn-ico">₴</span>Płatności</button>
-</div>
-
-<!-- APP -->
-<div id="app">
-  <aside id="sb">
-    <div class="sb-top">
-      <div class="sb-brand">KM <em>SAGGITA</em></div>
-      <div class="sb-who">
-        <strong id="sb-name">—</strong>
-        <span>Instruktor</span>
+  <!-- LOGIN -->
+  <div id="pg-login">
+    <div class="lbox">
+      <div class="lbrand">KRAV MAGA <em>SAGGITA</em></div>
+      <div class="lsub">Panel Instruktora</div>
+      <div class="lf">
+        <label>Login</label>
+        <input id="li-u" type="text" autocomplete="username" placeholder="login">
+        <label>Hasło</label>
+        <input id="li-p" type="password" autocomplete="current-password" placeholder="••••••"
+          onkeydown="if(event.key==='Enter')login()">
+        <button class="lbtn" onclick="login()">Zaloguj się</button>
+        <div id="li-e" class="lerr"></div>
       </div>
     </div>
-    <nav class="sb-nav">
-      <div class="sb-sec">Panel</div>
-      <div class="ni on" id="ni-dash"   onclick="go('dash')"><span class="ni-ico">▣</span>Dashboard</div>
-      <div class="ni"    id="ni-groups" onclick="go('groups')"><span class="ni-ico">◈</span>Grupy & Kursanci</div>
-      <div class="ni"    id="ni-cal"    onclick="go('cal')"><span class="ni-ico">⊡</span>Kalendarz zajęć</div>
-      <div class="ni"    id="ni-sess"   onclick="go('sess')"><span class="ni-ico">☑</span>Sesje & Obecności</div>
-      <div class="ni"    id="ni-pays"   onclick="go('pays')"><span class="ni-ico">₴</span>Płatności</div>
-    </nav>
-    <div class="sb-bot">
-      <button class="lout" onclick="logout()">Wyloguj</button>
-    </div>
-  </aside>
-  <main id="main">
-    <div class="ph"><div><div id="ph-t" class="ph-title">Dashboard</div><div id="ph-s" class="ph-sub"></div></div><div id="ph-act"></div></div>
-    <div id="pb"><div class="loading">Ładowanie...</div></div>
-  </main>
-</div>
-
-<!-- MODAL -->
-<div id="mo" class="mo" style="display:none" onclick="if(event.target===this)closeMo()">
-  <div class="md">
-    <div class="md-h"><div id="mo-t" class="md-title"></div><button class="md-x" onclick="closeMo()">✕</button></div>
-    <div id="mo-b" class="md-b"></div>
-    <div id="mo-f" class="md-f"></div>
   </div>
-</div>
 
-<script>
-'use strict';
-const $ = id => document.getElementById(id);
-const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  <!-- MOBILE TOP BAR -->
+  <div id="mob-bar" style="display:none">
+    <button id="ham" onclick="toggleSb()">☰</button>
+    <div class="mb-brand">KM <em>SAGGITA</em></div>
+    <button class="btn btn-ghost btn-xs" onclick="logout()">Wyloguj</button>
+  </div>
+  <div id="sb-overlay" onclick="closeSb()"></div>
 
-// ── DATE FIX ─────────────────────────────────────────────────
-// Handles both "2025-09-30" and "2025-09-30T00:00:00.000Z"
-function fd(v) {
-  if(!v) return '—';
-  const s = String(v).substring(0, 10); // always take YYYY-MM-DD part
-  if(!s.match(/^\d{4}-\d{2}-\d{2}$/)) return String(v);
-  const [y,m,d] = s.split('-');
-  return `${d}.${m}.${y}`;
-}
-function toISO(d) {
-  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-}
-function todayISO() { return toISO(new Date()); }
-function normISO(v) { return String(v||'').substring(0,10); } // normalize any date value to YYYY-MM-DD
-function daysAgo(v) { if(!v)return null; return Math.floor((Date.now()-new Date(normISO(v)))/86400000); }
-const MONTHS = ['Styczeń','Luty','Marzec','Kwiecień','Maj','Czerwiec','Lipiec','Sierpień','Wrzesień','Październik','Listopad','Grudzień'];
-const DAYS_SHORT = ['Pon','Wt','Śr','Czw','Pt','Sob','Ndz'];
-const DAYS_FULL = ['Poniedziałek','Wtorek','Środa','Czwartek','Piątek','Sobota','Niedziela'];
-const SEASON = '2025-09-01';
+  <!-- MOBILE BOTTOM NAV -->
+  <div id="bot-nav" style="display:none">
+    <button class="bn on" id="bn-dash" onclick="go('dash')"><span class="bn-ico">▣</span>Główna</button>
+    <button class="bn" id="bn-groups" onclick="go('groups')"><span class="bn-ico">◈</span>Grupy</button>
+    <button class="bn" id="bn-cal" onclick="go('cal')"><span class="bn-ico">⊡</span>Kalendarz</button>
+    <button class="bn" id="bn-sess" onclick="go('sess')"><span class="bn-ico">☑</span>Sesje</button>
+    <button class="bn" id="bn-pays" onclick="go('pays')"><span class="bn-ico">₴</span>Płatności</button>
+  </div>
 
-// ── STATE ─────────────────────────────────────────────────────
-const S = {
-  token:null, inst:null, perms:{},
-  groups:[], sessions:[], payments:[],
-  page:'dash',
-  calY: new Date().getFullYear(), calM: new Date().getMonth(), calGid: null,
-  sessGid:'', sessFrom: SEASON,
-  grpId:null, grpStudents:[],
-  sessId:null, sessData:null,
-  studId:null, studData:null,
-};
+  <!-- APP -->
+  <div id="app">
+    <aside id="sb">
+      <div class="sb-top">
+        <div class="sb-brand">KM <em>SAGGITA</em></div>
+        <div class="sb-who">
+          <strong id="sb-name">—</strong>
+          <span>Instruktor</span>
+        </div>
+      </div>
+      <nav class="sb-nav">
+        <div class="sb-sec">Panel</div>
+        <div class="ni on" id="ni-dash" onclick="go('dash')"><span class="ni-ico">▣</span>Dashboard</div>
+        <div class="ni" id="ni-groups" onclick="go('groups')"><span class="ni-ico">◈</span>Grupy & Kursanci</div>
+        <div class="ni" id="ni-cal" onclick="go('cal')"><span class="ni-ico">⊡</span>Kalendarz zajęć</div>
+        <div class="ni" id="ni-sess" onclick="go('sess')"><span class="ni-ico">☑</span>Sesje & Obecności</div>
+        <div class="ni" id="ni-pays" onclick="go('pays')"><span class="ni-ico">₴</span>Płatności</div>
+      </nav>
+      <div class="sb-bot">
+        <button class="lout" onclick="logout()">Wyloguj</button>
+      </div>
+    </aside>
+    <main id="main">
+      <div class="ph">
+        <div>
+          <div id="ph-t" class="ph-title">Dashboard</div>
+          <div id="ph-s" class="ph-sub"></div>
+        </div>
+        <div id="ph-act"></div>
+      </div>
+      <div id="pb">
+        <div class="loading">Ładowanie...</div>
+      </div>
+    </main>
+  </div>
 
-// ── API ───────────────────────────────────────────────────────
-async function api(url, method='GET', body=null) {
-  const h = {'Content-Type':'application/json'};
-  if(S.token) h['Authorization'] = 'Bearer '+S.token;
-  const r = await fetch(url, {method, headers:h, body:body?JSON.stringify(body):null});
-  if(!r.ok) {
-    let msg = 'Błąd '+r.status;
-    try{ const d=await r.json(); msg=d.error||msg; }catch(e){}
-    throw new Error(msg);
-  }
-  const ct = r.headers.get('content-type')||'';
-  return ct.includes('json') ? r.json() : {};
-}
+  <!-- MODAL -->
+  <div id="mo" class="mo" style="display:none" onclick="if(event.target===this)closeMo()">
+    <div class="md">
+      <div class="md-h">
+        <div id="mo-t" class="md-title"></div><button class="md-x" onclick="closeMo()">✕</button>
+      </div>
+      <div id="mo-b" class="md-b"></div>
+      <div id="mo-f" class="md-f"></div>
+    </div>
+  </div>
 
-// ── AUTH ──────────────────────────────────────────────────────
-async function login() {
-  const u=$('li-u').value.trim(), p=$('li-p').value;
-  const err=$('li-e'); err.classList.remove('show');
-  if(!u||!p){err.textContent='Podaj login i hasło.';err.classList.add('show');return;}
-  try {
-    const d = await api('/api/instructor/login','POST',{username:u,password:p});
-    setAuth(d.token, d.instructor, d.permissions||{});
-    $('pg-login').style.display='none';
-    $('app').classList.add('on');
-    await loadAll();
-  } catch(e) { err.textContent=e.message; err.classList.add('show'); }
-}
-function setAuth(tok, inst, perms) {
-  S.token=tok; S.inst=inst; S.perms=perms||{};
-  localStorage.setItem('it',tok);
-  localStorage.setItem('ii',JSON.stringify(inst));
-  localStorage.setItem('ip',JSON.stringify(S.perms));
-  $('sb-name').textContent=(inst.first_name||'')+' '+(inst.last_name||'');
-  applyPermNav();
-  showMobileBars(true);
-}
-function applyPermNav() {
-  // Ukryj zakładki na podstawie uprawnień
-  const payNav = document.getElementById('ni-pays');
-  if (payNav) payNav.style.display = S.perms.can_see_payments ? '' : 'none';
-  const payBn = document.getElementById('bn-pays');
-  if (payBn) payBn.style.display = S.perms.can_see_payments ? '' : 'none';
+  <script>
+    'use strict';
+    const $ = id => document.getElementById(id);
+    const esc = s => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
-  // Jeśli can_see_groups=false — ukryj "Grupy & Kursanci" z nav (dostęp tylko z dashboardu w dniu zajęć)
-  const grpNav = document.getElementById('ni-groups');
-  if (grpNav) grpNav.style.display = S.perms.can_see_groups ? '' : 'none';
-  const grpBn = document.getElementById('bn-groups');
-  if (grpBn) grpBn.style.display = S.perms.can_see_groups ? '' : 'none';
-}
-function logout() {
-  S.token=null; S.inst=null;
-  localStorage.removeItem('it'); localStorage.removeItem('ii');
-  $('app').classList.remove('on');
-  $('pg-login').style.display='flex';
-  showMobileBars(false);
-}
-function showMobileBars(show) {
-  // Pokazuj tylko na mobile (<=768px)
-  const isMobile = window.innerWidth <= 768;
-  const d = (show && isMobile) ? 'flex' : 'none';
-  $('mob-bar').style.display = d;
-  $('bot-nav').style.display = d;
-}
-function toggleSb() {
-  const sb = $('sb'), ov = $('sb-overlay');
-  const open = sb.style.display === 'flex';
-  if(open) { sb.style.display='none'; ov.style.display='none'; }
-  else {
-    sb.style.cssText='display:flex;position:fixed;top:0;bottom:0;left:0;z-index:999;width:220px';
-    ov.style.display='block';
-  }
-}
-function closeSb() {
-  $('sb').style.cssText='';
-  $('sb-overlay').style.display='none';
-}
+    // ── DATE FIX ─────────────────────────────────────────────────
+    // Handles both "2025-09-30" and "2025-09-30T00:00:00.000Z"
+    function fd(v) {
+      if (!v) return '—';
+      const s = String(v).substring(0, 10); // always take YYYY-MM-DD part
+      if (!s.match(/^\d{4}-\d{2}-\d{2}$/)) return String(v);
+      const [y, m, d] = s.split('-');
+      return `${d}.${m}.${y}`;
+    }
+    function toISO(d) {
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    }
+    function todayISO() { return toISO(new Date()); }
+    function normISO(v) { return String(v || '').substring(0, 10); } // normalize any date value to YYYY-MM-DD
+    function daysAgo(v) { if (!v) return null; return Math.floor((Date.now() - new Date(normISO(v))) / 86400000); }
+    const MONTHS = ['Styczeń', 'Luty', 'Marzec', 'Kwiecień', 'Maj', 'Czerwiec', 'Lipiec', 'Sierpień', 'Wrzesień', 'Październik', 'Listopad', 'Grudzień'];
+    const DAYS_SHORT = ['Pon', 'Wt', 'Śr', 'Czw', 'Pt', 'Sob', 'Ndz'];
+    const DAYS_FULL = ['Poniedziałek', 'Wtorek', 'Środa', 'Czwartek', 'Piątek', 'Sobota', 'Niedziela'];
+    const SEASON = '2025-09-01';
 
-// ── LOAD ──────────────────────────────────────────────────────
-async function loadAll() {
-  try {
-    const d=await api('/api/instructor/groups');
-    S.groups=d.rows||[];
-    // Zaktualizuj uprawnienia z odpowiedzi
-    if (d.permissions) { S.perms = d.permissions; applyPermNav(); }
-  }
-  catch(e) { console.error(e); }
-  render('dash');
-}
+    // ── STATE ─────────────────────────────────────────────────────
+    const S = {
+      token: null, inst: null, perms: {},
+      groups: [], sessions: [], payments: [],
+      page: 'dash',
+      calY: new Date().getFullYear(), calM: new Date().getMonth(), calGid: null,
+      sessGid: '', sessFrom: SEASON,
+      grpId: null, grpStudents: [],
+      sessId: null, sessData: null,
+      studId: null, studData: null,
+    };
 
-// ── NAVIGATION ────────────────────────────────────────────────
-function go(page) {
-  document.querySelectorAll('.ni').forEach(el=>el.classList.remove('on'));
-  document.querySelectorAll('.bn').forEach(el=>el.classList.remove('on'));
-  const n=$('ni-'+page); if(n)n.classList.add('on');
-  const bn=$('bn-'+page); if(bn)bn.classList.add('on');
-  S.page=page;
-  if(page==='groups'){S.grpId=null;S.studId=null;}
-  closeSb();
-  render(page);
-}
-function render(page) {
-  const titles={dash:'Dashboard',groups:'Grupy & Kursanci',cal:'Kalendarz zajęć',sess:'Sesje & Obecności',pays:'Płatności'};
-  $('ph-t').textContent=titles[page]||page;
-  $('ph-s').textContent='';
-  $('ph-act').innerHTML='';
-  switch(page) {
-    case 'dash':   renderDash();   break;
-    case 'groups':
-      if(S.studId)     renderStud();
-      else if(S.grpId) renderGrpStudents();
-      else             renderGroups();
-      break;
-    case 'cal':    renderCal();    break;
-    case 'sess':
-      if(S.sessId) renderAtt();
-      else         renderSess();
-      break;
-    case 'pays':   renderPays();   break;
-  }
-}
+    // ── API ───────────────────────────────────────────────────────
+    async function api(url, method = 'GET', body = null) {
+      const h = { 'Content-Type': 'application/json' };
+      if (S.token) h['Authorization'] = 'Bearer ' + S.token;
+      const r = await fetch(url, { method, headers: h, body: body ? JSON.stringify(body) : null });
+      if (!r.ok) {
+        let msg = 'Błąd ' + r.status;
+        try { const d = await r.json(); msg = d.error || msg; } catch (e) { }
+        throw new Error(msg);
+      }
+      const ct = r.headers.get('content-type') || '';
+      return ct.includes('json') ? r.json() : {};
+    }
 
-// ── DASHBOARD ─────────────────────────────────────────────────
-function renderDash() {
-  const showCount = S.perms.can_see_student_count;
-  const total = S.groups.reduce((s,g)=>s+(g.student_count||0),0);
-  const todayDow = new Date().getDay(); // 0=Sun
-  const tdow0 = todayDow===0?6:todayDow-1; // 0=Mon
-  const todayGs = S.groups.filter(g=>(g.schedules||[]).some(s=>Number(s.day_of_week)===tdow0+1)); // DB: 1=Mon ISO
+    // ── AUTH ──────────────────────────────────────────────────────
+    async function login() {
+      const u = $('li-u').value.trim(), p = $('li-p').value;
+      const err = $('li-e'); err.classList.remove('show');
+      if (!u || !p) { err.textContent = 'Podaj login i hasło.'; err.classList.add('show'); return; }
+      try {
+        const d = await api('/api/instructor/login', 'POST', { username: u, password: p });
+        setAuth(d.token, d.instructor, d.permissions || {});
+        $('pg-login').style.display = 'none';
+        $('app').classList.add('on');
+        await loadAll();
+      } catch (e) { err.textContent = e.message; err.classList.add('show'); }
+    }
+    function setAuth(tok, inst, perms) {
+      S.token = tok; S.inst = inst; S.perms = perms || {};
+      localStorage.setItem('it', tok);
+      localStorage.setItem('ii', JSON.stringify(inst));
+      localStorage.setItem('ip', JSON.stringify(S.perms));
+      $('sb-name').textContent = (inst.first_name || '') + ' ' + (inst.last_name || '');
+      applyPermNav();
+      showMobileBars(true);
+    }
+    function applyPermNav() {
+      // Ukryj zakładki na podstawie uprawnień
+      const payNav = document.getElementById('ni-pays');
+      if (payNav) payNav.style.display = S.perms.can_see_payments ? '' : 'none';
+      const payBn = document.getElementById('bn-pays');
+      if (payBn) payBn.style.display = S.perms.can_see_payments ? '' : 'none';
 
-  $('pb').innerHTML = `
+      // Jeśli can_see_groups=false — ukryj "Grupy & Kursanci" z nav (dostęp tylko z dashboardu w dniu zajęć)
+      const grpNav = document.getElementById('ni-groups');
+      if (grpNav) grpNav.style.display = S.perms.can_see_groups ? '' : 'none';
+      const grpBn = document.getElementById('bn-groups');
+      if (grpBn) grpBn.style.display = S.perms.can_see_groups ? '' : 'none';
+    }
+    function logout() {
+      S.token = null; S.inst = null;
+      localStorage.removeItem('it'); localStorage.removeItem('ii');
+      $('app').classList.remove('on');
+      $('pg-login').style.display = 'flex';
+      showMobileBars(false);
+    }
+    function showMobileBars(show) {
+      // Pokazuj tylko na mobile (<=768px)
+      const isMobile = window.innerWidth <= 768;
+      const d = (show && isMobile) ? 'flex' : 'none';
+      $('mob-bar').style.display = d;
+      $('bot-nav').style.display = d;
+    }
+    function toggleSb() {
+      const sb = $('sb'), ov = $('sb-overlay');
+      const open = sb.style.display === 'flex';
+      if (open) { sb.style.display = 'none'; ov.style.display = 'none'; }
+      else {
+        sb.style.cssText = 'display:flex;position:fixed;top:0;bottom:0;left:0;z-index:999;width:220px';
+        ov.style.display = 'block';
+      }
+    }
+    function closeSb() {
+      $('sb').style.cssText = '';
+      $('sb-overlay').style.display = 'none';
+    }
+
+    // ── LOAD ──────────────────────────────────────────────────────
+    async function loadAll() {
+      try {
+        const d = await api('/api/instructor/groups');
+        S.groups = d.rows || [];
+        // Zaktualizuj uprawnienia z odpowiedzi
+        if (d.permissions) { S.perms = d.permissions; applyPermNav(); }
+      }
+      catch (e) { console.error(e); }
+      render('dash');
+    }
+
+    // ── NAVIGATION ────────────────────────────────────────────────
+    function go(page) {
+      document.querySelectorAll('.ni').forEach(el => el.classList.remove('on'));
+      document.querySelectorAll('.bn').forEach(el => el.classList.remove('on'));
+      const n = $('ni-' + page); if (n) n.classList.add('on');
+      const bn = $('bn-' + page); if (bn) bn.classList.add('on');
+      S.page = page;
+      if (page === 'groups') { S.grpId = null; S.studId = null; }
+      closeSb();
+      render(page);
+    }
+    function render(page) {
+      const titles = { dash: 'Dashboard', groups: 'Grupy & Kursanci', cal: 'Kalendarz zajęć', sess: 'Sesje & Obecności', pays: 'Płatności' };
+      $('ph-t').textContent = titles[page] || page;
+      $('ph-s').textContent = '';
+      $('ph-act').innerHTML = '';
+      switch (page) {
+        case 'dash': renderDash(); break;
+        case 'groups':
+          if (S.studId) renderStud();
+          else if (S.grpId) renderGrpStudents();
+          else renderGroups();
+          break;
+        case 'cal': renderCal(); break;
+        case 'sess':
+          if (S.sessId) renderAtt();
+          else renderSess();
+          break;
+        case 'pays': renderPays(); break;
+      }
+    }
+
+    // ── DASHBOARD ─────────────────────────────────────────────────
+    function renderDash() {
+      const showCount = S.perms.can_see_student_count;
+      const total = S.groups.reduce((s, g) => s + (g.student_count || 0), 0);
+      const todayDow = new Date().getDay(); // 0=Sun
+      const tdow0 = todayDow === 0 ? 6 : todayDow - 1; // 0=Mon
+      const todayGs = S.groups.filter(g => (g.schedules || []).some(s => Number(s.day_of_week) === tdow0 + 1)); // DB: 1=Mon ISO
+
+      $('pb').innerHTML = `
     <div class="stats">
       ${S.perms.can_see_groups ? `<div class="sc b"><div class="sc-l">Twoje grupy</div><div class="sc-v">${S.groups.length}</div></div>` : ''}
       ${showCount ? `<div class="sc g"><div class="sc-l">Kursanci łącznie</div><div class="sc-v">${total}</div></div>` : ''}
@@ -625,81 +1816,81 @@ function renderDash() {
     <div class="gcards" style="margin-bottom:20px">${todayGs.map(gcardHTML).join('')}</div>` : ''}
     <div class="section-hd">WSZYSTKIE GRUPY</div>
     <div class="gcards">${S.groups.map(gcardHTML).join('') || '<div class="empty">Brak przypisanych grup.</div>'}</div>`;
-}
+    }
 
-function gcardHTML(g) {
-  const _seen1=new Set();
-  const sch=(g.schedules||[]).filter(s=>{const k=`${s.day_of_week}|${(s.time_label||String(s.time_start||'')).slice(0,5)}`;return _seen1.has(k)?false:(_seen1.add(k),true);}).map(s=>`<strong>${s.day_name||DAYS_FULL[s.day_of_week]}</strong>&nbsp;${s.time_label||''}`).join('<br>');
-  const showCount = S.perms.can_see_student_count;
+    function gcardHTML(g) {
+      const _seen1 = new Set();
+      const sch = (g.schedules || []).filter(s => { const k = `${s.day_of_week}|${(s.time_label || String(s.time_start || '')).slice(0, 5)}`; return _seen1.has(k) ? false : (_seen1.add(k), true); }).map(s => `<strong>${s.day_name || DAYS_FULL[s.day_of_week]}</strong>&nbsp;${s.time_label || ''}`).join('<br>');
+      const showCount = S.perms.can_see_student_count;
 
-  // Sprawdź czy dzisiaj są zajęcia tej grupy
-  const todayDow = new Date().getDay(); // 0=Sun
-  const todayIso = todayDow===0 ? 7 : todayDow; // DB: 1=Mon..7=Sun (ISO)
-  const hasClassToday = (g.schedules||[]).some(s => Number(s.day_of_week) === todayIso);
+      // Sprawdź czy dzisiaj są zajęcia tej grupy
+      const todayDow = new Date().getDay(); // 0=Sun
+      const todayIso = todayDow === 0 ? 7 : todayDow; // DB: 1=Mon..7=Sun (ISO)
+      const hasClassToday = (g.schedules || []).some(s => Number(s.day_of_week) === todayIso);
 
-  // Przycisk "Kursanci" — tylko jeśli ma pełny dostęp LUB dzisiaj ma zajęcia
-  const canOpenStudents = S.perms.can_see_groups || hasClassToday;
+      // Przycisk "Kursanci" — tylko jeśli ma pełny dostęp LUB dzisiaj ma zajęcia
+      const canOpenStudents = S.perms.can_see_groups || hasClassToday;
 
-  return `<div class="gc" onclick="${canOpenStudents ? `openGrp(${g.id})` : ''}">
-    <div class="gc-city">${esc(g.location_city||'')} / ${esc(g.location_name||'')}</div>
+      return `<div class="gc" onclick="${canOpenStudents ? `openGrp(${g.id})` : ''}">
+    <div class="gc-city">${esc(g.location_city || '')} / ${esc(g.location_name || '')}</div>
     <div class="gc-name">${esc(g.name)}</div>
     <div class="gc-meta">
-      ${showCount ? `<span>Kursantów: <strong style="color:var(--text)">${g.student_count||0}</strong></span>` : ''}
-      ${g.age_range?`<span>Wiek: <strong style="color:var(--text)">${esc(g.age_range)}</strong></span>`:''}
+      ${showCount ? `<span>Kursantów: <strong style="color:var(--text)">${g.student_count || 0}</strong></span>` : ''}
+      ${g.age_range ? `<span>Wiek: <strong style="color:var(--text)">${esc(g.age_range)}</strong></span>` : ''}
     </div>
-    <div class="gc-sched">${sch||'<span style="color:var(--dim2)">Brak grafiku</span>'}</div>
+    <div class="gc-sched">${sch || '<span style="color:var(--dim2)">Brak grafiku</span>'}</div>
     <div class="gc-foot">
       ${canOpenStudents
-        ? `<button class="btn btn-r btn-sm" onclick="event.stopPropagation();openGrp(${g.id})">Kursanci</button>`
-        : `<span style="font-size:11px;color:var(--dim2);padding:4px 0">Dostępne w dniu zajęć</span>`
-      }
+          ? `<button class="btn btn-r btn-sm" onclick="event.stopPropagation();openGrp(${g.id})">Kursanci</button>`
+          : `<span style="font-size:11px;color:var(--dim2);padding:4px 0">Dostępne w dniu zajęć</span>`
+        }
       <button class="btn btn-o btn-sm" onclick="event.stopPropagation();openCalGrp(${g.id})">Kalendarz</button>
     </div>
   </div>`;
-}
-
-// ── GROUPS ────────────────────────────────────────────────────
-function renderGroups() {
-  $('pb').innerHTML = `<div class="gcards">${S.groups.map(gcardHTML).join('')||'<div class="empty">Brak grup.</div>'}</div>`;
-}
-
-async function openGrp(gid) {
-  // Sprawdź uprawnienia — bez can_see_groups dostęp tylko w dniu zajęć
-  if (!S.perms.can_see_groups) {
-    const g = S.groups.find(x=>x.id==gid);
-    const todayDow = new Date().getDay();
-    const todayIso = todayDow===0 ? 7 : todayDow;
-    const hasClassToday = (g?.schedules||[]).some(s => Number(s.day_of_week) === todayIso);
-    if (!hasClassToday) {
-      $('pb').innerHTML=`<div class="empty"><strong>Brak dostępu</strong>Lista kursantów dostępna tylko w dniu zajęć.</div>`;
-      return;
     }
-  }
-  S.grpId=gid; S.studId=null;
-  $('pb').innerHTML='<div class="loading">Ładowanie kursantów...</div>';
-  try {
-    const d = await api(`/api/instructor/groups/${gid}/students`);
-    S.grpStudents = d.rows||[];
-    if (d.permissions) { S.perms = {...S.perms, ...d.permissions}; }
-    renderGrpStudents();
-  } catch(e) { $('pb').innerHTML=`<div class="empty">Błąd: ${esc(e.message)}</div>`; }
-}
 
-function renderGrpStudents() {
-  const g = S.groups.find(x=>x.id==S.grpId)||{};
-  $('ph-t').textContent = esc(g.name||'Kursanci');
-  $('ph-s').textContent = `${esc(g.location_city||'')} — ${esc(g.location_name||'')}`;
+    // ── GROUPS ────────────────────────────────────────────────────
+    function renderGroups() {
+      $('pb').innerHTML = `<div class="gcards">${S.groups.map(gcardHTML).join('') || '<div class="empty">Brak grup.</div>'}</div>`;
+    }
 
-  const _seen2=new Set();
-  const sch=(g.schedules||[]).filter(s=>{const k=`${s.day_of_week}|${(s.time_label||String(s.time_start||'')).slice(0,5)}`;return _seen2.has(k)?false:(_seen2.add(k),true);}).map(s=>`${s.day_name||DAYS_FULL[s.day_of_week]} ${s.time_label||''}`).join(', ');
-  const st = S.grpStudents;
+    async function openGrp(gid) {
+      // Sprawdź uprawnienia — bez can_see_groups dostęp tylko w dniu zajęć
+      if (!S.perms.can_see_groups) {
+        const g = S.groups.find(x => x.id == gid);
+        const todayDow = new Date().getDay();
+        const todayIso = todayDow === 0 ? 7 : todayDow;
+        const hasClassToday = (g?.schedules || []).some(s => Number(s.day_of_week) === todayIso);
+        if (!hasClassToday) {
+          $('pb').innerHTML = `<div class="empty"><strong>Brak dostępu</strong>Lista kursantów dostępna tylko w dniu zajęć.</div>`;
+          return;
+        }
+      }
+      S.grpId = gid; S.studId = null;
+      $('pb').innerHTML = '<div class="loading">Ładowanie kursantów...</div>';
+      try {
+        const d = await api(`/api/instructor/groups/${gid}/students`);
+        S.grpStudents = d.rows || [];
+        if (d.permissions) { S.perms = { ...S.perms, ...d.permissions }; }
+        renderGrpStudents();
+      } catch (e) { $('pb').innerHTML = `<div class="empty">Błąd: ${esc(e.message)}</div>`; }
+    }
 
-  // Tryb ograniczony — tylko widok zajęć (bez kartotek, bez pełnej tabeli)
-  if (!S.perms.can_see_groups) {
-    $('pb').innerHTML = `
-      <div class="bc"><span>${esc(g.name||'')}</span></div>
-      ${sch?`<div class="ib" style="margin-bottom:12px"><div class="ir"><span class="ir-l">Grafik</span><span class="ir-v">${esc(sch)}</span></div></div>`:''}
-      <div style="margin-bottom:14px;font-size:12px;color:var(--dim2)">Widok zajęć — ${new Date().toLocaleDateString('pl-PL',{weekday:'long',day:'numeric',month:'long'})}</div>
+    function renderGrpStudents() {
+      const g = S.groups.find(x => x.id == S.grpId) || {};
+      $('ph-t').textContent = esc(g.name || 'Kursanci');
+      $('ph-s').textContent = `${esc(g.location_city || '')} — ${esc(g.location_name || '')}`;
+
+      const _seen2 = new Set();
+      const sch = (g.schedules || []).filter(s => { const k = `${s.day_of_week}|${(s.time_label || String(s.time_start || '')).slice(0, 5)}`; return _seen2.has(k) ? false : (_seen2.add(k), true); }).map(s => `${s.day_name || DAYS_FULL[s.day_of_week]} ${s.time_label || ''}`).join(', ');
+      const st = S.grpStudents;
+
+      // Tryb ograniczony — tylko widok zajęć (bez kartotek, bez pełnej tabeli)
+      if (!S.perms.can_see_groups) {
+        $('pb').innerHTML = `
+      <div class="bc"><span>${esc(g.name || '')}</span></div>
+      ${sch ? `<div class="ib" style="margin-bottom:12px"><div class="ir"><span class="ir-l">Grafik</span><span class="ir-v">${esc(sch)}</span></div></div>` : ''}
+      <div style="margin-bottom:14px;font-size:12px;color:var(--dim2)">Widok zajęć — ${new Date().toLocaleDateString('pl-PL', { weekday: 'long', day: 'numeric', month: 'long' })}</div>
       <div class="tw"><table>
         <thead><tr>
           <th>Nazwisko, Imię</th>
@@ -708,27 +1899,27 @@ function renderGrpStudents() {
         </tr></thead>
         <tbody>${st.map(s => {
           const days = daysAgo(s.last_payment);
-          const payClass = days===null?'':(days>35?'bx bx-r':'bx bx-g');
+          const payClass = days === null ? '' : (days > 35 ? 'bx bx-r' : 'bx bx-g');
           return `<tr>
-            <td><strong>${esc(s.last_name)}, ${esc(s.first_name)}</strong>${!s.is_active?'<span class="bx bx-d" style="margin-left:6px">nieaktywny</span>':''}</td>
-            ${S.perms.can_see_payments ? `<td>${s.last_payment?`<span class="${payClass}">${fd(s.last_payment)}</span>`:'—'}</td>` : ''}
+            <td><strong>${esc(s.last_name)}, ${esc(s.first_name)}</strong>${!s.is_active ? '<span class="bx bx-d" style="margin-left:6px">nieaktywny</span>' : ''}</td>
+            ${S.perms.can_see_payments ? `<td>${s.last_payment ? `<span class="${payClass}">${fd(s.last_payment)}</span>` : '—'}</td>` : ''}
             ${S.perms.can_accept_payment ? `<td><button class="btn btn-xs" style="padding:3px 10px;font-size:11px;background:rgba(46,204,113,.15);border:1px solid rgba(46,204,113,.4);color:#2ecc71" onclick="moAcceptPayment(${s.id},'${esc(s.first_name)} ${esc(s.last_name)}')">+ Wpłata</button></td>` : ''}
           </tr>`;
         }).join('')}</tbody>
       </table></div>`;
-    return;
-  }
+        return;
+      }
 
-  // Tryb pełny (can_see_groups=true)
-  $('pb').innerHTML = `
-    <div class="bc"><a onclick="go('groups')">Grupy</a><span class="bc-sep">›</span><span>${esc(g.name||'')}</span></div>
-    ${sch?`<div class="ib" style="margin-bottom:12px"><div class="ir"><span class="ir-l">Grafik</span><span class="ir-v">${esc(sch)}</span></div></div>`:''}
+      // Tryb pełny (can_see_groups=true)
+      $('pb').innerHTML = `
+    <div class="bc"><a onclick="go('groups')">Grupy</a><span class="bc-sep">›</span><span>${esc(g.name || '')}</span></div>
+    ${sch ? `<div class="ib" style="margin-bottom:12px"><div class="ir"><span class="ir-l">Grafik</span><span class="ir-v">${esc(sch)}</span></div></div>` : ''}
     <div class="bar">
       <input type="search" placeholder="Szukaj po nazwisku..." id="ss" oninput="filterStud()">
       <div class="sep"></div>
-      <button class="btn btn-r btn-sm" onclick="moAddStud(${g.id})" ${S.perms.can_add_student===false?'style="display:none"':''}>+ Dodaj kursanta</button>
+      <button class="btn btn-r btn-sm" onclick="moAddStud(${g.id})" ${S.perms.can_add_student === false ? 'style="display:none"' : ''}>+ Dodaj kursanta</button>
     </div>
-    ${st.length===0?'<div class="empty">Brak kursantów w tej grupie.</div>':`
+    ${st.length === 0 ? '<div class="empty">Brak kursantów w tej grupie.</div>' : `
     <div class="tw"><table>
       <thead><tr>
         <th>Nazwisko, Imię</th>
@@ -741,82 +1932,82 @@ function renderGrpStudents() {
       </tr></thead>
       <tbody id="stb">${st.map(studRowHTML).join('')}</tbody>
     </table></div>`}`;
-}
+    }
 
-function studRowHTML(s) {
-  const days = daysAgo(s.last_payment);
-  const payClass = days===null?'':(days>35?'bx bx-r':'bx bx-g');
-  const payLabel = s.last_payment ? fd(s.last_payment) : '—';
-  const active = s.is_active!==false;
-  return `<tr>
+    function studRowHTML(s) {
+      const days = daysAgo(s.last_payment);
+      const payClass = days === null ? '' : (days > 35 ? 'bx bx-r' : 'bx bx-g');
+      const payLabel = s.last_payment ? fd(s.last_payment) : '—';
+      const active = s.is_active !== false;
+      return `<tr>
     <td data-label="Nazwisko, Imię" class="td-main">
       <a href="#" onclick="event.preventDefault();openStud(${s.id})" style="color:var(--text);font-weight:700">${esc(s.last_name)}, ${esc(s.first_name)}</a>
-      ${!active?'<span class="bx bx-d" style="margin-left:6px">nieaktywny</span>':''}
+      ${!active ? '<span class="bx bx-d" style="margin-left:6px">nieaktywny</span>' : ''}
     </td>
-    <td data-label="Ur."class="td-dim">${s.birth_year||'—'}</td>
-    <td data-label="Telefon" class="td-dim">${s.phone?esc(s.phone):'—'}</td>
-    <td data-label="Ost. wpłata">${s.last_payment?`<span class="${payClass}">${payLabel}</span>`:payLabel}</td>
-    <td data-label="Obecności">${s.att_season||0}</td>
-    <td data-label="Sezon (zł)">${s.paid_season?Number(s.paid_season).toFixed(0)+' zł':'—'}</td>
+    <td data-label="Ur."class="td-dim">${s.birth_year || '—'}</td>
+    <td data-label="Telefon" class="td-dim">${s.phone ? esc(s.phone) : '—'}</td>
+    <td data-label="Ost. wpłata">${s.last_payment ? `<span class="${payClass}">${payLabel}</span>` : payLabel}</td>
+    <td data-label="Obecności">${s.att_season || 0}</td>
+    <td data-label="Sezon (zł)">${s.paid_season ? Number(s.paid_season).toFixed(0) + ' zł' : '—'}</td>
     <td><button class="btn btn-o btn-xs" onclick="openStud(${s.id})">Kartoteka →</button></td>
   </tr>`;
-}
+    }
 
-function filterStud() {
-  const q = ($('ss')||{value:''}).value.toLowerCase();
-  const tb = $('stb'); if(!tb)return;
-  tb.querySelectorAll('tr').forEach(tr=>{
-    const t = tr.cells[0]?tr.cells[0].textContent.toLowerCase():'';
-    tr.style.display = t.includes(q)?'':'none';
-  });
-}
+    function filterStud() {
+      const q = ($('ss') || { value: '' }).value.toLowerCase();
+      const tb = $('stb'); if (!tb) return;
+      tb.querySelectorAll('tr').forEach(tr => {
+        const t = tr.cells[0] ? tr.cells[0].textContent.toLowerCase() : '';
+        tr.style.display = t.includes(q) ? '' : 'none';
+      });
+    }
 
-// ── STUDENT PROFILE ───────────────────────────────────────────
-async function openStud(sid) {
-  S.studId=sid;
-  $('pb').innerHTML='<div class="loading">Ładowanie...</div>';
-  try {
-    const [s, {rows:pays}, {rows:att}] = await Promise.all([
-      api(`/api/instructor/students/${sid}`),
-      api(`/api/instructor/students/${sid}/payments`),
-      api(`/api/instructor/students/${sid}/attendance`),
-    ]);
-    S.studData={...s,payments:pays,attendance:att};
-    renderStud();
-  } catch(e){ $('pb').innerHTML=`<div class="empty">Błąd: ${esc(e.message)}</div>`; }
-}
+    // ── STUDENT PROFILE ───────────────────────────────────────────
+    async function openStud(sid) {
+      S.studId = sid;
+      $('pb').innerHTML = '<div class="loading">Ładowanie...</div>';
+      try {
+        const [s, { rows: pays }, { rows: att }] = await Promise.all([
+          api(`/api/instructor/students/${sid}`),
+          api(`/api/instructor/students/${sid}/payments`),
+          api(`/api/instructor/students/${sid}/attendance`),
+        ]);
+        S.studData = { ...s, payments: pays, attendance: att };
+        renderStud();
+      } catch (e) { $('pb').innerHTML = `<div class="empty">Błąd: ${esc(e.message)}</div>`; }
+    }
 
-function renderStud() {
-  const s=S.studData, g=S.groups.find(x=>x.id==S.grpId)||{};
-  $('ph-t').textContent=`${esc(s.last_name)}, ${esc(s.first_name)}`;
-  $('ph-s').textContent='Kartoteka kursanta';
+    function renderStud() {
+      const s = S.studData, g = S.groups.find(x => x.id == S.grpId) || {};
+      $('ph-t').textContent = `${esc(s.last_name)}, ${esc(s.first_name)}`;
+      $('ph-s').textContent = 'Kartoteka kursanta';
 
-  const pays=s.payments||[];
-  const att=s.attendance||[];
-  const attPres=att.filter(a=>a.present).length;
-  const totalPaid=pays.reduce((s,p)=>s+Number(p.amount||0),0);
-  const grps=(s.groups||[]).map(gg=>`<span class="bx ${gg.active?'bx-g':'bx-d'}">${esc(gg.name)}</span>`).join(' ');
+      const pays = s.payments || [];
+      const att = s.attendance || [];
+      const attPres = att.filter(a => a.present).length;
+      const totalPaid = pays.reduce((s, p) => s + Number(p.amount || 0), 0);
+      const grps = (s.groups || []).map(gg => `<span class="bx ${gg.active ? 'bx-g' : 'bx-d'}">${esc(gg.name)}</span>`).join(' ');
 
-  $('pb').innerHTML=`
+      $('pb').innerHTML = `
     <div class="bc">
       <a onclick="go('groups')">Grupy</a><span class="bc-sep">›</span>
-      <a onclick="renderGrpStudents()">${esc(g.name||'Kursanci')}</a><span class="bc-sep">›</span>
+      <a onclick="renderGrpStudents()">${esc(g.name || 'Kursanci')}</a><span class="bc-sep">›</span>
       <span>${esc(s.first_name)} ${esc(s.last_name)}</span>
     </div>
     <div class="pg2">
       <div class="ib">
         <h4>Dane osobowe</h4>
         <div class="ir"><span class="ir-l">Imię i nazwisko</span><span class="ir-v">${esc(s.first_name)} ${esc(s.last_name)}</span></div>
-        <div class="ir"><span class="ir-l">Rok urodzenia</span><span class="ir-v">${s.birth_year||'—'}</span></div>
-        <div class="ir"><span class="ir-l">Telefon</span><span class="ir-v">${s.phone?esc(s.phone):'—'}</span></div>
-        <div class="ir"><span class="ir-l">E-mail</span><span class="ir-v">${s.email?esc(s.email):'—'}</span></div>
-        <div class="ir"><span class="ir-l">Status</span><span class="ir-v">${s.is_active!==false?'<span class="bx bx-g">Aktywny</span>':'<span class="bx bx-d">Nieaktywny</span>'}</span></div>
+        <div class="ir"><span class="ir-l">Rok urodzenia</span><span class="ir-v">${s.birth_year || '—'}</span></div>
+        <div class="ir"><span class="ir-l">Telefon</span><span class="ir-v">${s.phone ? esc(s.phone) : '—'}</span></div>
+        <div class="ir"><span class="ir-l">E-mail</span><span class="ir-v">${s.email ? esc(s.email) : '—'}</span></div>
+        <div class="ir"><span class="ir-l">Status</span><span class="ir-v">${s.is_active !== false ? '<span class="bx bx-g">Aktywny</span>' : '<span class="bx bx-d">Nieaktywny</span>'}</span></div>
       </div>
       <div class="ib">
         <h4>Podsumowanie</h4>
-        <div class="ir"><span class="ir-l">Grupy</span><span class="ir-v">${grps||'—'}</span></div>
+        <div class="ir"><span class="ir-l">Grupy</span><span class="ir-v">${grps || '—'}</span></div>
         <div class="ir"><span class="ir-l">Wpłacono (sezon)</span><span class="ir-v">${totalPaid.toFixed(0)} zł</span></div>
-        <div class="ir"><span class="ir-l">Ostatnia wpłata</span><span class="ir-v">${pays[0]?fd(pays[0].paid_at):'—'}</span></div>
+        <div class="ir"><span class="ir-l">Ostatnia wpłata</span><span class="ir-v">${pays[0] ? fd(pays[0].paid_at) : '—'}</span></div>
         <div class="ir"><span class="ir-l">Obecności w sezonie</span><span class="ir-v">${attPres} / ${att.length}</span></div>
       </div>
     </div>
@@ -826,37 +2017,37 @@ function renderStud() {
     </div>
     <div class="section-hd">PŁATNOŚCI <button class="btn btn-g btn-xs" onclick="moAddPay(${s.id})">+ Dodaj wpłatę</button></div>
     <div style="margin-bottom:18px">
-      ${pays.length===0?'<div class="empty" style="padding:16px">Brak wpłat.</div>':
-        pays.map(p=>`<div class="prow">
+      ${pays.length === 0 ? '<div class="empty" style="padding:16px">Brak wpłat.</div>' :
+          pays.map(p => `<div class="prow">
           <div class="prow-dt">${fd(p.paid_at)}</div>
-          <div class="prow-amt">${Number(p.amount||0).toFixed(0)} zł</div>
-          <div class="prow-note">${p.note?esc(p.note):''}</div>
+          <div class="prow-amt">${Number(p.amount || 0).toFixed(0)} zł</div>
+          <div class="prow-note">${p.note ? esc(p.note) : ''}</div>
           <button class="btn btn-ghost btn-xs" onclick="doDelPay(${s.id},${p.id})">✕</button>
         </div>`).join('')}
     </div>
     <div class="section-hd">HISTORIA OBECNOŚCI</div>
-    ${att.length===0?'<div class="empty" style="padding:16px">Brak zapisanych obecności.</div>':`
+    ${att.length === 0 ? '<div class="empty" style="padding:16px">Brak zapisanych obecności.</div>' : `
     <div class="tw"><table>
       <thead><tr><th>Data</th><th>Grupa</th><th>Lokalizacja</th><th>Obecność</th></tr></thead>
       <tbody>
-        ${att.slice(0,60).map(a=>`<tr>
+        ${att.slice(0, 60).map(a => `<tr>
           <td data-label="Data">${fd(a.session_date)}</td>
-          <td data-label="Grupa">${esc(a.group_name||'')}</td>
-          <td data-label="Lokalizacja">${esc(a.city||'')}</td>
-          <td data-label="Obecność">${a.present?'<span class="bx bx-g">✓ Obecny</span>':'<span class="bx bx-r">✗ Nieobecny</span>'}</td>
+          <td data-label="Grupa">${esc(a.group_name || '')}</td>
+          <td data-label="Lokalizacja">${esc(a.city || '')}</td>
+          <td data-label="Obecność">${a.present ? '<span class="bx bx-g">✓ Obecny</span>' : '<span class="bx bx-r">✗ Nieobecny</span>'}</td>
         </tr>`).join('')}
       </tbody>
     </table></div>`}`;
-}
+    }
 
-// ── CALENDAR ──────────────────────────────────────────────────
-function openCalGrp(gid) { S.calGid=gid; go('cal'); }
+    // ── CALENDAR ──────────────────────────────────────────────────
+    function openCalGrp(gid) { S.calGid = gid; go('cal'); }
 
-function renderCal() {
-  const {calY:y,calM:m} = S;
-  const gOpts = S.groups.map(g=>`<option value="${g.id}" ${S.calGid==g.id?'selected':''}>${esc(g.location_city)} — ${esc(g.name)}</option>`).join('');
+    function renderCal() {
+      const { calY: y, calM: m } = S;
+      const gOpts = S.groups.map(g => `<option value="${g.id}" ${S.calGid == g.id ? 'selected' : ''}>${esc(g.location_city)} — ${esc(g.name)}</option>`).join('');
 
-  $('pb').innerHTML=`
+      $('pb').innerHTML = `
     <div class="cal-head">
       <div class="cal-nav">
         <button onclick="calNav(-1)">◀</button>
@@ -871,165 +2062,165 @@ function renderCal() {
       </div>
       <button class="btn btn-o btn-sm" onclick="S.calY=new Date().getFullYear();S.calM=new Date().getMonth();renderCal()">Dziś</button>
     </div>
-    <div class="cgrid" id="cgrid">${DAYS_SHORT.map(d=>`<div class="cgh">${d}</div>`).join('')}</div>
+    <div class="cgrid" id="cgrid">${DAYS_SHORT.map(d => `<div class="cgh">${d}</div>`).join('')}</div>
     <div class="cal-legend">
       <span><em style="background:var(--gsoft);border-left:2px solid var(--green)"></em>Sesja istnieje (kliknij → obecności)</span>
       <span><em style="background:var(--asoft);border-left:2px solid var(--accent)"></em>Zaplanowane zajęcia (kliknij → utwórz sesję)</span>
     </div>
     <div id="cal-debug" style="font-size:10px;color:rgba(255,255,255,0.35);padding:4px 6px;word-break:break-all"></div>`;
 
-  const from=`${y}-${String(m+1).padStart(2,'0')}-01`;
-  const lastD=new Date(y,m+1,0).getDate();
-  const to=`${y}-${String(m+1).padStart(2,'0')}-${String(lastD).padStart(2,'0')}`;
-  const url=`/api/instructor/sessions?from=${from}&to=${to}${S.calGid?'&group_id='+S.calGid:''}`;
-  api(url)
-    .then(d=>{
-      const rows=d.rows||[];
-      const dbg=S.groups.map(g=>`${g.name}: ${(g.schedules||[]).length} terminów`).join(' | ');
-      const dbgEl=document.getElementById('cal-debug');
-      if(dbgEl) dbgEl.textContent=`Sesje: ${rows.length} | Grupy: ${S.groups.length} | ${dbg}`;
-      fillCalGrid(y,m,rows);
-    })
-    .catch(e=>{
-      const dbgEl=document.getElementById('cal-debug');
-      if(dbgEl) dbgEl.textContent='Błąd pobierania: '+e.message;
-      fillCalGrid(y,m,[]);
-    });
-}
+      const from = `${y}-${String(m + 1).padStart(2, '0')}-01`;
+      const lastD = new Date(y, m + 1, 0).getDate();
+      const to = `${y}-${String(m + 1).padStart(2, '0')}-${String(lastD).padStart(2, '0')}`;
+      const url = `/api/instructor/sessions?from=${from}&to=${to}${S.calGid ? '&group_id=' + S.calGid : ''}`;
+      api(url)
+        .then(d => {
+          const rows = d.rows || [];
+          const dbg = S.groups.map(g => `${g.name}: ${(g.schedules || []).length} terminów`).join(' | ');
+          const dbgEl = document.getElementById('cal-debug');
+          if (dbgEl) dbgEl.textContent = `Sesje: ${rows.length} | Grupy: ${S.groups.length} | ${dbg}`;
+          fillCalGrid(y, m, rows);
+        })
+        .catch(e => {
+          const dbgEl = document.getElementById('cal-debug');
+          if (dbgEl) dbgEl.textContent = 'Błąd pobierania: ' + e.message;
+          fillCalGrid(y, m, []);
+        });
+    }
 
-function calNav(dir) {
-  S.calM+=dir;
-  if(S.calM<0){S.calM=11;S.calY--;}
-  if(S.calM>11){S.calM=0;S.calY++;}
-  renderCal();
-}
+    function calNav(dir) {
+      S.calM += dir;
+      if (S.calM < 0) { S.calM = 11; S.calY--; }
+      if (S.calM > 11) { S.calM = 0; S.calY++; }
+      renderCal();
+    }
 
-function fillCalGrid(y,m,sessions) {
-  const grid=$('cgrid'); if(!grid)return;
-  // remove cells (keep 7 headers)
-  while(grid.children.length>7) grid.removeChild(grid.lastChild);
+    function fillCalGrid(y, m, sessions) {
+      const grid = $('cgrid'); if (!grid) return;
+      // remove cells (keep 7 headers)
+      while (grid.children.length > 7) grid.removeChild(grid.lastChild);
 
-  const today=todayISO();
-  const firstDow=new Date(y,m,1).getDay(); // 0=Sun
-  const offset=firstDow===0?6:firstDow-1; // Mon=0
-  const daysInM=new Date(y,m+1,0).getDate();
-  const prevDays=new Date(y,m,0).getDate();
+      const today = todayISO();
+      const firstDow = new Date(y, m, 1).getDay(); // 0=Sun
+      const offset = firstDow === 0 ? 6 : firstDow - 1; // Mon=0
+      const daysInM = new Date(y, m + 1, 0).getDate();
+      const prevDays = new Date(y, m, 0).getDate();
 
-  // Build session map: normalized "YYYY-MM-DD" → sessions[]
-  const smap={};
-  sessions.forEach(s=>{
-    const k=normISO(s.session_date);
-    if(!smap[k])smap[k]=[];
-    smap[k].push(s);
-  });
+      // Build session map: normalized "YYYY-MM-DD" → sessions[]
+      const smap = {};
+      sessions.forEach(s => {
+        const k = normISO(s.session_date);
+        if (!smap[k]) smap[k] = [];
+        smap[k].push(s);
+      });
 
-  // Build scheduled days map from group schedules
-  const groups = S.calGid ? S.groups.filter(g=>g.id==S.calGid) : S.groups;
-  const schedMap={}; // "YYYY-MM-DD" → [{group, sched}]
-  groups.forEach(g=>{
-    const seenDow=new Set();
-    (g.schedules||[]).filter(s=>{const k=`${s.day_of_week}|${(s.time_label||String(s.time_start||'')).slice(0,5)}`;if(seenDow.has(k))return false;seenDow.add(k);return true;}).forEach(sch=>{
-      const dow=Number(sch.day_of_week);
-      for(let d=1;d<=daysInM;d++){
-        const date=new Date(y,m,d);
-        const wd=date.getDay()===0?6:date.getDay()-1;
-        if(wd===dow-1){  // DB: 1=Mon ISO; wd: 0=Mon JS
-          const iso=toISO(date);
-          if(!schedMap[iso])schedMap[iso]=[];
-          schedMap[iso].push({group:g,sched:sch});
-        }
+      // Build scheduled days map from group schedules
+      const groups = S.calGid ? S.groups.filter(g => g.id == S.calGid) : S.groups;
+      const schedMap = {}; // "YYYY-MM-DD" → [{group, sched}]
+      groups.forEach(g => {
+        const seenDow = new Set();
+        (g.schedules || []).filter(s => { const k = `${s.day_of_week}|${(s.time_label || String(s.time_start || '')).slice(0, 5)}`; if (seenDow.has(k)) return false; seenDow.add(k); return true; }).forEach(sch => {
+          const dow = Number(sch.day_of_week);
+          for (let d = 1; d <= daysInM; d++) {
+            const date = new Date(y, m, d);
+            const wd = date.getDay() === 0 ? 6 : date.getDay() - 1;
+            if (wd === dow - 1) {  // DB: 1=Mon ISO; wd: 0=Mon JS
+              const iso = toISO(date);
+              if (!schedMap[iso]) schedMap[iso] = [];
+              schedMap[iso].push({ group: g, sched: sch });
+            }
+          }
+        });
+      });
+
+      // Prev month padding
+      for (let i = 0; i < offset; i++) {
+        const c = document.createElement('div');
+        c.className = 'cgc other';
+        c.innerHTML = `<div class="cgc-d">${prevDays - offset + i + 1}</div>`;
+        grid.appendChild(c);
       }
-    });
-  });
 
-  // Prev month padding
-  for(let i=0;i<offset;i++){
-    const c=document.createElement('div');
-    c.className='cgc other';
-    c.innerHTML=`<div class="cgc-d">${prevDays-offset+i+1}</div>`;
-    grid.appendChild(c);
-  }
+      for (let d = 1; d <= daysInM; d++) {
+        const iso = toISO(new Date(y, m, d));
+        const hasSess = !!smap[iso];
+        const hasSched = !!schedMap[iso] && !hasSess;
+        const isToday = iso === today;
+        const c = document.createElement('div');
+        const cls = ['cgc'];
+        if (isToday) cls.push('today');
+        if (hasSess || hasSched) cls.push('clickable');
+        c.className = cls.join(' ');
 
-  for(let d=1;d<=daysInM;d++){
-    const iso=toISO(new Date(y,m,d));
-    const hasSess=!!smap[iso];
-    const hasSched=!!schedMap[iso]&&!hasSess;
-    const isToday=iso===today;
-    const c=document.createElement('div');
-    const cls=['cgc'];
-    if(isToday)cls.push('today');
-    if(hasSess||hasSched)cls.push('clickable');
-    c.className=cls.join(' ');
+        let html = `<div class="cgc-d">${d}</div>`;
+        // Sortuj sesje po czasie rozpoczęcia
+        const sortedSess = (smap[iso] || []).slice().sort((a, b) => {
+          const ga = S.groups.find(x => x.id == a.group_id);
+          const gb = S.groups.find(x => x.id == b.group_id);
+          const ta = (ga?.schedules || [])[0]?.time_start || '99:99';
+          const tb = (gb?.schedules || [])[0]?.time_start || '99:99';
+          return String(ta).localeCompare(String(tb));
+        });
+        if (hasSess) {
+          sortedSess.forEach(s => {
+            const isFuture = normISO(s.session_date) > todayISO();
+            const gname = (s.group_name || "").replace("2025/2026", "25/26").replace(" - ", "—");
+            const pillCls = isFuture ? "cpill-f" : "cpill-s";
+            const pillIco = isFuture ? "⏳" : "✓";
+            html += `<span class="cpill ${pillCls}" onclick="openSessFromCal(${s.session_id},${s.group_id},'${normISO(s.session_date)}','${esc(s.group_name || '')}')" ontouchend="event.preventDefault();openSessFromCal(${s.session_id},${s.group_id},'${normISO(s.session_date)}','${esc(s.group_name || '')}')">${pillIco} ${esc(gname)} (${s.present_count || 0}/${s.total_marked || 0})</span>`;
+          });
+        }
+        if (hasSched) {
+          // Sortuj zaplanowane zajęcia po godzinie (time_start)
+          const sortedSched = (schedMap[iso] || []).slice().sort((a, b) =>
+            String(a.sched.time_start || '99:99').localeCompare(String(b.sched.time_start || '99:99'))
+          );
+          sortedSched.forEach(({ group: g, sched: sch }) => {
+            const gname = g.name.replace('2025/2026', '25/26').replace(' - ', '—');
+            html += `<span class="cpill cpill-f" onclick="createSess(${g.id},'${iso}')" ontouchend="event.preventDefault();createSess(${g.id},'${iso}')">+ ${esc(gname)} ${sch.time_label || ''}</span>`;
+          });
+        }
+        c.innerHTML = html;
+        grid.appendChild(c);
+      }
 
-    let html=`<div class="cgc-d">${d}</div>`;
-    // Sortuj sesje po czasie rozpoczęcia
-    const sortedSess = (smap[iso]||[]).slice().sort((a,b)=>{
-      const ga = S.groups.find(x=>x.id==a.group_id);
-      const gb = S.groups.find(x=>x.id==b.group_id);
-      const ta = (ga?.schedules||[])[0]?.time_start||'99:99';
-      const tb = (gb?.schedules||[])[0]?.time_start||'99:99';
-      return String(ta).localeCompare(String(tb));
-    });
-    if(hasSess) {
-      sortedSess.forEach(s=>{
-        const isFuture=normISO(s.session_date)>todayISO();
-        const gname=(s.group_name||"").replace("2025/2026","25/26").replace(" - ","—");
-        const pillCls=isFuture?"cpill-f":"cpill-s";
-        const pillIco=isFuture?"⏳":"✓";
-        html+=`<span class="cpill ${pillCls}" onclick="openSessFromCal(${s.session_id},${s.group_id},'${normISO(s.session_date)}','${esc(s.group_name||'')}')" ontouchend="event.preventDefault();openSessFromCal(${s.session_id},${s.group_id},'${normISO(s.session_date)}','${esc(s.group_name||'')}')">${pillIco} ${esc(gname)} (${s.present_count||0}/${s.total_marked||0})</span>`;
-      });
+      // Next month padding
+      const total = offset + daysInM;
+      const rem = (7 - total % 7) % 7;
+      for (let i = 1; i <= rem; i++) {
+        const c = document.createElement('div');
+        c.className = 'cgc other';
+        c.innerHTML = `<div class="cgc-d">${i}</div>`;
+        grid.appendChild(c);
+      }
     }
-    if(hasSched) {
-      // Sortuj zaplanowane zajęcia po godzinie (time_start)
-      const sortedSched = (schedMap[iso]||[]).slice().sort((a,b)=>
-        String(a.sched.time_start||'99:99').localeCompare(String(b.sched.time_start||'99:99'))
-      );
-      sortedSched.forEach(({group:g,sched:sch})=>{
-        const gname=g.name.replace('2025/2026','25/26').replace(' - ','—');
-        html+=`<span class="cpill cpill-f" onclick="createSess(${g.id},'${iso}')" ontouchend="event.preventDefault();createSess(${g.id},'${iso}')">+ ${esc(gname)} ${sch.time_label||''}</span>`;
-      });
+
+    async function createSess(gid, date) {
+      if (!confirm(`Otworzyć sesję treningową:\n${S.groups.find(x => x.id == gid)?.name || ''}\n${fd(date)}?`)) return;
+      try {
+        const d = await api('/api/instructor/sessions', 'POST', { group_id: gid, session_date: date });
+        openSessFromCal(d.id, gid, date, S.groups.find(x => x.id == gid)?.name || '');
+      } catch (e) { alert('Błąd: ' + e.message); }
     }
-    c.innerHTML=html;
-    grid.appendChild(c);
-  }
 
-  // Next month padding
-  const total=offset+daysInM;
-  const rem=(7-total%7)%7;
-  for(let i=1;i<=rem;i++){
-    const c=document.createElement('div');
-    c.className='cgc other';
-    c.innerHTML=`<div class="cgc-d">${i}</div>`;
-    grid.appendChild(c);
-  }
-}
+    function openSessFromCal(sessId, gid, date, name) {
+      S.sessId = sessId;
+      S.sessData = { session_id: sessId, group_id: gid, session_date: date, group_name: name };
+      document.querySelectorAll(".ni").forEach(el => el.classList.remove("on"));
+      const n = document.getElementById("ni-sess"); if (n) n.classList.add("on");
+      S.page = "sess";
+      renderAtt();
+    }
 
-async function createSess(gid, date) {
-  if(!confirm(`Otworzyć sesję treningową:\n${S.groups.find(x=>x.id==gid)?.name||''}\n${fd(date)}?`))return;
-  try {
-    const d=await api('/api/instructor/sessions','POST',{group_id:gid,session_date:date});
-    openSessFromCal(d.id,gid,date,S.groups.find(x=>x.id==gid)?.name||'');
-  } catch(e){ alert('Błąd: '+e.message); }
-}
+    // ── SESSIONS ──────────────────────────────────────────────────
+    async function renderSess() {
+      $('pb').innerHTML = '<div class="loading">Ładowanie sesji...</div>';
+      const url = `/api/instructor/sessions?from=${S.sessFrom}${S.sessGid ? '&group_id=' + S.sessGid : ''}`;
+      try { const d = await api(url); S.sessions = d.rows || []; } catch (e) { S.sessions = []; }
 
-function openSessFromCal(sessId,gid,date,name){
-  S.sessId=sessId;
-  S.sessData={session_id:sessId,group_id:gid,session_date:date,group_name:name};
-  document.querySelectorAll(".ni").forEach(el=>el.classList.remove("on"));
-  const n=document.getElementById("ni-sess"); if(n)n.classList.add("on");
-  S.page="sess";
-  renderAtt();
-}
+      const gOpts = S.groups.map(g => `<option value="${g.id}" ${S.sessGid == g.id ? 'selected' : ''}>${esc(g.location_city)} — ${esc(g.name)}</option>`).join('');
 
-// ── SESSIONS ──────────────────────────────────────────────────
-async function renderSess() {
-  $('pb').innerHTML='<div class="loading">Ładowanie sesji...</div>';
-  const url=`/api/instructor/sessions?from=${S.sessFrom}${S.sessGid?'&group_id='+S.sessGid:''}`;
-  try{ const d=await api(url); S.sessions=d.rows||[]; }catch(e){ S.sessions=[]; }
-
-  const gOpts=S.groups.map(g=>`<option value="${g.id}" ${S.sessGid==g.id?'selected':''}>${esc(g.location_city)} — ${esc(g.name)}</option>`).join('');
-
-  $('pb').innerHTML=`
+      $('pb').innerHTML = `
     <div class="bar">
       <select onchange="S.sessGid=this.value;renderSess()">
         <option value="">Wszystkie grupy</option>${gOpts}
@@ -1038,69 +2229,69 @@ async function renderSess() {
       <div class="sep"></div>
       <button class="btn btn-r btn-sm" onclick="moCreateSess()">+ Nowa sesja</button>
     </div>
-    ${S.sessions.length===0?'<div class="empty">Brak sesji dla wybranych filtrów.</div>':`
+    ${S.sessions.length === 0 ? '<div class="empty">Brak sesji dla wybranych filtrów.</div>' : `
     <div class="tw"><table>
       <thead><tr>
         <th>Data</th><th>Dzień</th><th>Grupa</th><th>Lokalizacja</th><th>Oznaczonych</th><th>Obecnych</th><th></th>
       </tr></thead>
       <tbody>
-        ${S.sessions.map(s=>{
-          const dt=normISO(s.session_date);
-          const dow=new Date(dt).getDay(); // 0=Sun
-          const dow0=dow===0?6:dow-1;
-          const dayLbl=DAYS_SHORT[dow0]||'?';
-          const pct=s.total_marked>0?Math.round(s.present_count/s.total_marked*100):0;
-          return`<tr>
+        ${S.sessions.map(s => {
+        const dt = normISO(s.session_date);
+        const dow = new Date(dt).getDay(); // 0=Sun
+        const dow0 = dow === 0 ? 6 : dow - 1;
+        const dayLbl = DAYS_SHORT[dow0] || '?';
+        const pct = s.total_marked > 0 ? Math.round(s.present_count / s.total_marked * 100) : 0;
+        return `<tr>
             <td data-label="Data" class="td-main">${fd(dt)}</td>
             <td data-label="Dzień" class="td-dim">${dayLbl}</td>
-            <td data-label="Grupa">${esc(s.group_name||'')}</td>
-            <td data-label="Lokalizacja" class="td-dim">${esc(s.location_city||'')}${s.location_name?' / '+esc(s.location_name):''}</td>
-            <td data-label="Oznaczonych">${s.total_marked||0}</td>
-            <td data-label="Obecnych">${s.total_marked>0?`<span class="bx ${s.present_count>0?'bx-g':'bx-r'}">${s.present_count||0} (${pct}%)</span>`:'<span class="bx bx-d">—</span>'}</td>
-            <td><button class="btn btn-o btn-xs" onclick="openSessById(${s.session_id},${s.group_id},'${dt}','${esc(s.group_name||'')}')">Obecności →</button></td>
+            <td data-label="Grupa">${esc(s.group_name || '')}</td>
+            <td data-label="Lokalizacja" class="td-dim">${esc(s.location_city || '')}${s.location_name ? ' / ' + esc(s.location_name) : ''}</td>
+            <td data-label="Oznaczonych">${s.total_marked || 0}</td>
+            <td data-label="Obecnych">${s.total_marked > 0 ? `<span class="bx ${s.present_count > 0 ? 'bx-g' : 'bx-r'}">${s.present_count || 0} (${pct}%)</span>` : '<span class="bx bx-d">—</span>'}</td>
+            <td><button class="btn btn-o btn-xs" onclick="openSessById(${s.session_id},${s.group_id},'${dt}','${esc(s.group_name || '')}')">Obecności →</button></td>
           </tr>`;
-        }).join('')}
+      }).join('')}
       </tbody>
     </table></div>`}`;
-}
+    }
 
-function openSessById(sid,gid,date,name){
-  S.sessId=sid;
-  S.sessData={session_id:sid,group_id:gid,session_date:date,group_name:name};
-  renderAtt();
-}
+    function openSessById(sid, gid, date, name) {
+      S.sessId = sid;
+      S.sessData = { session_id: sid, group_id: gid, session_date: date, group_name: name };
+      renderAtt();
+    }
 
-// ── ATTENDANCE ────────────────────────────────────────────────
-async function renderAtt() {
-  const sess=S.sessData||{};
-  const dateStr=fd(sess.session_date);
-  $('ph-t').textContent='Sprawdzanie obecności';
-  $('ph-s').textContent=`${esc(sess.group_name||'')} · ${dateStr}`;
-  $('pb').innerHTML='<div class="loading">Ładowanie listy...</div>';
+    // ── ATTENDANCE ────────────────────────────────────────────────
+    async function renderAtt() {
+      const sess = S.sessData || {};
+      const dateStr = fd(sess.session_date);
+      $('ph-t').textContent = 'Sprawdzanie obecności';
+      $('ph-s').textContent = `${esc(sess.group_name || '')} · ${dateStr}`;
+      $('pb').innerHTML = '<div class="loading">Ładowanie listy...</div>';
 
-  try {
-    const d=await api(`/api/instructor/sessions/${sess.session_id}/attendance?group_id=${sess.group_id}`);
-    const st=(d.rows||[]).sort((a,b)=>{
-      const da=a.last_payment?new Date(normISO(a.last_payment)):new Date(0);
-      const db=b.last_payment?new Date(normISO(b.last_payment)):new Date(0);
-      return db-da;
-    });
-    const pres=st.filter(s=>s.present).length;
-    const anyMarked = pres > 0 || st.some(s=>s.present===false && s._touched);
+      try {
+        const d = await api(`/api/instructor/sessions/${sess.session_id}/attendance?group_id=${sess.group_id}`);
+        const st = (d.rows || []).sort((a, b) => {
+          const da = a.last_payment ? new Date(normISO(a.last_payment)) : new Date(0);
+          const db = b.last_payment ? new Date(normISO(b.last_payment)) : new Date(0);
+          return db - da;
+        });
+        const pres = st.filter(s => s.present).length;
+        const anyMarked = pres > 0 || st.some(s => s.present === false && s._touched);
 
-    // Czy obecność jest wymagana — można opuścić dopiero po zaznaczeniu min 1 osoby
-    // lub kliknięciu "Brak kursantów" (gdy lista pusta)
-    const attRequired = S.perms.can_mark_attendance && st.length > 0;
+        // Czy obecność jest wymagana — można opuścić dopiero po zaznaczeniu min 1 osoby
+        // lub kliknięciu "Brak kursantów" (gdy lista pusta)
+        const attRequired = S.perms.can_mark_attendance && st.length > 0;
 
-    $('pb').innerHTML=`
+        $('pb').innerHTML = `
       <div class="bc">
         <a onclick="tryLeaveSess()" style="cursor:pointer">Sesje</a><span class="bc-sep">›</span>
-        <span>${esc(sess.group_name||'')} — ${dateStr}</span>
+        <span>${esc(sess.group_name || '')} — ${dateStr}</span>
       </div>
       <div class="stats" style="margin-bottom:14px">
         <div class="sc g"><div class="sc-l">Obecnych</div><div class="sc-v" id="att-pres-cnt">${pres}</div></div>
         <div class="sc"><div class="sc-l">Na liście</div><div class="sc-v">${st.length}</div></div>
-        <div class="sc b"><div class="sc-l">Frekwencja</div><div class="sc-v" id="att-pct">${st.length?Math.round(pres/st.length*100):0}%</div></div>
+        <div class="sc b"><div class="sc-l">Frekwencja</div><div class="sc-v" id="att-pct">${st.length ? Math.round(pres / st.length * 100) : 0}%</div></div>
       </div>
       <div class="bar" style="margin-bottom:10px">
         <button class="btn btn-g btn-sm" onclick="markAll(true)">✓ Wszyscy obecni</button>
@@ -1109,80 +2300,86 @@ async function renderAtt() {
         ${S.perms.can_add_student ? `<button class="btn btn-r btn-sm" onclick="moAddStud(${sess.group_id})">+ Dodaj kusanta</button>` : ''}
       </div>
       <div class="att-list" id="attlist">
-        ${st.map(s=>`
-          <div class="att-row ${s.present?'present':'absent'}" id="atr-${s.student_id}">
-            <div class="att-chk ${s.present?'on':''}" id="chk-${s.student_id}" onclick="toggleAtt(${sess.session_id},${s.student_id},this)">${s.present?'✓':''}</div>
+        ${st.map(s => `
+          <div class="att-row ${s.present ? 'present' : 'absent'}" id="atr-${s.student_id}" onclick="toggleAttRow(event, ${sess.session_id}, ${s.student_id})">
+            <div class="att-chk ${s.present ? 'on' : ''}" id="chk-${s.student_id}">${s.present ? '✓' : ''}</div>
             <div class="att-name">${esc(s.last_name)}, ${esc(s.first_name)}</div>
-            ${S.perms.can_see_payments ? `<div class="att-pay ${daysAgo(s.last_payment)>35?'late':''}">Wpłata: ${fd(s.last_payment)}</div>` : ''}
-            ${S.perms.can_accept_payment ? `<button class="btn btn-xs" style="padding:3px 8px;font-size:10px;background:rgba(46,204,113,.15);border:1px solid rgba(46,204,113,.4);color:#2ecc71" onclick="moAcceptPayment(${s.student_id},'${esc(s.first_name)} ${esc(s.last_name)}',${sess.group_id})">+ Wpłata</button>` : ''}
+            ${S.perms.can_see_payments ? `<div class="att-pay ${daysAgo(s.last_payment) > 35 ? 'late' : ''}">Wpłata: ${fd(s.last_payment)}</div>` : ''}
+            ${S.perms.can_accept_payment ? `<button class="btn btn-xs" style="padding:3px 8px;font-size:10px;background:rgba(46,204,113,.15);border:1px solid rgba(46,204,113,.4);color:#2ecc71;grid-column:2;justify-self:start" onclick="event.stopPropagation();moAcceptPayment(${s.student_id},'${esc(s.first_name)} ${esc(s.last_name)}',${sess.group_id})">+ Wpłata</button>` : ''}
           </div>`).join('')}
       </div>
       <div style="margin-top:16px;text-align:right">
-        <button class="btn btn-r" id="att-done-btn" onclick="confirmAttDone()" ${pres===0&&st.length>0?'style="opacity:.5"':''}>
+        <button class="btn btn-r" id="att-done-btn" onclick="confirmAttDone()" ${pres === 0 && st.length > 0 ? 'style="opacity:.5"' : ''}>
           ✓ Zapisz obecność i wróć
         </button>
       </div>`;
-    // Zapisz stan
-    S._attRequired = attRequired;
-    S._attStudents = st;
-  } catch(e){ $('pb').innerHTML=`<div class="empty">Błąd: ${esc(e.message)}</div>`; }
-}
-
-function tryLeaveSess() {
-  // Sprawdź czy zaznaczono obecność
-  if (S._attRequired) {
-    const presNow = S._attStudents ? S._attStudents.filter(s=>document.getElementById('chk-'+s.student_id)?.classList.contains('on')).length : 0;
-    if (presNow === 0) {
-      if (!confirm('Nie zaznaczono żadnych obecności. Czy na pewno chcesz wyjść bez zapisu?')) return;
+        // Zapisz stan
+        S._attRequired = attRequired;
+        S._attStudents = st;
+      } catch (e) { $('pb').innerHTML = `<div class="empty">Błąd: ${esc(e.message)}</div>`; }
     }
-  }
-  S.sessId=null; S._attRequired=false; S._attStudents=null;
-  renderSess();
-}
 
-function confirmAttDone() {
-  const presNow = S._attStudents ? S._attStudents.filter(s=>document.getElementById('chk-'+s.student_id)?.classList.contains('on')).length : 0;
-  if (presNow === 0 && S._attStudents && S._attStudents.length > 0) {
-    if (!confirm('Nie zaznaczono żadnych obecności. Zapisać mimo to?')) return;
-  }
-  S.sessId=null; S._attRequired=false; S._attStudents=null;
-  renderSess();
-}
+    function tryLeaveSess() {
+      // Sprawdź czy zaznaczono obecność
+      if (S._attRequired) {
+        const presNow = S._attStudents ? S._attStudents.filter(s => document.getElementById('chk-' + s.student_id)?.classList.contains('on')).length : 0;
+        if (presNow === 0) {
+          if (!confirm('Nie zaznaczono żadnych obecności. Czy na pewno chcesz wyjść bez zapisu?')) return;
+        }
+      }
+      S.sessId = null; S._attRequired = false; S._attStudents = null;
+      renderSess();
+    }
 
-async function toggleAtt(sessId, studId, el) {
-  if (!S.perms.can_mark_attendance) { alert('Brak uprawnień do oznaczania obecności.'); return; }
-  const wasOn=el.classList.contains('on');
-  const now=!wasOn;
-  el.classList.toggle('on',now);
-  el.textContent=now?'✓':'';
-  const row=$(`atr-${studId}`);
-  if(row){row.classList.toggle('present',now);row.classList.toggle('absent',!now);}
-  try{ await api(`/api/instructor/sessions/${sessId}/attendance`,'POST',{student_id:studId,present:now}); }
-  catch(e){
-    el.classList.toggle('on',wasOn);el.textContent=wasOn?'✓':'';
-    if(row){row.classList.toggle('present',wasOn);row.classList.toggle('absent',!wasOn);}
-    alert('Błąd zapisu: '+e.message);
-  }
-}
+    function confirmAttDone() {
+      const presNow = S._attStudents ? S._attStudents.filter(s => document.getElementById('chk-' + s.student_id)?.classList.contains('on')).length : 0;
+      if (presNow === 0 && S._attStudents && S._attStudents.length > 0) {
+        if (!confirm('Nie zaznaczono żadnych obecności. Zapisać mimo to?')) return;
+      }
+      S.sessId = null; S._attRequired = false; S._attStudents = null;
+      renderSess();
+    }
 
-async function markAll(present) {
-  const sess=S.sessData;
-  for(const el of document.querySelectorAll('.att-chk')) {
-    const sid=Number(el.id.replace('chk-',''));
-    el.classList.toggle('on',present); el.textContent=present?'✓':'';
-    const row=$(`atr-${sid}`);
-    if(row){row.classList.toggle('present',present);row.classList.toggle('absent',!present);}
-    await api(`/api/instructor/sessions/${sess.session_id}/attendance`,'POST',{student_id:sid,present}).catch(()=>{});
-  }
-}
+    async function toggleAttRow(event, sessId, studId) {
+      if (event && event.target.tagName === 'BUTTON') return;
+      const el = document.getElementById('chk-' + studId);
+      if (el) toggleAtt(sessId, studId, el);
+    }
 
-// ── PAYMENTS ──────────────────────────────────────────────────
-async function renderPays() {
-  $('pb').innerHTML='<div class="loading">Ładowanie płatności...</div>';
-  try{ const d=await api('/api/instructor/payments'); S.payments=d.rows||[]; }catch(e){ S.payments=[]; }
-  const total=S.payments.reduce((s,p)=>s+Number(p.amount||0),0);
+    async function toggleAtt(sessId, studId, el) {
+      if (!S.perms.can_mark_attendance) { alert('Brak uprawnień do oznaczania obecności.'); return; }
+      const wasOn = el.classList.contains('on');
+      const now = !wasOn;
+      el.classList.toggle('on', now);
+      el.textContent = now ? '✓' : '';
+      const row = $(`atr-${studId}`);
+      if (row) { row.classList.toggle('present', now); row.classList.toggle('absent', !now); }
+      try { await api(`/api/instructor/sessions/${sessId}/attendance`, 'POST', { student_id: studId, present: now }); }
+      catch (e) {
+        el.classList.toggle('on', wasOn); el.textContent = wasOn ? '✓' : '';
+        if (row) { row.classList.toggle('present', wasOn); row.classList.toggle('absent', !wasOn); }
+        alert('Błąd zapisu: ' + e.message);
+      }
+    }
 
-  $('pb').innerHTML=`
+    async function markAll(present) {
+      const sess = S.sessData;
+      for (const el of document.querySelectorAll('.att-chk')) {
+        const sid = Number(el.id.replace('chk-', ''));
+        el.classList.toggle('on', present); el.textContent = present ? '✓' : '';
+        const row = $(`atr-${sid}`);
+        if (row) { row.classList.toggle('present', present); row.classList.toggle('absent', !present); }
+        await api(`/api/instructor/sessions/${sess.session_id}/attendance`, 'POST', { student_id: sid, present }).catch(() => { });
+      }
+    }
+
+    // ── PAYMENTS ──────────────────────────────────────────────────
+    async function renderPays() {
+      $('pb').innerHTML = '<div class="loading">Ładowanie płatności...</div>';
+      try { const d = await api('/api/instructor/payments'); S.payments = d.rows || []; } catch (e) { S.payments = []; }
+      const total = S.payments.reduce((s, p) => s + Number(p.amount || 0), 0);
+
+      $('pb').innerHTML = `
     <div class="stats">
       <div class="sc g"><div class="sc-l">Wpłaty w sezonie</div><div class="sc-v">${total.toFixed(0)} zł</div></div>
       <div class="sc b"><div class="sc-l">Liczba wpisów</div><div class="sc-v">${S.payments.length}</div></div>
@@ -1190,63 +2387,63 @@ async function renderPays() {
     <div class="bar">
       <input type="search" placeholder="Szukaj po nazwisku..." id="psrch" oninput="filterPay()">
     </div>
-    ${S.payments.length===0?'<div class="empty">Brak płatności w sezonie.</div>':`
+    ${S.payments.length === 0 ? '<div class="empty">Brak płatności w sezonie.</div>' : `
     <div class="tw"><table>
       <thead><tr><th>Data</th><th>Kursant</th><th>Grupa</th><th>Kwota</th><th>Uwaga</th></tr></thead>
       <tbody id="ptb">
-        ${S.payments.map(p=>`<tr>
+        ${S.payments.map(p => `<tr>
           <td data-label="Data" class="td-dim">${fd(p.paid_at)}</td>
-          <td data-label="Kursant" class="td-main"><a href="#" onclick="event.preventDefault();openStud(${p.student_id})" style="color:var(--text)">${esc(p.last_name||'')}, ${esc(p.first_name||'')}</a></td>
-          <td data-label="Grupa" class="td-dim">${esc(p.location_city||'')} — ${esc(p.group_name||'')}</td>
-          <td data-label="Kwota"><strong>${Number(p.amount||0).toFixed(0)} zł</strong></td>
-          <td data-label="Uwaga" class="td-dim">${p.note?esc(p.note):''}</td>
+          <td data-label="Kursant" class="td-main"><a href="#" onclick="event.preventDefault();openStud(${p.student_id})" style="color:var(--text)">${esc(p.last_name || '')}, ${esc(p.first_name || '')}</a></td>
+          <td data-label="Grupa" class="td-dim">${esc(p.location_city || '')} — ${esc(p.group_name || '')}</td>
+          <td data-label="Kwota"><strong>${Number(p.amount || 0).toFixed(0)} zł</strong></td>
+          <td data-label="Uwaga" class="td-dim">${p.note ? esc(p.note) : ''}</td>
         </tr>`).join('')}
       </tbody>
     </table></div>`}`;
-}
+    }
 
-function filterPay() {
-  const q=($('psrch')||{value:''}).value.toLowerCase();
-  const tb=$('ptb'); if(!tb)return;
-  tb.querySelectorAll('tr').forEach(tr=>{
-    const t=tr.cells[1]?tr.cells[1].textContent.toLowerCase():'';
-    tr.style.display=t.includes(q)?'':'none';
-  });
-}
+    function filterPay() {
+      const q = ($('psrch') || { value: '' }).value.toLowerCase();
+      const tb = $('ptb'); if (!tb) return;
+      tb.querySelectorAll('tr').forEach(tr => {
+        const t = tr.cells[1] ? tr.cells[1].textContent.toLowerCase() : '';
+        tr.style.display = t.includes(q) ? '' : 'none';
+      });
+    }
 
-// ── MODALS ────────────────────────────────────────────────────
-function showMo(title,bodyHTML,footHTML=''){
-  $('mo-t').textContent=title;
-  $('mo-b').innerHTML=bodyHTML;
-  $('mo-f').innerHTML=footHTML;
-  $('mo').style.display='flex';
-}
-function closeMo(){$('mo').style.display='none';}
+    // ── MODALS ────────────────────────────────────────────────────
+    function showMo(title, bodyHTML, footHTML = '') {
+      $('mo-t').textContent = title;
+      $('mo-b').innerHTML = bodyHTML;
+      $('mo-f').innerHTML = footHTML;
+      $('mo').style.display = 'flex';
+    }
+    function closeMo() { $('mo').style.display = 'none'; }
 
-function moCreateSess(){
-  const opts=S.groups.map(g=>`<option value="${g.id}">${esc(g.location_city)} — ${esc(g.name)}</option>`).join('');
-  showMo('NOWA SESJA TRENINGOWA',`
+    function moCreateSess() {
+      const opts = S.groups.map(g => `<option value="${g.id}">${esc(g.location_city)} — ${esc(g.name)}</option>`).join('');
+      showMo('NOWA SESJA TRENINGOWA', `
     <div class="ff"><label>Grupa</label><select id="m-gid">${opts}</select></div>
     <div class="ff"><label>Data</label><input type="date" id="m-dt" value="${todayISO()}"></div>`,
-    `<button class="btn btn-o" onclick="closeMo()">Anuluj</button>
+        `<button class="btn btn-o" onclick="closeMo()">Anuluj</button>
      <button class="btn btn-r" onclick="doCreateSess()">Utwórz</button>`);
-}
-async function doCreateSess(){
-  const gid=$('m-gid').value,dt=$('m-dt').value;
-  if(!gid||!dt)return;
-  try{
-    const d=await api('/api/instructor/sessions','POST',{group_id:gid,session_date:dt});
-    closeMo();
-    openSessById(d.id,Number(gid),dt,S.groups.find(x=>x.id==gid)?.name||'');
-  }catch(e){alert('Błąd: '+e.message);}
-}
+    }
+    async function doCreateSess() {
+      const gid = $('m-gid').value, dt = $('m-dt').value;
+      if (!gid || !dt) return;
+      try {
+        const d = await api('/api/instructor/sessions', 'POST', { group_id: gid, session_date: dt });
+        closeMo();
+        openSessById(d.id, Number(gid), dt, S.groups.find(x => x.id == gid)?.name || '');
+      } catch (e) { alert('Błąd: ' + e.message); }
+    }
 
-// ── PRZYJMIJ PŁATNOŚĆ (instruktor) ────────────────────────────
-function moAcceptPayment(studentId, studentName, groupId) {
-  const mo = document.createElement('div');
-  mo.className = 'mo';
-  mo.id = 'mo-pay';
-  mo.innerHTML = `
+    // ── PRZYJMIJ PŁATNOŚĆ (instruktor) ────────────────────────────
+    function moAcceptPayment(studentId, studentName, groupId) {
+      const mo = document.createElement('div');
+      mo.className = 'mo';
+      mo.id = 'mo-pay';
+      mo.innerHTML = `
     <div class="md" style="max-width:380px">
       <div class="mh"><h3>💰 Przyjmij wpłatę</h3><button onclick="document.getElementById('mo-pay').remove()" style="background:none;border:none;color:var(--dim);font-size:20px;cursor:pointer">✕</button></div>
       <div class="mb">
@@ -1263,28 +2460,28 @@ function moAcceptPayment(studentId, studentName, groupId) {
       </div>
       <div class="mf">
         <button class="btn btn-secondary" onclick="document.getElementById('mo-pay').remove()">Anuluj</button>
-        <button class="btn btn-primary" onclick="doAcceptPayment(${studentId},${groupId||'null'})">Zapisz wpłatę</button>
+        <button class="btn btn-primary" onclick="doAcceptPayment(${studentId},${groupId || 'null'})">Zapisz wpłatę</button>
       </div>
     </div>`;
-  document.body.appendChild(mo);
-  setTimeout(() => document.getElementById('pay-amount')?.focus(), 50);
-}
+      document.body.appendChild(mo);
+      setTimeout(() => document.getElementById('pay-amount')?.focus(), 50);
+    }
 
-async function doAcceptPayment(studentId, groupId) {
-  const amount = parseFloat(document.getElementById('pay-amount')?.value);
-  const note = document.getElementById('pay-note')?.value?.trim();
-  const errEl = document.getElementById('pay-err');
-  if (!amount || amount <= 0) { errEl.textContent='Podaj prawidłową kwotę.'; errEl.style.display='block'; return; }
-  try {
-    await api('/api/instructor/accept-payment','POST',{ student_id:studentId, amount, note:note||null, group_id:groupId||null });
-    document.getElementById('mo-pay')?.remove();
-    if (S.sessId) renderAtt();
-  } catch(e) { errEl.textContent=e.message; errEl.style.display='block'; }
-}
+    async function doAcceptPayment(studentId, groupId) {
+      const amount = parseFloat(document.getElementById('pay-amount')?.value);
+      const note = document.getElementById('pay-note')?.value?.trim();
+      const errEl = document.getElementById('pay-err');
+      if (!amount || amount <= 0) { errEl.textContent = 'Podaj prawidłową kwotę.'; errEl.style.display = 'block'; return; }
+      try {
+        await api('/api/instructor/accept-payment', 'POST', { student_id: studentId, amount, note: note || null, group_id: groupId || null });
+        document.getElementById('mo-pay')?.remove();
+        if (S.sessId) renderAtt();
+      } catch (e) { errEl.textContent = e.message; errEl.style.display = 'block'; }
+    }
 
-function moAddStud(gid){
-  const opts=S.groups.map(g=>`<option value="${g.id}" ${g.id==gid?'selected':''}>${esc(g.location_city)} — ${esc(g.name)}</option>`).join('');
-  showMo('DODAJ KURSANTA',`
+    function moAddStud(gid) {
+      const opts = S.groups.map(g => `<option value="${g.id}" ${g.id == gid ? 'selected' : ''}>${esc(g.location_city)} — ${esc(g.name)}</option>`).join('');
+      showMo('DODAJ KURSANTA', `
     <div class="ff2">
       <div class="ff"><label>Imię *</label><input id="a-fn"></div>
       <div class="ff"><label>Nazwisko *</label><input id="a-ln"></div>
@@ -1297,224 +2494,225 @@ function moAddStud(gid){
       <div class="ff"><label>Rok urodzenia</label><input id="a-by" type="number" min="1950" max="2020"></div>
       <div class="ff"><label>Przypisz do grupy</label><select id="a-gp">${opts}</select></div>
     </div>`,
-    `<button class="btn btn-o" onclick="closeMo()">Anuluj</button>
+        `<button class="btn btn-o" onclick="closeMo()">Anuluj</button>
      <button class="btn btn-r" onclick="doAddStud()">Dodaj</button>`);
-}
-async function doAddStud(){
-  const fn=$('a-fn').value.trim(),ln=$('a-ln').value.trim();
-  if(!fn||!ln){alert('Imię i nazwisko są wymagane.');return;}
-  try{
-    await api('/api/instructor/students','POST',{
-      first_name:fn,last_name:ln,
-      phone:$('a-ph').value.trim()||null,
-      email:$('a-em').value.trim()||null,
-      birth_year:$('a-by').value||null,
-      group_id:$('a-gp').value||null
-    });
-    closeMo();
-    openGrp(S.grpId);
-  }catch(e){alert('Błąd: '+e.message);}
-}
+    }
+    async function doAddStud() {
+      const fn = $('a-fn').value.trim(), ln = $('a-ln').value.trim();
+      if (!fn || !ln) { alert('Imię i nazwisko są wymagane.'); return; }
+      try {
+        await api('/api/instructor/students', 'POST', {
+          first_name: fn, last_name: ln,
+          phone: $('a-ph').value.trim() || null,
+          email: $('a-em').value.trim() || null,
+          birth_year: $('a-by').value || null,
+          group_id: $('a-gp').value || null
+        });
+        closeMo();
+        openGrp(S.grpId);
+      } catch (e) { alert('Błąd: ' + e.message); }
+    }
 
-async function moEditStud(){
-  const s=S.studData;
-  // Pobierz grupy instruktora z info czy kursant jest w każdej
-  let grpRows=[];
-  try{ const d=await api(`/api/instructor/students/${s.id}/groups`); grpRows=d.rows||[]; }
-  catch(e){ console.warn('Błąd ładowania grup:',e); }
-  S._editGrpRows = grpRows;
+    async function moEditStud() {
+      const s = S.studData;
+      // Pobierz grupy instruktora z info czy kursant jest w każdej
+      let grpRows = [];
+      try { const d = await api(`/api/instructor/students/${s.id}/groups`); grpRows = d.rows || []; }
+      catch (e) { console.warn('Błąd ładowania grup:', e); }
+      S._editGrpRows = grpRows;
 
-  // Grupy w których kursant jest aktywny
-  const activeGrps = grpRows.filter(g=>g.student_active);
-  // Lista grup do wyboru przy przeniesieniu
-  const grpOpts = grpRows.map(g=>`<option value="${g.id}">${esc(g.location_city)} — ${esc(g.name)}</option>`).join('');
+      // Grupy w których kursant jest aktywny
+      const activeGrps = grpRows.filter(g => g.student_active);
+      // Lista grup do wyboru przy przeniesieniu
+      const grpOpts = grpRows.map(g => `<option value="${g.id}">${esc(g.location_city)} — ${esc(g.name)}</option>`).join('');
 
-  // Sekcja grup — każda aktywna z przyciskiem przenieś + usuń
-  const grpRows_html = activeGrps.length===0
-    ? `<div style="color:var(--dim);font-size:.85rem;padding:6px 0">Kursant nie jest przypisany do żadnej grupy.</div>`
-    : activeGrps.map(g=>`
+      // Sekcja grup — każda aktywna z przyciskiem przenieś + usuń
+      const grpRows_html = activeGrps.length === 0
+        ? `<div style="color:var(--dim);font-size:.85rem;padding:6px 0">Kursant nie jest przypisany do żadnej grupy.</div>`
+        : activeGrps.map(g => `
       <div class="eg-row" id="egr-${g.id}">
         <span class="bx bx-g" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(g.location_city)} — ${esc(g.name)}</span>
         <button class="btn btn-xs btn-o" onclick="moMoveStud(${s.id},${g.id},'${esc(g.name)}')">Przenieś →</button>
         <button class="btn btn-xs btn-ghost" onclick="doRemoveFromGroup(${s.id},${g.id},this)" title="Usuń z grupy">✕</button>
       </div>`).join('');
 
-  // Dodaj do dodatkowej grupy (nie wychodząc z aktualnej)
-  const addableGrps = grpRows.filter(g=>!g.student_active);
-  const addOpts = addableGrps.map(g=>`<option value="${g.id}">${esc(g.location_city)} — ${esc(g.name)}</option>`).join('');
+      // Dodaj do dodatkowej grupy (nie wychodząc z aktualnej)
+      const addableGrps = grpRows.filter(g => !g.student_active);
+      const addOpts = addableGrps.map(g => `<option value="${g.id}">${esc(g.location_city)} — ${esc(g.name)}</option>`).join('');
 
-  showMo('EDYTUJ KURSANTA',`
+      showMo('EDYTUJ KURSANTA', `
     <div class="ff2">
-      <div class="ff"><label>Imię *</label><input id="e-fn" value="${esc(s.first_name||'')}"></div>
-      <div class="ff"><label>Nazwisko *</label><input id="e-ln" value="${esc(s.last_name||'')}"></div>
+      <div class="ff"><label>Imię *</label><input id="e-fn" value="${esc(s.first_name || '')}"></div>
+      <div class="ff"><label>Nazwisko *</label><input id="e-ln" value="${esc(s.last_name || '')}"></div>
     </div>
     <div class="ff2">
-      <div class="ff"><label>Telefon</label><input id="e-ph" value="${esc(s.phone||'')}"></div>
-      <div class="ff"><label>E-mail</label><input id="e-em" value="${esc(s.email||'')}"></div>
+      <div class="ff"><label>Telefon</label><input id="e-ph" value="${esc(s.phone || '')}"></div>
+      <div class="ff"><label>E-mail</label><input id="e-em" value="${esc(s.email || '')}"></div>
     </div>
-    <div class="ff"><label>Rok urodzenia</label><input id="e-by" type="number" value="${s.birth_year||''}"></div>
+    <div class="ff"><label>Rok urodzenia</label><input id="e-by" type="number" value="${s.birth_year || ''}"></div>
     <div style="margin-top:18px;border-top:1px solid var(--brd);padding-top:14px">
       <div class="section-hd" style="margin-bottom:10px">GRUPY KURSANTA</div>
       <div id="eg-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px">
         ${grpRows_html}
       </div>
-      ${addableGrps.length>0?`
+      ${addableGrps.length > 0 ? `
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
         <select id="e-add-gp" style="flex:1;min-width:150px">
           <option value="">— dodaj do grupy —</option>
           ${addOpts}
         </select>
         <button class="btn btn-g btn-sm" onclick="doAddToGroup(${s.id})">+ Dodaj</button>
-      </div>`:''}
+      </div>`: ''}
     </div>`,
-    `<button class="btn btn-o" onclick="closeMo()">Anuluj</button>
+        `<button class="btn btn-o" onclick="closeMo()">Anuluj</button>
      <button class="btn btn-r" onclick="doEditStud(${s.id})">Zapisz dane</button>`);
-}
+    }
 
-// Przenieś kursanta do innej grupy (modal w modalu)
-function moMoveStud(sid, fromGid, fromName){
-  // Pobierz grupy do których można przenieść (wszystkie instruktora oprócz aktualnej)
-  const availGroups = (S._editGrpRows||[]).filter(g=>g.id!==fromGid);
-  if(!availGroups.length){alert('Brak innych grup do których można przenieść.');return;}
-  const opts = availGroups.map(g=>`<option value="${g.id}">${esc(g.location_city)} — ${esc(g.name)}</option>`).join('');
-  showMo('PRZENIEŚ DO INNEJ GRUPY',`
+    // Przenieś kursanta do innej grupy (modal w modalu)
+    function moMoveStud(sid, fromGid, fromName) {
+      // Pobierz grupy do których można przenieść (wszystkie instruktora oprócz aktualnej)
+      const availGroups = (S._editGrpRows || []).filter(g => g.id !== fromGid);
+      if (!availGroups.length) { alert('Brak innych grup do których można przenieść.'); return; }
+      const opts = availGroups.map(g => `<option value="${g.id}">${esc(g.location_city)} — ${esc(g.name)}</option>`).join('');
+      showMo('PRZENIEŚ DO INNEJ GRUPY', `
     <p style="margin:0 0 14px;color:var(--dim)">Kursant zostanie <strong>usunięty z: ${esc(fromName)}</strong> i dodany do wybranej grupy.</p>
     <div class="ff"><label>Przenieś do grupy</label>
       <select id="mv-gp">${opts}</select>
     </div>`,
-    `<button class="btn btn-o" onclick="moEditStud()">← Wróć</button>
+        `<button class="btn btn-o" onclick="moEditStud()">← Wróć</button>
      <button class="btn btn-r" onclick="doMoveStud(${sid},${fromGid})">Przenieś</button>`);
-}
+    }
 
-async function doMoveStud(sid, fromGid){
-  const toGid = $('mv-gp').value;
-  if(!toGid){alert('Wybierz grupę docelową.');return;}
-  try{
-    await api(`/api/instructor/students/${sid}/groups`,'POST',{
-      group_id:Number(toGid), action:'move', from_group_id:fromGid
-    });
-    closeMo();
-    // Odśwież listę — wróć do grupy z której przenosiliśmy lub do kursanta
-    if(S.grpId===fromGid){ openGrp(Number(toGid)); }
-    else { openStud(sid); }
-  }catch(e){alert('Błąd: '+e.message);}
-}
+    async function doMoveStud(sid, fromGid) {
+      const toGid = $('mv-gp').value;
+      if (!toGid) { alert('Wybierz grupę docelową.'); return; }
+      try {
+        await api(`/api/instructor/students/${sid}/groups`, 'POST', {
+          group_id: Number(toGid), action: 'move', from_group_id: fromGid
+        });
+        closeMo();
+        // Odśwież listę — wróć do grupy z której przenosiliśmy lub do kursanta
+        if (S.grpId === fromGid) { openGrp(Number(toGid)); }
+        else { openStud(sid); }
+      } catch (e) { alert('Błąd: ' + e.message); }
+    }
 
-async function doRemoveFromGroup(sid, gid, btn){
-  if(!confirm('Usunąć kursanta z tej grupy?'))return;
-  try{
-    await api(`/api/instructor/students/${sid}/groups`,'POST',{
-      group_id:gid, action:'remove'
-    });
-    // Usuń wiersz z UI bez zamykania modala
-    const row=document.getElementById('egr-'+gid);
-    if(row) row.remove();
-  }catch(e){alert('Błąd: '+e.message);}
-}
+    async function doRemoveFromGroup(sid, gid, btn) {
+      if (!confirm('Usunąć kursanta z tej grupy?')) return;
+      try {
+        await api(`/api/instructor/students/${sid}/groups`, 'POST', {
+          group_id: gid, action: 'remove'
+        });
+        // Usuń wiersz z UI bez zamykania modala
+        const row = document.getElementById('egr-' + gid);
+        if (row) row.remove();
+      } catch (e) { alert('Błąd: ' + e.message); }
+    }
 
-async function doAddToGroup(sid){
-  const gid=$('e-add-gp').value;
-  if(!gid){alert('Wybierz grupę.');return;}
-  try{
-    await api(`/api/instructor/students/${sid}/groups`,'POST',{
-      group_id:Number(gid), action:'add'
-    });
-    closeMo();
-    openStud(sid);
-  }catch(e){alert('Błąd: '+e.message);}
-}
+    async function doAddToGroup(sid) {
+      const gid = $('e-add-gp').value;
+      if (!gid) { alert('Wybierz grupę.'); return; }
+      try {
+        await api(`/api/instructor/students/${sid}/groups`, 'POST', {
+          group_id: Number(gid), action: 'add'
+        });
+        closeMo();
+        openStud(sid);
+      } catch (e) { alert('Błąd: ' + e.message); }
+    }
 
-async function doEditStud(id){
-  const fn=$('e-fn').value.trim(),ln=$('e-ln').value.trim();
-  if(!fn||!ln){alert('Imię i nazwisko są wymagane.');return;}
-  try{
-    await api(`/api/instructor/students/${id}`,'PATCH',{
-      first_name:fn,last_name:ln,
-      phone:$('e-ph').value.trim()||null,
-      email:$('e-em').value.trim()||null,
-      birth_year:$('e-by').value||null
-    });
-    closeMo();
-    openStud(id);
-  }catch(e){alert('Błąd: '+e.message);}
-}
+    async function doEditStud(id) {
+      const fn = $('e-fn').value.trim(), ln = $('e-ln').value.trim();
+      if (!fn || !ln) { alert('Imię i nazwisko są wymagane.'); return; }
+      try {
+        await api(`/api/instructor/students/${id}`, 'PATCH', {
+          first_name: fn, last_name: ln,
+          phone: $('e-ph').value.trim() || null,
+          email: $('e-em').value.trim() || null,
+          birth_year: $('e-by').value || null
+        });
+        closeMo();
+        openStud(id);
+      } catch (e) { alert('Błąd: ' + e.message); }
+    }
 
-async function doDelStud(id){
-  if(!confirm('Usunąć kursanta? Jeśli ma płatności lub obecności — zostanie oznaczony jako nieaktywny.'))return;
-  try{
-    const d=await api(`/api/instructor/students/${id}`,'DELETE');
-    if(d.soft)alert('Kursant ma historię — oznaczony jako nieaktywny.');
-    S.studId=null;
-    openGrp(S.grpId);
-  }catch(e){alert('Błąd: '+e.message);}
-}
+    async function doDelStud(id) {
+      if (!confirm('Usunąć kursanta? Jeśli ma płatności lub obecności — zostanie oznaczony jako nieaktywny.')) return;
+      try {
+        const d = await api(`/api/instructor/students/${id}`, 'DELETE');
+        if (d.soft) alert('Kursant ma historię — oznaczony jako nieaktywny.');
+        S.studId = null;
+        openGrp(S.grpId);
+      } catch (e) { alert('Błąd: ' + e.message); }
+    }
 
-function moAddPay(sid){
-  showMo('DODAJ WPŁATĘ',`
+    function moAddPay(sid) {
+      showMo('DODAJ WPŁATĘ', `
     <div class="ff2">
       <div class="ff"><label>Kwota (zł) *</label><input id="p-am" type="number" min="1" placeholder="np. 220"></div>
       <div class="ff"><label>Data</label><input id="p-dt" type="date" value="${todayISO()}"></div>
     </div>
     <div class="ff"><label>Uwaga</label><input id="p-nt" placeholder="opcjonalnie"></div>`,
-    `<button class="btn btn-o" onclick="closeMo()">Anuluj</button>
+        `<button class="btn btn-o" onclick="closeMo()">Anuluj</button>
      <button class="btn btn-g" onclick="doAddPay(${sid})">Zapisz wpłatę</button>`);
-}
-async function doAddPay(sid){
-  const amt=$('p-am').value;
-  if(!amt){alert('Podaj kwotę.');return;}
-  try{
-    await api(`/api/instructor/students/${sid}/payments`,'POST',{
-      amount:parseFloat(amt),date:$('p-dt').value,note:$('p-nt').value.trim()||null
+    }
+    async function doAddPay(sid) {
+      const amt = $('p-am').value;
+      if (!amt) { alert('Podaj kwotę.'); return; }
+      try {
+        await api(`/api/instructor/students/${sid}/payments`, 'POST', {
+          amount: parseFloat(amt), date: $('p-dt').value, note: $('p-nt').value.trim() || null
+        });
+        closeMo();
+        openStud(sid);
+      } catch (e) { alert('Błąd: ' + e.message); }
+    }
+
+    async function doDelPay(sid, pid) {
+      if (!confirm('Usunąć tę wpłatę?')) return;
+      try { await api(`/api/instructor/students/${sid}/payments?pid=${pid}`, 'DELETE'); openStud(sid); }
+      catch (e) { alert('Błąd: ' + e.message); }
+    }
+
+    // ── INIT ──────────────────────────────────────────────────────
+    // Reaguj na zmianę rozmiaru okna
+    window.addEventListener('resize', () => {
+      if (S.token) showMobileBars(true);
     });
-    closeMo();
-    openStud(sid);
-  }catch(e){alert('Błąd: '+e.message);}
-}
 
-async function doDelPay(sid,pid){
-  if(!confirm('Usunąć tę wpłatę?'))return;
-  try{ await api(`/api/instructor/students/${sid}/payments?pid=${pid}`,'DELETE'); openStud(sid); }
-  catch(e){ alert('Błąd: '+e.message); }
-}
+    (function init() {
+      const tok = localStorage.getItem('it'), ii = localStorage.getItem('ii'), ip = localStorage.getItem('ip');
+      if (tok && ii) {
+        try {
+          setAuth(tok, JSON.parse(ii), ip ? JSON.parse(ip) : {});
+          $('pg-login').style.display = 'none';
+          $('app').classList.add('on');
+          loadAll();
+        } catch (e) { localStorage.removeItem('it'); localStorage.removeItem('ii'); localStorage.removeItem('ip'); }
+      }
+    })();
+    /* ===== TAP NA CAŁY WIERSZ = OBECNOŚĆ ===== */
 
-// ── INIT ──────────────────────────────────────────────────────
-// Reaguj na zmianę rozmiaru okna
-window.addEventListener('resize', () => {
-  if (S.token) showMobileBars(true);
-});
+    document.addEventListener("click", function (e) {
 
-(function init(){
-  const tok=localStorage.getItem('it'), ii=localStorage.getItem('ii'), ip=localStorage.getItem('ip');
-  if(tok&&ii){
-    try{
-      setAuth(tok, JSON.parse(ii), ip ? JSON.parse(ip) : {});
-      $('pg-login').style.display='none';
-      $('app').classList.add('on');
-      loadAll();
-    }catch(e){localStorage.removeItem('it');localStorage.removeItem('ii');localStorage.removeItem('ip');}
-  }
-})();
-/* ===== TAP NA CAŁY WIERSZ = OBECNOŚĆ ===== */
+      const checkbox = e.target.closest("input[type='checkbox']");
 
-document.addEventListener("click", function(e){
+      if (checkbox) return;
 
-  const checkbox = e.target.closest("input[type='checkbox']");
+      const row = e.target.closest("div");
 
-  if(checkbox) return;
+      if (!row) return;
 
-  const row = e.target.closest("div");
+      const cb = row.querySelector("input[type='checkbox']");
 
-  if(!row) return;
+      if (!cb) return;
 
-  const cb = row.querySelector("input[type='checkbox']");
+      cb.checked = !cb.checked;
 
-  if(!cb) return;
+      cb.dispatchEvent(new Event("change"));
 
-  cb.checked = !cb.checked;
-
-  cb.dispatchEvent(new Event("change"));
-
-});
-</script>
+    });
+  </script>
 </body>
+
 </html>
