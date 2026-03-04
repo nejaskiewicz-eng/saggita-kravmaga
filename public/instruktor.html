@@ -345,36 +345,34 @@ margin-top:6px !important;
 }
 /* ===== JEDEN SCROLL NA CAŁĄ STRONĘ ===== */
 
-/* usuń scroll z listy kursantów */
+/* wyłącz scroll w layoutach aplikacji */
+main,
+.container,
+.wrap,
+.page,
+.content,
+.app,
+.pb{
+height:auto !important;
+max-height:none !important;
+overflow:visible !important;
+}
+
+/* lista kursantów */
 .student-list,
 .list,
 .attendance-list,
 #students,
 #kursanci{
-overflow:visible !important;
-max-height:none !important;
 height:auto !important;
+max-height:none !important;
+overflow:visible !important;
 }
 
 /* scroll tylko na stronie */
-html, body{
-overflow-y:auto !important;
-}
-
-/* zabezpieczenie */
-main{
-overflow:visible !important;
-}
-/* ===== USUŃ SCROLL Z KONTENERA KURSANTÓW ===== */
-
-.pb{
-overflow:visible !important;
-max-height:none !important;
-height:auto !important;
-}
-
-/* scroll tylko na całej stronie */
+html,
 body{
+height:auto !important;
 overflow-y:auto !important;
 }
 </style>
