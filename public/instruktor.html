@@ -1910,9 +1910,9 @@
       <div class="sc y"><div class="sc-l">Sezon od</div><div class="sc-v" style="font-size:15px">01.09.2025</div></div>
     </div>
     ${todayGs.length ? `<div class="section-hd">DZISIAJ MASZ ZAJĘCIA</div>
-    <div class="gcards" style="margin-bottom:20px">${todayGs.map(gcardHTML).join('')}</div>` : ''}
-    <div class="section-hd">WSZYSTKIE GRUPY</div>
-    <div class="gcards">${S.groups.map(gcardHTML).join('') || '<div class="empty">Brak przypisanych grup.</div>'}</div>`;
+    <div class="gcards" style="margin-bottom:20px">${todayGs.map(gcardHTML).join('')}</div>` :
+          `<div class="empty" style="margin-top:20px">Dzisiaj nie masz żadnych zaplanowanych zajęć.</div>`}
+    <!-- "Wszystkie grupy" usunięto zgodnie z preferencją – dostępne w menu "Grupy & Kursanci" -->`;
     }
 
     function gcardHTML(g) {
@@ -2426,13 +2426,19 @@
         ${S.perms.can_add_student ? `<button class="btn btn-r btn-sm" onclick="moAddStud(${sess.group_id})">+ Dodaj kusanta</button>` : ''}
       </div>
       <div class="att-list" id="attlist">
-        ${st.map(s => `
+        ${st.map(s => {
+          // Zmiana: podlinkuj wpłatę bezpośrednio do profilu, by nie musieć skakać po stronach
+          const payText = S.perms.can_see_payments ? `<div class="att-pay ${daysAgo(s.last_payment) > 35 ? 'late' : ''}" onclick="event.stopPropagation();openStud(${s.student_id})" style="cursor:pointer;text-decoration:underline;text-underline-offset:2px">Wpłata: ${fd(s.last_payment)}</div>` : '';
+          const payBtn = S.perms.can_accept_payment ? `<button class="btn btn-xs" style="padding:3px 8px;font-size:10px;background:rgba(46,204,113,.15);border:1px solid rgba(46,204,113,.4);color:#2ecc71;grid-column:2;justify-self:start" onclick="event.stopPropagation();moAcceptPayment(${s.student_id},'${esc(s.first_name)} ${esc(s.last_name)}',${sess.group_id})">+ Wpłata</button>` : '';
+
+          return `
           <div class="att-row ${s.present ? 'present' : 'absent'}" id="atr-${s.student_id}" onclick="toggleAttRow(event, ${sess.session_id}, ${s.student_id})">
             <div class="att-chk ${s.present ? 'on' : ''}" id="chk-${s.student_id}">${s.present ? '✓' : ''}</div>
             <div class="att-name">${esc(s.last_name)}, ${esc(s.first_name)}</div>
-            ${S.perms.can_see_payments ? `<div class="att-pay ${daysAgo(s.last_payment) > 35 ? 'late' : ''}">Wpłata: ${fd(s.last_payment)}</div>` : ''}
-            ${S.perms.can_accept_payment ? `<button class="btn btn-xs" style="padding:3px 8px;font-size:10px;background:rgba(46,204,113,.15);border:1px solid rgba(46,204,113,.4);color:#2ecc71;grid-column:2;justify-self:start" onclick="event.stopPropagation();moAcceptPayment(${s.student_id},'${esc(s.first_name)} ${esc(s.last_name)}',${sess.group_id})">+ Wpłata</button>` : ''}
-          </div>`).join('')}
+            ${payText}
+            ${payBtn}
+          </div>`;
+        }).join('')}
       </div>
       <div style="margin-top:16px;text-align:right">
         <button class="btn btn-r" id="att-done-btn" onclick="confirmAttDone()" ${pres === 0 && st.length > 0 ? 'style="opacity:.5"' : ''}>
