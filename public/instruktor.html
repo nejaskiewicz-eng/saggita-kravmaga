@@ -70,7 +70,7 @@
     /* ─── LOGIN ─────────────────────────────────────────────────── */
     #pg-login {
       display: flex;
-      height: 100vh;
+      height: 100dvh;
       align-items: center;
       justify-content: center;
       background: var(--bg)
@@ -173,7 +173,7 @@
     /* ─── APP ────────────────────────────────────────────────────── */
     #app {
       display: none;
-      height: 100vh;
+      height: 100dvh;
       flex-direction: row
     }
 
@@ -1477,13 +1477,14 @@
 
     /* naprawa przewijania listy przy dolnym menu */
     body {
-      padding-bottom: 120px;
+      padding-bottom: calc(75px + env(safe-area-inset-bottom)) !important;
     }
 
     /* wymuszenie prawidłowego scrolla strony */
     html,
     body {
       overflow-y: auto;
+      min-height: 100dvh;
     }
 
     /* ===== TRYB INSTRUKTORA — MINIMALNY PANEL ===== */
@@ -1534,7 +1535,10 @@
     .page,
     .content,
     .app,
-    .pb {
+    .pb,
+    #pb,
+    #app,
+    #app.on {
       height: auto !important;
       max-height: none !important;
       overflow: visible !important;
