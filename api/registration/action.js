@@ -43,6 +43,7 @@ module.exports = async (req, res) => {
       let displayAmount = totalAmount;
       let docTitle = 'Dokument płatniczy';
       let docNote = '';
+      const fmt = (v) => parseFloat(v||0).toFixed(2);
       const pMonths = parseInt(docMonths || 1);
       const pRate = docMonthlyRate ? parseFloat(docMonthlyRate) : null;
       const pSignupFee = parseFloat(r.signup_fee || 0);
@@ -64,13 +65,31 @@ module.exports = async (req, res) => {
       let scheduleTable = '';
       if (isScheduleDoc && pRate && pMonths > 1) {
         const now = new Date();
+        const day = now.getDate();
+        // Pierwsza połowa miesiąca (1-15): zaczynam od bieżącego miesiąca
+        // Druga połowa (16+): zaczynam od przyszłego miesiąca
+        const startOffset = day > 15 ? 1 : 0;
+
         let rows = '';
         for (let i = 0; i < pMonths; i++) {
-          const d = new Date(now.getFullYear(), now.getMonth() + i, 10);
+          const monthOffset = startOffset + i;
+          const d = new Date(now.getFullYear(), now.getMonth() + monthOffset, 1);
           const label = d.toLocaleDateString('pl-PL', { month: 'long', year: 'numeric' });
           const amt = i === 0 ? (pRate + pSignupFee) : pRate;
           const note = i === 0 && pSignupFee > 0 ? ' (karnet + wpisowe)' : '';
-          rows += `<tr><td>${i+1}.</td><td>${label}</td><td>do 10. dnia miesiąca</td><td style="font-weight:bold;color:#c42000">${fmt2(amt)} zł${note}</td></tr>`;
+
+          let deadline;
+          if (i === 0 && startOffset === 0) {
+            // Bieżący miesiąc, 1. połowa — płatne natychmiast (w ciągu 3 dni)
+            deadline = 'w ciągu 3 dni roboczych';
+          } else {
+            // Ostatni dzień miesiąca poprzedzającego opłacany miesiąc
+            const prevEnd = new Date(now.getFullYear(), now.getMonth() + monthOffset, 0);
+            const prevLabel = prevEnd.toLocaleDateString('pl-PL', { day: 'numeric', month: 'long', year: 'numeric' });
+            deadline = `do ${prevLabel}`;
+          }
+
+          rows += `<tr><td>${i+1}.</td><td>${label}</td><td>${deadline}</td><td style="font-weight:bold;color:#c42000">${fmt(amt)} zł${note}</td></tr>`;
         }
         scheduleTable = `<h2 style="margin-top:24px;font-size:16px">📅 Harmonogram wpłat</h2>
 <table>
@@ -203,26 +222,15 @@ ${!isScheduleDoc ? `<a href="${onlineUrl}" class="online-btn">💳 Przejdź do p
       };
 
       if (action === 'download_doc') {
-        // Wyślij mail uzależniony od trybu płatności
+        // Mail z danymi do przelewu — wysyłany po kliknięciu zielonego przycisku
         userMail = mailKursant(contractData);
       } else if (action === 'schedule_doc') {
-        // Mail z harmonogramem miesięcznym
+        // Mail z harmonogramem miesięcznym — wysyłany po kliknięciu zielonego przycisku
         userMail = mailKursant({ ...contractData, payment_mode: 'monthly' });
       } else if (action === 'pay_online') {
-        if (pMode === 'full' || pMode === 'monthly') {
-          // Szczegółowy mail kontraktowy
-          userMail = mailKursant(contractData);
-        } else {
-          userMail = mailPayOnlineChosen({
-            first_name:   r.first_name,
-            payment_ref,
-            plan_name:    r.plan_name,
-            group_name:   r.group_name,
-            city:         r.city,
-            total_amount: pMode === 'monthly' ? pMonthlyRate + pSignupFee : r.total_amount,
-            pay_url:      pay_url || '',
-          });
-        }
+        // Brak maila — użytkownik dopiero jest przekierowywany do bramki płatności.
+        // Mail zostanie wysłany przez payment_confirmed po powrocie z płatności.
+        userMail = null;
       } else if (action === 'payment_confirmed') {
         userMail = mailPaymentConfirmed({
           first_name:        r.first_name,
