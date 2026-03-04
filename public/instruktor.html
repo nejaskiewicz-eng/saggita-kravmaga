@@ -1384,16 +1384,19 @@
         pointer-events: none
       }
 
-      /* Calendar */
+      /* Calendar - Przebudowa mobilna w agendę (listę) */
       .cal-head {
         flex-wrap: wrap;
         gap: 6px
       }
 
       .cal-title {
-        font-size: 13px;
+        font-size: 14px;
         min-width: 100%;
-        order: -1
+        order: -1;
+        text-align: center;
+        margin-bottom: 4px;
+        font-weight: bold;
       }
 
       .cal-filt {
@@ -1402,27 +1405,68 @@
 
       .cal-filt select {
         width: 100%;
-        padding: 6px;
-        font-size: 12px
+        padding: 8px;
+        font-size: 13px
       }
 
       .cal-nav button {
-        padding: 4px 8px
+        padding: 6px 12px;
+        font-size: 14px;
       }
 
+      /* Ukrywamy nagłówki dni (pon wt śr) u instruktora na mobilce */
+      .cgh {
+        display: none;
+      }
+
+      .cgrid {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        border: none;
+        background: transparent;
+      }
+
+      /* Pojedynczy "dzień" w widoku listy */
       .cgc {
-        min-height: 42px;
-        padding: 2px 1px
+        min-height: auto;
+        padding: 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        background: var(--panel2);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+      }
+
+      /* Ukrywamy puste wypełniacze z poprzedniego miesiąca na mobilnym widoku */
+      .cgc.other {
+        display: none !important;
       }
 
       .cgc-d {
-        font-size: 9px
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--text);
+        text-align: left;
+        border-bottom: 1px solid var(--line);
+        padding-bottom: 6px;
+        margin-bottom: 4px;
       }
 
+      .cgc.today .cgc-d {
+        color: var(--accent);
+      }
+
+      /* Kafelki sesji na liście */
       .cpill {
-        font-size: 8px;
-        padding: 1px 2px;
-        margin-top: 1px
+        font-size: 11px;
+        padding: 6px 8px;
+        margin-top: 0;
+        border-radius: 4px;
+        text-align: left;
+        white-space: normal;
+        line-height: 1.3;
       }
 
       .cal-legend {
@@ -1487,22 +1531,23 @@
 
     @media(max-width:380px) {
       .cgh {
-        font-size: 8px;
-        padding: 5px 0
+        display: none
       }
 
       .cgc {
-        min-height: 42px
-      }
-
-      .cpill {
-        display: none
+        min-height: auto
       }
     }
 
-    /* naprawa przewijania listy przy dolnym menu (odchudzonego menu mobilnego) */
+    /* naprawa przewijania listy przy dolnym menu (odchudzonego menu mobilnego + wsparcie iOS Safe-Area obcinania) */
     body {
-      padding-bottom: calc(55px + env(safe-area-inset-bottom)) !important;
+      padding-bottom: calc(90px + env(safe-area-inset-bottom)) !important;
+    }
+
+    #bot-nav {
+      /* Nadpisanie z zabezpieczeniem przed ucieczką paska w dół Safari */
+      bottom: env(safe-area-inset-bottom);
+      padding-bottom: 0;
     }
 
     /* wymuszenie prawidłowego scrolla strony */
@@ -2196,6 +2241,7 @@
         const cls = ['cgc'];
         if (isToday) cls.push('today');
         if (hasSess || hasSched) cls.push('clickable');
+        else cls.push('other'); // Oznaczamy puste dni jako 'other', żeby mobilny CSS je ukrył.
         c.className = cls.join(' ');
 
         let html = `<div class="cgc-d">${d}</div>`;
