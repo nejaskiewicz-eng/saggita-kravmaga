@@ -1404,7 +1404,7 @@ function buildPrices(){
         </div>
         ${priceHtml}
         ${subHtml}
-        ${desc ? `<div class="price-desc">${escapeHtml(desc)}</div>` : ''}
+        ${desc && !isSchoolYear(p) ? `<div class="price-desc">${escapeHtml(desc)}</div>` : ''}
       </div>
     `;
   }).join('');
@@ -1595,8 +1595,6 @@ function rebuildGroups(){
 
   const groups = (loc?.groups || []).filter(g=>{
     if(g.active===false) return false;
-    // Ukryj grupy bez wolnych miejsc
-    if(typeof g.available==='number' && g.available===0) return false;
     // Jeśli plan dziecięcy — tylko grupy kids/young
     if(selectedPlan && isKidsPlan(selectedPlan)){
       const cat = norm(g.category||'');
