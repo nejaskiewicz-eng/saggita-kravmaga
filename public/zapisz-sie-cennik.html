@@ -2009,11 +2009,17 @@ async function confirmAndFinish(payment_ref){
   const action = p.payment_mode === 'monthly' ? 'schedule_doc' : 'download_doc';
 
   try{
-    await fetch(`${API}/registration/action`, {
+    const resp = await fetch(`${API}/registration/action`, {
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body: JSON.stringify({ payment_ref, action, ...p })
     });
+    const json = await resp.json().catch(()=>({}));
+    if(!resp.ok){
+      console.error('[confirmAndFinish] API error:', resp.status, json);
+      throw new Error(json.error || `Błąd serwera ${resp.status}`);
+    }
+    console.log('[confirmAndFinish] success:', json, {action, ...p});
     btn.innerHTML = '✓ Rejestracja potwierdzona!';
     btn.style.background = 'linear-gradient(180deg,rgba(0,140,0,0.95),rgba(0,80,0,0.95))';
     toast('Dziękujemy! Sprawdź maila z potwierdzeniem 🎉','ok',6000);
@@ -2021,7 +2027,8 @@ async function confirmAndFinish(payment_ref){
   }catch(e){
     btn.disabled = false;
     btn.innerHTML = '✓ Potwierdź i zakończ rejestrację';
-    toast('Błąd — spróbuj ponownie','err',3000);
+    toast('Błąd: ' + (e.message || 'spróbuj ponownie'),'err',5000);
+    console.error('[confirmAndFinish] error:', e);
   }
 }
 

@@ -178,13 +178,27 @@ ${!isScheduleDoc ? `<a href="${onlineUrl}" class="online-btn">💳 Przejdź do p
         r.location_address = 'ul. Długa 33, 58-100 Świdnica';
       }
 
-      // Zaktualizuj rekord
-      await pool.query(
-        `UPDATE registrations SET finalize_action=$1, finalized_at=NOW(), updated_at=NOW(),
-         payment_status = CASE WHEN $1='payment_confirmed' THEN 'paid' ELSE payment_status END
-         WHERE payment_ref=$2`,
-        [action, payment_ref]
-      );
+      // Zaktualizuj rekord — jeśli kolumny finalize_action/finalized_at nie istnieją, ignorujemy błąd
+      try {
+        await pool.query(
+          `UPDATE registrations SET finalize_action=$1, finalized_at=NOW(), updated_at=NOW(),
+           payment_status = CASE WHEN $1='payment_confirmed' THEN 'paid' ELSE payment_status END
+           WHERE payment_ref=$2`,
+          [action, payment_ref]
+        );
+      } catch (updateErr) {
+        // Próbujemy bez kolumn finalize_action/finalized_at
+        try {
+          await pool.query(
+            `UPDATE registrations SET updated_at=NOW(),
+             payment_status = CASE WHEN $1='payment_confirmed' THEN 'paid' ELSE payment_status END
+             WHERE payment_ref=$2`,
+            [action, payment_ref]
+          );
+        } catch (e2) {
+          console.warn('[action/update]', e2.message);
+        }
+      }
 
       // Przygotuj dane do maila
       const scheduleLabel = r.day_name
