@@ -438,6 +438,11 @@
       background: var(--asoft)
     }
 
+    .btn:active,
+    .gc:active {
+      transform: scale(0.97);
+    }
+
     .btn-sm {
       padding: 5px 9px;
       font-size: 11px
@@ -1586,11 +1591,11 @@
 
   <!-- MOBILE BOTTOM NAV -->
   <div id="bot-nav" style="display:none">
-    <button class="bn on" id="bn-dash" onclick="go('dash')"><span class="bn-ico">▣</span>Główna</button>
-    <button class="bn" id="bn-groups" onclick="go('groups')"><span class="bn-ico">◈</span>Grupy</button>
-    <button class="bn" id="bn-cal" onclick="go('cal')"><span class="bn-ico">⊡</span>Kalendarz</button>
-    <button class="bn" id="bn-sess" onclick="go('sess')"><span class="bn-ico">☑</span>Sesje</button>
-    <button class="bn" id="bn-pays" onclick="go('pays')"><span class="bn-ico">₴</span>Płatności</button>
+    <button class="bn on" id="bn-dash" onclick="goMenu('dash')"><span class="bn-ico">▣</span>Główna</button>
+    <button class="bn" id="bn-groups" onclick="goMenu('groups')"><span class="bn-ico">◈</span>Grupy</button>
+    <button class="bn" id="bn-cal" onclick="goMenu('cal')"><span class="bn-ico">⊡</span>Kalendarz</button>
+    <button class="bn" id="bn-sess" onclick="goMenu('sess')"><span class="bn-ico">☑</span>Sesje</button>
+    <button class="bn" id="bn-pays" onclick="goMenu('pays')"><span class="bn-ico">₴</span>Płatności</button>
   </div>
 
   <!-- APP -->
@@ -1605,11 +1610,11 @@
       </div>
       <nav class="sb-nav">
         <div class="sb-sec">Panel</div>
-        <div class="ni on" id="ni-dash" onclick="go('dash')"><span class="ni-ico">▣</span>Dashboard</div>
-        <div class="ni" id="ni-groups" onclick="go('groups')"><span class="ni-ico">◈</span>Grupy & Kursanci</div>
-        <div class="ni" id="ni-cal" onclick="go('cal')"><span class="ni-ico">⊡</span>Kalendarz zajęć</div>
-        <div class="ni" id="ni-sess" onclick="go('sess')"><span class="ni-ico">☑</span>Sesje & Obecności</div>
-        <div class="ni" id="ni-pays" onclick="go('pays')"><span class="ni-ico">₴</span>Płatności</div>
+        <div class="ni on" id="ni-dash" onclick="goMenu('dash')"><span class="ni-ico">▣</span>Dashboard</div>
+        <div class="ni" id="ni-groups" onclick="goMenu('groups')"><span class="ni-ico">◈</span>Grupy & Kursanci</div>
+        <div class="ni" id="ni-cal" onclick="goMenu('cal')"><span class="ni-ico">⊡</span>Kalendarz zajęć</div>
+        <div class="ni" id="ni-sess" onclick="goMenu('sess')"><span class="ni-ico">☑</span>Sesje & Obecności</div>
+        <div class="ni" id="ni-pays" onclick="goMenu('pays')"><span class="ni-ico">₴</span>Płatności</div>
       </nav>
       <div class="sb-bot">
         <button class="lout" onclick="logout()">Wyloguj</button>
@@ -1767,6 +1772,18 @@
     }
 
     // ── NAVIGATION ────────────────────────────────────────────────
+    function goMenu(page) {
+      if (S.page === 'sess' && S.sessId && S._attRequired) {
+        const presNow = S._attStudents ? S._attStudents.filter(s => document.getElementById('chk-' + s.student_id)?.classList.contains('on')).length : 0;
+        if (presNow === 0) {
+          if (!confirm('Nie zaznaczono żadnych obecności. Czy na pewno chcesz wyjść bez zapisu?')) return;
+        }
+        S._attRequired = false;
+        S.sessId = null;
+      }
+      go(page);
+    }
+
     function go(page) {
       document.querySelectorAll('.ni').forEach(el => el.classList.remove('on'));
       document.querySelectorAll('.bn').forEach(el => el.classList.remove('on'));
@@ -2310,7 +2327,7 @@
       </div>
       <div style="margin-top:16px;text-align:right">
         <button class="btn btn-r" id="att-done-btn" onclick="confirmAttDone()" ${pres === 0 && st.length > 0 ? 'style="opacity:.5"' : ''}>
-          ✓ Zapisz obecność i wróć
+          ✓ Zakończ sprawdzanie
         </button>
       </div>`;
         // Zapisz stan
@@ -2440,30 +2457,19 @@
 
     // ── PRZYJMIJ PŁATNOŚĆ (instruktor) ────────────────────────────
     function moAcceptPayment(studentId, studentName, groupId) {
-      const mo = document.createElement('div');
-      mo.className = 'mo';
-      mo.id = 'mo-pay';
-      mo.innerHTML = `
-    <div class="md" style="max-width:380px">
-      <div class="mh"><h3>💰 Przyjmij wpłatę</h3><button onclick="document.getElementById('mo-pay').remove()" style="background:none;border:none;color:var(--dim);font-size:20px;cursor:pointer">✕</button></div>
-      <div class="mb">
-        <div style="font-size:13px;color:var(--dim);margin-bottom:16px">Kursant: <strong style="color:var(--bright)">${studentName}</strong></div>
+      showMo('💰 Przyjmij wpłatę', `
+        <div style="font-size:13px;color:var(--dim);margin-bottom:16px">Kursant: <strong style="color:var(--text)">${studentName}</strong></div>
         <div class="ff" style="margin-bottom:12px">
           <label>Kwota (zł) *</label>
-          <input id="pay-amount" type="number" min="1" max="9999" step="1" placeholder="100" style="background:var(--surface2);border:1px solid var(--border2);border-radius:5px;color:var(--bright);padding:9px 11px;font-size:14px;font-family:inherit;width:100%;outline:none">
+          <input id="pay-amount" type="number" min="1" max="9999" step="1" placeholder="100">
         </div>
         <div class="ff">
           <label>Notatka (opcjonalnie)</label>
-          <input id="pay-note" placeholder="np. gotówka" style="background:var(--surface2);border:1px solid var(--border2);border-radius:5px;color:var(--bright);padding:9px 11px;font-size:13px;font-family:inherit;width:100%;outline:none">
+          <input id="pay-note" placeholder="np. gotówka">
         </div>
-        <div id="pay-err" style="color:#ff6b4a;font-size:12px;margin-top:10px;display:none"></div>
-      </div>
-      <div class="mf">
-        <button class="btn btn-secondary" onclick="document.getElementById('mo-pay').remove()">Anuluj</button>
-        <button class="btn btn-primary" onclick="doAcceptPayment(${studentId},${groupId || 'null'})">Zapisz wpłatę</button>
-      </div>
-    </div>`;
-      document.body.appendChild(mo);
+        <div id="pay-err" class="lerr" style="display:none"></div>`,
+        `<button class="btn btn-o" onclick="closeMo()">Anuluj</button>
+         <button class="btn btn-g" onclick="doAcceptPayment(${studentId},${groupId || 'null'})">Zapisz wpłatę</button>`);
       setTimeout(() => document.getElementById('pay-amount')?.focus(), 50);
     }
 
@@ -2474,9 +2480,10 @@
       if (!amount || amount <= 0) { errEl.textContent = 'Podaj prawidłową kwotę.'; errEl.style.display = 'block'; return; }
       try {
         await api('/api/instructor/accept-payment', 'POST', { student_id: studentId, amount, note: note || null, group_id: groupId || null });
-        document.getElementById('mo-pay')?.remove();
+        closeMo();
         if (S.sessId) renderAtt();
-      } catch (e) { errEl.textContent = e.message; errEl.style.display = 'block'; }
+        else openStud(studentId);
+      } catch (e) { errEl.textContent = e.message; errEl.classList.add('show'); }
     }
 
     function moAddStud(gid) {
@@ -2691,27 +2698,6 @@
         } catch (e) { localStorage.removeItem('it'); localStorage.removeItem('ii'); localStorage.removeItem('ip'); }
       }
     })();
-    /* ===== TAP NA CAŁY WIERSZ = OBECNOŚĆ ===== */
-
-    document.addEventListener("click", function (e) {
-
-      const checkbox = e.target.closest("input[type='checkbox']");
-
-      if (checkbox) return;
-
-      const row = e.target.closest("div");
-
-      if (!row) return;
-
-      const cb = row.querySelector("input[type='checkbox']");
-
-      if (!cb) return;
-
-      cb.checked = !cb.checked;
-
-      cb.dispatchEvent(new Event("change"));
-
-    });
   </script>
 </body>
 
