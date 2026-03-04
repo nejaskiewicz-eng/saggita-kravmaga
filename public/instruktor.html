@@ -883,8 +883,16 @@ function fillCalGrid(y,m,sessions) {
     c.className=cls.join(' ');
 
     let html=`<div class="cgc-d">${d}</div>`;
+    // Sortuj sesje po czasie rozpoczęcia
+    const sortedSess = (smap[iso]||[]).slice().sort((a,b)=>{
+      const ga = S.groups.find(x=>x.id==a.group_id);
+      const gb = S.groups.find(x=>x.id==b.group_id);
+      const ta = (ga?.schedules||[])[0]?.time_start||'99:99';
+      const tb = (gb?.schedules||[])[0]?.time_start||'99:99';
+      return String(ta).localeCompare(String(tb));
+    });
     if(hasSess) {
-      smap[iso].forEach(s=>{
+      sortedSess.forEach(s=>{
         const isFuture=normISO(s.session_date)>todayISO();
         const gname=(s.group_name||"").replace("2025/2026","25/26").replace(" - ","—");
         const pillCls=isFuture?"cpill-f":"cpill-s";
@@ -893,7 +901,11 @@ function fillCalGrid(y,m,sessions) {
       });
     }
     if(hasSched) {
-      schedMap[iso].forEach(({group:g,sched:sch})=>{
+      // Sortuj zaplanowane zajęcia po godzinie (time_start)
+      const sortedSched = (schedMap[iso]||[]).slice().sort((a,b)=>
+        String(a.sched.time_start||'99:99').localeCompare(String(b.sched.time_start||'99:99'))
+      );
+      sortedSched.forEach(({group:g,sched:sch})=>{
         const gname=g.name.replace('2025/2026','25/26').replace(' - ','—');
         html+=`<span class="cpill cpill-f" onclick="createSess(${g.id},'${iso}')" ontouchend="event.preventDefault();createSess(${g.id},'${iso}')">+ ${esc(gname)} ${sch.time_label||''}</span>`;
       });
