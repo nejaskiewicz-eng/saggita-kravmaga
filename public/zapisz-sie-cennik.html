@@ -1433,8 +1433,9 @@ function buildLocationSelect(){
     // Pokaż tylko lokalizacje mające co najmniej jedną aktywną grupę dziecięcą
     const groups = (loc.groups||[]).filter(g=>g.active!==false);
     const hasKidsGroup = groups.some(g=>{
-      const n = norm((g.name||'')+' '+(g.category||''));
-      return n.includes('kid')||n.includes('young')||n.includes('dzieci')||n.includes('dziec')||n.includes('junior')||n.includes('młodz');
+      // Filtruj TYLKO po category — nie po nazwie (nazwa "Dorośli i młodzież" fałszywie pasowała)
+      const cat = norm(g.category||'');
+      return cat==='kids'||cat==='young'||cat.includes('kid')||cat.includes('junior');
     });
     if(!hasKidsGroup) console.log('[kids filter] ukrywam:', loc.city, '— brak grup dziecięcych. Grupy:', groups.map(g=>g.name+'/'+g.category));
     return hasKidsGroup;
@@ -1490,8 +1491,9 @@ function rebuildGroups(){
     if(g.active===false) return false;
     // zmiana 6: jeśli wybrany plan to dzieci, pokaż tylko grupy dziecięce
     if(selectedPlan && isKidsPlan(selectedPlan)){
-      const n = norm((g.name||'')+' '+(g.category||''));
-      return n.includes('kid')||n.includes('young')||n.includes('dzieci')||n.includes('dziec')||n.includes('junior')||n.includes('młodz');
+      // Filtruj tylko po category
+      const cat = norm(g.category||'');
+      return cat==='kids'||cat==='young'||cat.includes('kid')||cat.includes('junior');
     }
     return true;
   });
