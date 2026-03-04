@@ -16,7 +16,7 @@ module.exports = async (req, res) => {
 
   // ── GET: generuj dokument płatniczy HTML (do wydruku) ─────────────────────
   if (req.method === 'GET') {
-    const { payment_ref, action: docAction, months: docMonths, monthly_rate: docMonthlyRate } = req.query;
+    const { payment_ref, action: docAction, months: docMonths, monthly_rate: docMonthlyRate, signup_fee: docSignupFee } = req.query;
     if (!payment_ref) return res.status(400).json({ error: 'Brak payment_ref' });
 
     try {
@@ -46,7 +46,8 @@ module.exports = async (req, res) => {
       const fmt = (v) => parseFloat(v||0).toFixed(2);
       const pMonths = parseInt(docMonths || 1);
       const pRate = docMonthlyRate ? parseFloat(docMonthlyRate) : null;
-      const pSignupFee = parseFloat(r.signup_fee || 0);
+      // signup_fee: najpierw z URL (frontend wie więcej), fallback do DB
+      const pSignupFee = docSignupFee !== undefined ? parseFloat(docSignupFee) : parseFloat(r.signup_fee || 0);
 
       if (isMonthlyDoc && pRate) {
         displayAmount = pRate + pSignupFee;
@@ -139,7 +140,7 @@ Po przelewie wyślij potwierdzenie na: <strong>biuro@akademiaobrony.pl</strong><
 Kontakt: <strong>biuro@akademiaobrony.pl</strong> · <strong>510 930 460</strong></div>
 ${!isScheduleDoc ? `<a href="${onlineUrl}" class="online-btn">💳 Przejdź do płatności online</a>` : ''}
 <div class="footer">Akademia Obrony Saggita | biuro@akademiaobrony.pl | 510 930 460</div>
-<script>window.onload=()=>window.print();</script>
+<div style="margin:20px 0;text-align:center"><button onclick="window.print()" style="padding:10px 28px;background:#c42000;color:#fff;border:none;border-radius:4px;font-size:14px;font-weight:bold;cursor:pointer">🖨️ Drukuj / Zapisz jako PDF</button></div>
 </body></html>`;
 
       res.setHeader('Content-Type', 'text/html; charset=utf-8');

@@ -136,11 +136,10 @@ module.exports = async (req, res) => {
       sendMail({ to: ADMIN_EMAIL, ...mailAdmin({ ...mailData, payment_mode, months, monthly_rate }) }),
     ];
 
-    // Wyślij mail do kursanta — treść zależy od wybranego trybu płatności
+    // Mail do kursanta wysyłamy dopiero po kliknięciu zielonego przycisku (action.js).
+    // Tu wysyłamy tylko mail na listę rezerwową (bo ci nie mają kroku płatności).
     if (is_waitlist) {
       mails.push(sendMail({ to: b.email, ...mailWaitlist(mailData) }));
-    } else {
-      mails.push(sendMail({ to: b.email, ...mailKursant(mailData) }));
     }
 
     Promise.all(mails).catch(e => console.error('[register/mail]', e));

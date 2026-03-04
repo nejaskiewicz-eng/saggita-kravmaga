@@ -1978,10 +1978,11 @@ async function downloadPaymentDoc(payment_ref){
 
   // Tylko otwórz dokument — mail zostanie wysłany po kliknięciu zielonego przycisku
   const p = getPaymentModePayload();
+  const feeAmt = Number(selected._feeAmount || 0);
   const isMonthly = p.payment_mode === 'monthly';
   const base = `${API}/registration/action?payment_ref=${encodeURIComponent(payment_ref)}`;
   const url = isMonthly
-    ? `${base}&action=monthly_doc&months=${p.months}&monthly_rate=${p.monthly_rate}`
+    ? `${base}&action=monthly_doc&months=${p.months}&monthly_rate=${p.monthly_rate}&signup_fee=${feeAmt}`
     : base;
   window.open(url, '_blank');
   toast('Dokument otwarty 📄 — potwierdź rejestrację zielonym przyciskiem','ok',4000);
