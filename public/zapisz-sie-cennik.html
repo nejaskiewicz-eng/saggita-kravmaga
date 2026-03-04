@@ -899,216 +899,243 @@ h1{
       <!-- Blok dokumentów -->
       <div id="docsContainer" style="display:flex;flex-direction:column;gap:14px">
 
-        <!-- Dokument 1: Umowa - Regulamin -->
-        <div class="doc-block" id="docBlock1" style="
-          border:1px solid rgba(255,255,255,0.12);
-          border-radius:var(--radius-sm);
-          overflow:hidden;
-          background:rgba(255,255,255,0.025);
-        ">
-          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px;background:rgba(255,255,255,0.03);border-bottom:1px solid rgba(255,255,255,0.08)">
-            <div>
-              <div style="font-size:14px;font-weight:700;color:var(--white)">📄 Umowa – Regulamin Sekcji Krav Maga Kids</div>
-              <div style="font-size:12px;color:rgba(255,255,255,0.45);margin-top:3px">Zapoznaj się z regulaminem i potwierdź akceptację</div>
-            </div>
-            <div style="display:flex;align-items:center;gap:8px">
-              <span id="docStatus1" style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:999px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.45)">Do przeczytania</span>
-              <button class="btn btnSmall ghost" onclick="toggleDoc(1)">Rozwiń ▾</button>
-            </div>
-          </div>
-          <div id="docContent1" style="display:none;padding:20px 18px">
-            <div style="max-height:320px;overflow-y:auto;padding:16px;background:rgba(0,0,0,0.25);border-radius:10px;border:1px solid rgba(255,255,255,0.07);font-size:13px;line-height:1.7;color:rgba(255,255,255,0.78)">
-              <strong style="display:block;margin-bottom:12px;font-size:15px;color:var(--white)">UMOWA – REGULAMIN SEKCJI KRAV MAGA</strong>
-              <strong>Akademia Obrony Saggita</strong><br><br>
-              <strong>1. Bądź punktualny i systematyczny.</strong><br>
-              Na zajęcia przychodź zawsze kilka minut wcześniej. Staraj się regularnie uczestniczyć w treningach.<br><br>
-              <strong>2. Zamieniaj strój na treningowy.</strong><br>
-              Na każdym treningu obowiązuje strój sportowy – spodnie dresowe, koszulka, obuwie sportowe.<br><br>
-              <strong>3. Pamiętaj o higienie.</strong><br>
-              W czasie treningu będziesz w bliskim kontakcie z innymi osobami. Zadbaj o czysty strój i higienę osobistą.<br><br>
-              <strong>4. Dbaj o zdrowie swoje i innych.</strong><br>
-              Jeśli jesteś chory bądź osłabiony – zrezygnuj z treningu. Zawsze informuj Instruktora o niedyspozycji.<br><br>
-              <strong>5. Przestrzegaj zasad bezpieczeństwa.</strong><br>
-              Wykonuj ćwiczenia zgodnie z poleceniem Instruktora. Zdejmij zegarek, biżuterię i inne akcesoria mogące uszkodzić Ciebie lub partnera.<br><br>
-              <strong>6. Składki członkowskie.</strong><br>
-              Opłatę za treningi wnosi się miesięcznie do ostatniego dnia miesiąca poprzedzającego nowy miesiąc. Przy karnecie miesięcznym: 240 zł/mies. Przy umowie na 10 miesięcy: 180 zł/mies.<br><br>
-              <strong>7. Godziny i miejsce treningów.</strong><br>
-              Dokładne godziny opisane są na stronie www.akademiaobrony.pl.<br><br>
-              <strong>8. Dbaj o wizerunek miejsca.</strong><br>
-              Nie pozostawiaj butelek, ubrań ani innych rzeczy. Dbaj o porządek.<br><br>
-              <strong>9. Tolerancja.</strong><br>
-              Utrzymuj dobre stosunki z wszystkimi uczestnikami niezależnie od płci, wyznania, koloru skóry czy innych cech.<br><br>
-              <strong>REGULAMIN SEKCJI KRAV MAGA KIDS</strong><br><br>
-              <strong>1. Wymagania zdrowotne.</strong> W przypadku wątpliwości rodzic/opiekun przedkłada zaświadczenie lekarskie.<br><br>
-              <strong>2. Odbiór dziecka.</strong> Dziecko może być odebrane tylko przez rodzica, opiekuna prawnego lub osobę wcześniej wskazaną pisemnie.<br><br>
-              <strong>3. Liczba uczestników.</strong> Maksymalna liczba uczestników w grupie: 25 osób.<br><br>
-              <strong>10. Zasady zwrotu opłat.</strong> Opłaty nie podlegają zwrotowi w przypadku nieobecności, chyba że strony uzgodnią inaczej. W przypadku dłuższej choroby (z zaświadczeniem) możliwe jest przeniesienie opłaty na kolejny okres.<br><br>
-              <em style="color:rgba(255,255,255,0.40)">Akademia Obrony Saggita | <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="e88a819d9a87a88983898c8d858189878a9a878691c69884">[email&#160;protected]</a> | 510 930 460</em>
-            </div>
-            <!-- Pola do wpisania danych -->
-            <div style="margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:10px">
-              <div class="field">
-                <label>Imię i nazwisko rodzica/opiekuna *</label>
-                <input id="doc1_parent" type="text" placeholder="np. Jan Kowalski">
-              </div>
-              <div class="field">
-                <label>Imię i nazwisko dziecka *</label>
-                <input id="doc1_child" type="text" placeholder="np. Anna Kowalska">
-              </div>
-            </div>
-            <div style="margin-top:12px;padding:10px 14px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.09);border-radius:10px;display:flex;align-items:flex-start;gap:10px">
-              <input type="checkbox" id="doc1_confirm" onchange="updateDocStatus(1)" style="margin-top:2px;flex-shrink:0">
-              <label for="doc1_confirm" style="font-size:13px;color:rgba(255,255,255,0.82);cursor:pointer;font-weight:600">
-                Oświadczam, że zapoznałem/am się z niniejszą Umową – Regulaminem Sekcji Krav Maga oraz Regulaminem Sekcji Krav Maga Kids i akceptuję wszystkie zawarte w nim postanowienia.
-              </label>
-            </div>
-            <!-- Podpis online -->
-            <div style="margin-top:14px">
-              <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,0.55);margin-bottom:8px">Podpis elektroniczny</div>
-              <canvas id="sigCanvas1" width="560" height="120" style="width:100%;max-width:560px;height:120px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.15);border-radius:10px;cursor:crosshair;touch-action:none;display:block"></canvas>
-              <div style="display:flex;gap:8px;margin-top:8px">
-                <button class="btn btnSmall ghost" onclick="clearSig(1)">Wyczyść podpis</button>
-                <span id="sigStatus1" style="font-size:12px;color:rgba(255,255,255,0.40);align-self:center">Podpisz powyżej</span>
-              </div>
-            </div>
-          </div>
-        </div>
+      <div style="margin-bottom:14px;padding:10px 16px;background:rgba(255,68,68,0.08);border:1px solid rgba(255,68,68,0.25);border-radius:10px;font-size:13px;color:rgba(255,255,255,0.75)">
+        Pola oznaczone <span style="color:#ff4444;font-weight:700">*</span> są obowiązkowe.
+      </div>
 
-        <!-- Dokument 2: Zgoda rodzica -->
-        <div class="doc-block" id="docBlock2" style="
-          border:1px solid rgba(255,255,255,0.12);
-          border-radius:var(--radius-sm);
-          overflow:hidden;
-          background:rgba(255,255,255,0.025);
-        ">
-          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px;background:rgba(255,255,255,0.03);border-bottom:1px solid rgba(255,255,255,0.08)">
-            <div>
-              <div style="font-size:14px;font-weight:700;color:var(--white)">📄 Zgoda Rodzica / Opiekuna Prawnego</div>
-              <div style="font-size:12px;color:rgba(255,255,255,0.45);margin-top:3px">Zgoda na udział dziecka w zajęciach Krav Maga Kids</div>
-            </div>
-            <div style="display:flex;align-items:center;gap:8px">
-              <span id="docStatus2" style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:999px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.45)">Do przeczytania</span>
-              <button class="btn btnSmall ghost" onclick="toggleDoc(2)">Rozwiń ▾</button>
-            </div>
+      <!-- ═══ DOKUMENT 1: Umowa – Regulamin ═══ -->
+      <div class="doc-block" id="docBlock1" style="border:1px solid rgba(255,255,255,0.12);border-radius:var(--radius-sm);overflow:hidden;background:rgba(255,255,255,0.025)">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px;background:rgba(255,255,255,0.03);border-bottom:1px solid rgba(255,255,255,0.08)">
+          <div>
+            <div style="font-size:14px;font-weight:700;color:var(--white)">📄 Umowa – Regulamin Sekcji Krav Maga Kids</div>
+            <div style="font-size:12px;color:rgba(255,255,255,0.45);margin-top:3px">Zapoznaj się z regulaminem i potwierdź akceptację</div>
           </div>
-          <div id="docContent2" style="display:none;padding:20px 18px">
-            <div style="max-height:280px;overflow-y:auto;padding:16px;background:rgba(0,0,0,0.25);border-radius:10px;border:1px solid rgba(255,255,255,0.07);font-size:13px;line-height:1.7;color:rgba(255,255,255,0.78)">
-              <strong style="display:block;margin-bottom:12px;font-size:15px;color:var(--white)">ZGODA RODZICA / OPIEKUNA PRAWNEGO</strong>
-              <em>na udział dziecka w zajęciach Krav Maga Kids • Akademia Obrony Saggita</em><br><br>
-              <strong>OŚWIADCZENIA RODZICA / OPIEKUNA:</strong><br><br>
-              1. Oświadczam, że stan zdrowia mojego dziecka pozwala na udział w zajęciach ruchowych oraz treningach samoobrony.<br><br>
-              2. Przyjmuję do wiadomości, że zajęcia mają charakter sportowo-treningowy i mogą wiązać się z wysiłkiem fizycznym.<br><br>
-              3. Zobowiązuję się do poinformowania instruktora o wszelkich przeciwwskazaniach zdrowotnych, chorobach lub urazach dziecka.<br><br>
-              4. Potwierdzam, że zapoznałem/am się z zasadami obowiązującymi uczestników zajęć oraz z dokumentem Standardy Ochrony Małoletnich Akademii Obrony Saggita.<br><br>
-              5. Przyjmuję do wiadomości, że bezpieczeństwo uczestników jest nadrzędną wartością zajęć.<br><br>
-              <strong>ZGODA NA WYKORZYSTANIE WIZERUNKU (opcjonalnie)</strong><br>
-              Wyrażam zgodę / nie wyrażam zgody* na nieodpłatne wykorzystanie wizerunku mojego dziecka w materiałach promocyjnych Akademii. *niepotrzebne skreślić
-            </div>
-            <!-- Pola formularza -->
-            <div style="margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:10px">
-              <div class="field">
-                <label>Imię i nazwisko rodzica *</label>
-                <input id="doc2_parent" type="text" placeholder="np. Jan Kowalski">
-              </div>
-              <div class="field">
-                <label>Adres zamieszkania *</label>
-                <input id="doc2_address" type="text" placeholder="np. ul. Przykładowa 1, 00-000 Miasto">
-              </div>
-              <div class="field">
-                <label>Telefon kontaktowy *</label>
-                <input id="doc2_phone" type="tel" placeholder="np. 600 000 000">
-              </div>
-              <div class="field">
-                <label>Imię i nazwisko dziecka *</label>
-                <input id="doc2_child" type="text" placeholder="np. Anna Kowalska">
-              </div>
-              <div class="field">
-                <label>Data urodzenia dziecka *</label>
-                <input id="doc2_dob" type="date">
-              </div>
-              <div class="field">
-                <label>Osoba do kontaktu (nagłe wypadki)</label>
-                <input id="doc2_emergency" type="text" placeholder="np. Maria Kowalska · 500 000 000">
-              </div>
-            </div>
-            <div style="margin-top:10px;padding:10px 14px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.09);border-radius:10px;display:flex;align-items:flex-start;gap:10px">
-              <input type="checkbox" id="doc2_wizerunek" style="margin-top:2px;flex-shrink:0">
-              <label for="doc2_wizerunek" style="font-size:13px;color:rgba(255,255,255,0.75);cursor:pointer">
-                Wyrażam zgodę na nieodpłatne wykorzystanie wizerunku dziecka w materiałach promocyjnych Akademii (opcjonalnie)
-              </label>
-            </div>
-            <div style="margin-top:8px;padding:10px 14px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.09);border-radius:10px;display:flex;align-items:flex-start;gap:10px">
-              <input type="checkbox" id="doc2_confirm" onchange="updateDocStatus(2)" style="margin-top:2px;flex-shrink:0">
-              <label for="doc2_confirm" style="font-size:13px;color:rgba(255,255,255,0.82);cursor:pointer;font-weight:600">
-                Oświadczam, że podane informacje są prawdziwe i wyrażam zgodę na udział mojego dziecka w zajęciach Krav Maga Kids.
-              </label>
-            </div>
-            <div style="margin-top:14px">
-              <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,0.55);margin-bottom:8px">Podpis elektroniczny</div>
-              <canvas id="sigCanvas2" width="560" height="120" style="width:100%;max-width:560px;height:120px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.15);border-radius:10px;cursor:crosshair;touch-action:none;display:block"></canvas>
-              <div style="display:flex;gap:8px;margin-top:8px">
-                <button class="btn btnSmall ghost" onclick="clearSig(2)">Wyczyść podpis</button>
-                <span id="sigStatus2" style="font-size:12px;color:rgba(255,255,255,0.40);align-self:center">Podpisz powyżej</span>
-              </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span id="docStatus1" style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:999px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.45)">Do przeczytania</span>
+            <button class="btn btnSmall ghost" onclick="toggleDoc(1)">Rozwiń ▾</button>
+          </div>
+        </div>
+        <div id="docContent1" style="display:none;padding:20px 18px">
+          <div style="max-height:340px;overflow-y:auto;padding:16px;background:rgba(0,0,0,0.25);border-radius:10px;border:1px solid rgba(255,255,255,0.07);font-size:13px;line-height:1.8;color:rgba(255,255,255,0.78)">
+            <strong style="display:block;margin-bottom:4px;font-size:15px;color:var(--white)">UMOWA – REGULAMIN SEKCJI KRAV MAGA</strong>
+            <em style="color:rgba(255,255,255,0.5)">Akademia Obrony Saggita</em><br><br>
+            <strong>1. Bądź punktualny i systematyczny.</strong><br>
+            Na zajęcia przychodź zawsze kilka minut wcześniej, tak abyś miał czas na przebranie się i formalności. Staraj się również regularnie uczestniczyć w treningach.<br><br>
+            <strong>2. Zamieniaj strój na treningowy.</strong><br>
+            Na każdym treningu obowiązuje strój sportowy – spodnie dresowe, koszulka, obuwie sportowe, a po pewnym czasie ochraniacze.<br><br>
+            <strong>3. Pamiętaj o higienie.</strong><br>
+            W czasie treningu będziesz w bliskim kontakcie z innymi osobami. Zadbaj o czysty strój i higienę osobistą przed każdymi zajęciami.<br><br>
+            <strong>4. Dbaj o zdrowie swoje i innych.</strong><br>
+            Jeśli jesteś chory bądź osłabiony – zrezygnuj z treningu. Zawsze informuj Instruktora o niedyspozycji lub nagłym pogorszeniu stanu zdrowia. Pamiętaj, że na treningu można doznać kontuzji – dbaj o bezpieczeństwo swoje i partnera.<br><br>
+            <strong>5. Przestrzegaj zasad bezpieczeństwa.</strong><br>
+            Wykonuj ćwiczenia zgodnie z poleceniem Instruktora. Nie oddalaj się bez wcześniejszego powiadomienia. Korzystaj ze sprzętu zgodnie z przeznaczeniem. Zdejmij zegarek, biżuterię i inne akcesoria mogące uszkodzić Ciebie lub partnera.<br><br>
+            <strong>6. Składki członkowskie i coroczna opłata na sprzęt.</strong><br>
+            Wysokość opłat ustala Główny Instruktor i zastrzega sobie prawo do ich zmiany w dowolnym momencie.<br>
+            • Opłatę wnosi się miesięcznie do ostatniego dnia miesiąca poprzedzającego nowy miesiąc treningów.<br>
+            • W tytule przelewu: imię i nazwisko, miesiąc i rok, „opłata za trening".<br>
+            • Karnet miesięczny bez zobowiązań: <strong>240 zł/mies.</strong><br>
+            • Umowa na rok szkolny (10 mies.): <strong>180 zł/mies.</strong><br>
+            • <strong>Rezygnacja w trakcie trwania umowy:</strong> W przypadku wcześniejszego rozwiązania umowy, za każdy miesiąc objęty rabatem umownym (180 zł zamiast 240 zł) kursant zobowiązany jest do wyrównania różnicy do pełnej stawki karnetu bez zobowiązań, tj. dopłaty <strong>60 zł za każdy miesiąc</strong> korzystający z obniżonej ceny.<br>
+            • Koszt jednorazowego treningu: 40,00 zł.<br>
+            • Coroczna opłata członkowska: 40 zł (przeznaczana na sprzęt treningowy).<br><br>
+            <strong>7. Godziny i miejsce treningów.</strong><br>
+            Dokładne godziny opisane są na stronie <strong>www.akademiaobrony.pl</strong>. Nieobecność należy zgłosić Instruktorowi.<br><br>
+            <strong>8. Dbaj o wizerunek miejsca.</strong><br>
+            Nie pozostawiaj butelek, ubrań ani innych rzeczy. Dbaj o porządek wszędzie, gdzie odbywają się treningi.<br><br>
+            <strong>9. Tolerancja.</strong><br>
+            Utrzymuj dobre stosunki z pozostałymi uczestnikami niezależnie od płci, wyznania, koloru skóry czy innych cech. Kadra Akademii jest w pełni zaangażowana w ochronę uczestników.<br><br>
+            <strong style="color:var(--white)">REGULAMIN SEKCJI KRAV MAGA KIDS</strong><br><br>
+            <strong>1. Wymagania zdrowotne.</strong><br>
+            Zajęcia nie wymagają specjalnej opieki medycznej. W razie wątpliwości rodzic/opiekun przedkłada zaświadczenie lekarskie i informuje Instruktora o wszelkich przeciwwskazaniach zdrowotnych.<br><br>
+            <strong>2. Odbiór dziecka.</strong><br>
+            Dziecko może być odebrane wyłącznie przez rodzica, opiekuna prawnego lub osobę wcześniej wskazaną pisemnie. Rodzic/opiekun zobowiązany jest do odbioru dziecka niezwłocznie po zakończeniu zajęć.<br><br>
+            <strong>3. Liczba uczestników.</strong><br>
+            Maksymalna liczba uczestników w grupie: 25 osób. Akademia zastrzega sobie prawo do zmian w grafiku i podziale grup.<br><br>
+            <strong>4. Bezpieczeństwo podczas zajęć.</strong><br>
+            Dzieci nie mogą oddalać się z miejsca zajęć bez wiedzy Instruktora. Wszelkie ćwiczenia wykonywane są pod nadzorem prowadzącego.<br><br>
+            <strong>5. Zachowanie podczas zajęć.</strong><br>
+            Uczestnicy zobowiązani są do kulturalnego zachowania. Niedopuszczalna jest przemoc, wulgarny język oraz agresywne zachowanie poza ćwiczeniami.<br><br>
+            <strong>6. Zakaz używania telefonów komórkowych.</strong><br>
+            Podczas zajęć telefony powinny być wyciszone i schowane. Zabrania się nagrywania i fotografowania bez zgody Instruktora i rodziców.<br><br>
+            <strong>7. Alkohol i substancje odurzające.</strong><br>
+            Bezwzględnie zabrania się przychodzenia na zajęcia pod wpływem alkoholu lub substancji odurzających. Naruszenie skutkuje natychmiastowym usunięciem z zajęć.<br><br>
+            <strong>8. Agresywne zachowanie.</strong><br>
+            Agresja wobec uczestników lub Instruktorów skutkuje natychmiastowym zatrzymaniem zajęć i powiadomieniem rodziców. W poważnych przypadkach Akademia zastrzega prawo do powiadomienia Policji.<br><br>
+            <strong>9. Zachowanie negatywne w mediach społecznościowych.</strong><br>
+            Zabrania się umieszczania treści obraźliwych lub naruszających dobra osobiste uczestników, Instruktorów lub Akademii. Naruszenie może skutkować odpowiedzialnością prawną.<br><br>
+            <strong>10. Zasady zwrotu opłat.</strong><br>
+            Opłaty nie podlegają zwrotowi w przypadku nieobecności, chyba że strony uzgodnią inaczej. W przypadku dłuższej choroby (z zaświadczeniem lekarskim) możliwe jest przeniesienie opłaty na kolejny okres.<br><br>
+            <strong>11. Wyjście poza miejsce zajęć.</strong><br>
+            Dziecko zobowiązane jest uzyskać zgodę Instruktora przed opuszczeniem sali. Samowolne oddalenie się jest niedopuszczalne.<br><br>
+            <strong>12. Decyzja o wykluczeniu.</strong><br>
+            Akademia zastrzega sobie prawo do wykluczenia uczestnika bez zwrotu opłat w przypadku rażących naruszeń Regulaminu.<br><br>
+            <strong>13. Kontakt z rodzicami.</strong><br>
+            W sytuacjach nagłych Instruktor niezwłocznie kontaktuje się z rodzicem/opiekunem pod podanym numerem.<br><br>
+            <strong>KLAUZULA INFORMACYJNA RODO</strong><br>
+            Administratorem danych jest: Tadeusz Dubicki, ul. Jagiellońska 2/4, 58-100 Świdnica, NIP 884 218 23 65, tel. 510 930 460, biuro@akademiaobrony.pl. Dane przetwarzane są w celu prowadzenia korespondencji i działań marketingowych. Przysługuje Panu/Pani prawo dostępu do danych, ich sprostowania, usunięcia lub ograniczenia przetwarzania.
+          </div>
+          <div style="margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div class="field"><label>Imię i nazwisko rodzica/opiekuna <span style="color:#ff4444">*</span></label><input id="doc1_parent" type="text" placeholder="np. Jan Kowalski"></div>
+            <div class="field"><label>Imię i nazwisko dziecka <span style="color:#ff4444">*</span></label><input id="doc1_child" type="text" placeholder="np. Anna Kowalska"></div>
+          </div>
+          <div style="margin-top:12px;padding:10px 14px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.09);border-radius:10px;display:flex;align-items:flex-start;gap:10px">
+            <input type="checkbox" id="doc1_confirm" onchange="updateDocStatus(1)" style="margin-top:2px;flex-shrink:0">
+            <label for="doc1_confirm" style="font-size:13px;color:rgba(255,255,255,0.82);cursor:pointer;font-weight:600">Oświadczam, że zapoznałem/am się z niniejszą Umową – Regulaminem Sekcji Krav Maga oraz Regulaminem Sekcji Krav Maga Kids i akceptuję wszystkie zawarte w nim postanowienia. <span style="color:#ff4444">*</span></label>
+          </div>
+          <div style="margin-top:14px">
+            <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,0.55);margin-bottom:8px">Podpis elektroniczny <span style="color:#ff4444">*</span></div>
+            <canvas id="sigCanvas1" width="560" height="120" style="width:100%;max-width:560px;height:120px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.15);border-radius:10px;cursor:crosshair;touch-action:none;display:block"></canvas>
+            <div style="display:flex;gap:8px;margin-top:8px">
+              <button class="btn btnSmall ghost" onclick="clearSig(1)">Wyczyść podpis</button>
+              <span id="sigStatus1" style="font-size:12px;color:rgba(255,255,255,0.40);align-self:center">Podpisz powyżej</span>
             </div>
           </div>
         </div>
+      </div>
 
-        <!-- Dokument 3: Polityka Ochrony Małoletnich -->
-        <div class="doc-block" id="docBlock3" style="
-          border:1px solid rgba(255,255,255,0.12);
-          border-radius:var(--radius-sm);
-          overflow:hidden;
-          background:rgba(255,255,255,0.025);
-        ">
-          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px;background:rgba(255,255,255,0.03);border-bottom:1px solid rgba(255,255,255,0.08)">
-            <div>
-              <div style="font-size:14px;font-weight:700;color:var(--white)">📄 Polityka Ochrony Dzieci i Młodzieży</div>
-              <div style="font-size:12px;color:rgba(255,255,255,0.45);margin-top:3px">Standardy Ochrony Małoletnich — dokument dla Rodziców / Opiekunów</div>
-            </div>
-            <div style="display:flex;align-items:center;gap:8px">
-              <span id="docStatus3" style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:999px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.45)">Do przeczytania</span>
-              <button class="btn btnSmall ghost" onclick="toggleDoc(3)">Rozwiń ▾</button>
-            </div>
+      <!-- ═══ DOKUMENT 2: Zgoda Rodzica ═══ -->
+      <div class="doc-block" id="docBlock2" style="border:1px solid rgba(255,255,255,0.12);border-radius:var(--radius-sm);overflow:hidden;background:rgba(255,255,255,0.025)">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px;background:rgba(255,255,255,0.03);border-bottom:1px solid rgba(255,255,255,0.08)">
+          <div>
+            <div style="font-size:14px;font-weight:700;color:var(--white)">📄 Zgoda Rodzica / Opiekuna Prawnego</div>
+            <div style="font-size:12px;color:rgba(255,255,255,0.45);margin-top:3px">Zgoda na udział dziecka w zajęciach Krav Maga Kids</div>
           </div>
-          <div id="docContent3" style="display:none;padding:20px 18px">
-            <div style="max-height:280px;overflow-y:auto;padding:16px;background:rgba(0,0,0,0.25);border-radius:10px;border:1px solid rgba(255,255,255,0.07);font-size:13px;line-height:1.7;color:rgba(255,255,255,0.78)">
-              <strong style="display:block;margin-bottom:12px;font-size:15px;color:var(--white)">POLITYKA OCHRONY DZIECI I MŁODZIEŻY</strong>
-              <em>Akademia Obrony Saggita • Dokument dla Rodziców / Opiekunów Prawnych</em><br><br>
-              Niniejszy dokument zawiera skróconą wersję Standardów Ochrony Małoletnich obowiązujących w Akademii Obrony Saggita.<br><br>
-              <strong>1. WPROWADZENIE</strong><br>
-              Akademia Obrony Saggita wprowadziła procedury mające na celu ochronę przed krzywdzeniem podczas treningów i obozów (STANDARDY OCHRONY MAŁOLETNICH).<br><br>
-              <strong>2. PRZYKŁADY NIEWŁAŚCIWEGO ZACHOWANIA</strong><br>
-              Absolutnie niedozwolone: bicie, kopanie, popychanie, zamykanie, niszczenie rzeczy, ośmieszanie, grożenie, szantażowanie, faworyzowanie, wykluczanie, robienie zdjęć bez zgody, nakłanianie do dotykania miejsc intymnych, podglądanie.<br><br>
-              <strong>3. NASZE ZASADY OCHRONY UCZESTNIKÓW</strong><br>
-              Instruktorzy mają obowiązek: szanować godność wszystkich, reagować na niewłaściwe zachowania, komunikować się z dziećmi konstruktywnie, nie stosować przemocy, szanować prywatność, nie publikować zdjęć dzieci bez zgody.<br><br>
-              <strong>4. ZASADY OBOWIĄZUJĄCE UCZESTNIKA</strong><br>
-              Dziecko zobowiązuje się: postępować zgodnie z instrukcjami, szanować innych, nie stosować słów obraźliwych, zgłaszać nękanie.<br><br>
-              <strong>5. PRAWA UCZESTNIKA</strong><br>
-              Dobrze się bawić, czuć się bezpiecznie, być chronionym, być wysłuchanym, wiedzieć gdzie udać się po pomoc.<br><br>
-              <strong>6. ZGŁASZANIE PRZEMOCY</strong><br>
-              Zgłoszenie do INSTRUKTORA lub KOORDYNATORA nigdy nie zostanie zlekceważone.<br><br>
-              <strong>7. DODATKOWE ŹRÓDŁA WSPARCIA</strong><br>
-              Fundacja Dajemy Dzieciom Siłę: www.116111.pl | Telefon Rzecznika Praw Dziecka: www.brpd.gov.pl
-            </div>
-            <div style="margin-top:12px;padding:10px 14px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.09);border-radius:10px;display:flex;align-items:flex-start;gap:10px">
-              <input type="checkbox" id="doc3_confirm" onchange="updateDocStatus(3)" style="margin-top:2px;flex-shrink:0">
-              <label for="doc3_confirm" style="font-size:13px;color:rgba(255,255,255,0.82);cursor:pointer;font-weight:600">
-                Oświadczam, że zapoznałem/am się z Polityką Ochrony Dzieci i Młodzieży Akademii Obrony Saggita i przyjmuję ją do wiadomości. Zobowiązuję się do zapoznania z nią swojego dziecka.
-              </label>
-            </div>
-            <div style="margin-top:14px">
-              <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,0.55);margin-bottom:8px">Podpis elektroniczny</div>
-              <canvas id="sigCanvas3" width="560" height="120" style="width:100%;max-width:560px;height:120px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.15);border-radius:10px;cursor:crosshair;touch-action:none;display:block"></canvas>
-              <div style="display:flex;gap:8px;margin-top:8px">
-                <button class="btn btnSmall ghost" onclick="clearSig(3)">Wyczyść podpis</button>
-                <span id="sigStatus3" style="font-size:12px;color:rgba(255,255,255,0.40);align-self:center">Podpisz powyżej</span>
-              </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span id="docStatus2" style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:999px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.45)">Do przeczytania</span>
+            <button class="btn btnSmall ghost" onclick="toggleDoc(2)">Rozwiń ▾</button>
+          </div>
+        </div>
+        <div id="docContent2" style="display:none;padding:20px 18px">
+          <div style="max-height:340px;overflow-y:auto;padding:16px;background:rgba(0,0,0,0.25);border-radius:10px;border:1px solid rgba(255,255,255,0.07);font-size:13px;line-height:1.8;color:rgba(255,255,255,0.78)">
+            <strong style="display:block;margin-bottom:4px;font-size:15px;color:var(--white)">ZGODA RODZICA / OPIEKUNA PRAWNEGO</strong>
+            <em style="color:rgba(255,255,255,0.5)">na udział dziecka w zajęciach Krav Maga Kids • Akademia Obrony Saggita</em><br><br>
+            Ja niżej podpisany/a wyrażam zgodę na udział mojego dziecka w zajęciach sportowych <strong>Krav Maga Kids</strong> organizowanych przez <strong>Akademię Obrony Saggita</strong>.<br><br>
+            <strong>OŚWIADCZENIA RODZICA / OPIEKUNA</strong><br><br>
+            1. Oświadczam, że stan zdrowia mojego dziecka pozwala na udział w zajęciach ruchowych oraz treningach samoobrony.<br>
+            2. Przyjmuję do wiadomości, że zajęcia mają charakter sportowo-treningowy i mogą wiązać się z wysiłkiem fizycznym.<br>
+            3. Zobowiązuję się do poinformowania instruktora o wszelkich przeciwwskazaniach zdrowotnych, chorobach lub urazach dziecka, które mogą mieć wpływ na jego bezpieczeństwo podczas treningów.<br>
+            4. Potwierdzam, że zapoznałem/am się z zasadami obowiązującymi uczestników zajęć oraz z dokumentem <strong>Standardy Ochrony Małoletnich</strong> Akademii Obrony Saggita i zobowiązuję się do ich przestrzegania.<br>
+            5. Przyjmuję do wiadomości, że bezpieczeństwo uczestników jest nadrzędną wartością zajęć, a instruktorzy prowadzą treningi zgodnie z zasadami określonymi w Polityce Ochrony Małoletnich.<br><br>
+            <em style="color:rgba(255,255,255,0.4)">Akademia Obrony Saggita | Tadeusz Dubicki – Koordynator | Tel.: 510 930 460 | biuro@akademiaobrony.pl</em>
+          </div>
+          <div style="margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div class="field"><label>Imię i nazwisko rodzica/opiekuna <span style="color:#ff4444">*</span></label><input id="doc2_parent" type="text" placeholder="np. Jan Kowalski"></div>
+            <div class="field"><label>Adres zamieszkania <span style="color:#ff4444">*</span></label><input id="doc2_address" type="text" placeholder="np. ul. Przykładowa 1, 00-000 Miasto"></div>
+            <div class="field"><label>Telefon kontaktowy <span style="color:#ff4444">*</span></label><input id="doc2_phone" type="tel" placeholder="np. 600 000 000"></div>
+            <div class="field"><label>Imię i nazwisko dziecka <span style="color:#ff4444">*</span></label><input id="doc2_child" type="text" placeholder="np. Anna Kowalska"></div>
+            <div class="field"><label>Data urodzenia dziecka <span style="color:#ff4444">*</span></label><input id="doc2_dob" type="date"></div>
+            <div class="field"><label>Osoba do kontaktu w sytuacji nagłej</label><input id="doc2_emergency" type="text" placeholder="np. Maria Kowalska, tel. 500 000 000"></div>
+          </div>
+          <div style="margin-top:10px;padding:10px 14px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.09);border-radius:10px;display:flex;align-items:flex-start;gap:10px">
+            <input type="checkbox" id="doc2_wizerunek" style="margin-top:2px;flex-shrink:0">
+            <label for="doc2_wizerunek" style="font-size:13px;color:rgba(255,255,255,0.75);cursor:pointer">Wyrażam zgodę na nieodpłatne wykorzystanie wizerunku dziecka w materiałach promocyjnych Akademii (opcjonalnie)</label>
+          </div>
+          <div style="margin-top:8px;padding:10px 14px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.09);border-radius:10px;display:flex;align-items:flex-start;gap:10px">
+            <input type="checkbox" id="doc2_confirm" onchange="updateDocStatus(2)" style="margin-top:2px;flex-shrink:0">
+            <label for="doc2_confirm" style="font-size:13px;color:rgba(255,255,255,0.82);cursor:pointer;font-weight:600">Oświadczam, że podane informacje są prawdziwe i biorę odpowiedzialność za udział mojego dziecka w zajęciach. <span style="color:#ff4444">*</span></label>
+          </div>
+          <div style="margin-top:14px">
+            <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,0.55);margin-bottom:8px">Podpis elektroniczny <span style="color:#ff4444">*</span></div>
+            <canvas id="sigCanvas2" width="560" height="120" style="width:100%;max-width:560px;height:120px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.15);border-radius:10px;cursor:crosshair;touch-action:none;display:block"></canvas>
+            <div style="display:flex;gap:8px;margin-top:8px">
+              <button class="btn btnSmall ghost" onclick="clearSig(2)">Wyczyść podpis</button>
+              <span id="sigStatus2" style="font-size:12px;color:rgba(255,255,255,0.40);align-self:center">Podpisz powyżej</span>
             </div>
           </div>
         </div>
+      </div>
+
+      <!-- ═══ DOKUMENT 3: Polityka Ochrony ═══ -->
+      <div class="doc-block" id="docBlock3" style="border:1px solid rgba(255,255,255,0.12);border-radius:var(--radius-sm);overflow:hidden;background:rgba(255,255,255,0.025)">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px;background:rgba(255,255,255,0.03);border-bottom:1px solid rgba(255,255,255,0.08)">
+          <div>
+            <div style="font-size:14px;font-weight:700;color:var(--white)">📄 Polityka Ochrony Dzieci i Młodzieży</div>
+            <div style="font-size:12px;color:rgba(255,255,255,0.45);margin-top:3px">Standardy Ochrony Małoletnich — dokument dla Rodziców / Opiekunów</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span id="docStatus3" style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:999px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.45)">Do przeczytania</span>
+            <button class="btn btnSmall ghost" onclick="toggleDoc(3)">Rozwiń ▾</button>
+          </div>
+        </div>
+        <div id="docContent3" style="display:none;padding:20px 18px">
+          <div style="max-height:340px;overflow-y:auto;padding:16px;background:rgba(0,0,0,0.25);border-radius:10px;border:1px solid rgba(255,255,255,0.07);font-size:13px;line-height:1.8;color:rgba(255,255,255,0.78)">
+            <strong style="display:block;margin-bottom:4px;font-size:15px;color:var(--white)">POLITYKA OCHRONY DZIECI I MŁODZIEŻY</strong>
+            <em style="color:rgba(255,255,255,0.5)">Akademia Obrony Saggita • Dokument dla Rodziców / Opiekunów Prawnych</em><br><br>
+            Niniejszy dokument zawiera skróconą wersję <strong>Standardów Ochrony Małoletnich</strong> obowiązujących w Akademii Obrony Saggita. Prosimy o zapoznanie się z jego treścią i złożenie podpisu potwierdzającego przyjęcie do wiadomości obowiązujących zasad.<br><br>
+            <strong>1. WPROWADZENIE</strong><br>
+            Akademia Obrony Saggita wprowadziła procedury mające na celu ochronę przed krzywdzeniem podczas treningów i obozów. Procedury te noszą nazwę: <strong>STANDARDY OCHRONY MAŁOLETNICH</strong>. W standardach znajdą Państwo kodeksy, zasady i procedury, które pomagają tworzyć przyjazne, bezpieczne i wolne od przemocy miejsce do doskonalenia umiejętności ruchowych w zakresie samoobrony.<br><br>
+            <strong>2. PRZYKŁADY NIEWŁAŚCIWEGO ZACHOWANIA</strong><br>
+            Poniższe zachowania są absolutnie niedozwolone ze strony instruktorów, opiekunów oraz innych uczestników:<br>
+            1. bicie, kopanie, popychanie, szarpanie<br>
+            2. zamykanie (w toalecie, szatni, przebieralni, sali)<br>
+            3. niszczenie rzeczy<br>
+            4. ośmieszanie, wyśmiewanie, obrażanie, grożenie, szantażowanie<br>
+            5. faworyzowanie, karanie nadmiernym wysiłkiem<br>
+            6. wrogie/obraźliwe gesty, wykluczanie (izolowanie) z grupy, manipulowanie relacjami<br>
+            7. robienie zdjęć, nagrywanie, udostępnianie nagrań i zdjęć bez zgody<br>
+            8. nakłanianie do pokazywania miejsc intymnych, dotykanie miejsc intymnych<br>
+            9. zachęcanie do dotykania miejsc intymnych innych osób<br>
+            10. podglądanie podczas przebierania lub kąpieli<br><br>
+            <strong>3. NASZE ZASADY OCHRONY UCZESTNIKÓW</strong><br>
+            Wprowadziliśmy <strong>KODEKSY POSTĘPOWANIA</strong>, które określają oczekiwane zachowania w czasie treningów i obozów.<br><br>
+            <strong>Instruktorzy mają obowiązek m.in.:</strong><br>
+            1. Szanować godność i wartości wszystkich osób bez względu na wiek, rasę, płeć, niepełnosprawność, religię lub inne cechy.<br>
+            2. Reagować i zgłaszać obraźliwe, niewłaściwe i dyskryminacyjne zachowania.<br>
+            3. Komunikować się z dziećmi konstruktywnie, odpowiednio do ich wieku, nigdy ich nie upokarzając.<br>
+            4. Nie stosować przemocy fizycznej ani psychicznej, w tym kar cielesnych.<br>
+            5. Szanować prywatność dzieci (np. nie wchodzić do szatni bez pozwolenia).<br>
+            6. Nie wdawać się w prywatne rozmowy z dziećmi w mediach społecznościowych.<br>
+            7. Nie publikować zdjęć i filmów dzieci bez zgody zainteresowanych i ich rodziców.<br>
+            8. Unikać spędzania czasu z dziećmi na osobności, bez udziału innych dorosłych.<br>
+            9. Prowadzić zajęcia dostosowane do umiejętności i wieku dzieci.<br>
+            10. Współpracować z rodzicami, psychologami i lekarzami dla dobra każdego małoletniego.<br><br>
+            <strong>4. ZASADY OBOWIĄZUJĄCE UCZESTNIKA ZAJĘĆ</strong><br>
+            Jako uczestnik zajęć Twoje dziecko zobowiązuje się do:<br>
+            1. Postępowania zgodnie z instrukcjami i radami instruktorów i opiekunów.<br>
+            2. Poinformowania opiekunów o jakichkolwiek problemach zdrowotnych lub obawach dotyczących bezpieczeństwa.<br>
+            3. Szanowania innych dzieci i pomagania im w pełnym uczestnictwie w zajęciach.<br>
+            4. Niestosowania słów i gestów obraźliwych, prowokacyjnych lub dyskryminujących.<br>
+            5. Nieuderzania ani nieatakowania fizycznego innych uczestników.<br>
+            6. Niespożywania alkoholu, niezażywania narkotyków ani innych substancji odurzających.<br>
+            7. Nieprowadzenia bójek ani celowego krzywdzenia innych.<br>
+            8. Zgłaszania instruktorowi wszelkich kontuzji i stanu zdrowia przed lub w trakcie zajęć.<br>
+            9. Zgłaszania nękania, jeżeli zauważy, że zdarza się jemu lub innemu dziecku.<br><br>
+            <strong>5. PRAWA UCZESTNIKA</strong><br>
+            1. Dobrze się bawić i rozwijać swoje umiejętności.<br>
+            2. Czuć się bezpiecznie i szczęśliwie.<br>
+            3. Być chronionym przed złym zachowaniem ze strony dorosłych lub innych dzieci.<br>
+            4. Rozmawiać i być wysłuchanym, zwłaszcza jeśli ma obawy lub nie czuje się bezpiecznie.<br>
+            5. Wiedzieć, gdzie udać się po pomoc lub z kim porozmawiać.<br>
+            6. Być pod opieką, jeśli zdarzy się wypadek lub uraz.<br><br>
+            <strong>6. ZGŁASZANIE PRZEMOCY I NIEWŁAŚCIWYCH ZACHOWAŃ</strong><br>
+            W przypadku, gdy Twoje dziecko doświadczyło krzywdzenia lub było świadkiem przemocy, powinno poinformować <strong>INSTRUKTORA</strong> lub <strong>KOORDYNATORA</strong>. Zgłoszenie nigdy nie zostanie zlekceważone. Podejmiemy działania, aby zapewnić bezpieczeństwo, wyciągnąć konsekwencje wobec sprawcy oraz w razie potrzeby powiadomić Sąd, Prokuraturę lub Policję.<br><br>
+            <strong>7. DODATKOWE ŹRÓDŁA WSPARCIA</strong><br>
+            • Fundacja Dajemy Dzieciom Siłę: <strong>www.116111.pl</strong> oraz <strong>www.fdds.pl</strong> – pomoc bezpłatna, całą dobę.<br>
+            • Telefon zaufania Rzecznika Praw Dziecka: <strong>www.brpd.gov.pl</strong> – pomoc bezpłatna, całą dobę.<br>
+            • Ogólnopolski telefon dla ofiar przemocy w rodzinie – wsparcie psychologiczne i informacje o procedurach.<br><br>
+            <em style="color:rgba(255,255,255,0.4)">Akademia Obrony Saggita | Tadeusz Dubicki – Koordynator | Tel.: 510 930 460 | biuro@akademiaobrony.pl</em>
+          </div>
+          <div style="margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div class="field"><label>Imię i nazwisko rodzica/opiekuna <span style="color:#ff4444">*</span></label><input id="doc3_parent" type="text" placeholder="np. Jan Kowalski"></div>
+            <div class="field"><label>Imię i nazwisko dziecka <span style="color:#ff4444">*</span></label><input id="doc3_child" type="text" placeholder="np. Anna Kowalska"></div>
+          </div>
+          <div style="margin-top:12px;padding:10px 14px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.09);border-radius:10px;display:flex;align-items:flex-start;gap:10px">
+            <input type="checkbox" id="doc3_confirm" onchange="updateDocStatus(3)" style="margin-top:2px;flex-shrink:0">
+            <label for="doc3_confirm" style="font-size:13px;color:rgba(255,255,255,0.82);cursor:pointer;font-weight:600">Oświadczam, że zapoznałem/am się z Polityką Ochrony Dzieci i Młodzieży Akademii Obrony Saggita i przyjmuję ją do wiadomości. Zobowiązuję się do zapoznania z nią swojego dziecka. <span style="color:#ff4444">*</span></label>
+          </div>
+          <div style="margin-top:14px">
+            <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,0.55);margin-bottom:8px">Podpis elektroniczny <span style="color:#ff4444">*</span></div>
+            <canvas id="sigCanvas3" width="560" height="120" style="width:100%;max-width:560px;height:120px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.15);border-radius:10px;cursor:crosshair;touch-action:none;display:block"></canvas>
+            <div style="display:flex;gap:8px;margin-top:8px">
+              <button class="btn btnSmall ghost" onclick="clearSig(3)">Wyczyść podpis</button>
+              <span id="sigStatus3" style="font-size:12px;color:rgba(255,255,255,0.40);align-self:center">Podpisz powyżej</span>
+            </div>
+          </div>
+        </div>
+      </div>
 
       </div><!-- /docsContainer -->
+
 
       <div id="docsErrorMsg" style="display:none;margin-top:12px;padding:11px 14px;background:rgba(178,25,0,0.10);border:1px solid rgba(178,25,0,0.35);border-radius:10px;font-size:13px;color:#ffb2a6;font-weight:600"></div>
 
@@ -2022,7 +2049,7 @@ function prefillDocForms(){
   const phone = document.getElementById('f_phone')?.value.trim() || '';
   const fullName = (fn+' '+ln).trim();
   // Pre-fill parent name fields with kursant data
-  ['doc1_parent','doc2_parent'].forEach(id=>{
+  ['doc1_parent','doc2_parent','doc3_parent'].forEach(id=>{
     const el = document.getElementById(id);
     if(el && !el.value) el.value = fullName;
   });
@@ -2049,6 +2076,8 @@ function validateAndGoStep5(){
 
   // Check doc 3
   if(!document.getElementById('doc3_confirm').checked) errors.push('Zaakceptuj Politykę Ochrony Małoletnich (dokument 3)');
+  if(!document.getElementById('doc3_parent').value.trim()) errors.push('Wpisz imię i nazwisko rodzica (dok. 3)');
+  if(!document.getElementById('doc3_child').value.trim()) errors.push('Wpisz imię i nazwisko dziecka (dok. 3)');
   if(!sigSigned[3]) errors.push('Złóż podpis elektroniczny pod dokumentem 3');
 
   if(errors.length){
