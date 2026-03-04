@@ -135,15 +135,28 @@ h1{
   font-size:11px;color:rgba(255,255,255,0.38);line-height:1.4;
   font-style:italic;
 }
-/* Koszyk — zmiana 4: pulsuje i rośnie po dodaniu pozycji */
-@keyframes cartGlow{
-  0%,100%{ box-shadow:var(--shadow-card), 0 10px 0px rgba(26,111,212,0), inset 0 1px 0 rgba(255,255,255,0.08); }
-  50%    { box-shadow:var(--shadow-card), 0 18px 38px rgba(26,111,212,0.55), inset 0 1px 0 rgba(255,255,255,0.10); }
+/* Koszyk — pulsuje i rośnie po dodaniu pozycji */
+@keyframes cartGlowBlue{
+  0%,100%{ box-shadow:var(--shadow-card), 0 6px 0px rgba(16,86,168,0), inset 0 1px 0 rgba(255,255,255,0.06); }
+  50%    { box-shadow:var(--shadow-card), 0 22px 44px rgba(16,86,168,0.65), inset 0 1px 0 rgba(255,255,255,0.10); }
+}
+@keyframes cartGlowRed{
+  0%,100%{ box-shadow:var(--shadow-card), 0 6px 0px rgba(178,25,0,0), inset 0 1px 0 rgba(255,255,255,0.06); }
+  50%    { box-shadow:var(--shadow-card), 0 22px 44px rgba(178,25,0,0.65), inset 0 1px 0 rgba(255,255,255,0.10); }
 }
 .cart-inline.has-item{
-  border-color:rgba(26,111,212,0.45);
-  animation: cartGlow 2.2s ease-in-out infinite;
-  transition: max-height 0.4s ease, border-color 0.3s ease, padding 0.3s ease;
+  padding:22px 22px 22px;     /* rośnie */
+  min-height:210px;
+  transition: border-color 0.3s ease, padding 0.3s ease, min-height 0.3s ease;
+}
+.cart-inline.has-item.glow-kids{
+  border-color:#1459b0;
+  background:#091e4a;
+  animation: cartGlowBlue 2.2s ease-in-out infinite;
+}
+.cart-inline.has-item.glow-adults{
+  border-color:rgba(178,25,0,0.70);
+  animation: cartGlowRed 2.2s ease-in-out infinite;
 }
 
 /* cart state: empty */
@@ -227,8 +240,7 @@ h1{
   overflow:hidden;
   display:flex;flex-direction:column;
   border:1px solid rgba(255,255,255,0.09);
-  backdrop-filter:blur(16px);
-  -webkit-backdrop-filter:blur(16px);
+  /* usunięto backdrop-filter — pełne kolory, zero przezierności */
 }
 
 /* Nagłówek kolumny */
@@ -267,23 +279,22 @@ h1{
   color:rgba(255,150,120,0.90);
 }
 
-/* === DZIECI — niebieska kolumna === */
+/* === DZIECI — SOLID ciemny niebieski jak btn-kids, zero glassmorphism === */
 .price-col.kids{
-  background:linear-gradient(145deg, rgba(26,111,212,0.13) 0%, rgba(0,0,0,0.28) 60%);
-  /* zmiana 1: ramka kolumny w kolorze przycisku Wybierz */
-  box-shadow:0 0 0 1px rgba(26,111,212,0.55) inset, var(--shadow-card);
+  background:linear-gradient(145deg, #0c2d6e 0%, #091e4a 100%);
+  box-shadow:0 0 0 2px #1056A8 inset, var(--shadow-card);
+  border-color:#1056A8;
 }
 .price-col.kids .price-col__head{
-  /* zmiana 1: nagłówek (Dzieci + meta) tło i dolna krawędź = kolor btn-kids */
-  background:rgba(26,111,212,0.22);
-  border-bottom-color:rgba(26,111,212,0.55);
+  background:#0e3578;
+  border-bottom:2px solid #1459b0;
 }
-.price-col.kids .price-col__title{color:var(--blue-light)}
+.price-col.kids .price-col__title{color:#7ec8ff; font-weight:700;}
 .price-col.kids .price-col__meta{
-  /* zmiana 1: badge (np. "3 pozycje") = kolor btn-kids */
-  background:rgba(26,111,212,0.38);
-  border:1px solid rgba(26,111,212,0.70);
-  color:rgba(160,210,255,0.96);
+  background:#1056A8;
+  border:1px solid #1a6fda;
+  color:#d0eaff;
+  font-weight:800;
 }
 
 /* KARTY POZYCJI CENNIKA */
@@ -313,12 +324,16 @@ h1{
 }
 .adults .priceCard:hover{box-shadow:0 6px 24px rgba(178,25,0,0.25)}
 
-/* Karta dzieci — zmiana 2: ramka = kolor przycisku Wybierz */
+/* Karta dzieci — SOLID niebieski, zero glassmorphism */
 .kids .priceCard{
-  background:rgba(26,111,212,0.11);
-  border:1px solid rgba(26,111,212,0.50);
+  background:#0e3578;
+  border:1.5px solid #1a6fda;
 }
-.kids .priceCard:hover{box-shadow:0 6px 24px rgba(26,111,212,0.35)}
+.kids .priceCard:hover{
+  background:#103d88;
+  box-shadow:0 6px 24px rgba(16,86,168,0.50);
+  border-color:#2e8fff;
+}
 
 .priceCard__top{
   display:flex;align-items:flex-start;justify-content:space-between;gap:10px;
@@ -690,16 +705,16 @@ h1{
         <div class="field full" id="fieldMonths" style="display:none">
           <label>Liczba miesięcy *</label>
           <select id="f_months">
-            <option value="1">1 miesiąc — 180 zł</option>
-            <option value="2">2 miesiące — 360 zł</option>
-            <option value="3">3 miesiące — 540 zł</option>
-            <option value="4">4 miesiące — 720 zł</option>
-            <option value="5">5 miesięcy — 900 zł</option>
-            <option value="6">6 miesięcy — 1 080 zł</option>
-            <option value="7">7 miesięcy — 1 260 zł</option>
-            <option value="8">8 miesięcy — 1 440 zł</option>
-            <option value="9">9 miesięcy — 1 620 zł</option>
-            <option value="10" selected>10 miesięcy — 1 800 zł (pełny rok szkolny)</option>
+            <option value="1">1 miesiąc</option>
+            <option value="2">2 miesiące</option>
+            <option value="3">3 miesiące</option>
+            <option value="4">4 miesiące</option>
+            <option value="5">5 miesięcy</option>
+            <option value="6">6 miesięcy</option>
+            <option value="7">7 miesięcy</option>
+            <option value="8">8 miesięcy</option>
+            <option value="9">9 miesięcy</option>
+            <option value="10" selected>10 miesięcy — pełny rok szkolny</option>
           </select>
           <div class="help">Stawka: 180 zł / miesiąc. Kwota w koszyku aktualizuje się automatycznie.</div>
         </div>
@@ -1092,7 +1107,10 @@ function selectPlan(id){
   // Aktualizuj koszyk
   const cart = document.getElementById('cartInline');
   cart.classList.remove('empty');
-  cart.classList.add('has-item'); // zmiana 4: pulsowanie
+  cart.classList.add('has-item');
+  // kolor glow zależy od planu
+  cart.classList.remove('glow-kids','glow-adults');
+  cart.classList.add(isKidsPlan(p) ? 'glow-kids' : 'glow-adults');
   document.getElementById('cartServiceName').textContent = p.name;
   updateCartPrice();
 
@@ -1103,6 +1121,22 @@ function selectPlan(id){
 
   document.getElementById('goStep2').disabled = false;
   document.getElementById('btnClearCart').disabled = false;
+
+  // przebuduj dropdown lokalizacji żeby np. Wrocław znikał przy planie dla dzieci
+  buildLocationSelect();
+  // jeśli wybrana lokalizacja jest teraz niewidoczna — wyczyść
+  const locSel = document.getElementById('f_location');
+  const currentLocId = locSel.value;
+  const stillVisible = Array.from(locSel.options).some(o=>o.value===currentLocId && o.value!=='');
+  if(!stillVisible && currentLocId){
+    locSel.value='';
+    selected.location_id = null;
+    selected.group_id = null;
+    selected._locLabel = null;
+    selected._groupLabel = null;
+    rebuildGroups();
+  }
+
   toast(`Wybrano: ${p.name}`);
 }
 
@@ -1114,7 +1148,7 @@ function clearCart(){
 
   const cart = document.getElementById('cartInline');
   cart.classList.add('empty');
-  cart.classList.remove('has-item'); // zmiana 4
+  cart.classList.remove('has-item','glow-kids','glow-adults');
   document.getElementById('cartServiceName').textContent = 'Nie wybrano jeszcze';
   document.getElementById('cartPrice').innerHTML = '— <small>zł</small>';
   document.getElementById('cartHint').textContent = 'Wybierz ofertę z cennika poniżej';
@@ -1140,7 +1174,21 @@ function escapeHtml(str){
 
 function buildLocationSelect(){
   const sel=document.getElementById('f_location');
-  sel.innerHTML = `<option value="">— wybierz lokalizację —</option>` + scheduleData.map(loc=>
+  const kidsPlanActive = selectedPlan && isKidsPlan(selectedPlan);
+
+  const visibleLocs = scheduleData.filter(loc=>{
+    if(!kidsPlanActive) return true;
+    // pokaż tylko lokalizacje mające choć jedną grupę dziecięcą (lub VIP panel = Wałbrzych)
+    const city = norm(loc.city||'');
+    if(city.includes('wałbrzych')) return true;
+    const groups = loc.groups||[];
+    return groups.some(g=>{
+      const n = norm((g.name||'')+' '+(g.category||''));
+      return n.includes('kid')||n.includes('young')||n.includes('dzieci')||n.includes('dziec')||n.includes('junior')||n.includes('młodz');
+    });
+  });
+
+  sel.innerHTML = `<option value="">— wybierz lokalizację —</option>` + visibleLocs.map(loc=>
     `<option value="${loc.id}">${escapeHtml(loc.city)} — ${escapeHtml(loc.name||'')}</option>`
   ).join('');
 }
@@ -1150,12 +1198,20 @@ function rebuildGroups(){
   selected.location_id = locId || null;
   selected.group_id = null;
   selected.schedule_id = null;
+  selected._locLabel = null;
+  selected._groupLabel = null;
 
   const grpSel=document.getElementById('f_group');
   const schSel=document.getElementById('f_schedule');
   const gh=document.getElementById('groupHelp');
   const vipPanel=document.getElementById('vipPanel');
   const standardForm=document.getElementById('standardStep2Form');
+
+  // zapisz tekst wybranej lokalizacji do podsumowania
+  const locSel=document.getElementById('f_location');
+  if(locId && locSel.selectedIndex>0){
+    selected._locLabel = locSel.options[locSel.selectedIndex].text;
+  }
 
   if(!locId){
     grpSel.innerHTML = `<option value="">Najpierw wybierz lokalizację</option>`;
@@ -1169,7 +1225,7 @@ function rebuildGroups(){
 
   const loc = scheduleData.find(l=>Number(l.id)===locId);
 
-  // zmiana 7: Wałbrzych → VIP panel
+  // Wałbrzych → VIP panel
   if(loc && norm(loc.city).includes('wałbrzych')){
     if(vipPanel) vipPanel.classList.remove('hidden');
     if(standardForm) standardForm.classList.add('hidden');
@@ -1210,6 +1266,13 @@ function rebuildSchedules(){
   const gid = Number(document.getElementById('f_group').value||0);
   selected.group_id = gid || null;
   selected.schedule_id = null;
+  // zapisz tekst wybranej grupy do podsumowania
+  const grpSel2=document.getElementById('f_group');
+  if(gid && grpSel2.selectedIndex>0){
+    selected._groupLabel = grpSel2.options[grpSel2.selectedIndex].text;
+  } else {
+    selected._groupLabel = null;
+  }
 
   const schSel=document.getElementById('f_schedule');
   const gh=document.getElementById('groupHelp');
@@ -1262,9 +1325,13 @@ function buildSummary(){
   const gid   = selected.group_id;
   const sid   = Number(document.getElementById('f_schedule').value||0) || null;
 
+  // Pobierz z danych lub z zapisanych etykiet (fallback)
   const loc = scheduleData.find(l=>Number(l.id)===locId);
-  const g   = (loc?.groups||[]).find(x=>Number(x.id)===gid);
-  const s   = sid ? (g?.schedules||[]).find(x=>Number(x.id)===sid) : null;
+  const g   = loc ? (loc.groups||[]).find(x=>Number(x.id)===gid) : null;
+  const s   = sid && g ? (g.schedules||[]).find(x=>Number(x.id)===sid) : null;
+
+  const locLabel   = loc ? `${loc.city}${loc.name?' — '+loc.name:''}` : (selected._locLabel || '—');
+  const groupLabel = g   ? g.name : (selected._groupLabel ? selected._groupLabel.split(' ·')[0] : '—');
 
   const isNew       = document.getElementById('f_is_new').value === 'true';
   const hasMembership = document.getElementById('f_has_membership').checked;
@@ -1274,11 +1341,12 @@ function buildSummary(){
   const fee    = (!hasMembership && hasFee(selectedPlan, isNew)) ? Number(selectedPlan.signup_fee||0) : 0;
   const total  = base + fee;
 
+  // Formuła cenowa — zawsze stawka × miesiące, total TYLKO na końcu
   let priceDesc = '';
   if(hasMembership)                               priceDesc = '0 zł (posiadacz karnetu)';
   else if(isOneTime(selectedPlan))                priceDesc = `${money(base)} zł (jednorazowe)`;
   else if(isSchoolYear(selectedPlan))             priceDesc = `180 zł × ${months} mies. = ${money(base)} zł`;
-  else if(Number(selectedPlan.months||0)>1)       priceDesc = `${money(base)} zł (${selectedPlan.months} mies. × ${money(Math.round(monthlyRate(selectedPlan)))} zł)`;
+  else if(Number(selectedPlan.months||0)>1)       priceDesc = `${money(Math.round(monthlyRate(selectedPlan)))} zł × ${selectedPlan.months} mies. = ${money(base)} zł`;
   else                                            priceDesc = `${money(base)} zł / mies.`;
 
   const sum = document.getElementById('summaryBox');
@@ -1287,15 +1355,14 @@ function buildSummary(){
     <div class="sRow"><b>Koszt karnetu</b><span>${priceDesc}</span></div>
     ${fee>0 ? `<div class="sRow"><b>Opłata wpisowa</b><span>${money(fee)} zł (jednorazowo dla nowych)</span></div>` : ''}
     <div class="sRow" style="border-color:rgba(255,255,255,0.20)"><b style="color:var(--white);font-size:14px">Do zapłaty</b><span style="color:var(--white);font-size:16px;font-weight:800">${money(total)} zł</span></div>
-    <div class="sRow"><b>Lokalizacja</b><span>${escapeHtml(loc?`${loc.city} — ${loc.name||''}` : '—')}</span></div>
-    <div class="sRow"><b>Grupa</b><span>${escapeHtml(g?g.name:'—')}</span></div>
+    <div class="sRow"><b>Lokalizacja</b><span>${escapeHtml(locLabel)}</span></div>
+    <div class="sRow"><b>Grupa</b><span>${escapeHtml(groupLabel)}</span></div>
     <div class="sRow"><b>Termin</b><span>${escapeHtml(s?scheduleLabel(s):'do ustalenia')}</span></div>
     <div class="sRow"><b>Kursant</b><span>${escapeHtml(document.getElementById('f_first_name').value.trim()+' '+document.getElementById('f_last_name').value.trim())}</span></div>
     <div class="sRow"><b>Kontakt</b><span>${escapeHtml(document.getElementById('f_email').value.trim())} · ${escapeHtml(document.getElementById('f_phone').value.trim())}</span></div>
   `;
 
   selected.schedule_id = sid;
-  // Zapisz wyliczoną kwotę do późniejszego użycia
   selected._totalAmount = total;
   selected._feeAmount   = fee;
   selected._months      = months;

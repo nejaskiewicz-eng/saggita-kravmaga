@@ -215,21 +215,22 @@ a{text-decoration:none;color:inherit}
 .group-card--adults .slot:hover .slot__btn{border-color:rgba(178,25,0,0.65);background:rgba(178,25,0,0.18);}
 .group-card--adults .slot.selected .slot__btn{border-color:rgba(178,25,0,0.85);background:linear-gradient(180deg,rgba(178,25,0,0.98),rgba(80,8,0,0.92));}
 
-/* DZIECI — niebieski */
+/* DZIECI — SOLID ciemny niebieski jak btn-kids, zero glassmorphism */
 .group-card--kids{
-  background:linear-gradient(145deg, rgba(26,111,212,0.10) 0%, rgba(0,0,0,0.28) 60%);
-  box-shadow:0 0 0 1px rgba(26,111,212,0.20) inset, var(--shadow-card);
+  background:linear-gradient(145deg, #0c2d6e 0%, #091e4a 100%);
+  box-shadow:0 0 0 2px #1056A8 inset, var(--shadow-card);
+  border-color:#1056A8;
 }
 .group-card--kids .group-card__head{
-  background:rgba(26,111,212,0.12);
-  border-bottom-color:rgba(26,111,212,0.22);
+  background:#0e3578;
+  border-bottom:2px solid #1459b0;
 }
-.group-card--kids .group-card__name{color:var(--blue-light);}
+.group-card--kids .group-card__name{color:#7ec8ff; font-weight:700;}
 .group-card--kids .slot{border-left-color:transparent;}
-.group-card--kids .slot:hover{border-left-color:rgba(26,111,212,0.65);background:rgba(26,111,212,0.08);}
-.group-card--kids .slot.selected{background:rgba(26,111,212,0.14);border-left-color:rgba(26,111,212,0.90);}
-.group-card--kids .slot:hover .slot__btn{border-color:rgba(26,111,212,0.65);background:rgba(26,111,212,0.18);}
-.group-card--kids .slot.selected .slot__btn{border-color:rgba(26,111,212,0.85);background:linear-gradient(180deg,rgba(26,111,212,0.98),rgba(8,40,100,0.92));}
+.group-card--kids .slot:hover{border-left-color:#1a6fda;background:#0e3578;}
+.group-card--kids .slot.selected{background:#103d88;border-left-color:#2e8fff;}
+.group-card--kids .slot:hover .slot__btn{border-color:#1a6fda;background:linear-gradient(135deg,#1056A8,#0d4990);box-shadow:0 3px 10px rgba(8,40,110,0.55);color:#fff;}
+.group-card--kids .slot.selected .slot__btn{border-color:#2e8fff;background:linear-gradient(135deg,#1a6fda,#1056A8);box-shadow:0 5px 16px rgba(8,40,110,0.70);color:#fff;}
 
 /* ── GROUP CARD BODY ── */
 .group-card__body{
@@ -523,19 +524,21 @@ a{text-decoration:none;color:inherit}
   box-shadow:0 0 0 3px rgba(178,25,0,0.18);
 }
 
-/* Kids price cards */
+/* Kids price cards — SOLID niebieski */
 .form--kids .price-card{
-  background:rgba(26,111,212,0.09);
-  border:1px solid rgba(26,111,212,0.22);
+  background:#0e3578;
+  border:1.5px solid #1a6fda;
 }
 .form--kids .price-card:hover{
   transform:translateY(-2px);
-  box-shadow:0 6px 24px rgba(26,111,212,0.25);
+  background:#103d88;
+  box-shadow:0 6px 24px rgba(16,86,168,0.50);
+  border-color:#2e8fff;
 }
 .form--kids .price-card.selected{
-  background:rgba(26,111,212,0.16);
-  border-color:rgba(26,111,212,0.70);
-  box-shadow:0 0 0 3px rgba(26,111,212,0.18);
+  background:#103d88;
+  border-color:#2e8fff;
+  box-shadow:0 0 0 3px rgba(16,86,168,0.30);
 }
 
 /* Consent */
@@ -648,6 +651,15 @@ a{text-decoration:none;color:inherit}
   color:rgba(255,255,255,0.40);line-height:1.65;
 }
 
+/* zmiana 4: puls na wybranym terminie — odpowiednik cart glow */
+@keyframes slotGlow{
+  0%,100%{ box-shadow:none; }
+  50%    { box-shadow:0 14px 36px rgba(var(--form-accent-rgb,var(--accent-rgb)),0.40); }
+}
+.selected-slot-info.has-slot{
+  animation:slotGlow 2.2s ease-in-out infinite;
+}
+
 /* ── SPINNER ── */
 .spinner{display:none;width:22px;height:22px;border:2px solid rgba(255,255,255,0.20);border-top-color:#fff;border-radius:50%;animation:spin 600ms linear infinite;}
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -692,6 +704,7 @@ a{text-decoration:none;color:inherit}
 @media(max-width:600px){
   .group-card__head{padding:14px 16px;}
   .slot{padding:14px 16px;}
+  .vip-fg{grid-template-columns:1fr !important;}
 }
 </style>
 </head>
@@ -1011,24 +1024,55 @@ function buildPanels() {
         const vipGrid = document.createElement('div');
         vipGrid.className = 'sched-grid';
         vipGrid.innerHTML = `
-          <div class="group-card group-card--vip">
-            <div class="group-card__head" style="background:linear-gradient(135deg,rgba(178,25,0,0.16) 0%,rgba(26,111,212,0.16) 100%);border-bottom-color:rgba(100,130,255,0.25);">
-              <div class="group-card__name" style="background:linear-gradient(90deg,#FF6B4A,#5BA8FF);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Zajęcia indywidualne VIP</div>
+          <div class="group-card group-card--kids" style="box-shadow:0 0 0 1px rgba(16,86,168,0.60) inset,var(--shadow-card)">
+            <div class="group-card__head" style="background:rgba(26,111,212,0.22);border-bottom-color:rgba(16,86,168,0.55);">
+              <div class="group-card__name" style="color:#5BA8FF">Zajęcia VIP</div>
               <div class="group-card__meta">
-                <span class="badge badge--red">Wałbrzych</span>
-                <span class="badge badge--blue">Indywidualne 1:1</span>
+                <span class="badge badge--blue">Wałbrzych</span>
+                <span class="badge badge--white">Maks. 8 osób</span>
+                <span class="badge badge--blue">Piątki 19:00–21:00</span>
               </div>
             </div>
-            <div style="display:flex;flex-direction:column;background:linear-gradient(135deg,rgba(178,25,0,0.06) 0%,rgba(0,0,0,0.10) 50%,rgba(26,111,212,0.06) 100%);">
-              <div class="vip-info" style="padding:24px 22px 12px;">
-                <strong style="color:#fff;font-size:1rem;">Trening dopasowany do Ciebie — termin ustalamy razem.</strong><br><br>
-                Zajęcia 1:1 z instruktorem, program układany pod Twoje cele. Idealne dla zapracowanych, osób wracających po przerwie i tych, którzy chcą szybkich efektów.<br><br>
-                <span style="color:rgba(255,255,255,0.60);">Tel: <strong style="color:#fff">510 930 460</strong> &nbsp;&middot;&nbsp; Email: <strong style="color:#fff">biuro@akademiaobrony.pl</strong></span>
+            <div style="background:linear-gradient(145deg,rgba(26,111,212,0.08) 0%,rgba(0,0,0,0.22) 100%);">
+              <div class="vip-info" style="padding:22px 22px 14px">
+                <strong style="color:#fff;font-size:.96rem;">Szczególny rodzaj zajęć w bardzo kameralnej grupie.</strong><br><br>
+                Zajęcia VIP trwają 2h i są w pełni personalizowane — dostosowujemy je dokładnie pod Twoje potrzeby i możliwości.
+                Maks. 8 uczestników gwarantuje indywidualne podejście instruktora.<br><br>
+                <span style="color:rgba(255,255,255,0.58);font-size:.84rem">📅 Piątki 19:00–21:00 &nbsp;·&nbsp; Zapisy otwarte — wycena indywidualna</span>
               </div>
-              <div style="padding:0 22px 24px;">
-                <a href="mailto:biuro@akademiaobrony.pl?subject=Zaj%C4%99cia%20VIP%20Wa%C5%82brzych&body=Dzie%C5%84%20dobry%2C%20chcia%C5%82bym%2Fa%20um%C3%B3wi%C4%87%20si%C4%99%20na%20zaj%C4%99cia%20indywidualne%20VIP%20w%20Wa%C5%82brzychu." class="btn-vip-contact">
-                  Skontaktuj się — umów termin
-                </a>
+
+              <div style="padding:0 22px 26px">
+                <div id="vipWbForm" style="background:rgba(16,86,168,0.08);border:1px solid rgba(16,86,168,0.30);border-radius:12px;padding:20px 18px;">
+                  <div style="font-family:'Montserrat',sans-serif;font-weight:700;font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,0.55);margin-bottom:14px">Formularz zgłoszeniowy — Zajęcia VIP Wałbrzych</div>
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px" class="vip-fg">
+                    <div class="form-field">
+                      <label class="form-label">Imię i nazwisko <span style="color:#5BA8FF">*</span></label>
+                      <input class="form-input" id="vipWb_name" type="text" placeholder="Jan Kowalski">
+                    </div>
+                    <div class="form-field">
+                      <label class="form-label">Telefon <span style="color:#5BA8FF">*</span></label>
+                      <input class="form-input" id="vipWb_phone" type="tel" placeholder="600 000 000">
+                    </div>
+                    <div class="form-field" style="grid-column:1/-1">
+                      <label class="form-label">Email <span style="color:#5BA8FF">*</span></label>
+                      <input class="form-input" id="vipWb_email" type="email" placeholder="jan@email.pl">
+                    </div>
+                    <div class="form-field" style="grid-column:1/-1">
+                      <label class="form-label">Dodatkowe informacje (opcjonalnie)</label>
+                      <textarea class="form-textarea" id="vipWb_notes" placeholder="Np. doświadczenie, cele treningowe, pytania…"></textarea>
+                    </div>
+                  </div>
+                  <div style="margin-top:12px;padding:10px 12px;background:rgba(16,86,168,0.10);border:1px solid rgba(16,86,168,0.22);border-radius:8px;font-size:.76rem;color:rgba(255,255,255,0.52);line-height:1.55">
+                    Po wysłaniu zgłoszenia skontaktujemy się z Tobą wkrótce w celu ustalenia szczegółów i wyceny.
+                  </div>
+                  <div id="vipWbMsg" style="display:none;margin-top:10px;padding:10px 13px;border-radius:8px;font-weight:700;font-size:.82rem"></div>
+                  <button type="button" id="vipWbBtn" onclick="submitVipWb()"
+                    style="margin-top:14px;display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,#1056A8,#0d4990);border:1px solid rgba(16,86,168,0.90);color:#fff;font-family:'Open Sans',sans-serif;font-weight:800;font-size:.80rem;letter-spacing:.06em;text-transform:uppercase;padding:13px 24px;border-radius:10px;cursor:pointer;box-shadow:0 4px 14px rgba(8,40,110,0.55);transition:transform 150ms ease,box-shadow 150ms ease"
+                    onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 24px rgba(8,40,110,0.70)'"
+                    onmouseout="this.style.transform='';this.style.boxShadow='0 4px 14px rgba(8,40,110,0.55)'">
+                    Zapisz się na Zajęcia VIP →
+                  </button>
+                </div>
               </div>
             </div>
           </div>`;
@@ -1157,9 +1201,10 @@ function buildPanels() {
         const vipContent = document.createElement('div');
         const info = document.createElement('div');
         info.className = 'vip-info';
-        info.innerHTML = `<strong>${group.notes || 'Zajęcia indywidualne.'}</strong><br>
-          Skontaktuj się z nami, aby ustalić termin:<br>📞 510 930 460 · ✉ biuro@akademiaobrony.pl<br><br>
-          Możesz też zapisać się na listę rezerwową — podaj preferowany termin.`;
+        info.innerHTML = `<strong>${group.notes || 'Zajęcia VIP w kameralnej grupie.'}</strong><br>
+          Szczególny rodzaj zajęć — maks. 8 osób, 2h, w pełni personalizowane.<br>
+          📅 Piątki 19:00–21:00 &nbsp;·&nbsp; Wycena indywidualna<br><br>
+          Skontaktuj się z nami: 📞 <strong style="color:#fff">510 930 460</strong> · ✉ <strong style="color:#fff">biuro@akademiaobrony.pl</strong>`;
         vipContent.appendChild(info);
 
         const vipBtn = document.createElement('div');
@@ -1267,6 +1312,7 @@ function selectSlot(locId, cityName, groupId, groupName, schedId, dayName, timeL
     : `${cityName} · ${groupName} · ${dayName}, ${timeLabel}${waitlistFlag ? ' (lista rezerwowa)' : ''}`;
 
   document.getElementById('slotInfoText').textContent = infoText;
+  document.getElementById('slotInfo').classList.add('has-slot'); // zmiana 4
   document.getElementById('preferredTimeField').style.display = isVIP ? 'block' : 'none';
 
   const group = allData.flatMap(l => l.groups || []).find(g => g.id === groupId);
@@ -1489,6 +1535,7 @@ function goBackToSchedule() {
   selectedGroup = null;
   selectedSchedule = null;
   selectedLocation = null;
+  document.getElementById('slotInfo')?.classList.remove('has-slot'); // zmiana 4
   // Scrollujemy do grafiku
   const grafik = document.getElementById('locPanels');
   if (grafik) grafik.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1568,6 +1615,63 @@ function handleDownloadDoc(payment_ref) {
     });
   } else {
     alert('Zablokowano wyskakujące okno. Pozwól na wyskakujące okna dla tej strony.');
+  }
+}
+
+// zmiana 7: VIP Wałbrzych — formularz Formspree
+async function submitVipWb(){
+  const name  = document.getElementById('vipWb_name')?.value.trim();
+  const phone = document.getElementById('vipWb_phone')?.value.trim();
+  const email = document.getElementById('vipWb_email')?.value.trim();
+  const notes = document.getElementById('vipWb_notes')?.value.trim();
+  const msg   = document.getElementById('vipWbMsg');
+  const btn   = document.getElementById('vipWbBtn');
+
+  if(!name || !phone || !email){
+    msg.style.display='block';
+    msg.style.background='rgba(178,25,0,0.14)';
+    msg.style.border='1px solid rgba(178,25,0,0.45)';
+    msg.style.color='#ffb2a6';
+    msg.textContent='Uzupełnij imię, email i telefon.';
+    return;
+  }
+
+  const orig = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = `<span style="width:16px;height:16px;border:2px solid rgba(255,255,255,0.25);border-top-color:#fff;border-radius:50%;animation:spin 600ms linear infinite;display:inline-block"></span> Wysyłam…`;
+
+  try{
+    const fd = new FormData();
+    fd.append('_subject', 'Zajęcia VIP Wałbrzych — nowe zgłoszenie');
+    fd.append('name',  name);
+    fd.append('email', email);
+    fd.append('phone', phone);
+    fd.append('zajecia', 'Zajęcia VIP — Wałbrzych (Piątki 19:00–21:00)');
+    if(notes) fd.append('notes', notes);
+
+    const r = await fetch('https://formspree.io/f/xpqjgjnv',{
+      method:'POST', headers:{Accept:'application/json'}, body: fd
+    });
+    if(!r.ok) throw new Error();
+
+    // Sukces
+    msg.style.display='block';
+    msg.style.background='rgba(46,204,113,0.12)';
+    msg.style.border='1px solid rgba(46,204,113,0.38)';
+    msg.style.color='#2ecc71';
+    msg.textContent='✓ Zgłoszenie wysłane! Skontaktujemy się wkrótce w celu ustalenia szczegółów.';
+    document.getElementById('vipWb_name').value='';
+    document.getElementById('vipWb_phone').value='';
+    document.getElementById('vipWb_email').value='';
+    document.getElementById('vipWb_notes').value='';
+  }catch(e){
+    msg.style.display='block';
+    msg.style.background='rgba(178,25,0,0.14)';
+    msg.style.border='1px solid rgba(178,25,0,0.45)';
+    msg.style.color='#ffb2a6';
+    msg.textContent='Błąd wysyłki — napisz bezpośrednio na biuro@akademiaobrony.pl';
+  }finally{
+    btn.disabled=false; btn.innerHTML=orig;
   }
 }
 
