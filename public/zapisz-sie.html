@@ -1,1029 +1,1497 @@
 <!DOCTYPE html>
 <html lang="pl">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Zapisz się — Krav Maga Saggita</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zapisz się — Krav Maga Saggita</title>
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&family=Open+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&family=Open+Sans:wght@400;600;700;800&display=swap"
+    rel="stylesheet">
 
-<style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html{scroll-behavior:smooth}
-body{background:#141414;color:#fff;font-family:'Open Sans',sans-serif;min-height:100vh}
-a{text-decoration:none;color:inherit}
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
 
-/* =========================================================
+    html {
+      scroll-behavior: smooth
+    }
+
+    body {
+      background: #141414;
+      color: #fff;
+      font-family: 'Open Sans', sans-serif;
+      min-height: 100vh
+    }
+
+    a {
+      text-decoration: none;
+      color: inherit
+    }
+
+    /* =========================================================
    ZAPISZ SIĘ — spójne z kmPage--misja
    (Montserrat ONLY 700, tło #141414, akcenty jak w misji)
    ========================================================= */
 
-:root{
-  --bg:#141414;
+    :root {
+      --bg: #141414;
 
-  --accent:#B21900;
-  --accent-rgb:178,25,0;
+      --accent: #B21900;
+      --accent-rgb: 178, 25, 0;
 
-  --accent-strong:#DA2A00;
-  --accent-glass:rgba(var(--accent-rgb),0.08);
-  --border-accent:rgba(var(--accent-rgb),0.45);
+      --accent-strong: #DA2A00;
+      --accent-glass: rgba(var(--accent-rgb), 0.08);
+      --border-accent: rgba(var(--accent-rgb), 0.45);
 
-  --white:#FFFFFF;
-  --text:rgba(255,255,255,0.86);
-  --text-muted:rgba(255,255,255,0.56);
-  --border-neutral:rgba(255,255,255,0.16);
+      --white: #FFFFFF;
+      --text: rgba(255, 255, 255, 0.86);
+      --text-muted: rgba(255, 255, 255, 0.56);
+      --border-neutral: rgba(255, 255, 255, 0.16);
 
-  --panel:rgba(255,255,255,0.02);
-  --panel-2:rgba(0,0,0,0.26);
-  --line:rgba(255,255,255,0.10);
-}
+      --panel: rgba(255, 255, 255, 0.02);
+      --panel-2: rgba(0, 0, 0, 0.26);
+      --line: rgba(255, 255, 255, 0.10);
+    }
 
-/* ── WRAP ── */
-.wrap{width:min(1200px,94vw);margin:0 auto;}
+    /* ── WRAP ── */
+    .wrap {
+      width: min(1200px, 94vw);
+      margin: 0 auto;
+    }
 
-/* ── PAGE HEADER (bez czerwonych gradientów) ── */
-.pg-header{
-  background:transparent;
-  border-bottom:1px solid var(--line);
-  padding:58px 0 42px;
-  text-align:center;
-}
-.pg-header__kicker{
-  font-weight:800;font-size:.68rem;letter-spacing:.18em;text-transform:uppercase;
-  color:var(--accent);
-  margin-bottom:14px;
-  display:inline-flex;align-items:center;gap:8px;
-}
-.pg-header__kicker::before{
-  content:'';
-  width:6px;height:6px;border-radius:50%;
-  background:var(--accent);
-  box-shadow:0 0 10px rgba(var(--accent-rgb),0.60);
-}
-.pg-header__h1{
-  font-family:'Montserrat',sans-serif;
-  font-weight:700;
-  font-size:clamp(2rem,5vw,3.4rem);
-  line-height:.95;letter-spacing:-.02em;text-transform:uppercase;
-  transform:skewX(-2deg);
-  display:inline-block;
-}
-.pg-header__h1 em{font-style:normal;color:var(--accent);}
-.pg-header__sub{
-  margin-top:14px;
-  font-weight:600;font-size:.92rem;
-  color:var(--text-muted);
-  max-width:640px;margin-inline:auto;
-}
-.pg-header__ul{
-  width:140px;height:3px;
-  background:linear-gradient(90deg,var(--accent),transparent);
-  box-shadow:0 0 10px rgba(var(--accent-rgb),0.20);
-  margin:18px auto 0;
-  opacity:.9;
-}
+    /* ── PAGE HEADER (bez czerwonych gradientów) ── */
+    .pg-header {
+      background: transparent;
+      border-bottom: 1px solid var(--line);
+      padding: 58px 0 42px;
+      text-align: center;
+    }
 
-/* ── LOCATION TABS (jak chipy) ── */
-.loc-tabs{
-  display:flex;gap:8px;margin:34px 0 26px;
-  border-bottom:1px solid var(--line);
-  padding-bottom:10px;
-  flex-wrap:wrap;
-}
-.loc-tab{
-  padding:10px 16px;
-  font-family:'Montserrat',sans-serif;
-  font-weight:700;
-  font-size:.74rem;
-  letter-spacing:.14em;
-  text-transform:uppercase;
-  background:rgba(0,0,0,0.30);
-  border:1px solid rgba(255,255,255,0.16);
-  color:rgba(255,255,255,0.70);
-  cursor:pointer;
-  transition:transform 200ms ease, filter 200ms ease, border-color 200ms ease, background 200ms ease, color 200ms ease;
-}
-.loc-tab:hover{
-  transform:translateY(-2px);
-  border-color:rgba(var(--accent-rgb),0.55);
-  color:#fff;
-}
-.loc-tab.active{
-  border-color:rgba(var(--accent-rgb),0.75);
-  background:rgba(var(--accent-rgb),0.12);
-  color:#fff;
-}
+    .pg-header__kicker {
+      font-weight: 800;
+      font-size: .68rem;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 14px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
 
-/* ── PANELS ── */
-.loc-panel{display:none;}
-.loc-panel.active{display:block;}
-.sched-grid{display:grid;gap:14px;margin-bottom:42px;}
-.sched-grid--two-col{
-  display:flex;
-  flex-direction:row;
-  align-items:flex-start;
-  gap:14px;
-}
-.sched-grid--two-col .group-col{
-  flex:1;
-  display:flex;
-  flex-direction:column;
-  gap:14px;
-  min-width:0;
-}
-@media(max-width:860px){
-  .sched-grid--two-col{
-    flex-direction:column;
-  }
-}
+    .pg-header__kicker::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 10px rgba(var(--accent-rgb), 0.60);
+    }
 
-/* ── GROUP CARD ── */
-.group-card{
-  border-radius:var(--radius-sm);
-  overflow:hidden;
-  display:flex;
-  flex-direction:column;
-  border:1px solid rgba(255,255,255,0.09);
-  box-shadow:var(--shadow-deep), inset 0 1px 0 rgba(255,255,255,0.06);
-  backdrop-filter:blur(16px);
-  -webkit-backdrop-filter:blur(16px);
-}
-.group-card__head{
-  padding:18px 22px;
-  border-bottom:1px solid rgba(255,255,255,0.09);
-  display:flex;align-items:center;justify-content:space-between;gap:12px;
-  flex-wrap:wrap;
-}
-.group-card__name{
-  font-family:'Montserrat',sans-serif;
-  font-weight:700;
-  font-size:clamp(1rem,2vw,1.15rem);
-  letter-spacing:-.01em;
-  color:#fff;
-}
-.group-card__meta{display:flex;gap:8px;flex-wrap:wrap;}
+    .pg-header__h1 {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 700;
+      font-size: clamp(2rem, 5vw, 3.4rem);
+      line-height: .95;
+      letter-spacing: -.02em;
+      text-transform: uppercase;
+      transform: skewX(-2deg);
+      display: inline-block;
+    }
 
-.badge{
-  font-weight:700;font-size:.68rem;letter-spacing:.06em;
-  padding:5px 12px;border:1px solid;border-radius:999px;
-  background:rgba(0,0,0,0.22);
-}
-.badge--red{color:rgba(255,150,120,.90);border-color:rgba(178,25,0,0.40);background:rgba(178,25,0,0.14);}
-.badge--white{color:rgba(255,255,255,0.62);border-color:rgba(255,255,255,0.18);}
-.badge--warn{color:#e8c248;border-color:rgba(232,194,72,0.38);background:rgba(232,165,0,0.10);}
-.badge--closed{color:#888;border-color:rgba(255,255,255,0.10);background:rgba(0,0,0,0.20);}
-.badge--blue{color:rgba(130,190,255,.90);border-color:rgba(26,111,212,0.40);background:rgba(26,111,212,0.16);}
+    .pg-header__h1 em {
+      font-style: normal;
+      color: var(--accent);
+    }
 
-/* ── CENNIK-STYLE VARIABLES ── */
-:root{
-  --blue:#1A6FD4;
-  --blue-rgb:26,111,212;
-  --blue-light:#5BA8FF;
-  --radius:20px;
-  --radius-sm:14px;
-  --radius-xs:10px;
-  --shadow-card:0 8px 32px rgba(0,0,0,0.45);
-  --shadow-deep:0 32px 80px rgba(0,0,0,0.70);
-}
+    .pg-header__sub {
+      margin-top: 14px;
+      font-weight: 600;
+      font-size: .92rem;
+      color: var(--text-muted);
+      max-width: 640px;
+      margin-inline: auto;
+    }
 
-/* ── GROUP CARD (styl jak price-col z cennika) ── */
-.group-card{
-  border-radius:var(--radius-sm);
-  overflow:hidden;
-  display:flex;
-  flex-direction:column;
-  border:1px solid rgba(255,255,255,0.09);
-  box-shadow:var(--shadow-deep), inset 0 1px 0 rgba(255,255,255,0.06);
-  backdrop-filter:blur(16px);
-  -webkit-backdrop-filter:blur(16px);
-}
+    .pg-header__ul {
+      width: 140px;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent), transparent);
+      box-shadow: 0 0 10px rgba(var(--accent-rgb), 0.20);
+      margin: 18px auto 0;
+      opacity: .9;
+    }
 
-/* DOROŚLI — czerwony */
-.group-card--adults{
-  background:linear-gradient(145deg, rgba(178,25,0,0.12) 0%, rgba(0,0,0,0.28) 60%);
-  box-shadow:0 0 0 1px rgba(178,25,0,0.22) inset, var(--shadow-card);
-}
-.group-card--adults .group-card__head{
-  background:rgba(178,25,0,0.14);
-  border-bottom-color:rgba(178,25,0,0.25);
-}
-.group-card--adults .group-card__name{color:#FF6B4A;}
-.group-card--adults .slot{border-left-color:transparent;}
-.group-card--adults .slot:hover{border-left-color:rgba(178,25,0,0.65);background:rgba(178,25,0,0.08);}
-.group-card--adults .slot.selected{background:rgba(178,25,0,0.14);border-left-color:rgba(178,25,0,0.90);}
-.group-card--adults .slot:hover .slot__btn{border-color:rgba(178,25,0,0.65);background:rgba(178,25,0,0.18);}
-.group-card--adults .slot.selected .slot__btn{border-color:rgba(178,25,0,0.85);background:linear-gradient(180deg,rgba(178,25,0,0.98),rgba(80,8,0,0.92));}
+    /* ── LOCATION TABS (jak chipy) ── */
+    .loc-tabs {
+      display: flex;
+      gap: 8px;
+      margin: 34px 0 26px;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 10px;
+      flex-wrap: wrap;
+    }
 
-/* DZIECI — SOLID ciemny niebieski jak btn-kids, zero glassmorphism */
-.group-card--kids{
-  background:linear-gradient(145deg, #0c2d6e 0%, #091e4a 100%);
-  box-shadow:0 0 0 2px #1056A8 inset, var(--shadow-card);
-  border-color:#1056A8;
-}
-.group-card--kids .group-card__head{
-  background:#0e3578;
-  border-bottom:2px solid #1459b0;
-}
-.group-card--kids .group-card__name{color:#7ec8ff; font-weight:700;}
-.group-card--kids .slot{border-left-color:transparent;}
-.group-card--kids .slot:hover{border-left-color:#1a6fda;background:#0e3578;}
-.group-card--kids .slot.selected{background:#103d88;border-left-color:#2e8fff;}
-.group-card--kids .slot:hover .slot__btn{border-color:#1a6fda;background:linear-gradient(135deg,#1056A8,#0d4990);box-shadow:0 3px 10px rgba(8,40,110,0.55);color:#fff;}
-.group-card--kids .slot.selected .slot__btn{border-color:#2e8fff;background:linear-gradient(135deg,#1a6fda,#1056A8);box-shadow:0 5px 16px rgba(8,40,110,0.70);color:#fff;}
+    .loc-tab {
+      padding: 10px 16px;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 700;
+      font-size: .74rem;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      background: rgba(0, 0, 0, 0.30);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      color: rgba(255, 255, 255, 0.70);
+      cursor: pointer;
+      transition: transform 200ms ease, filter 200ms ease, border-color 200ms ease, background 200ms ease, color 200ms ease;
+    }
 
-/* ── GROUP CARD BODY ── */
-.group-card__body{
-  display:grid;
-  grid-template-columns:1fr 220px;
-  align-items:stretch;
-  flex:1;
-}
-@media(max-width:900px){
-  .sched-grid--two-col .group-card__body{ grid-template-columns:1fr; }
-  .sched-grid--two-col .group-card__info{ border-left:none !important; border-top:1px solid rgba(255,255,255,0.08); }
-}
-@media(max-width:700px){
-  .group-card__body{ grid-template-columns:1fr; }
-  .group-card__info{ border-left:none !important; border-top:1px solid rgba(255,255,255,0.08); }
-}
+    .loc-tab:hover {
+      transform: translateY(-2px);
+      border-color: rgba(var(--accent-rgb), 0.55);
+      color: #fff;
+    }
 
-/* ── SLOTS GRID ── */
-.group-card__slots{
-  display:grid;
-  grid-template-columns:repeat(auto-fit, minmax(230px,1fr));
-}
+    .loc-tab.active {
+      border-color: rgba(var(--accent-rgb), 0.75);
+      background: rgba(var(--accent-rgb), 0.12);
+      color: #fff;
+    }
 
-.slot{
-  border-bottom:1px solid rgba(255,255,255,0.06);
-}
+    /* ── PANELS ── */
+    .loc-panel {
+      display: none;
+    }
 
-/* ── INFO PANEL ── */
-.group-card__info{
-  border-left:1px solid rgba(255,255,255,0.08);
-  background:rgba(0,0,0,0.18);
-  padding:20px 18px;
-  display:flex;
-  flex-direction:column;
-  gap:9px;
-}
+    .loc-panel.active {
+      display: block;
+    }
 
-.info-panel__label{
-  font-weight:800;
-  font-size:.60rem;
-  letter-spacing:.16em;
-  text-transform:uppercase;
-  color:rgba(255,255,255,0.32);
-  padding-bottom:8px;
-  border-bottom:1px solid rgba(255,255,255,0.07);
-  margin-bottom:2px;
-}
+    .sched-grid {
+      display: grid;
+      gap: 14px;
+      margin-bottom: 42px;
+    }
 
-.info-btn{
-  display:flex;
-  align-items:center;
-  gap:9px;
-  padding:10px 13px;
-  border-radius:var(--radius-xs);
-  font-weight:700;
-  font-size:.72rem;
-  letter-spacing:.02em;
-  color:rgba(255,255,255,0.82);
-  border:1px solid rgba(255,255,255,0.12);
-  background:rgba(255,255,255,0.04);
-  cursor:pointer;
-  backdrop-filter:blur(8px);
-  transition:transform 150ms ease, border-color 150ms ease, background 150ms ease, box-shadow 150ms ease;
-  text-decoration:none;
-  font-family:'Open Sans',sans-serif;
-}
-.info-btn:hover{
-  transform:translateY(-1px);
-  border-color:rgba(255,255,255,0.22);
-  background:rgba(255,255,255,0.08);
-}
-.group-card--adults .info-btn--map:hover{
-  border-color:rgba(178,25,0,0.65);
-  background:rgba(178,25,0,0.14);
-  box-shadow:0 4px 14px rgba(178,25,0,0.25);
-}
-.group-card--kids .info-btn--map:hover{
-  border-color:rgba(26,111,212,0.65);
-  background:rgba(26,111,212,0.14);
-  box-shadow:0 4px 14px rgba(26,111,212,0.25);
-}
-.info-btn__icon{
-  font-size:.90rem;
-  flex-shrink:0;
-}
-.info-btn--placeholder{
-  opacity:.48;
-  cursor:default;
-  border-style:dashed;
-}
-.info-btn--placeholder:hover{
-  transform:none;
-  border-color:rgba(255,255,255,0.12);
-  background:rgba(255,255,255,0.04);
-  box-shadow:none;
-}
-.info-btn--placeholder::after{
-  content:'wkrótce';
-  margin-left:auto;
-  font-size:.60rem;
-  letter-spacing:.06em;
-  color:rgba(255,255,255,0.28);
-  font-weight:700;
-}
+    .sched-grid--two-col {
+      display: flex;
+      flex-direction: row;
+      align-items: flex-start;
+      gap: 14px;
+    }
 
-.slot{
-  background:rgba(0,0,0,0.15);
-  padding:16px 18px;
-  display:flex;align-items:center;justify-content:space-between;gap:12px;
-  cursor:pointer;
-  transition:background 200ms, transform 120ms, border-left-color 200ms;
-  border-left:3px solid transparent;
-  border-bottom:1px solid rgba(255,255,255,0.05);
-}
-.slot--closed{cursor:default;opacity:.50;}
-.slot--closed:hover{background:rgba(0,0,0,0.15);border-left-color:transparent;transform:none;}
-.slot:active{transform:scale(0.998);}
+    .sched-grid--two-col .group-col {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      min-width: 0;
+    }
 
-.slot__day{
-  font-family:'Montserrat',sans-serif;
-  font-weight:700;
-  font-size:.78rem;letter-spacing:.12em;text-transform:uppercase;
-  color:#fff;
-}
-.slot__time{
-  font-weight:800;font-size:1.02rem;color:rgba(255,255,255,0.92);
-  margin-top:2px;
-}
-.slot.selected .slot__time{color:#fff;}
+    @media(max-width:860px) {
+      .sched-grid--two-col {
+        flex-direction: column;
+      }
+    }
 
-.slot__addr{font-weight:600;font-size:.72rem;color:var(--text-muted);margin-top:4px;}
+    /* ── GROUP CARD ── */
+    .group-card {
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      box-shadow: var(--shadow-deep), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
 
-.slot__btn{
-  font-weight:800;font-size:.64rem;letter-spacing:.10em;text-transform:uppercase;
-  color:rgba(255,255,255,0.82);
-  border:1px solid rgba(255,255,255,0.15);
-  background:rgba(255,255,255,0.05);
-  padding:8px 14px;
-  border-radius:var(--radius-xs);
-  white-space:nowrap;
-  backdrop-filter:blur(4px);
-  transition:transform 150ms ease, border-color 150ms ease, background 150ms ease;
-}
+    .group-card__head {
+      padding: 18px 22px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
 
-/* VIP info */
-.vip-info{
-  padding:22px 18px;
-  font-weight:600;font-size:.88rem;line-height:1.70;
-  color:rgba(255,255,255,0.70);
-}
-.vip-info strong{color:#fff;}
+    .group-card__name {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 700;
+      font-size: clamp(1rem, 2vw, 1.15rem);
+      letter-spacing: -.01em;
+      color: #fff;
+    }
 
-/* ── FORM SECTION ── */
-.form-section{
-  border:1px solid rgba(255,255,255,0.09);
-  background:rgba(255,255,255,0.03);
-  backdrop-filter:blur(24px) saturate(160%);
-  -webkit-backdrop-filter:blur(24px) saturate(160%);
-  border-radius:var(--radius);
-  padding:32px 28px 38px;
-  margin-bottom:56px;
-  display:none;
-  box-shadow:var(--shadow-deep), inset 0 1px 0 rgba(255,255,255,0.06);
-}
-.form-section.visible{display:block;}
+    .group-card__meta {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
 
-/* Kolor akcentu formularza — zmieniany dynamicznie przez JS */
-.form-section.form--adults{ --form-accent-rgb:178,25,0; --form-accent:#B21900; }
-.form-section.form--kids  { --form-accent-rgb:26,111,212; --form-accent:#1A6FD4; }
+    .badge {
+      font-weight: 700;
+      font-size: .68rem;
+      letter-spacing: .06em;
+      padding: 5px 12px;
+      border: 1px solid;
+      border-radius: 999px;
+      background: rgba(0, 0, 0, 0.22);
+    }
 
-.form-section__title{
-  font-family:'Montserrat',sans-serif;
-  font-weight:700;
-  font-size:1.20rem;
-  letter-spacing:-.01em;
-  margin-bottom:5px;
-}
-.form-section__sub{font-weight:600;font-size:.84rem;color:var(--text-muted);margin-bottom:24px;}
+    .badge--red {
+      color: rgba(255, 150, 120, .90);
+      border-color: rgba(178, 25, 0, 0.40);
+      background: rgba(178, 25, 0, 0.14);
+    }
 
-/* Wybrany termin */
-.selected-slot-info{
-  background:rgba(0,0,0,0.22);
-  border:1px solid rgba(255,255,255,0.10);
-  border-radius:var(--radius-xs);
-  padding:14px 18px;
-  margin-bottom:24px;
-  display:flex;align-items:center;gap:14px;flex-wrap:wrap;
-  position:relative;
-  overflow:hidden;
-}
-.selected-slot-info::before{
-  content:'';
-  position:absolute;left:0;top:0;bottom:0;width:3px;
-  background:var(--form-accent, var(--accent));
-  box-shadow:0 0 16px rgba(var(--form-accent-rgb, var(--accent-rgb)),0.40);
-}
-.selected-slot-info__label{
-  font-weight:800;font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;
-  color:rgba(255,255,255,0.55);
-}
-.selected-slot-info__val{font-weight:700;font-size:.92rem;color:#fff;}
+    .badge--white {
+      color: rgba(255, 255, 255, 0.62);
+      border-color: rgba(255, 255, 255, 0.18);
+    }
 
-/* Grid formularza */
-.form-grid{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:14px;
-}
-@media(max-width:600px){.form-grid{grid-template-columns:1fr;}}
+    .badge--warn {
+      color: #e8c248;
+      border-color: rgba(232, 194, 72, 0.38);
+      background: rgba(232, 165, 0, 0.10);
+    }
 
-.form-field{display:flex;flex-direction:column;gap:6px;}
-.form-field--full{grid-column:1/-1;}
+    .badge--closed {
+      color: #888;
+      border-color: rgba(255, 255, 255, 0.10);
+      background: rgba(0, 0, 0, 0.20);
+    }
 
-.form-label{
-  font-weight:700;font-size:.68rem;letter-spacing:.10em;text-transform:uppercase;
-  color:rgba(255,255,255,0.55);
-}
-.form-label span{color:var(--form-accent, var(--accent));}
+    .badge--blue {
+      color: rgba(130, 190, 255, .90);
+      border-color: rgba(26, 111, 212, 0.40);
+      background: rgba(26, 111, 212, 0.16);
+    }
 
-/* Inputs — jak w cenniku */
-.form-input,.form-select,.form-textarea{
-  width:100%;
-  padding:11px 14px;
-  border-radius:var(--radius-xs);
-  border:1px solid rgba(255,255,255,0.12);
-  background:rgba(255,255,255,0.04);
-  backdrop-filter:blur(8px);
-  color:#fff;
-  font-family:'Open Sans',sans-serif;
-  font-weight:600;font-size:.90rem;
-  outline:none;
-  transition:border-color 150ms, box-shadow 150ms;
-  -webkit-appearance:none;
-}
-.form-input::placeholder{color:rgba(255,255,255,0.25);}
-.form-input:focus,.form-select:focus,.form-textarea:focus{
-  border-color:rgba(var(--form-accent-rgb, var(--accent-rgb)),0.55);
-  box-shadow:0 0 0 4px rgba(var(--form-accent-rgb, var(--accent-rgb)),0.09);
-}
-.form-select option{background:#141414;color:#fff;}
-.form-textarea{resize:vertical;min-height:80px;}
+    /* ── CENNIK-STYLE VARIABLES ── */
+    :root {
+      --blue: #1A6FD4;
+      --blue-rgb: 26, 111, 212;
+      --blue-light: #5BA8FF;
+      --radius: 20px;
+      --radius-sm: 14px;
+      --radius-xs: 10px;
+      --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.45);
+      --shadow-deep: 0 32px 80px rgba(0, 0, 0, 0.70);
+    }
 
-.form-divider{
-  grid-column:1/-1;
-  border:none;border-top:1px solid rgba(255,255,255,0.08);
-  margin:6px 0;
-}
-.form-section-label{
-  grid-column:1/-1;
-  font-family:'Montserrat',sans-serif;
-  font-weight:700;
-  font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;
-  color:rgba(255,255,255,0.75);
-  margin-top:4px;
-}
+    /* ── GROUP CARD (styl jak price-col z cennika) ── */
+    .group-card {
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      box-shadow: var(--shadow-deep), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
 
-/* ── PRICE CARDS — dopasowane do cennika ── */
-.price-options{
-  grid-column:1/-1;
-  display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));
-  gap:10px;margin-top:4px;
-}
-.price-card{
-  border-radius:var(--radius-xs);
-  padding:16px 18px;
-  cursor:pointer;
-  transition:transform 150ms ease, box-shadow 150ms ease, border-color 150ms ease, background 150ms ease;
-  position:relative;
-  overflow:hidden;
-}
-.price-card input{position:absolute;opacity:0;pointer-events:none;}
-.price-card__name{font-weight:800;font-size:.82rem;color:#fff;margin-bottom:6px;line-height:1.3;}
-.price-card__price{
-  font-family:'Montserrat',sans-serif;font-weight:900;font-size:1.5rem;color:#fff;line-height:1;
-}
-.price-card__price small{font-size:.80rem;font-family:'Open Sans',sans-serif;font-weight:600;color:rgba(255,255,255,0.50);margin-left:3px;}
-.price-card__extra{font-weight:600;font-size:.70rem;color:var(--text-muted);margin-top:5px;line-height:1.5;}
+    /* DOROŚLI — czerwony */
+    .group-card--adults {
+      background: linear-gradient(145deg, rgba(178, 25, 0, 0.12) 0%, rgba(0, 0, 0, 0.28) 60%);
+      box-shadow: 0 0 0 1px rgba(178, 25, 0, 0.22) inset, var(--shadow-card);
+    }
 
-/* Adults price cards */
-.form--adults .price-card{
-  background:rgba(178,25,0,0.09);
-  border:1px solid rgba(178,25,0,0.22);
-}
-.form--adults .price-card:hover{
-  transform:translateY(-2px);
-  box-shadow:0 6px 24px rgba(178,25,0,0.25);
-}
-.form--adults .price-card.selected{
-  background:rgba(178,25,0,0.16);
-  border-color:rgba(178,25,0,0.70);
-  box-shadow:0 0 0 3px rgba(178,25,0,0.18);
-}
+    .group-card--adults .group-card__head {
+      background: rgba(178, 25, 0, 0.14);
+      border-bottom-color: rgba(178, 25, 0, 0.25);
+    }
 
-/* Kids price cards — SOLID niebieski */
-.form--kids .price-card{
-  background:#0e3578;
-  border:1.5px solid #1a6fda;
-}
-.form--kids .price-card:hover{
-  transform:translateY(-2px);
-  background:#103d88;
-  box-shadow:0 6px 24px rgba(16,86,168,0.50);
-  border-color:#2e8fff;
-}
-.form--kids .price-card.selected{
-  background:#103d88;
-  border-color:#2e8fff;
-  box-shadow:0 0 0 3px rgba(16,86,168,0.30);
-}
+    .group-card--adults .group-card__name {
+      color: #FF6B4A;
+    }
 
-/* Consent */
-.consent-item{
-  grid-column:1/-1;
-  display:flex;gap:12px;align-items:flex-start;
-  padding:12px 14px;
-  border-radius:var(--radius-xs);
-  border:1px solid rgba(255,255,255,0.08);
-  background:rgba(255,255,255,0.025);
-  font-weight:600;font-size:.84rem;line-height:1.60;
-  color:rgba(255,255,255,0.75);
-  cursor:pointer;
-}
-.consent-item input[type=checkbox]{
-  width:18px;height:18px;flex-shrink:0;
-  accent-color:var(--form-accent, var(--accent));
-  cursor:pointer;margin-top:2px;
-}
+    .group-card--adults .slot {
+      border-left-color: transparent;
+    }
 
-/* Submit */
-.form-actions{
-  grid-column:1/-1;
-  display:flex;align-items:center;gap:16px;margin-top:12px;flex-wrap:wrap;
-}
-.btn-submit{
-  background:linear-gradient(135deg, rgba(var(--form-accent-rgb, var(--accent-rgb)),0.92), rgba(var(--form-accent-rgb, var(--accent-rgb)),0.65));
-  border:1px solid rgba(var(--form-accent-rgb, var(--accent-rgb)),0.65);
-  color:#fff;
-  font-family:'Open Sans',sans-serif;font-weight:800;
-  font-size:.82rem;letter-spacing:.06em;text-transform:uppercase;
-  padding:14px 28px;cursor:pointer;
-  border-radius:var(--radius-xs);
-  box-shadow:0 4px 18px rgba(var(--form-accent-rgb, var(--accent-rgb)),0.28);
-  transition:transform 150ms ease, box-shadow 150ms ease, filter 150ms ease;
-}
-.btn-submit:hover{transform:translateY(-2px);filter:brightness(1.10);box-shadow:0 8px 28px rgba(var(--form-accent-rgb, var(--accent-rgb)),0.40);}
-.btn-submit:disabled{opacity:.45;cursor:not-allowed;transform:none;filter:none;}
-.form-note{font-weight:600;font-size:.76rem;color:var(--text-muted);}
+    .group-card--adults .slot:hover {
+      border-left-color: rgba(178, 25, 0, 0.65);
+      background: rgba(178, 25, 0, 0.08);
+    }
 
-/* Error / info */
-.form-msg{
-  grid-column:1/-1;
-  padding:12px 16px;
-  border-radius:var(--radius-xs);
-  font-weight:700;font-size:.82rem;
-  display:none;
-}
-.form-msg.error{background:rgba(178,25,0,0.12);border:1px solid rgba(178,25,0,0.40);color:#ffb2a6;display:block;}
-.form-msg.info{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.14);color:rgba(255,255,255,0.80);display:block;}
+    .group-card--adults .slot.selected {
+      background: rgba(178, 25, 0, 0.14);
+      border-left-color: rgba(178, 25, 0, 0.90);
+    }
 
-/* ── CONFIRMATION ── */
-.confirm-box{
-  max-width:680px;margin:56px auto;
-  border:1px solid rgba(255,255,255,0.10);
-  background:rgba(255,255,255,0.03);
-  backdrop-filter:blur(20px);
-  border-radius:var(--radius);
-  padding:40px 36px;
-  display:none;
-  box-shadow:var(--shadow-deep), inset 0 1px 0 rgba(255,255,255,0.06);
-  position:relative;
-}
-.confirm-box.visible{display:block;}
-.confirm-box__back{
-  position:absolute;top:16px;right:16px;
-  background:rgba(255,255,255,0.05);
-  border:1px solid rgba(255,255,255,0.14);
-  color:rgba(255,255,255,0.70);
-  padding:8px 16px;border-radius:8px;
-  font-family:'Open Sans',sans-serif;
-  font-weight:700;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;
-  cursor:pointer;
-  transition:background 150ms,color 150ms,border-color 150ms;
-}
-.confirm-box__back:hover{
-  background:rgba(255,255,255,0.10);
-  color:#fff;
-  border-color:rgba(255,255,255,0.28);
-}
-.confirm-box__icon{font-size:3rem;margin-bottom:18px;}
-.confirm-box__h2{
-  font-family:'Montserrat',sans-serif;font-weight:700;
-  font-size:1.8rem;letter-spacing:-.01em;margin-bottom:10px;
-}
-.confirm-box__h2 em{font-style:normal;color:var(--accent);}
-.confirm-box__text{font-weight:600;font-size:.90rem;line-height:1.70;color:rgba(255,255,255,0.70);margin-bottom:22px;}
-.confirm-box__transfer{
-  background:rgba(0,0,0,0.22);
-  border:1px solid rgba(255,255,255,0.10);
-  border-radius:var(--radius-xs);
-  padding:18px 20px;
-  font-size:.88rem;
-  line-height:2;
-}
-.confirm-box__transfer .lbl{font-weight:800;font-size:.65rem;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,0.55);}
-.confirm-box__transfer .val{font-weight:700;color:#fff;}
-.confirm-box__ref{
-  display:inline-block;
-  font-family:'Montserrat',sans-serif;font-weight:700;font-size:1.5rem;
-  color:#fff;letter-spacing:.08em;
-  margin:16px 0;
-  padding:10px 14px;
-  border-radius:var(--radius-xs);
-  border:1px solid rgba(255,255,255,0.12);
-  background:rgba(0,0,0,0.26);
-}
-.confirm-box__note{
-  margin-top:18px;font-weight:600;font-size:.78rem;
-  color:rgba(255,255,255,0.40);line-height:1.65;
-}
+    .group-card--adults .slot:hover .slot__btn {
+      border-color: rgba(178, 25, 0, 0.65);
+      background: rgba(178, 25, 0, 0.18);
+    }
 
-/* zmiana 4: puls na wybranym terminie — odpowiednik cart glow */
-@keyframes slotGlow{
-  0%,100%{ box-shadow:none; }
-  50%    { box-shadow:0 14px 36px rgba(var(--form-accent-rgb,var(--accent-rgb)),0.40); }
-}
-.selected-slot-info.has-slot{
-  animation:slotGlow 2.2s ease-in-out infinite;
-}
+    .group-card--adults .slot.selected .slot__btn {
+      border-color: rgba(178, 25, 0, 0.85);
+      background: linear-gradient(180deg, rgba(178, 25, 0, 0.98), rgba(80, 8, 0, 0.92));
+    }
 
-/* ── SPINNER ── */
-.spinner{display:none;width:22px;height:22px;border:2px solid rgba(255,255,255,0.20);border-top-color:#fff;border-radius:50%;animation:spin 600ms linear infinite;}
-@keyframes spin{to{transform:rotate(360deg)}}
+    /* DZIECI — SOLID ciemny niebieski jak btn-kids, zero glassmorphism */
+    .group-card--kids {
+      background: linear-gradient(145deg, #0c2d6e 0%, #091e4a 100%);
+      box-shadow: 0 0 0 2px #1056A8 inset, var(--shadow-card);
+      border-color: #1056A8;
+    }
 
-/* ── LOADING STATE ── */
-.loading-overlay{
-  padding:60px;text-align:center;
-  font-weight:700;font-size:.88rem;color:var(--text-muted);
-}
+    .group-card--kids .group-card__head {
+      background: #0e3578;
+      border-bottom: 2px solid #1459b0;
+    }
 
-/* VIP card — red-to-blue gradient */
-.group-card--vip{
-  background:linear-gradient(135deg, rgba(178,25,0,0.12) 0%, rgba(0,0,0,0.20) 50%, rgba(26,111,212,0.12) 100%);
-  box-shadow:0 0 0 1px rgba(100,100,255,0.18) inset, var(--shadow-card);
-}
-.btn-vip-contact{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  width:100%;
-  padding:14px 22px;
-  border-radius:var(--radius-xs);
-  font-family:'Open Sans',sans-serif;
-  font-weight:800;
-  font-size:.80rem;
-  letter-spacing:.06em;
-  text-transform:uppercase;
-  color:#fff;
-  background:linear-gradient(90deg, #B21900 0%, #1A6FD4 100%);
-  border:1px solid rgba(100,130,255,0.40);
-  box-shadow:0 4px 20px rgba(26,111,212,0.22), 0 4px 20px rgba(178,25,0,0.18);
-  text-decoration:none;
-  transition:transform 150ms ease, filter 150ms ease, box-shadow 150ms ease;
-}
-.btn-vip-contact:hover{
-  transform:translateY(-2px);
-  filter:brightness(1.10);
-  box-shadow:0 8px 30px rgba(26,111,212,0.35), 0 8px 30px rgba(178,25,0,0.28);
-}
+    .group-card--kids .group-card__name {
+      color: #7ec8ff;
+      font-weight: 700;
+    }
 
-/* mobile */
-@media(max-width:600px){
-  .group-card__head{padding:14px 16px;}
-  .slot{padding:14px 16px;}
-  .vip-fg{grid-template-columns:1fr !important;}
-}
-</style>
+    .group-card--kids .slot {
+      border-left-color: transparent;
+    }
+
+    .group-card--kids .slot:hover {
+      border-left-color: #1a6fda;
+      background: #0e3578;
+    }
+
+    .group-card--kids .slot.selected {
+      background: #103d88;
+      border-left-color: #2e8fff;
+    }
+
+    .group-card--kids .slot:hover .slot__btn {
+      border-color: #1a6fda;
+      background: linear-gradient(135deg, #1056A8, #0d4990);
+      box-shadow: 0 3px 10px rgba(8, 40, 110, 0.55);
+      color: #fff;
+    }
+
+    .group-card--kids .slot.selected .slot__btn {
+      border-color: #2e8fff;
+      background: linear-gradient(135deg, #1a6fda, #1056A8);
+      box-shadow: 0 5px 16px rgba(8, 40, 110, 0.70);
+      color: #fff;
+    }
+
+    /* ── GROUP CARD BODY ── */
+    .group-card__body {
+      display: grid;
+      grid-template-columns: 1fr 220px;
+      align-items: stretch;
+      flex: 1;
+    }
+
+    @media(max-width:900px) {
+      .sched-grid--two-col .group-card__body {
+        grid-template-columns: 1fr;
+      }
+
+      .sched-grid--two-col .group-card__info {
+        border-left: none !important;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+      }
+    }
+
+    @media(max-width:700px) {
+      .group-card__body {
+        grid-template-columns: 1fr;
+      }
+
+      .group-card__info {
+        border-left: none !important;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+      }
+    }
+
+    /* ── SLOTS GRID ── */
+    .group-card__slots {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    }
+
+    .slot {
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    /* ── INFO PANEL ── */
+    .group-card__info {
+      border-left: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(0, 0, 0, 0.18);
+      padding: 20px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+    }
+
+    .info-panel__label {
+      font-weight: 800;
+      font-size: .60rem;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.32);
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+      margin-bottom: 2px;
+    }
+
+    .info-btn {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 10px 13px;
+      border-radius: var(--radius-xs);
+      font-weight: 700;
+      font-size: .72rem;
+      letter-spacing: .02em;
+      color: rgba(255, 255, 255, 0.82);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.04);
+      cursor: pointer;
+      backdrop-filter: blur(8px);
+      transition: transform 150ms ease, border-color 150ms ease, background 150ms ease, box-shadow 150ms ease;
+      text-decoration: none;
+      font-family: 'Open Sans', sans-serif;
+    }
+
+    .info-btn:hover {
+      transform: translateY(-1px);
+      border-color: rgba(255, 255, 255, 0.22);
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .group-card--adults .info-btn--map:hover {
+      border-color: rgba(178, 25, 0, 0.65);
+      background: rgba(178, 25, 0, 0.14);
+      box-shadow: 0 4px 14px rgba(178, 25, 0, 0.25);
+    }
+
+    .group-card--kids .info-btn--map:hover {
+      border-color: rgba(26, 111, 212, 0.65);
+      background: rgba(26, 111, 212, 0.14);
+      box-shadow: 0 4px 14px rgba(26, 111, 212, 0.25);
+    }
+
+    .info-btn__icon {
+      font-size: .90rem;
+      flex-shrink: 0;
+    }
+
+    .info-btn--placeholder {
+      opacity: .48;
+      cursor: default;
+      border-style: dashed;
+    }
+
+    .info-btn--placeholder:hover {
+      transform: none;
+      border-color: rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.04);
+      box-shadow: none;
+    }
+
+    .info-btn--placeholder::after {
+      content: 'wkrótce';
+      margin-left: auto;
+      font-size: .60rem;
+      letter-spacing: .06em;
+      color: rgba(255, 255, 255, 0.28);
+      font-weight: 700;
+    }
+
+    .slot {
+      background: rgba(0, 0, 0, 0.15);
+      padding: 16px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      cursor: pointer;
+      transition: background 200ms, transform 120ms, border-left-color 200ms;
+      border-left: 3px solid transparent;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .slot--closed {
+      cursor: default;
+      opacity: .50;
+    }
+
+    .slot--closed:hover {
+      background: rgba(0, 0, 0, 0.15);
+      border-left-color: transparent;
+      transform: none;
+    }
+
+    .slot:active {
+      transform: scale(0.998);
+    }
+
+    .slot__day {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 700;
+      font-size: .78rem;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: #fff;
+    }
+
+    .slot__time {
+      font-weight: 800;
+      font-size: 1.02rem;
+      color: rgba(255, 255, 255, 0.92);
+      margin-top: 2px;
+    }
+
+    .slot.selected .slot__time {
+      color: #fff;
+    }
+
+    .slot__addr {
+      font-weight: 600;
+      font-size: .72rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .slot__btn {
+      font-weight: 800;
+      font-size: .64rem;
+      letter-spacing: .10em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.82);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      background: rgba(255, 255, 255, 0.05);
+      padding: 8px 14px;
+      border-radius: var(--radius-xs);
+      white-space: nowrap;
+      backdrop-filter: blur(4px);
+      transition: transform 150ms ease, border-color 150ms ease, background 150ms ease;
+    }
+
+    /* VIP info */
+    .vip-info {
+      padding: 22px 18px;
+      font-weight: 600;
+      font-size: .88rem;
+      line-height: 1.70;
+      color: rgba(255, 255, 255, 0.70);
+    }
+
+    .vip-info strong {
+      color: #fff;
+    }
+
+    /* ── FORM SECTION ── */
+    .form-section {
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      background: rgba(255, 255, 255, 0.03);
+      backdrop-filter: blur(24px) saturate(160%);
+      -webkit-backdrop-filter: blur(24px) saturate(160%);
+      border-radius: var(--radius);
+      padding: 32px 28px 38px;
+      margin-bottom: 56px;
+      display: none;
+      box-shadow: var(--shadow-deep), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    }
+
+    .form-section.visible {
+      display: block;
+    }
+
+    /* Kolor akcentu formularza — zmieniany dynamicznie przez JS */
+    .form-section.form--adults {
+      --form-accent-rgb: 178, 25, 0;
+      --form-accent: #B21900;
+    }
+
+    .form-section.form--kids {
+      --form-accent-rgb: 26, 111, 212;
+      --form-accent: #1A6FD4;
+    }
+
+    .form-section__title {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 700;
+      font-size: 1.20rem;
+      letter-spacing: -.01em;
+      margin-bottom: 5px;
+    }
+
+    .form-section__sub {
+      font-weight: 600;
+      font-size: .84rem;
+      color: var(--text-muted);
+      margin-bottom: 24px;
+    }
+
+    /* Wybrany termin */
+    .selected-slot-info {
+      background: rgba(0, 0, 0, 0.22);
+      border: 1px solid rgba(255, 255, 255, 0.10);
+      border-radius: var(--radius-xs);
+      padding: 14px 18px;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .selected-slot-info::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 3px;
+      background: var(--form-accent, var(--accent));
+      box-shadow: 0 0 16px rgba(var(--form-accent-rgb, var(--accent-rgb)), 0.40);
+    }
+
+    .selected-slot-info__label {
+      font-weight: 800;
+      font-size: .62rem;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.55);
+    }
+
+    .selected-slot-info__val {
+      font-weight: 700;
+      font-size: .92rem;
+      color: #fff;
+    }
+
+    /* Grid formularza */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    @media(max-width:600px) {
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .form-field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .form-field--full {
+      grid-column: 1/-1;
+    }
+
+    .form-label {
+      font-weight: 700;
+      font-size: .68rem;
+      letter-spacing: .10em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.55);
+    }
+
+    .form-label span {
+      color: var(--form-accent, var(--accent));
+    }
+
+    /* Inputs — jak w cenniku */
+    .form-input,
+    .form-select,
+    .form-textarea {
+      width: 100%;
+      padding: 11px 14px;
+      border-radius: var(--radius-xs);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.04);
+      backdrop-filter: blur(8px);
+      color: #fff;
+      font-family: 'Open Sans', sans-serif;
+      font-weight: 600;
+      font-size: .90rem;
+      outline: none;
+      transition: border-color 150ms, box-shadow 150ms;
+      -webkit-appearance: none;
+    }
+
+    .form-input::placeholder {
+      color: rgba(255, 255, 255, 0.25);
+    }
+
+    .form-input:focus,
+    .form-select:focus,
+    .form-textarea:focus {
+      border-color: rgba(var(--form-accent-rgb, var(--accent-rgb)), 0.55);
+      box-shadow: 0 0 0 4px rgba(var(--form-accent-rgb, var(--accent-rgb)), 0.09);
+    }
+
+    .form-select option {
+      background: #141414;
+      color: #fff;
+    }
+
+    .form-textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    .form-divider {
+      grid-column: 1/-1;
+      border: none;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      margin: 6px 0;
+    }
+
+    .form-section-label {
+      grid-column: 1/-1;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 700;
+      font-size: .68rem;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.75);
+      margin-top: 4px;
+    }
+
+    /* ── PRICE CARDS — dopasowane do cennika ── */
+    .price-options {
+      grid-column: 1/-1;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      gap: 10px;
+      margin-top: 4px;
+    }
+
+    .price-card {
+      border-radius: var(--radius-xs);
+      padding: 16px 18px;
+      cursor: pointer;
+      transition: transform 150ms ease, box-shadow 150ms ease, border-color 150ms ease, background 150ms ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .price-card input {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .price-card__name {
+      font-weight: 800;
+      font-size: .82rem;
+      color: #fff;
+      margin-bottom: 6px;
+      line-height: 1.3;
+    }
+
+    .price-card__price {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 900;
+      font-size: 1.5rem;
+      color: #fff;
+      line-height: 1;
+    }
+
+    .price-card__price small {
+      font-size: .80rem;
+      font-family: 'Open Sans', sans-serif;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.50);
+      margin-left: 3px;
+    }
+
+    .price-card__extra {
+      font-weight: 600;
+      font-size: .70rem;
+      color: var(--text-muted);
+      margin-top: 5px;
+      line-height: 1.5;
+    }
+
+    /* Adults price cards */
+    .form--adults .price-card {
+      background: rgba(178, 25, 0, 0.09);
+      border: 1px solid rgba(178, 25, 0, 0.22);
+    }
+
+    .form--adults .price-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 24px rgba(178, 25, 0, 0.25);
+    }
+
+    .form--adults .price-card.selected {
+      background: rgba(178, 25, 0, 0.16);
+      border-color: rgba(178, 25, 0, 0.70);
+      box-shadow: 0 0 0 3px rgba(178, 25, 0, 0.18);
+    }
+
+    /* Kids price cards — SOLID niebieski */
+    .form--kids .price-card {
+      background: #0e3578;
+      border: 1.5px solid #1a6fda;
+    }
+
+    .form--kids .price-card:hover {
+      transform: translateY(-2px);
+      background: #103d88;
+      box-shadow: 0 6px 24px rgba(16, 86, 168, 0.50);
+      border-color: #2e8fff;
+    }
+
+    .form--kids .price-card.selected {
+      background: #103d88;
+      border-color: #2e8fff;
+      box-shadow: 0 0 0 3px rgba(16, 86, 168, 0.30);
+    }
+
+    /* Consent */
+    .consent-item {
+      grid-column: 1/-1;
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      padding: 12px 14px;
+      border-radius: var(--radius-xs);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.025);
+      font-weight: 600;
+      font-size: .84rem;
+      line-height: 1.60;
+      color: rgba(255, 255, 255, 0.75);
+      cursor: pointer;
+    }
+
+    .consent-item input[type=checkbox] {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+      accent-color: var(--form-accent, var(--accent));
+      cursor: pointer;
+      margin-top: 2px;
+    }
+
+    /* Submit */
+    .form-actions {
+      grid-column: 1/-1;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-top: 12px;
+      flex-wrap: wrap;
+    }
+
+    .btn-submit {
+      background: linear-gradient(135deg, rgba(var(--form-accent-rgb, var(--accent-rgb)), 0.92), rgba(var(--form-accent-rgb, var(--accent-rgb)), 0.65));
+      border: 1px solid rgba(var(--form-accent-rgb, var(--accent-rgb)), 0.65);
+      color: #fff;
+      font-family: 'Open Sans', sans-serif;
+      font-weight: 800;
+      font-size: .82rem;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      padding: 14px 28px;
+      cursor: pointer;
+      border-radius: var(--radius-xs);
+      box-shadow: 0 4px 18px rgba(var(--form-accent-rgb, var(--accent-rgb)), 0.28);
+      transition: transform 150ms ease, box-shadow 150ms ease, filter 150ms ease;
+    }
+
+    .btn-submit:hover {
+      transform: translateY(-2px);
+      filter: brightness(1.10);
+      box-shadow: 0 8px 28px rgba(var(--form-accent-rgb, var(--accent-rgb)), 0.40);
+    }
+
+    .btn-submit:disabled {
+      opacity: .45;
+      cursor: not-allowed;
+      transform: none;
+      filter: none;
+    }
+
+    .form-note {
+      font-weight: 600;
+      font-size: .76rem;
+      color: var(--text-muted);
+    }
+
+    /* Error / info */
+    .form-msg {
+      grid-column: 1/-1;
+      padding: 12px 16px;
+      border-radius: var(--radius-xs);
+      font-weight: 700;
+      font-size: .82rem;
+      display: none;
+    }
+
+    .form-msg.error {
+      background: rgba(178, 25, 0, 0.12);
+      border: 1px solid rgba(178, 25, 0, 0.40);
+      color: #ffb2a6;
+      display: block;
+    }
+
+    .form-msg.info {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      color: rgba(255, 255, 255, 0.80);
+      display: block;
+    }
+
+    /* ── CONFIRMATION ── */
+    .confirm-box {
+      max-width: 680px;
+      margin: 56px auto;
+      border: 1px solid rgba(255, 255, 255, 0.10);
+      background: rgba(255, 255, 255, 0.03);
+      backdrop-filter: blur(20px);
+      border-radius: var(--radius);
+      padding: 40px 36px;
+      display: none;
+      box-shadow: var(--shadow-deep), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+      position: relative;
+    }
+
+    .confirm-box.visible {
+      display: block;
+    }
+
+    .confirm-box__back {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      color: rgba(255, 255, 255, 0.70);
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-family: 'Open Sans', sans-serif;
+      font-weight: 700;
+      font-size: .72rem;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background 150ms, color 150ms, border-color 150ms;
+    }
+
+    .confirm-box__back:hover {
+      background: rgba(255, 255, 255, 0.10);
+      color: #fff;
+      border-color: rgba(255, 255, 255, 0.28);
+    }
+
+    .confirm-box__icon {
+      font-size: 3rem;
+      margin-bottom: 18px;
+    }
+
+    .confirm-box__h2 {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 700;
+      font-size: 1.8rem;
+      letter-spacing: -.01em;
+      margin-bottom: 10px;
+    }
+
+    .confirm-box__h2 em {
+      font-style: normal;
+      color: var(--accent);
+    }
+
+    .confirm-box__text {
+      font-weight: 600;
+      font-size: .90rem;
+      line-height: 1.70;
+      color: rgba(255, 255, 255, 0.70);
+      margin-bottom: 22px;
+    }
+
+    .confirm-box__transfer {
+      background: rgba(0, 0, 0, 0.22);
+      border: 1px solid rgba(255, 255, 255, 0.10);
+      border-radius: var(--radius-xs);
+      padding: 18px 20px;
+      font-size: .88rem;
+      line-height: 2;
+    }
+
+    .confirm-box__transfer .lbl {
+      font-weight: 800;
+      font-size: .65rem;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.55);
+    }
+
+    .confirm-box__transfer .val {
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .confirm-box__ref {
+      display: inline-block;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 700;
+      font-size: 1.5rem;
+      color: #fff;
+      letter-spacing: .08em;
+      margin: 16px 0;
+      padding: 10px 14px;
+      border-radius: var(--radius-xs);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(0, 0, 0, 0.26);
+    }
+
+    .confirm-box__note {
+      margin-top: 18px;
+      font-weight: 600;
+      font-size: .78rem;
+      color: rgba(255, 255, 255, 0.40);
+      line-height: 1.65;
+    }
+
+    /* zmiana 4: puls na wybranym terminie — odpowiednik cart glow */
+    @keyframes slotGlow {
+
+      0%,
+      100% {
+        box-shadow: none;
+      }
+
+      50% {
+        box-shadow: 0 14px 36px rgba(var(--form-accent-rgb, var(--accent-rgb)), 0.40);
+      }
+    }
+
+    .selected-slot-info.has-slot {
+      animation: slotGlow 2.2s ease-in-out infinite;
+    }
+
+    /* ── SPINNER ── */
+    .spinner {
+      display: none;
+      width: 22px;
+      height: 22px;
+      border: 2px solid rgba(255, 255, 255, 0.20);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 600ms linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg)
+      }
+    }
+
+    /* ── LOADING STATE ── */
+    .loading-overlay {
+      padding: 60px;
+      text-align: center;
+      font-weight: 700;
+      font-size: .88rem;
+      color: var(--text-muted);
+    }
+
+    /* VIP card — red-to-blue gradient */
+    .group-card--vip {
+      background: linear-gradient(135deg, rgba(178, 25, 0, 0.12) 0%, rgba(0, 0, 0, 0.20) 50%, rgba(26, 111, 212, 0.12) 100%);
+      box-shadow: 0 0 0 1px rgba(100, 100, 255, 0.18) inset, var(--shadow-card);
+    }
+
+    .btn-vip-contact {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      padding: 14px 22px;
+      border-radius: var(--radius-xs);
+      font-family: 'Open Sans', sans-serif;
+      font-weight: 800;
+      font-size: .80rem;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      color: #fff;
+      background: linear-gradient(90deg, #B21900 0%, #1A6FD4 100%);
+      border: 1px solid rgba(100, 130, 255, 0.40);
+      box-shadow: 0 4px 20px rgba(26, 111, 212, 0.22), 0 4px 20px rgba(178, 25, 0, 0.18);
+      text-decoration: none;
+      transition: transform 150ms ease, filter 150ms ease, box-shadow 150ms ease;
+    }
+
+    .btn-vip-contact:hover {
+      transform: translateY(-2px);
+      filter: brightness(1.10);
+      box-shadow: 0 8px 30px rgba(26, 111, 212, 0.35), 0 8px 30px rgba(178, 25, 0, 0.28);
+    }
+
+    /* mobile */
+    @media(max-width:600px) {
+      .group-card__head {
+        padding: 14px 16px;
+      }
+
+      .slot {
+        padding: 14px 16px;
+      }
+
+      .vip-fg {
+        grid-template-columns: 1fr !important;
+      }
+    }
+  </style>
+
+  <!-- PWA iOS Support -->
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
 </head>
 
 <body>
 
-<header class="pg-header">
-  <div class="wrap">
-    <div class="pg-header__kicker">Krav Maga Saggita</div>
-    <h1 class="pg-header__h1">ZAPISZ SIĘ<em> NA ZAJĘCIA</em></h1>
-    <p class="pg-header__sub">Wybierz lokalizację, termin i grupę — formularz uzupełni się automatycznie.</p>
-    <div class="pg-header__ul" aria-hidden="true"></div>
-  </div>
-</header>
+  <header class="pg-header">
+    <div class="wrap">
+      <div class="pg-header__kicker">Krav Maga Saggita</div>
+      <h1 class="pg-header__h1">ZAPISZ SIĘ<em> NA ZAJĘCIA</em></h1>
+      <p class="pg-header__sub">Wybierz lokalizację, termin i grupę — formularz uzupełni się automatycznie.</p>
+      <div class="pg-header__ul" aria-hidden="true"></div>
+    </div>
+  </header>
 
-<main class="wrap">
-  <nav class="loc-tabs" id="locTabs" aria-label="Lokalizacje" role="tablist"></nav>
+  <main class="wrap">
+    <nav class="loc-tabs" id="locTabs" aria-label="Lokalizacje" role="tablist"></nav>
 
-  <div id="locPanels">
-    <div class="loading-overlay">Ładowanie grafiku…</div>
-  </div>
-
-  <section class="form-section" id="formSection" aria-live="polite">
-    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:4px;">
-      <div>
-        <div class="form-section__title">Formularz zapisu</div>
-        <p class="form-section__sub">Pola oznaczone <span style="color:var(--accent)">*</span> są wymagane.</p>
-      </div>
-      <button type="button" onclick="goBackToSchedule()" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.14);color:rgba(255,255,255,0.70);padding:8px 16px;border-radius:8px;font-family:'Open Sans',sans-serif;font-weight:700;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;flex-shrink:0;margin-top:2px;transition:background 150ms,color 150ms,border-color 150ms;" onmouseover="this.style.background='rgba(255,255,255,0.10)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,0.05)';this.style.color='rgba(255,255,255,0.70)'">← Wróć do grafiku</button>
+    <div id="locPanels">
+      <div class="loading-overlay">Ładowanie grafiku…</div>
     </div>
 
-    <div class="selected-slot-info" id="slotInfo" aria-live="polite">
-      <div>
-        <div class="selected-slot-info__label">Wybrany termin</div>
-        <div class="selected-slot-info__val" id="slotInfoText">—</div>
+    <section class="form-section" id="formSection" aria-live="polite">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:4px;">
+        <div>
+          <div class="form-section__title">Formularz zapisu</div>
+          <p class="form-section__sub">Pola oznaczone <span style="color:var(--accent)">*</span> są wymagane.</p>
+        </div>
+        <button type="button" onclick="goBackToSchedule()"
+          style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.14);color:rgba(255,255,255,0.70);padding:8px 16px;border-radius:8px;font-family:'Open Sans',sans-serif;font-weight:700;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;flex-shrink:0;margin-top:2px;transition:background 150ms,color 150ms,border-color 150ms;"
+          onmouseover="this.style.background='rgba(255,255,255,0.10)';this.style.color='#fff'"
+          onmouseout="this.style.background='rgba(255,255,255,0.05)';this.style.color='rgba(255,255,255,0.70)'">← Wróć
+          do grafiku</button>
       </div>
-    </div>
 
-    <form id="regForm" novalidate>
-      <div class="form-grid">
-
-        <div class="form-section-label">Dane osobowe</div>
-
-        <div class="form-field">
-          <label class="form-label" for="f_first">Imię <span>*</span></label>
-          <input class="form-input" type="text" id="f_first" name="first_name" autocomplete="given-name" required>
+      <div class="selected-slot-info" id="slotInfo" aria-live="polite">
+        <div>
+          <div class="selected-slot-info__label">Wybrany termin</div>
+          <div class="selected-slot-info__val" id="slotInfoText">—</div>
         </div>
+      </div>
 
-        <div class="form-field">
-          <label class="form-label" for="f_last">Nazwisko <span>*</span></label>
-          <input class="form-input" type="text" id="f_last" name="last_name" autocomplete="family-name" required>
-        </div>
+      <form id="regForm" novalidate>
+        <div class="form-grid">
 
-        <div class="form-field">
-          <label class="form-label" for="f_email">Adres e-mail <span>*</span></label>
-          <input class="form-input" type="email" id="f_email" name="email" autocomplete="email" required>
-        </div>
+          <div class="form-section-label">Dane osobowe</div>
 
-        <div class="form-field">
-          <label class="form-label" for="f_phone">Telefon <span>*</span></label>
-          <input class="form-input" type="tel" id="f_phone" name="phone" autocomplete="tel" placeholder="+48 xxx xxx xxx">
-        </div>
+          <div class="form-field">
+            <label class="form-label" for="f_first">Imię <span>*</span></label>
+            <input class="form-input" type="text" id="f_first" name="first_name" autocomplete="given-name" required>
+          </div>
 
-        <div class="form-field">
-          <label class="form-label" for="f_birth">Rok urodzenia</label>
-          <input class="form-input" type="number" id="f_birth" name="birth_year" min="1950" max="2022" placeholder="np. 1990">
-        </div>
+          <div class="form-field">
+            <label class="form-label" for="f_last">Nazwisko <span>*</span></label>
+            <input class="form-input" type="text" id="f_last" name="last_name" autocomplete="family-name" required>
+          </div>
 
-        <div class="form-field">
-          <label class="form-label" for="f_new">Czy to Twój pierwszy sezon?</label>
-          <select class="form-select" id="f_new" name="is_new">
-            <option value="true">Tak — jestem nowy/a</option>
-            <option value="false">Nie — kontynuuję treningi</option>
-          </select>
-        </div>
+          <div class="form-field">
+            <label class="form-label" for="f_email">Adres e-mail <span>*</span></label>
+            <input class="form-input" type="email" id="f_email" name="email" autocomplete="email" required>
+          </div>
 
-        <hr class="form-divider">
+          <div class="form-field">
+            <label class="form-label" for="f_phone">Telefon <span>*</span></label>
+            <input class="form-input" type="tel" id="f_phone" name="phone" autocomplete="tel"
+              placeholder="+48 xxx xxx xxx">
+          </div>
 
-        <div class="form-section-label">Wybierz karnet</div>
+          <div class="form-field">
+            <label class="form-label" for="f_birth">Rok urodzenia</label>
+            <input class="form-input" type="number" id="f_birth" name="birth_year" min="1950" max="2022"
+              placeholder="np. 1990">
+          </div>
 
-        <!-- Checkbox dla posiadaczy karnetu -->
-        <div class="consent-item" style="margin-bottom:16px;">
-          <input type="checkbox" id="f_has_membership" name="has_membership">
-          <label for="f_has_membership" style="font-weight:600;color:rgba(255,255,255,0.90);">
-            Posiadam już karnet miesięczny <span style="font-weight:400;color:rgba(255,255,255,0.65);">(rezerwuję tylko miejsce, bez płatności)</span>
+          <div class="form-field">
+            <label class="form-label" for="f_new">Czy to Twój pierwszy sezon?</label>
+            <select class="form-select" id="f_new" name="is_new">
+              <option value="true">Tak — jestem nowy/a</option>
+              <option value="false">Nie — kontynuuję treningi</option>
+            </select>
+          </div>
+
+          <hr class="form-divider">
+
+          <div class="form-section-label">Wybierz karnet</div>
+
+          <!-- Checkbox dla posiadaczy karnetu -->
+          <div class="consent-item" style="margin-bottom:16px;">
+            <input type="checkbox" id="f_has_membership" name="has_membership">
+            <label for="f_has_membership" style="font-weight:600;color:rgba(255,255,255,0.90);">
+              Posiadam już karnet miesięczny <span style="font-weight:400;color:rgba(255,255,255,0.65);">(rezerwuję
+                tylko miejsce, bez płatności)</span>
+            </label>
+          </div>
+
+          <div class="price-options" id="priceOptions"></div>
+
+          <hr class="form-divider">
+
+          <div class="form-section-label">Szczegóły</div>
+
+          <div class="form-field">
+            <label class="form-label" for="f_date">Preferowana data startu</label>
+            <input class="form-input" type="date" id="f_date" name="start_date">
+          </div>
+
+          <div class="form-field">
+            <label class="form-label" for="f_pay">Metoda płatności</label>
+            <select class="form-select" id="f_pay" name="payment_method">
+              <option value="transfer">Przelew bankowy</option>
+              <option value="cash">Gotówka (na miejscu)</option>
+            </select>
+          </div>
+
+          <div class="form-field form-field--full" id="preferredTimeField" style="display:none">
+            <label class="form-label" for="f_ptime">Preferowany termin zajęć (Wałbrzych VIP)</label>
+            <input class="form-input" type="text" id="f_ptime" name="preferred_time"
+              placeholder="np. wtorek 18:00 lub elastyczny">
+          </div>
+
+          <hr class="form-divider">
+
+          <div class="form-section-label">Zgody</div>
+
+          <label class="consent-item">
+            <input type="checkbox" id="f_consent_data" required>
+            <span>Wyrażam zgodę na przetwarzanie moich danych osobowych przez Akademię Obrony Saggita w celu realizacji
+              zapisu na zajęcia i obsługi płatności. <span style="color:var(--accent)">*</span></span>
           </label>
+
+          <label class="consent-item">
+            <input type="checkbox" id="f_consent_rules" required>
+            <span>Zapoznałem/am się z regulaminem zajęć i akceptuję jego warunki. <span
+                style="color:var(--accent)">*</span></span>
+          </label>
+
+          <div class="form-msg" id="formMsg"></div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn-submit" id="submitBtn">
+              <span id="submitLabel">Wyślij zapis →</span>
+              <span class="spinner" id="submitSpinner"></span>
+            </button>
+            <span class="form-note">Zapis nie jest potwierdzeniem miejsca. Potwierdzenie wysyłamy po weryfikacji.</span>
+          </div>
+
         </div>
+      </form>
+    </section>
 
-        <div class="price-options" id="priceOptions"></div>
+    <div class="confirm-box" id="confirmBox">
+      <button class="confirm-box__back" onclick="goBackToSchedule()">← Wróć do grafiku</button>
+      <div class="confirm-box__icon">✓</div>
+      <h2 class="confirm-box__h2">Zapis<em> przyjęty</em></h2>
+      <p class="confirm-box__text" id="confirmText">Dziękujemy za zapis! Skontaktujemy się w celu potwierdzenia miejsca.
+      </p>
+      <div class="confirm-box__ref" id="confirmRef"></div>
+      <div class="confirm-box__transfer" id="confirmTransfer" style="display:none"></div>
+      <div id="confirmActions" style="display:none;gap:10px;flex-wrap:wrap;margin-top:18px"></div>
+      <p class="confirm-box__note">Zachowaj powyższy numer referencyjny — przyda się w razie pytań o płatność.</p>
+    </div>
 
-        <hr class="form-divider">
+  </main>
 
-        <div class="form-section-label">Szczegóły</div>
+  <script>
+    /**
+     * ZAPISZ-SIE — stabilne pobieranie grafiku:
+     * - obsługuje /api/schedule (nested: locations->groups->schedules)
+     * - obsługuje /api/admin-api/schedules (flat: lista terminów)
+     * - normalizuje dane i dopiero buduje UI
+     */
 
-        <div class="form-field">
-          <label class="form-label" for="f_date">Preferowana data startu</label>
-          <input class="form-input" type="date" id="f_date" name="start_date">
-        </div>
+    const API_BASE = 'https://saggita-kravmaga.vercel.app';
+    const API = `${API_BASE}/api`;
 
-        <div class="form-field">
-          <label class="form-label" for="f_pay">Metoda płatności</label>
-          <select class="form-select" id="f_pay" name="payment_method">
-            <option value="transfer">Przelew bankowy</option>
-            <option value="cash">Gotówka (na miejscu)</option>
-          </select>
-        </div>
+    const SCHEDULE_SOURCES = [
+      `${API}/schedule`,
+      `${API}/admin-api/schedules`,
+    ];
 
-        <div class="form-field form-field--full" id="preferredTimeField" style="display:none">
-          <label class="form-label" for="f_ptime">Preferowany termin zajęć (Wałbrzych VIP)</label>
-          <input class="form-input" type="text" id="f_ptime" name="preferred_time" placeholder="np. wtorek 18:00 lub elastyczny">
-        </div>
+    const GROUPS_SOURCES = [
+      `${API}/groups`,
+      `${API}/admin-api/groups`,
+    ];
 
-        <hr class="form-divider">
+    const LOCATIONS_SOURCES = [
+      `${API}/locations`,
+      `${API}/admin-api/locations`,
+    ];
 
-        <div class="form-section-label">Zgody</div>
+    function qs(sel, root = document) { return root.querySelector(sel); }
+    function qsa(sel, root = document) { return Array.from(root.querySelectorAll(sel)); }
 
-        <label class="consent-item">
-          <input type="checkbox" id="f_consent_data" required>
-          <span>Wyrażam zgodę na przetwarzanie moich danych osobowych przez Akademię Obrony Saggita w celu realizacji zapisu na zajęcia i obsługi płatności. <span style="color:var(--accent)">*</span></span>
-        </label>
-
-        <label class="consent-item">
-          <input type="checkbox" id="f_consent_rules" required>
-          <span>Zapoznałem/am się z regulaminem zajęć i akceptuję jego warunki. <span style="color:var(--accent)">*</span></span>
-        </label>
-
-        <div class="form-msg" id="formMsg"></div>
-
-        <div class="form-actions">
-          <button type="submit" class="btn-submit" id="submitBtn">
-            <span id="submitLabel">Wyślij zapis →</span>
-            <span class="spinner" id="submitSpinner"></span>
-          </button>
-          <span class="form-note">Zapis nie jest potwierdzeniem miejsca. Potwierdzenie wysyłamy po weryfikacji.</span>
-        </div>
-
-      </div>
-    </form>
-  </section>
-
-  <div class="confirm-box" id="confirmBox">
-    <button class="confirm-box__back" onclick="goBackToSchedule()">← Wróć do grafiku</button>
-    <div class="confirm-box__icon">✓</div>
-    <h2 class="confirm-box__h2">Zapis<em> przyjęty</em></h2>
-    <p class="confirm-box__text" id="confirmText">Dziękujemy za zapis! Skontaktujemy się w celu potwierdzenia miejsca.</p>
-    <div class="confirm-box__ref" id="confirmRef"></div>
-    <div class="confirm-box__transfer" id="confirmTransfer" style="display:none"></div>
-    <div id="confirmActions" style="display:none;gap:10px;flex-wrap:wrap;margin-top:18px"></div>
-    <p class="confirm-box__note">Zachowaj powyższy numer referencyjny — przyda się w razie pytań o płatność.</p>
-  </div>
-
-</main>
-
-<script>
-/**
- * ZAPISZ-SIE — stabilne pobieranie grafiku:
- * - obsługuje /api/schedule (nested: locations->groups->schedules)
- * - obsługuje /api/admin-api/schedules (flat: lista terminów)
- * - normalizuje dane i dopiero buduje UI
- */
-
-const API_BASE = 'https://saggita-kravmaga.vercel.app';
-const API = `${API_BASE}/api`;
-
-const SCHEDULE_SOURCES = [
-  `${API}/schedule`,
-  `${API}/admin-api/schedules`,
-];
-
-const GROUPS_SOURCES = [
-  `${API}/groups`,
-  `${API}/admin-api/groups`,
-];
-
-const LOCATIONS_SOURCES = [
-  `${API}/locations`,
-  `${API}/admin-api/locations`,
-];
-
-function qs(sel, root=document){ return root.querySelector(sel); }
-function qsa(sel, root=document){ return Array.from(root.querySelectorAll(sel)); }
-
-async function fetchJson(url){
-  const res = await fetch(url, { cache: 'no-store' });
-  const text = await res.text();
-  let data;
-  try { data = text ? JSON.parse(text) : null; }
-  catch(e){ throw new Error(`Nieprawidłowy JSON z ${url}: ${text.slice(0,120)}`); }
-  if(!res.ok) throw new Error(`HTTP ${res.status} z ${url}: ${data?.error || text.slice(0,120)}`);
-  return data;
-}
-
-async function fetchFirstOk(urls){
-  let lastErr = null;
-  for(const url of urls){
-    try { return await fetchJson(url); }
-    catch(e){ lastErr = e; }
-  }
-  throw lastErr || new Error('Brak działającego źródła danych');
-}
-
-// ── Normalizacja danych ───────────────────────────────────────────
-const PL_DAY = {1:'Poniedziałek',2:'Wtorek',3:'Środa',4:'Czwartek',5:'Piątek',6:'Sobota',7:'Niedziela',0:'Niedziela'};
-const hhmm = (t) => (t && typeof t === 'string') ? t.slice(0,5) : '';
-
-function looksNested(x){
-  return Array.isArray(x) && x[0] && Array.isArray(x[0].groups);
-}
-
-function normalizeSchedulesPayload(payload){
-  // /admin-api/schedules może zwrócić {rows:[...]} albo [...]. My chcemy [...]
-  if(Array.isArray(payload)) return payload;
-  if(Array.isArray(payload?.rows)) return payload.rows;
-  return [];
-}
-
-function buildNestedFromFlat({ locations, groups, schedules }){
-  const locMap = new Map((locations||[]).map(l => [l.id, { ...l, groups: [] }]));
-  const groupMap = new Map((groups||[]).map(g => [g.id, { ...g, schedules: [] }]));
-
-  // powiąż grupy z lokalizacjami
-  for(const g of (groups||[])){
-    const loc = locMap.get(g.location_id);
-    const gg = groupMap.get(g.id);
-    if(loc && gg) loc.groups.push(gg);
-  }
-
-  // dorzuć schedules do grup
-  for(const s of (schedules||[])){
-    if (s.active === false) continue;
-    const g = groupMap.get(s.group_id);
-    if(!g) continue;
-
-    const day_name = s.day_name || PL_DAY[s.day_of_week] || '—';
-    const time_label = s.time_label || (
-      hhmm(s.time_start) ? `${hhmm(s.time_start)}${hhmm(s.time_end) ? `–${hhmm(s.time_end)}` : ''}` : 'Termin do ustalenia'
-    );
-
-    g.schedules.push({
-      id: s.id,
-      group_id: s.group_id,
-      day_of_week: s.day_of_week,
-      day_name,
-      time_start: s.time_start,
-      time_end: s.time_end,
-      time_label,
-      address: s.address || null,
-      active: s.active !== false,
-    });
-  }
-
-  // sortowanie
-  const locs = Array.from(locMap.values())
-    .sort((a,b)=>(a.city||'').localeCompare(b.city||'', 'pl'));
-
-  for(const loc of locs){
-    loc.groups = (loc.groups||[])
-      .filter(g => g && g.active !== false)
-      .sort((a,b)=>(a.name||'').localeCompare(b.name||'', 'pl'));
-
-    for(const g of loc.groups){
-      g.schedules = (g.schedules||[])
-        .sort((a,b)=> (a.day_of_week - b.day_of_week) || String(a.time_start||'').localeCompare(String(b.time_start||'')));
+    async function fetchJson(url) {
+      const res = await fetch(url, { cache: 'no-store' });
+      const text = await res.text();
+      let data;
+      try { data = text ? JSON.parse(text) : null; }
+      catch (e) { throw new Error(`Nieprawidłowy JSON z ${url}: ${text.slice(0, 120)}`); }
+      if (!res.ok) throw new Error(`HTTP ${res.status} z ${url}: ${data?.error || text.slice(0, 120)}`);
+      return data;
     }
-  }
 
-  return locs;
-}
+    async function fetchFirstOk(urls) {
+      let lastErr = null;
+      for (const url of urls) {
+        try { return await fetchJson(url); }
+        catch (e) { lastErr = e; }
+      }
+      throw lastErr || new Error('Brak działającego źródła danych');
+    }
 
-// ── State ─────────────────────────────────────────────────────────
-let allData = [];
-let allPrices = [];
-let selectedGroup = null;
-let selectedSchedule = null;
-let selectedLocation = null;
+    // ── Normalizacja danych ───────────────────────────────────────────
+    const PL_DAY = { 1: 'Poniedziałek', 2: 'Wtorek', 3: 'Środa', 4: 'Czwartek', 5: 'Piątek', 6: 'Sobota', 7: 'Niedziela', 0: 'Niedziela' };
+    const hhmm = (t) => (t && typeof t === 'string') ? t.slice(0, 5) : '';
 
-// ── UI: Tabs ─────────────────────────────────────────────────────
-function buildTabs() {
-  const nav = document.getElementById('locTabs');
-  nav.innerHTML = '';
+    function looksNested(x) {
+      return Array.isArray(x) && x[0] && Array.isArray(x[0].groups);
+    }
 
-  allData.forEach((loc, i) => {
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'loc-tab' + (i === 0 ? ' active' : '');
-    btn.textContent = loc.city || loc.name || `Lokalizacja ${loc.id}`;
-    btn.setAttribute('role','tab');
-    btn.setAttribute('aria-selected', i === 0 ? 'true' : 'false');
-    btn.addEventListener('click', () => switchTab(loc.id));
-    nav.appendChild(btn);
-  });
-}
+    function normalizeSchedulesPayload(payload) {
+      // /admin-api/schedules może zwrócić {rows:[...]} albo [...]. My chcemy [...]
+      if (Array.isArray(payload)) return payload;
+      if (Array.isArray(payload?.rows)) return payload.rows;
+      return [];
+    }
 
-function switchTab(locId) {
-  qsa('.loc-tab').forEach((btn, i) => {
-    const active = allData[i]?.id === locId;
-    btn.classList.toggle('active', active);
-    btn.setAttribute('aria-selected', active ? 'true' : 'false');
-  });
-  qsa('.loc-panel').forEach(p => p.classList.toggle('active', p.dataset.locId == locId));
-}
+    function buildNestedFromFlat({ locations, groups, schedules }) {
+      const locMap = new Map((locations || []).map(l => [l.id, { ...l, groups: [] }]));
+      const groupMap = new Map((groups || []).map(g => [g.id, { ...g, schedules: [] }]));
 
-// ── UI: Panels ───────────────────────────────────────────────────
-function buildPanels() {
-  const container = document.getElementById('locPanels');
-  container.innerHTML = '';
+      // powiąż grupy z lokalizacjami
+      for (const g of (groups || [])) {
+        const loc = locMap.get(g.location_id);
+        const gg = groupMap.get(g.id);
+        if (loc && gg) loc.groups.push(gg);
+      }
 
-  allData.forEach((loc, locIdx) => {
-    const panel = document.createElement('div');
-    panel.className = 'loc-panel' + (locIdx === 0 ? ' active' : '');
-    panel.dataset.locId = loc.id;
+      // dorzuć schedules do grup
+      for (const s of (schedules || [])) {
+        if (s.active === false) continue;
+        const g = groupMap.get(s.group_id);
+        if (!g) continue;
 
-    const groups = Array.isArray(loc.groups) ? loc.groups : [];
-    if (!groups.length) {
-      const locCity = (loc.city || loc.name || '').toLowerCase();
-      if (locCity.includes('wałbrzych') || locCity.includes('walbrzych')) {
-        const vipGrid = document.createElement('div');
-        vipGrid.className = 'sched-grid';
-        vipGrid.innerHTML = `
+        const day_name = s.day_name || PL_DAY[s.day_of_week] || '—';
+        const time_label = s.time_label || (
+          hhmm(s.time_start) ? `${hhmm(s.time_start)}${hhmm(s.time_end) ? `–${hhmm(s.time_end)}` : ''}` : 'Termin do ustalenia'
+        );
+
+        g.schedules.push({
+          id: s.id,
+          group_id: s.group_id,
+          day_of_week: s.day_of_week,
+          day_name,
+          time_start: s.time_start,
+          time_end: s.time_end,
+          time_label,
+          address: s.address || null,
+          active: s.active !== false,
+        });
+      }
+
+      // sortowanie
+      const locs = Array.from(locMap.values())
+        .sort((a, b) => (a.city || '').localeCompare(b.city || '', 'pl'));
+
+      for (const loc of locs) {
+        loc.groups = (loc.groups || [])
+          .filter(g => g && g.active !== false)
+          .sort((a, b) => (a.name || '').localeCompare(b.name || '', 'pl'));
+
+        for (const g of loc.groups) {
+          g.schedules = (g.schedules || [])
+            .sort((a, b) => (a.day_of_week - b.day_of_week) || String(a.time_start || '').localeCompare(String(b.time_start || '')));
+        }
+      }
+
+      return locs;
+    }
+
+    // ── State ─────────────────────────────────────────────────────────
+    let allData = [];
+    let allPrices = [];
+    let selectedGroup = null;
+    let selectedSchedule = null;
+    let selectedLocation = null;
+
+    // ── UI: Tabs ─────────────────────────────────────────────────────
+    function buildTabs() {
+      const nav = document.getElementById('locTabs');
+      nav.innerHTML = '';
+
+      allData.forEach((loc, i) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'loc-tab' + (i === 0 ? ' active' : '');
+        btn.textContent = loc.city || loc.name || `Lokalizacja ${loc.id}`;
+        btn.setAttribute('role', 'tab');
+        btn.setAttribute('aria-selected', i === 0 ? 'true' : 'false');
+        btn.addEventListener('click', () => switchTab(loc.id));
+        nav.appendChild(btn);
+      });
+    }
+
+    function switchTab(locId) {
+      qsa('.loc-tab').forEach((btn, i) => {
+        const active = allData[i]?.id === locId;
+        btn.classList.toggle('active', active);
+        btn.setAttribute('aria-selected', active ? 'true' : 'false');
+      });
+      qsa('.loc-panel').forEach(p => p.classList.toggle('active', p.dataset.locId == locId));
+    }
+
+    // ── UI: Panels ───────────────────────────────────────────────────
+    function buildPanels() {
+      const container = document.getElementById('locPanels');
+      container.innerHTML = '';
+
+      allData.forEach((loc, locIdx) => {
+        const panel = document.createElement('div');
+        panel.className = 'loc-panel' + (locIdx === 0 ? ' active' : '');
+        panel.dataset.locId = loc.id;
+
+        const groups = Array.isArray(loc.groups) ? loc.groups : [];
+        if (!groups.length) {
+          const locCity = (loc.city || loc.name || '').toLowerCase();
+          if (locCity.includes('wałbrzych') || locCity.includes('walbrzych')) {
+            const vipGrid = document.createElement('div');
+            vipGrid.className = 'sched-grid';
+            vipGrid.innerHTML = `
           <div class="group-card group-card--kids" style="box-shadow:0 0 0 1px rgba(16,86,168,0.60) inset,var(--shadow-card)">
             <div class="group-card__head" style="background:rgba(26,111,212,0.22);border-bottom-color:rgba(16,86,168,0.55);">
               <div class="group-card__name" style="color:#5BA8FF">Zajęcia VIP</div>
@@ -1076,97 +1544,97 @@ function buildPanels() {
               </div>
             </div>
           </div>`;
-        panel.appendChild(vipGrid);
-      } else {
-        panel.innerHTML = '<p style="color:rgba(255,255,255,0.56);padding:24px 0;font-weight:600">Brak grup dla tej lokalizacji.</p>';
-      }
-      container.appendChild(panel);
-      return;
-    }
-
-    const grid = document.createElement('div');
-    const hasAdults = groups.some(g => !/KIDS|YOUNG|DZIECI/.test((g.name||'').toUpperCase()) && g.category !== 'vip');
-    const hasKids   = groups.some(g => /KIDS|YOUNG|DZIECI/.test((g.name||'').toUpperCase()));
-    const twoCol = hasAdults && hasKids;
-    grid.className = 'sched-grid' + (twoCol ? ' sched-grid--two-col' : '');
-
-    let kidsCol = null, adultsCol = null;
-    if (twoCol) {
-      kidsCol = document.createElement('div');
-      kidsCol.className = 'group-col';
-      adultsCol = document.createElement('div');
-      adultsCol.className = 'group-col';
-      grid.appendChild(kidsCol);   // kids left
-      grid.appendChild(adultsCol); // adults right
-    }
-
-    groups.forEach(group => {
-      const isVIP = group.category === 'vip';
-      const notes = (group.notes || '').toLowerCase();
-      const isClosed = notes.includes('zamknięty') || notes.includes('zamkniety');
-      const isFull = false; // Miejsc nie pokazujemy — zawsze 'Zapisuję się'
-
-      // Detect group type
-      const gName = (group.name || '').toUpperCase();
-      const isKids = /KIDS|YOUNG|DZIECI/.test(gName);
-
-      const card = document.createElement('div');
-      // Ustaw klasę koloru: kids = niebieski, vip = adults (czerwony), reszta = adults
-      const cardColorClass = isKids ? 'group-card--kids' : 'group-card--adults';
-      card.className = 'group-card ' + cardColorClass;
-
-      const head = document.createElement('div');
-      head.className = 'group-card__head';
-
-      const nameEl = document.createElement('div');
-      nameEl.className = 'group-card__name';
-      nameEl.textContent = group.name || 'Grupa';
-      head.appendChild(nameEl);
-
-      const meta = document.createElement('div');
-      meta.className = 'group-card__meta';
-
-      if (group.age_range) {
-        const b = document.createElement('span');
-        b.className = 'badge badge--white';
-        b.textContent = group.age_range;
-        meta.appendChild(b);
-      }
-
-      if (isClosed) {
-        const b = document.createElement('span');
-        b.className = 'badge badge--closed';
-        b.textContent = 'Nabór zamknięty';
-        meta.appendChild(b);
-      }
-
-      head.appendChild(meta);
-      card.appendChild(head);
-
-      // ── Info panel builder ──
-      function buildInfoPanel() {
-        const infoDiv = document.createElement('div');
-        infoDiv.className = 'group-card__info';
-
-        // Build Google Maps URL from first available address in schedules, or fall back to hardcoded by group name, or city
-        const firstAddr = (group.schedules||[]).map(s=>s.address).find(a=>a);
-        const gName = (group.name||'').toUpperCase();
-        const ADDR_FALLBACK = {
-          'KIDS':   'Świdnica, ul. Długa 33',
-          'YOUNG':  'Świdnica, ul. Długa 33',
-          'DZIECI': 'Świdnica, ul. Długa 33',
-        };
-        let hardcoded = null;
-        if(!firstAddr) {
-          if(/KIDS|YOUNG|DZIECI/.test(gName)) hardcoded = 'Świdnica, ul. Długa 33';
-          else if(/DOROŚLI|MLODZIEŻ|MŁODZIEŻ|DOROSLI/.test(gName) && /ŚWIDNICA|SWIDNICA/.test((loc.city||'').toUpperCase())) hardcoded = 'Świdnica, ul. Jodłowa 21';
+            panel.appendChild(vipGrid);
+          } else {
+            panel.innerHTML = '<p style="color:rgba(255,255,255,0.56);padding:24px 0;font-weight:600">Brak grup dla tej lokalizacji.</p>';
+          }
+          container.appendChild(panel);
+          return;
         }
-        const mapsQuery = firstAddr || hardcoded || loc.address || loc.city || '';
-        const mapsUrl = mapsQuery
-          ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapsQuery)}`
-          : null;
 
-        infoDiv.innerHTML = `
+        const grid = document.createElement('div');
+        const hasAdults = groups.some(g => !/KIDS|YOUNG|DZIECI/.test((g.name || '').toUpperCase()) && g.category !== 'vip');
+        const hasKids = groups.some(g => /KIDS|YOUNG|DZIECI/.test((g.name || '').toUpperCase()));
+        const twoCol = hasAdults && hasKids;
+        grid.className = 'sched-grid' + (twoCol ? ' sched-grid--two-col' : '');
+
+        let kidsCol = null, adultsCol = null;
+        if (twoCol) {
+          kidsCol = document.createElement('div');
+          kidsCol.className = 'group-col';
+          adultsCol = document.createElement('div');
+          adultsCol.className = 'group-col';
+          grid.appendChild(kidsCol);   // kids left
+          grid.appendChild(adultsCol); // adults right
+        }
+
+        groups.forEach(group => {
+          const isVIP = group.category === 'vip';
+          const notes = (group.notes || '').toLowerCase();
+          const isClosed = notes.includes('zamknięty') || notes.includes('zamkniety');
+          const isFull = false; // Miejsc nie pokazujemy — zawsze 'Zapisuję się'
+
+          // Detect group type
+          const gName = (group.name || '').toUpperCase();
+          const isKids = /KIDS|YOUNG|DZIECI/.test(gName);
+
+          const card = document.createElement('div');
+          // Ustaw klasę koloru: kids = niebieski, vip = adults (czerwony), reszta = adults
+          const cardColorClass = isKids ? 'group-card--kids' : 'group-card--adults';
+          card.className = 'group-card ' + cardColorClass;
+
+          const head = document.createElement('div');
+          head.className = 'group-card__head';
+
+          const nameEl = document.createElement('div');
+          nameEl.className = 'group-card__name';
+          nameEl.textContent = group.name || 'Grupa';
+          head.appendChild(nameEl);
+
+          const meta = document.createElement('div');
+          meta.className = 'group-card__meta';
+
+          if (group.age_range) {
+            const b = document.createElement('span');
+            b.className = 'badge badge--white';
+            b.textContent = group.age_range;
+            meta.appendChild(b);
+          }
+
+          if (isClosed) {
+            const b = document.createElement('span');
+            b.className = 'badge badge--closed';
+            b.textContent = 'Nabór zamknięty';
+            meta.appendChild(b);
+          }
+
+          head.appendChild(meta);
+          card.appendChild(head);
+
+          // ── Info panel builder ──
+          function buildInfoPanel() {
+            const infoDiv = document.createElement('div');
+            infoDiv.className = 'group-card__info';
+
+            // Build Google Maps URL from first available address in schedules, or fall back to hardcoded by group name, or city
+            const firstAddr = (group.schedules || []).map(s => s.address).find(a => a);
+            const gName = (group.name || '').toUpperCase();
+            const ADDR_FALLBACK = {
+              'KIDS': 'Świdnica, ul. Długa 33',
+              'YOUNG': 'Świdnica, ul. Długa 33',
+              'DZIECI': 'Świdnica, ul. Długa 33',
+            };
+            let hardcoded = null;
+            if (!firstAddr) {
+              if (/KIDS|YOUNG|DZIECI/.test(gName)) hardcoded = 'Świdnica, ul. Długa 33';
+              else if (/DOROŚLI|MLODZIEŻ|MŁODZIEŻ|DOROSLI/.test(gName) && /ŚWIDNICA|SWIDNICA/.test((loc.city || '').toUpperCase())) hardcoded = 'Świdnica, ul. Jodłowa 21';
+            }
+            const mapsQuery = firstAddr || hardcoded || loc.address || loc.city || '';
+            const mapsUrl = mapsQuery
+              ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapsQuery)}`
+              : null;
+
+            infoDiv.innerHTML = `
           <div class="info-panel__label">Informacje</div>
 
           <a class="info-btn info-btn--map" ${mapsUrl ? `href="${mapsUrl}" target="_blank" rel="noopener"` : `href="#" onclick="return false;"`} title="Sprawdź dojazd">
@@ -1191,238 +1659,238 @@ function buildPanels() {
           `}
         `;
 
-        return infoDiv;
-      }
+            return infoDiv;
+          }
 
-      if (isVIP) {
-        const body = document.createElement('div');
-        body.className = 'group-card__body';
+          if (isVIP) {
+            const body = document.createElement('div');
+            body.className = 'group-card__body';
 
-        const vipContent = document.createElement('div');
-        const info = document.createElement('div');
-        info.className = 'vip-info';
-        info.innerHTML = `<strong>${group.notes || 'Zajęcia VIP w kameralnej grupie.'}</strong><br>
+            const vipContent = document.createElement('div');
+            const info = document.createElement('div');
+            info.className = 'vip-info';
+            info.innerHTML = `<strong>${group.notes || 'Zajęcia VIP w kameralnej grupie.'}</strong><br>
           Szczególny rodzaj zajęć — maks. 8 osób, 2h, w pełni personalizowane.<br>
           📅 Piątki 19:00–21:00 &nbsp;·&nbsp; Wycena indywidualna<br><br>
           Skontaktuj się z nami: 📞 <strong style="color:#fff">510 930 460</strong> · ✉ <strong style="color:#fff">biuro@akademiaobrony.pl</strong>`;
-        vipContent.appendChild(info);
+            vipContent.appendChild(info);
 
-        const vipBtn = document.createElement('div');
-        vipBtn.style.cssText = 'padding:0 18px 18px';
-        const b = document.createElement('button');
-        b.type = 'button';
-        b.className = 'slot__btn';
-        b.style.cssText = 'font-size:.72rem;padding:10px 18px;cursor:pointer;font-weight:900;letter-spacing:.12em;text-transform:uppercase;';
-        b.textContent = 'Zapisz się na listę rezerwową →';
-        b.addEventListener('click', () => selectSlot(loc.id, loc.city, group.id, group.name, null, null, null, true));
-        vipBtn.appendChild(b);
-        vipContent.appendChild(vipBtn);
+            const vipBtn = document.createElement('div');
+            vipBtn.style.cssText = 'padding:0 18px 18px';
+            const b = document.createElement('button');
+            b.type = 'button';
+            b.className = 'slot__btn';
+            b.style.cssText = 'font-size:.72rem;padding:10px 18px;cursor:pointer;font-weight:900;letter-spacing:.12em;text-transform:uppercase;';
+            b.textContent = 'Zapisz się na listę rezerwową →';
+            b.addEventListener('click', () => selectSlot(loc.id, loc.city, group.id, group.name, null, null, null, true));
+            vipBtn.appendChild(b);
+            vipContent.appendChild(vipBtn);
 
-        body.appendChild(vipContent);
-        body.appendChild(buildInfoPanel());
-        card.appendChild(body);
+            body.appendChild(vipContent);
+            body.appendChild(buildInfoPanel());
+            card.appendChild(body);
 
-      } else {
-        const schedules = Array.isArray(group.schedules) ? group.schedules : [];
+          } else {
+            const schedules = Array.isArray(group.schedules) ? group.schedules : [];
 
-        const body = document.createElement('div');
-        body.className = 'group-card__body';
+            const body = document.createElement('div');
+            body.className = 'group-card__body';
 
-        // jeżeli brak terminów — pokaż czytelną informację zamiast pustki
-        if(!schedules.length){
-          const empty = document.createElement('div');
-          empty.className = 'vip-info';
-          empty.innerHTML = `<strong>Brak dodanych terminów</strong><br>Jeśli widzisz je w panelu admin, to znaczy, że endpoint, z którego korzysta ta strona, nie zwraca ich w tym formacie.`;
-          body.appendChild(empty);
-        } else {
-          const slotsWrap = document.createElement('div');
-          slotsWrap.className = 'group-card__slots';
+            // jeżeli brak terminów — pokaż czytelną informację zamiast pustki
+            if (!schedules.length) {
+              const empty = document.createElement('div');
+              empty.className = 'vip-info';
+              empty.innerHTML = `<strong>Brak dodanych terminów</strong><br>Jeśli widzisz je w panelu admin, to znaczy, że endpoint, z którego korzysta ta strona, nie zwraca ich w tym formacie.`;
+              body.appendChild(empty);
+            } else {
+              const slotsWrap = document.createElement('div');
+              slotsWrap.className = 'group-card__slots';
 
-          schedules.forEach(sched => {
-            const dayName = sched.day_name || PL_DAY[sched.day_of_week] || '—';
-            const timeLabel = sched.time_label || (hhmm(sched.time_start) ? `${hhmm(sched.time_start)}${hhmm(sched.time_end) ? `–${hhmm(sched.time_end)}` : ''}` : 'Termin do ustalenia');
+              schedules.forEach(sched => {
+                const dayName = sched.day_name || PL_DAY[sched.day_of_week] || '—';
+                const timeLabel = sched.time_label || (hhmm(sched.time_start) ? `${hhmm(sched.time_start)}${hhmm(sched.time_end) ? `–${hhmm(sched.time_end)}` : ''}` : 'Termin do ustalenia');
 
-            const slot = document.createElement('div');
-            slot.className = 'slot' + (isClosed ? ' slot--closed' : '');
-            slot.setAttribute('role', isClosed ? 'presentation' : 'button');
-            if (!isClosed) slot.setAttribute('tabindex', '0');
+                const slot = document.createElement('div');
+                slot.className = 'slot' + (isClosed ? ' slot--closed' : '');
+                slot.setAttribute('role', isClosed ? 'presentation' : 'button');
+                if (!isClosed) slot.setAttribute('tabindex', '0');
 
-            const left = document.createElement('div');
-            left.innerHTML = `
+                const left = document.createElement('div');
+                left.innerHTML = `
               <div class="slot__day">${dayName}</div>
               <div class="slot__time">${timeLabel}</div>
               ${sched.address ? `<div class="slot__addr">${sched.address}</div>` : ''}
             `;
 
-            const btnEl = document.createElement('div');
-            btnEl.className = 'slot__btn';
-            btnEl.textContent = isClosed ? 'Zamknięty' : 'Zapisz się';
+                const btnEl = document.createElement('div');
+                btnEl.className = 'slot__btn';
+                btnEl.textContent = isClosed ? 'Zamknięty' : 'Zapisz się';
 
-            slot.appendChild(left);
-            slot.appendChild(btnEl);
+                slot.appendChild(left);
+                slot.appendChild(btnEl);
 
-            if (!isClosed) {
-              const handler = (ev) => {
-                window._lastSlotEl = ev.currentTarget;
-                selectSlot(loc.id, loc.city, group.id, group.name, sched.id, dayName, timeLabel, isFull);
-              };
-              slot.addEventListener('click', handler);
-              slot.addEventListener('keydown', e => { if(e.key === 'Enter' || e.key === ' ') handler(e); });
+                if (!isClosed) {
+                  const handler = (ev) => {
+                    window._lastSlotEl = ev.currentTarget;
+                    selectSlot(loc.id, loc.city, group.id, group.name, sched.id, dayName, timeLabel, isFull);
+                  };
+                  slot.addEventListener('click', handler);
+                  slot.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') handler(e); });
+                }
+
+                slotsWrap.appendChild(slot);
+              });
+
+              body.appendChild(slotsWrap);
             }
 
-            slotsWrap.appendChild(slot);
-          });
+            body.appendChild(buildInfoPanel());
+            card.appendChild(body);
+          }
 
-          body.appendChild(slotsWrap);
+          if (twoCol) {
+            const isKidsCard = /KIDS|YOUNG|DZIECI/.test((group.name || '').toUpperCase());
+            (isKidsCard ? kidsCol : adultsCol).appendChild(card);
+          } else {
+            grid.appendChild(card);
+          }
+        });
+
+        panel.appendChild(grid);
+        container.appendChild(panel);
+      });
+    }
+
+    // ── Select slot ──────────────────────────────────────────────────
+
+
+    function selectSlot(locId, cityName, groupId, groupName, schedId, dayName, timeLabel, isWaitlist) {
+      qsa('.slot.selected').forEach(s => s.classList.remove('selected'));
+      if (window._lastSlotEl) window._lastSlotEl.classList.add('selected');
+
+      selectedGroup = groupId;
+      selectedSchedule = schedId;
+      selectedLocation = locId;
+
+      const isVIP = schedId === null;
+      const waitlistFlag = !!isWaitlist;
+
+      const infoText = isVIP
+        ? `${cityName} · ${groupName} (lista rezerwowa)`
+        : `${cityName} · ${groupName} · ${dayName}, ${timeLabel}${waitlistFlag ? ' (lista rezerwowa)' : ''}`;
+
+      document.getElementById('slotInfoText').textContent = infoText;
+      document.getElementById('slotInfo').classList.add('has-slot'); // zmiana 4
+      document.getElementById('preferredTimeField').style.display = isVIP ? 'block' : 'none';
+
+      const group = allData.flatMap(l => l.groups || []).find(g => g.id === groupId);
+      const gName = (group?.name || '').toUpperCase();
+      const isKidsGroup = /KIDS|YOUNG|DZIECI/.test(gName);
+
+      // Ustaw kolor formularza
+      const section = document.getElementById('formSection');
+      section.classList.remove('form--adults', 'form--kids');
+      section.classList.add(isKidsGroup ? 'form--kids' : 'form--adults');
+
+      buildPriceOptions(group?.category || 'adults');
+
+      section.classList.add('visible');
+      section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    // ── Price helpers (spójne z zapisz-sie-cennik.html) ──────────────
+    const norm = (v) => String(v || '').trim().toLowerCase();
+    const isKidsPlan = (p) => { const c = norm(p.category); return c.includes('kid') || c.includes('dziec'); };
+    const isOneTime = (p) => !Number(p.months || 0);
+    const isSchoolYr = (p) => isKidsPlan(p) && Number(p.months || 0) >= 10;
+    const isMultiMo = (p) => Number(p.months || 0) >= 3;
+    const monthlyR = (p) => Number(p.months || 0) > 1 ? Number(p.price) / Number(p.months) : Number(p.price);
+    const hasFee = (p, isNew) => !isOneTime(p) && isNew && Number(p.signup_fee || 0) > 0;
+    const money = (v) => Number(v || 0).toLocaleString('pl-PL', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+
+    function buildPriceOptions(category) {
+      const container = document.getElementById('priceOptions');
+      container.innerHTML = '';
+
+      // Checkbox "Posiadam karnet"
+      const hasMembership = document.getElementById('f_has_membership')?.checked;
+      if (hasMembership) {
+        container.innerHTML = '<p style="color:rgba(255,255,255,0.76);font-size:.9rem;font-weight:600;">✓ Posiadasz karnet — rezerwacja bez płatności</p>';
+        return;
+      }
+
+      const isNew = document.getElementById('f_new')?.value !== 'false';
+      const rows = (allPrices || []);
+
+      // Filtruj tak samo jak cennik — kids osobno, adults osobno
+      const isKidsCat = category === 'kids';
+      const relevant = isKidsCat
+        ? rows.filter(p => isKidsPlan(p))
+        : rows.filter(p => !isKidsPlan(p));
+
+      if (!relevant.length) {
+        container.innerHTML = '<p style="color:rgba(255,255,255,0.56);font-size:.82rem">Brak planów cennikowych dla tej grupy.</p>';
+        return;
+      }
+
+      relevant.sort((a, b) => Number(a.price || 0) - Number(b.price || 0));
+
+      // Referencja 1 miesiąca dorosłych do rabatu
+      const adult1m = !isKidsCat ? rows.filter(p => !isKidsPlan(p)).find(p => Number(p.months || 0) === 1) : null;
+      const adult1mPrice = adult1m ? Number(adult1m.price) : null;
+
+      relevant.forEach((plan, i) => {
+        const months = Number(plan.months || 0);
+        const fee = hasFee(plan, isNew) ? Number(plan.signup_fee || 0) : 0;
+        const monthly = monthlyR(plan);
+
+        let priceHtml = '';
+        let subHtml = '';
+        let badgeHtml = '';
+
+        if (isOneTime(plan)) {
+          priceHtml = `<div class="price-card__price">${money(plan.price)}<small>zł</small></div>`;
+          subHtml = `<div class="price-card__extra">Brak opłaty wpisowej<br>Pojedyncze zajęcia</div>`;
+        } else if (isSchoolYr(plan)) {
+          priceHtml = `<div class="price-card__price">180<small>zł / mies.</small></div>`;
+          const total = 180 * months;
+          subHtml = `<div class="price-card__extra">Do ${months} miesięcy — od 180 do ${money(total)} zł łącznie`;
+          if (fee > 0) subHtml += `<br>+ wpisowe ${money(fee)} zł dla nowych`;
+          subHtml += `</div>`;
+        } else if (isMultiMo(plan) && !isKidsCat) {
+          const discPct = adult1mPrice ? Math.round((1 - monthly / adult1mPrice) * 100) : null;
+          priceHtml = `<div class="price-card__price">${money(Math.round(monthly))}<small>zł / mies.</small></div>`;
+          subHtml = `<div class="price-card__extra">łącznie ${money(plan.price)} zł za ${months} mies.`;
+          if (fee > 0) subHtml += `<br>+ wpisowe ${money(fee)} zł dla nowych`;
+          subHtml += `</div>`;
+          if (discPct > 0) badgeHtml = `<span style="display:inline-flex;align-items:center;padding:2px 8px;border-radius:999px;background:rgba(46,204,113,0.18);border:1px solid rgba(46,204,113,0.35);color:#2ecc71;font-size:11px;font-weight:800">-${discPct}%</span>`;
+        } else {
+          priceHtml = `<div class="price-card__price">${money(Math.round(monthly))}<small>zł / mies.</small></div>`;
+          if (fee > 0) subHtml = `<div class="price-card__extra">+ wpisowe ${money(fee)} zł dla nowych`;
+          if (plan.description) subHtml = (subHtml || '<div class="price-card__extra">') + (fee > 0 ? '<br>' : '') + plan.description + '</div>';
+          else if (subHtml) subHtml += '</div>';
         }
 
-        body.appendChild(buildInfoPanel());
-        card.appendChild(body);
-      }
+        if (plan.description && !subHtml.includes(plan.description)) {
+          subHtml += `<div class="price-card__extra" style="margin-top:3px">${plan.description}</div>`;
+        }
 
-      if (twoCol) {
-        const isKidsCard = /KIDS|YOUNG|DZIECI/.test((group.name||'').toUpperCase());
-        (isKidsCard ? kidsCol : adultsCol).appendChild(card);
-      } else {
-        grid.appendChild(card);
-      }
-    });
+        const card = document.createElement('label');
+        card.className = 'price-card';
+        if (i === 0) card.classList.add('selected');
 
-    panel.appendChild(grid);
-    container.appendChild(panel);
-  });
-}
+        const input = document.createElement('input');
+        input.type = 'radio';
+        input.name = 'price_plan';
+        input.value = plan.id;
+        if (i === 0) input.checked = true;
+        card.appendChild(input);
 
-// ── Select slot ──────────────────────────────────────────────────
-
-
-function selectSlot(locId, cityName, groupId, groupName, schedId, dayName, timeLabel, isWaitlist) {
-  qsa('.slot.selected').forEach(s => s.classList.remove('selected'));
-  if (window._lastSlotEl) window._lastSlotEl.classList.add('selected');
-
-  selectedGroup = groupId;
-  selectedSchedule = schedId;
-  selectedLocation = locId;
-
-  const isVIP = schedId === null;
-  const waitlistFlag = !!isWaitlist;
-
-  const infoText = isVIP
-    ? `${cityName} · ${groupName} (lista rezerwowa)`
-    : `${cityName} · ${groupName} · ${dayName}, ${timeLabel}${waitlistFlag ? ' (lista rezerwowa)' : ''}`;
-
-  document.getElementById('slotInfoText').textContent = infoText;
-  document.getElementById('slotInfo').classList.add('has-slot'); // zmiana 4
-  document.getElementById('preferredTimeField').style.display = isVIP ? 'block' : 'none';
-
-  const group = allData.flatMap(l => l.groups || []).find(g => g.id === groupId);
-  const gName = (group?.name || '').toUpperCase();
-  const isKidsGroup = /KIDS|YOUNG|DZIECI/.test(gName);
-
-  // Ustaw kolor formularza
-  const section = document.getElementById('formSection');
-  section.classList.remove('form--adults', 'form--kids');
-  section.classList.add(isKidsGroup ? 'form--kids' : 'form--adults');
-
-  buildPriceOptions(group?.category || 'adults');
-
-  section.classList.add('visible');
-  section.scrollIntoView({ behavior: 'smooth', block: 'start' });
-}
-
-// ── Price helpers (spójne z zapisz-sie-cennik.html) ──────────────
-const norm       = (v)=>String(v||'').trim().toLowerCase();
-const isKidsPlan = (p)=>{ const c=norm(p.category); return c.includes('kid')||c.includes('dziec'); };
-const isOneTime  = (p)=>!Number(p.months||0);
-const isSchoolYr = (p)=>isKidsPlan(p) && Number(p.months||0)>=10;
-const isMultiMo  = (p)=>Number(p.months||0)>=3;
-const monthlyR   = (p)=>Number(p.months||0)>1 ? Number(p.price)/Number(p.months) : Number(p.price);
-const hasFee     = (p, isNew)=> !isOneTime(p) && isNew && Number(p.signup_fee||0)>0;
-const money      = (v)=>Number(v||0).toLocaleString('pl-PL',{minimumFractionDigits:0,maximumFractionDigits:2});
-
-function buildPriceOptions(category) {
-  const container = document.getElementById('priceOptions');
-  container.innerHTML = '';
-
-  // Checkbox "Posiadam karnet"
-  const hasMembership = document.getElementById('f_has_membership')?.checked;
-  if (hasMembership) {
-    container.innerHTML = '<p style="color:rgba(255,255,255,0.76);font-size:.9rem;font-weight:600;">✓ Posiadasz karnet — rezerwacja bez płatności</p>';
-    return;
-  }
-
-  const isNew = document.getElementById('f_new')?.value !== 'false';
-  const rows = (allPrices || []);
-
-  // Filtruj tak samo jak cennik — kids osobno, adults osobno
-  const isKidsCat = category === 'kids';
-  const relevant = isKidsCat
-    ? rows.filter(p => isKidsPlan(p))
-    : rows.filter(p => !isKidsPlan(p));
-
-  if (!relevant.length) {
-    container.innerHTML = '<p style="color:rgba(255,255,255,0.56);font-size:.82rem">Brak planów cennikowych dla tej grupy.</p>';
-    return;
-  }
-
-  relevant.sort((a,b)=>Number(a.price||0)-Number(b.price||0));
-
-  // Referencja 1 miesiąca dorosłych do rabatu
-  const adult1m = !isKidsCat ? rows.filter(p=>!isKidsPlan(p)).find(p=>Number(p.months||0)===1) : null;
-  const adult1mPrice = adult1m ? Number(adult1m.price) : null;
-
-  relevant.forEach((plan, i) => {
-    const months  = Number(plan.months||0);
-    const fee     = hasFee(plan, isNew) ? Number(plan.signup_fee||0) : 0;
-    const monthly = monthlyR(plan);
-
-    let priceHtml = '';
-    let subHtml   = '';
-    let badgeHtml = '';
-
-    if (isOneTime(plan)) {
-      priceHtml = `<div class="price-card__price">${money(plan.price)}<small>zł</small></div>`;
-      subHtml   = `<div class="price-card__extra">Brak opłaty wpisowej<br>Pojedyncze zajęcia</div>`;
-    } else if (isSchoolYr(plan)) {
-      priceHtml = `<div class="price-card__price">180<small>zł / mies.</small></div>`;
-      const total = 180 * months;
-      subHtml = `<div class="price-card__extra">Do ${months} miesięcy — od 180 do ${money(total)} zł łącznie`;
-      if (fee>0) subHtml += `<br>+ wpisowe ${money(fee)} zł dla nowych`;
-      subHtml += `</div>`;
-    } else if (isMultiMo(plan) && !isKidsCat) {
-      const discPct = adult1mPrice ? Math.round((1 - monthly/adult1mPrice)*100) : null;
-      priceHtml = `<div class="price-card__price">${money(Math.round(monthly))}<small>zł / mies.</small></div>`;
-      subHtml = `<div class="price-card__extra">łącznie ${money(plan.price)} zł za ${months} mies.`;
-      if (fee>0) subHtml += `<br>+ wpisowe ${money(fee)} zł dla nowych`;
-      subHtml += `</div>`;
-      if (discPct>0) badgeHtml = `<span style="display:inline-flex;align-items:center;padding:2px 8px;border-radius:999px;background:rgba(46,204,113,0.18);border:1px solid rgba(46,204,113,0.35);color:#2ecc71;font-size:11px;font-weight:800">-${discPct}%</span>`;
-    } else {
-      priceHtml = `<div class="price-card__price">${money(Math.round(monthly))}<small>zł / mies.</small></div>`;
-      if (fee>0) subHtml = `<div class="price-card__extra">+ wpisowe ${money(fee)} zł dla nowych`;
-      if (plan.description) subHtml = (subHtml||'<div class="price-card__extra">') + (fee>0?'<br>':'') + plan.description + '</div>';
-      else if (subHtml) subHtml += '</div>';
-    }
-
-    if (plan.description && !subHtml.includes(plan.description)) {
-      subHtml += `<div class="price-card__extra" style="margin-top:3px">${plan.description}</div>`;
-    }
-
-    const card = document.createElement('label');
-    card.className = 'price-card';
-    if (i === 0) card.classList.add('selected');
-
-    const input = document.createElement('input');
-    input.type  = 'radio';
-    input.name  = 'price_plan';
-    input.value = plan.id;
-    if (i === 0) input.checked = true;
-    card.appendChild(input);
-
-    card.innerHTML += `
+        card.innerHTML += `
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:4px">
         <div>
           <div class="price-card__name">${plan.name || ''}</div>
-          <div style="font-size:.68rem;font-weight:600;color:rgba(255,255,255,0.40);margin-top:1px">${isOneTime(plan)?'jednorazowo':months>1?`${months} mies.`:'1 mies.'}</div>
+          <div style="font-size:.68rem;font-weight:600;color:rgba(255,255,255,0.40);margin-top:1px">${isOneTime(plan) ? 'jednorazowo' : months > 1 ? `${months} mies.` : '1 mies.'}</div>
         </div>
         ${badgeHtml}
       </div>
@@ -1430,143 +1898,143 @@ function buildPriceOptions(category) {
       ${subHtml}
     `;
 
-    card.addEventListener('click', () => {
-      qsa('.price-card').forEach(c => c.classList.remove('selected'));
-      card.classList.add('selected');
+        card.addEventListener('click', () => {
+          qsa('.price-card').forEach(c => c.classList.remove('selected'));
+          card.classList.add('selected');
+        });
+
+        container.appendChild(card);
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('f_new')?.addEventListener('change', () => {
+        if (selectedGroup !== null) {
+          const group = allData.flatMap(l => l.groups || []).find(g => g.id === selectedGroup);
+          buildPriceOptions(group?.category || 'adults');
+        }
+      });
+
+      // Listener dla checkbox "Posiadam karnet"
+      document.getElementById('f_has_membership')?.addEventListener('change', () => {
+        if (selectedGroup !== null) {
+          const group = allData.flatMap(l => l.groups || []).find(g => g.id === selectedGroup);
+          buildPriceOptions(group?.category || 'adults');
+        }
+      });
     });
 
-    container.appendChild(card);
-  });
-}
+    // ── Submit ───────────────────────────────────────────────────────
+    document.getElementById('regForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
 
-document.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('f_new')?.addEventListener('change', () => {
-    if (selectedGroup !== null) {
-      const group = allData.flatMap(l => l.groups || []).find(g => g.id === selectedGroup);
-      buildPriceOptions(group?.category || 'adults');
-    }
-  });
+      const msg = document.getElementById('formMsg');
+      const btn = document.getElementById('submitBtn');
+      const spinner = document.getElementById('submitSpinner');
+      const label = document.getElementById('submitLabel');
 
-  // Listener dla checkbox "Posiadam karnet"
-  document.getElementById('f_has_membership')?.addEventListener('change', () => {
-    if (selectedGroup !== null) {
-      const group = allData.flatMap(l => l.groups || []).find(g => g.id === selectedGroup);
-      buildPriceOptions(group?.category || 'adults');
-    }
-  });
-});
+      msg.className = 'form-msg';
+      msg.textContent = '';
 
-// ── Submit ───────────────────────────────────────────────────────
-document.getElementById('regForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
+      if (!selectedGroup) { showMsg('Wybierz termin zajęć z grafiku powyżej.', 'error'); return; }
 
-  const msg = document.getElementById('formMsg');
-  const btn = document.getElementById('submitBtn');
-  const spinner = document.getElementById('submitSpinner');
-  const label = document.getElementById('submitLabel');
+      const first = document.getElementById('f_first').value.trim();
+      const last = document.getElementById('f_last').value.trim();
+      const email = document.getElementById('f_email').value.trim();
+      const phone = document.getElementById('f_phone').value.trim();
 
-  msg.className = 'form-msg';
-  msg.textContent = '';
+      if (!first || !last) { showMsg('Wpisz imię i nazwisko.', 'error'); return; }
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showMsg('Podaj prawidłowy adres e-mail.', 'error'); return; }
+      if (!phone) { showMsg('Podaj numer telefonu.', 'error'); return; }
+      if (!document.getElementById('f_consent_data').checked) { showMsg('Wymagana zgoda na przetwarzanie danych.', 'error'); return; }
+      if (!document.getElementById('f_consent_rules').checked) { showMsg('Wymagana akceptacja regulaminu.', 'error'); return; }
 
-  if (!selectedGroup) { showMsg('Wybierz termin zajęć z grafiku powyżej.', 'error'); return; }
+      const selectedPrice = document.querySelector('input[name=price_plan]:checked');
 
-  const first = document.getElementById('f_first').value.trim();
-  const last  = document.getElementById('f_last').value.trim();
-  const email = document.getElementById('f_email').value.trim();
-  const phone = document.getElementById('f_phone').value.trim();
+      btn.disabled = true;
+      spinner.style.display = 'inline-block';
+      label.textContent = 'Wysyłam…';
 
-  if (!first || !last) { showMsg('Wpisz imię i nazwisko.', 'error'); return; }
-  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showMsg('Podaj prawidłowy adres e-mail.', 'error'); return; }
-  if (!phone) { showMsg('Podaj numer telefonu.', 'error'); return; }
-  if (!document.getElementById('f_consent_data').checked) { showMsg('Wymagana zgoda na przetwarzanie danych.', 'error'); return; }
-  if (!document.getElementById('f_consent_rules').checked) { showMsg('Wymagana akceptacja regulaminu.', 'error'); return; }
+      try {
+        const body = {
+          first_name: first,
+          last_name: last,
+          email,
+          phone,
+          birth_year: document.getElementById('f_birth').value ? parseInt(document.getElementById('f_birth').value) : null,
+          is_new: document.getElementById('f_new').value !== 'false',
+          group_id: selectedGroup,
+          schedule_id: selectedSchedule,
+          price_plan_id: selectedPrice ? parseInt(selectedPrice.value) : null,
+          has_membership: document.getElementById('f_has_membership')?.checked || false,
+          start_date: document.getElementById('f_date').value || null,
+          payment_method: document.getElementById('f_pay').value,
+          preferred_time: document.getElementById('f_ptime').value.trim() || null,
+          consent_data: true,
+          consent_rules: true,
+        };
 
-  const selectedPrice = document.querySelector('input[name=price_plan]:checked');
+        const res = await fetch(`${API}/register`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
 
-  btn.disabled = true;
-  spinner.style.display = 'inline-block';
-  label.textContent = 'Wysyłam…';
+        const data = await res.json();
+        if (!res.ok) { showMsg(data.error || 'Błąd zapisu. Spróbuj ponownie.', 'error'); return; }
+        showConfirmation(data, first, last);
 
-  try {
-    const body = {
-      first_name: first,
-      last_name: last,
-      email,
-      phone,
-      birth_year: document.getElementById('f_birth').value ? parseInt(document.getElementById('f_birth').value) : null,
-      is_new: document.getElementById('f_new').value !== 'false',
-      group_id: selectedGroup,
-      schedule_id: selectedSchedule,
-      price_plan_id: selectedPrice ? parseInt(selectedPrice.value) : null,
-      has_membership: document.getElementById('f_has_membership')?.checked || false,
-      start_date: document.getElementById('f_date').value || null,
-      payment_method: document.getElementById('f_pay').value,
-      preferred_time: document.getElementById('f_ptime').value.trim() || null,
-      consent_data: true,
-      consent_rules: true,
-    };
-
-    const res = await fetch(`${API}/register`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
+      } catch (err) {
+        showMsg('Błąd połączenia. Sprawdź internet i spróbuj ponownie.', 'error');
+      } finally {
+        btn.disabled = false;
+        spinner.style.display = 'none';
+        label.textContent = 'Wyślij zapis →';
+      }
     });
 
-    const data = await res.json();
-    if (!res.ok) { showMsg(data.error || 'Błąd zapisu. Spróbuj ponownie.', 'error'); return; }
-    showConfirmation(data, first, last);
+    function goBackToSchedule() {
+      // Chowamy i potwierdzenie i formularz
+      document.getElementById('confirmBox').classList.remove('visible');
+      const section = document.getElementById('formSection');
+      section.classList.remove('visible');
+      // Odznaczamy wybrany termin
+      document.querySelectorAll('.slot.selected').forEach(s => s.classList.remove('selected'));
+      selectedGroup = null;
+      selectedSchedule = null;
+      selectedLocation = null;
+      document.getElementById('slotInfo')?.classList.remove('has-slot'); // zmiana 4
+      // Scrollujemy do grafiku
+      const grafik = document.getElementById('locPanels');
+      if (grafik) grafik.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
 
-  } catch(err) {
-    showMsg('Błąd połączenia. Sprawdź internet i spróbuj ponownie.', 'error');
-  } finally {
-    btn.disabled = false;
-    spinner.style.display = 'none';
-    label.textContent = 'Wyślij zapis →';
-  }
-});
+    function showMsg(text, type) {
+      const msg = document.getElementById('formMsg');
+      msg.textContent = text;
+      msg.className = 'form-msg ' + type;
+      msg.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
 
-function goBackToSchedule() {
-  // Chowamy i potwierdzenie i formularz
-  document.getElementById('confirmBox').classList.remove('visible');
-  const section = document.getElementById('formSection');
-  section.classList.remove('visible');
-  // Odznaczamy wybrany termin
-  document.querySelectorAll('.slot.selected').forEach(s => s.classList.remove('selected'));
-  selectedGroup = null;
-  selectedSchedule = null;
-  selectedLocation = null;
-  document.getElementById('slotInfo')?.classList.remove('has-slot'); // zmiana 4
-  // Scrollujemy do grafiku
-  const grafik = document.getElementById('locPanels');
-  if (grafik) grafik.scrollIntoView({ behavior: 'smooth', block: 'start' });
-}
+    function showConfirmation(data, first, last) {
+      document.getElementById('formSection').style.display = 'none';
 
-function showMsg(text, type) {
-  const msg = document.getElementById('formMsg');
-  msg.textContent = text;
-  msg.className = 'form-msg ' + type;
-  msg.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-}
+      const box = document.getElementById('confirmBox');
+      const isWaitlist = data.is_waitlist;
 
-function showConfirmation(data, first, last) {
-  document.getElementById('formSection').style.display = 'none';
+      document.getElementById('confirmText').textContent = isWaitlist
+        ? `Twój zapis na listę rezerwową został przyjęty, ${first}. Skontaktujemy się, gdy pojawi się wolne miejsce.`
+        : `Dziękujemy za zapis, ${first}! Twoje zgłoszenie zostało przyjęte. Skontaktujemy się, aby potwierdzić miejsce w grupie.`;
 
-  const box = document.getElementById('confirmBox');
-  const isWaitlist = data.is_waitlist;
+      document.getElementById('confirmRef').textContent = data.payment_ref || '';
 
-  document.getElementById('confirmText').textContent = isWaitlist
-    ? `Twój zapis na listę rezerwową został przyjęty, ${first}. Skontaktujemy się, gdy pojawi się wolne miejsce.`
-    : `Dziękujemy za zapis, ${first}! Twoje zgłoszenie zostało przyjęte. Skontaktujemy się, aby potwierdzić miejsce w grupie.`;
+      const BANK_ACCOUNT = '21 1140 2004 0000 3902 3890 8895';
+      const BANK_NAME = 'Akademia Obrony Saggita';
 
-  document.getElementById('confirmRef').textContent = data.payment_ref || '';
-
-  const BANK_ACCOUNT = '21 1140 2004 0000 3902 3890 8895';
-  const BANK_NAME    = 'Akademia Obrony Saggita';
-
-  if (!isWaitlist && data.total_amount) {
-    const div = document.getElementById('confirmTransfer');
-    div.innerHTML = `
-      <div><span class="lbl">Plan płatności</span><br><span class="val" style="font-size:1.1rem;font-weight:700;color:var(--accent)">${data.monthly_rate ? money(data.monthly_rate)+' zł/mies.' + (data.months_count ? ' × '+data.months_count+' mies.' : '') : parseFloat(data.total_amount||0).toFixed(2)+' zł'}</span></div>
+      if (!isWaitlist && data.total_amount) {
+        const div = document.getElementById('confirmTransfer');
+        div.innerHTML = `
+      <div><span class="lbl">Plan płatności</span><br><span class="val" style="font-size:1.1rem;font-weight:700;color:var(--accent)">${data.monthly_rate ? money(data.monthly_rate) + ' zł/mies.' + (data.months_count ? ' × ' + data.months_count + ' mies.' : '') : parseFloat(data.total_amount || 0).toFixed(2) + ' zł'}</span></div>
       <br>
       <div><span class="lbl">Numer konta</span><br><span class="val" style="font-family:monospace;letter-spacing:.04em">${data.bank_account || BANK_ACCOUNT}</span></div>
       <div><span class="lbl">Odbiorca</span><br><span class="val">${data.bank_name || BANK_NAME}</span></div>
@@ -1574,166 +2042,167 @@ function showConfirmation(data, first, last) {
       <br>
       <small style="color:rgba(255,255,255,0.56)">Dokładna kwota zostanie podana w dokumencie płatniczym. Przelew wyślij najpóźniej do ostatniego dnia poprzedzającego miesiąc rozliczeniowy.</small>
     `;
-    div.style.display = 'block';
-  }
+        div.style.display = 'block';
+      }
 
-  if (!isWaitlist) {
-    const actions = document.getElementById('confirmActions');
-    actions.style.display = 'flex';
-    actions.innerHTML = `
+      if (!isWaitlist) {
+        const actions = document.getElementById('confirmActions');
+        actions.style.display = 'flex';
+        actions.innerHTML = `
       <button onclick="handlePayOnline('${data.payment_ref}')" style="background:linear-gradient(180deg,rgba(178,25,0,0.98),rgba(80,8,0,0.95));color:#fff;border:none;padding:13px 22px;font-family:'Open Sans',sans-serif;font-weight:800;font-size:.80rem;letter-spacing:.06em;text-transform:uppercase;cursor:pointer">Opłać online →</button>
       <button onclick="handleDownloadDoc('${data.payment_ref}')" style="background:transparent;color:rgba(255,255,255,0.90);border:1px solid rgba(255,255,255,0.22);padding:13px 22px;font-family:'Open Sans',sans-serif;font-weight:800;font-size:.80rem;letter-spacing:.06em;text-transform:uppercase;cursor:pointer">Pobierz dokument płatniczy</button>
     `;
-  }
+      }
 
-  box.classList.add('visible');
-  box.scrollIntoView({ behavior: 'smooth', block: 'start' });
-}
-
-async function handlePayOnline(payment_ref) {
-  try {
-    await fetch(`${API}/registration/action`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ payment_ref, action: 'pay_online' })
-    });
-    alert('Płatność online będzie dostępna wkrótce. Skontaktujemy się z Tobą mailowo.');
-  } catch(e) { alert('Błąd. Spróbuj ponownie.'); }
-}
-
-function handleDownloadDoc(payment_ref) {
-  // Otwórz dokument w nowym oknie i użyj natywnego drukowania przeglądarki
-  const url = `${API}/registration/action?payment_ref=${encodeURIComponent(payment_ref)}`;
-  const printWindow = window.open(url, '_blank', 'width=800,height=900');
-  
-  if (printWindow) {
-    // Poczekaj aż dokument się załaduje, potem automatycznie wywołaj drukowanie
-    printWindow.addEventListener('load', function() {
-      setTimeout(() => {
-        printWindow.print();
-      }, 500);
-    });
-  } else {
-    alert('Zablokowano wyskakujące okno. Pozwól na wyskakujące okna dla tej strony.');
-  }
-}
-
-// zmiana 7: VIP Wałbrzych — formularz Formspree
-async function submitVipWb(){
-  const name  = document.getElementById('vipWb_name')?.value.trim();
-  const phone = document.getElementById('vipWb_phone')?.value.trim();
-  const email = document.getElementById('vipWb_email')?.value.trim();
-  const notes = document.getElementById('vipWb_notes')?.value.trim();
-  const msg   = document.getElementById('vipWbMsg');
-  const btn   = document.getElementById('vipWbBtn');
-
-  if(!name || !phone || !email){
-    msg.style.display='block';
-    msg.style.background='rgba(178,25,0,0.14)';
-    msg.style.border='1px solid rgba(178,25,0,0.45)';
-    msg.style.color='#ffb2a6';
-    msg.textContent='Uzupełnij imię, email i telefon.';
-    return;
-  }
-
-  const orig = btn.innerHTML;
-  btn.disabled = true;
-  btn.innerHTML = `<span style="width:16px;height:16px;border:2px solid rgba(255,255,255,0.25);border-top-color:#fff;border-radius:50%;animation:spin 600ms linear infinite;display:inline-block"></span> Wysyłam…`;
-
-  try{
-    const fd = new FormData();
-    fd.append('_subject', 'Zajęcia VIP Wałbrzych — nowe zgłoszenie');
-    fd.append('name',  name);
-    fd.append('email', email);
-    fd.append('phone', phone);
-    fd.append('zajecia', 'Zajęcia VIP — Wałbrzych (Piątki 19:00–21:00)');
-    if(notes) fd.append('notes', notes);
-
-    const r = await fetch('https://formspree.io/f/xpqjgjnv',{
-      method:'POST', headers:{Accept:'application/json'}, body: fd
-    });
-    if(!r.ok) throw new Error();
-
-    // Sukces
-    msg.style.display='block';
-    msg.style.background='rgba(46,204,113,0.12)';
-    msg.style.border='1px solid rgba(46,204,113,0.38)';
-    msg.style.color='#2ecc71';
-    msg.textContent='✓ Zgłoszenie wysłane! Skontaktujemy się wkrótce w celu ustalenia szczegółów.';
-    document.getElementById('vipWb_name').value='';
-    document.getElementById('vipWb_phone').value='';
-    document.getElementById('vipWb_email').value='';
-    document.getElementById('vipWb_notes').value='';
-  }catch(e){
-    msg.style.display='block';
-    msg.style.background='rgba(178,25,0,0.14)';
-    msg.style.border='1px solid rgba(178,25,0,0.45)';
-    msg.style.color='#ffb2a6';
-    msg.textContent='Błąd wysyłki — napisz bezpośrednio na biuro@akademiaobrony.pl';
-  }finally{
-    btn.disabled=false; btn.innerHTML=orig;
-  }
-}
-
-// ── Init ─────────────────────────────────────────────────────────
-async function init() {
-  const container = document.getElementById('locPanels');
-  container.innerHTML = '<div class="loading-overlay">Ładowanie grafiku…</div>';
-
-  try {
-    const [schedPayload, pricesPayload] = await Promise.all([
-      fetchFirstOk(SCHEDULE_SOURCES),
-      fetchFirstOk([`${API}/prices`]),
-    ]);
-
-    allPrices = Array.isArray(pricesPayload) ? pricesPayload : (Array.isArray(pricesPayload?.rows) ? pricesPayload.rows : []);
-
-    const CITY_ORDER = ['Świdnica','Wrocław','Wałbrzych'];
-    function sortLocations(locs) {
-      return [...locs].sort((a,b) => {
-        const ai = CITY_ORDER.indexOf(a.city||a.name||'');
-        const bi = CITY_ORDER.indexOf(b.city||b.name||'');
-        if(ai === -1 && bi === -1) return (a.city||'').localeCompare(b.city||'','pl');
-        if(ai === -1) return 1;
-        if(bi === -1) return -1;
-        return ai - bi;
-      });
+      box.classList.add('visible');
+      box.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
-    if (looksNested(schedPayload)) {
-      allData = sortLocations(schedPayload);
-    } else {
-      const flatSchedules = normalizeSchedulesPayload(schedPayload);
-      const [locations, groups] = await Promise.all([
-        fetchFirstOk(LOCATIONS_SOURCES),
-        fetchFirstOk(GROUPS_SOURCES),
-      ]);
-
-      const locArr = Array.isArray(locations) ? locations : (Array.isArray(locations?.rows) ? locations.rows : []);
-      const grpArr = Array.isArray(groups) ? groups : (Array.isArray(groups?.rows) ? groups.rows : []);
-
-      allData = sortLocations(buildNestedFromFlat({
-        locations: locArr,
-        groups: grpArr,
-        schedules: flatSchedules,
-      }));
+    async function handlePayOnline(payment_ref) {
+      try {
+        await fetch(`${API}/registration/action`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ payment_ref, action: 'pay_online' })
+        });
+        alert('Płatność online będzie dostępna wkrótce. Skontaktujemy się z Tobą mailowo.');
+      } catch (e) { alert('Błąd. Spróbuj ponownie.'); }
     }
 
-    buildTabs();
-    buildPanels();
-    if (allData?.[0]?.id) switchTab(allData[0].id);
+    function handleDownloadDoc(payment_ref) {
+      // Otwórz dokument w nowym oknie i użyj natywnego drukowania przeglądarki
+      const url = `${API}/registration/action?payment_ref=${encodeURIComponent(payment_ref)}`;
+      const printWindow = window.open(url, '_blank', 'width=800,height=900');
 
-  } catch(e) {
-    container.innerHTML = `<div class="loading-overlay" style="color:#ffb2a6">
+      if (printWindow) {
+        // Poczekaj aż dokument się załaduje, potem automatycznie wywołaj drukowanie
+        printWindow.addEventListener('load', function () {
+          setTimeout(() => {
+            printWindow.print();
+          }, 500);
+        });
+      } else {
+        alert('Zablokowano wyskakujące okno. Pozwól na wyskakujące okna dla tej strony.');
+      }
+    }
+
+    // zmiana 7: VIP Wałbrzych — formularz Formspree
+    async function submitVipWb() {
+      const name = document.getElementById('vipWb_name')?.value.trim();
+      const phone = document.getElementById('vipWb_phone')?.value.trim();
+      const email = document.getElementById('vipWb_email')?.value.trim();
+      const notes = document.getElementById('vipWb_notes')?.value.trim();
+      const msg = document.getElementById('vipWbMsg');
+      const btn = document.getElementById('vipWbBtn');
+
+      if (!name || !phone || !email) {
+        msg.style.display = 'block';
+        msg.style.background = 'rgba(178,25,0,0.14)';
+        msg.style.border = '1px solid rgba(178,25,0,0.45)';
+        msg.style.color = '#ffb2a6';
+        msg.textContent = 'Uzupełnij imię, email i telefon.';
+        return;
+      }
+
+      const orig = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = `<span style="width:16px;height:16px;border:2px solid rgba(255,255,255,0.25);border-top-color:#fff;border-radius:50%;animation:spin 600ms linear infinite;display:inline-block"></span> Wysyłam…`;
+
+      try {
+        const fd = new FormData();
+        fd.append('_subject', 'Zajęcia VIP Wałbrzych — nowe zgłoszenie');
+        fd.append('name', name);
+        fd.append('email', email);
+        fd.append('phone', phone);
+        fd.append('zajecia', 'Zajęcia VIP — Wałbrzych (Piątki 19:00–21:00)');
+        if (notes) fd.append('notes', notes);
+
+        const r = await fetch('https://formspree.io/f/xpqjgjnv', {
+          method: 'POST', headers: { Accept: 'application/json' }, body: fd
+        });
+        if (!r.ok) throw new Error();
+
+        // Sukces
+        msg.style.display = 'block';
+        msg.style.background = 'rgba(46,204,113,0.12)';
+        msg.style.border = '1px solid rgba(46,204,113,0.38)';
+        msg.style.color = '#2ecc71';
+        msg.textContent = '✓ Zgłoszenie wysłane! Skontaktujemy się wkrótce w celu ustalenia szczegółów.';
+        document.getElementById('vipWb_name').value = '';
+        document.getElementById('vipWb_phone').value = '';
+        document.getElementById('vipWb_email').value = '';
+        document.getElementById('vipWb_notes').value = '';
+      } catch (e) {
+        msg.style.display = 'block';
+        msg.style.background = 'rgba(178,25,0,0.14)';
+        msg.style.border = '1px solid rgba(178,25,0,0.45)';
+        msg.style.color = '#ffb2a6';
+        msg.textContent = 'Błąd wysyłki — napisz bezpośrednio na biuro@akademiaobrony.pl';
+      } finally {
+        btn.disabled = false; btn.innerHTML = orig;
+      }
+    }
+
+    // ── Init ─────────────────────────────────────────────────────────
+    async function init() {
+      const container = document.getElementById('locPanels');
+      container.innerHTML = '<div class="loading-overlay">Ładowanie grafiku…</div>';
+
+      try {
+        const [schedPayload, pricesPayload] = await Promise.all([
+          fetchFirstOk(SCHEDULE_SOURCES),
+          fetchFirstOk([`${API}/prices`]),
+        ]);
+
+        allPrices = Array.isArray(pricesPayload) ? pricesPayload : (Array.isArray(pricesPayload?.rows) ? pricesPayload.rows : []);
+
+        const CITY_ORDER = ['Świdnica', 'Wrocław', 'Wałbrzych'];
+        function sortLocations(locs) {
+          return [...locs].sort((a, b) => {
+            const ai = CITY_ORDER.indexOf(a.city || a.name || '');
+            const bi = CITY_ORDER.indexOf(b.city || b.name || '');
+            if (ai === -1 && bi === -1) return (a.city || '').localeCompare(b.city || '', 'pl');
+            if (ai === -1) return 1;
+            if (bi === -1) return -1;
+            return ai - bi;
+          });
+        }
+
+        if (looksNested(schedPayload)) {
+          allData = sortLocations(schedPayload);
+        } else {
+          const flatSchedules = normalizeSchedulesPayload(schedPayload);
+          const [locations, groups] = await Promise.all([
+            fetchFirstOk(LOCATIONS_SOURCES),
+            fetchFirstOk(GROUPS_SOURCES),
+          ]);
+
+          const locArr = Array.isArray(locations) ? locations : (Array.isArray(locations?.rows) ? locations.rows : []);
+          const grpArr = Array.isArray(groups) ? groups : (Array.isArray(groups?.rows) ? groups.rows : []);
+
+          allData = sortLocations(buildNestedFromFlat({
+            locations: locArr,
+            groups: grpArr,
+            schedules: flatSchedules,
+          }));
+        }
+
+        buildTabs();
+        buildPanels();
+        if (allData?.[0]?.id) switchTab(allData[0].id);
+
+      } catch (e) {
+        container.innerHTML = `<div class="loading-overlay" style="color:#ffb2a6">
       Błąd ładowania grafiku.<br><br>
       <span style="color:rgba(255,255,255,.65);font-weight:600">${e.message || e}</span>
     </div>`;
-    console.error(e);
-  }
-}
+        console.error(e);
+      }
+    }
 
-init();
-</script>
+    init();
+  </script>
 
 </body>
+
 </html>

@@ -1,0 +1,16 @@
+{
+    "name": "Aplikacja Instruktora Krav Maga Saggita",
+    "short_name": "KV Saggita",
+    "display": "standalone",
+    "start_url": "/instruktor.html",
+    "background_color": "#0b0b0d",
+    "theme_color": "#16161c",
+    "icons": [
+        {
+            "src": "/apple-touch-icon.png",
+            "sizes": "192x192 512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }
+    ]
+}
