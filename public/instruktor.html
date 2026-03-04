@@ -2398,9 +2398,10 @@
       try {
         const d = await api(`/api/instructor/sessions/${sess.session_id}/attendance?group_id=${sess.group_id}`);
         const st = (d.rows || []).sort((a, b) => {
-          const da = a.last_payment ? new Date(normISO(a.last_payment)) : new Date(0);
-          const db = b.last_payment ? new Date(normISO(b.last_payment)) : new Date(0);
-          return db - da;
+          // Sortowanie alfabetyczne po nazwisku, potem po imieniu
+          const cmp = (a.last_name || '').localeCompare(b.last_name || '', 'pl');
+          if (cmp !== 0) return cmp;
+          return (a.first_name || '').localeCompare(b.first_name || '', 'pl');
         });
         const pres = st.filter(s => s.present).length;
         const anyMarked = pres > 0 || st.some(s => s.present === false && s._touched);
@@ -2428,9 +2429,15 @@
       <div class="att-list" id="attlist">
         ${st.map(s => {
           const days = daysAgo(s.last_payment);
-          const payBadge = S.perms.can_see_payments ? `<div style="font-size:12px;font-weight:800;letter-spacing:0.02em;color:var(--text);border-bottom:1px solid rgba(255,255,255,0.05);padding-bottom:8px;margin-bottom:8px;width:100%">Wpłata: <span class="badge ${days > 35 ? 'br' : 'bg'}" style="padding:4px 8px;border-radius:6px;font-size:12px;margin-left:4px">${s.last_payment ? fd(s.last_payment) : 'Brak danych'}</span></div>` : '';
-          const profBtn = `<button class="btn btn-o btn-sm" onclick="event.stopPropagation();openStud(${s.student_id})" style="width:100%;justify-content:center;font-size:11px;padding:6px 0">Kartoteka</button>`;
-          const addPayBtn = S.perms.can_accept_payment ? `<button class="btn btn-sm" style="width:100%;justify-content:center;font-size:11px;padding:6px 0;background:rgba(46,204,113,.15);border:1px solid rgba(46,204,113,.4);color:#2ecc71" onclick="event.stopPropagation();moAcceptPayment(${s.student_id},'${esc(s.first_name)} ${esc(s.last_name)}',${sess.group_id})">+ Wpłata</button>` : '';
+
+          // Data wpłaty robi teraz za potężny, klikalny przycisk przenoszący do profilu
+          const payBadge = S.perms.can_see_payments ? `
+          <div onclick="event.stopPropagation();openStud(${s.student_id})" style="cursor:pointer;font-size:12px;font-weight:800;letter-spacing:0.02em;color:var(--text);border-bottom:1px solid rgba(255,255,255,0.08);padding-bottom:8px;margin-bottom:8px;width:100%;display:flex;align-items:center;justify-content:space-between">
+            <span>Wpłata: <span class="badge ${days > 35 ? 'br' : 'bg'}" style="padding:4px 8px;border-radius:6px;font-size:13px;margin-left:4px">${s.last_payment ? fd(s.last_payment) : 'Brak'}</span></span>
+            <span style="font-size:18px;color:rgba(255,255,255,0.4)">›</span>
+          </div>` : '';
+
+          const addPayBtn = S.perms.can_accept_payment ? `<button class="btn btn-sm" style="width:100%;justify-content:center;font-size:11px;padding:6px 0;background:rgba(46,204,113,.15);border:1px solid rgba(46,204,113,.4);color:#2ecc71" onclick="event.stopPropagation();moAcceptPayment(${s.student_id},'${esc(s.first_name)} ${esc(s.last_name)}',${sess.group_id})">+ Dodaj wpłatę</button>` : '';
 
           return `
           <div class="att-row ${s.present ? 'present' : 'absent'}" id="atr-${s.student_id}" onclick="toggleAttRow(event, ${sess.session_id}, ${s.student_id})">
@@ -2438,10 +2445,7 @@
             <div class="att-name" style="font-weight:800;font-size:15px;padding-top:2px">${esc(s.last_name)}, ${esc(s.first_name)}</div>
             <div style="grid-column:2;display:flex;flex-direction:column;align-items:flex-start;margin-top:6px;padding-top:2px;width:100%;">
               ${payBadge}
-              <div style="display:flex;width:100%;gap:8px">
-                ${profBtn}
-                ${addPayBtn}
-              </div>
+              ${addPayBtn}
             </div>
           </div>`;
         }).join('')}
