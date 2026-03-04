@@ -67,12 +67,28 @@ body::before{ display:none; }
    HEADER ROW — nagłówek + koszyk inline
    ═══════════════════════════════════════ */
 .header-row{
-  display:grid;
-  grid-template-columns:1fr minmax(240px, 320px);
+  display:flex;
+  flex-direction:row;
   gap:32px;
-  align-items:start;
+  align-items:flex-start;
   margin-bottom:32px;
   width:100%;
+}
+.header-row .brand{
+  flex:1;
+  min-width:0;
+}
+#cartInline{
+  flex-shrink:0;
+  width:280px;
+  transition:width .4s ease, padding .4s ease;
+}
+#cartInline.has-item{
+  width:400px;
+}
+@media(max-width:900px){
+  #cartInline{ width:240px; }
+  #cartInline.has-item{ width:300px; }
 }
 @media (max-width:680px){ .header-row{ grid-template-columns:1fr; gap:20px; } }
 
@@ -105,15 +121,16 @@ h1{
   border:1.5px solid rgba(255,255,255,0.12);
   border-radius:var(--radius-sm);
   padding:20px 22px;
-  width:100%;
+  width:300px;
+  flex-shrink:0;
   min-height:140px;
   box-shadow:var(--shadow-card);
   display:flex;flex-direction:column;gap:10px;
   transition:background .4s ease, border-color .4s ease, box-shadow .4s ease, padding .4s ease, min-height .4s ease;
 }
-/* Rozszerzenie koszyka gdy ma pozycję */
+/* Koszyk rośnie w dół gdy ma pozycję */
 .cart-inline.has-item{
-  min-height:200px;
+  min-height:260px;
 }
 .cart-inline__label{
   font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
@@ -1360,6 +1377,7 @@ function selectPlan(id){
   // kolor glow zależy od planu
   cart.classList.remove('glow-kids','glow-adults');
   cart.classList.add(isKidsPlan(p) ? 'glow-kids' : 'glow-adults');
+  document.querySelector('.header-row').classList.add('cart-expanded');
   document.getElementById('cartServiceName').textContent = p.name;
   updateCartPrice();
 
@@ -1398,6 +1416,7 @@ function clearCart(){
   const cart = document.getElementById('cartInline');
   cart.classList.add('empty');
   cart.classList.remove('has-item','glow-kids','glow-adults');
+  document.querySelector('.header-row').classList.remove('cart-expanded');
   document.getElementById('cartServiceName').textContent = 'Nie wybrano jeszcze';
   document.getElementById('cartPrice').innerHTML = '— <small>zł</small>';
   document.getElementById('cartHint').textContent = 'Wybierz ofertę z cennika poniżej';
