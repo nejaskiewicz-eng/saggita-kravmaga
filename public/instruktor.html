@@ -365,6 +365,18 @@ overflow-y:auto !important;
 main{
 overflow:visible !important;
 }
+/* ===== USUŃ SCROLL Z KONTENERA KURSANTÓW ===== */
+
+.pb{
+overflow:visible !important;
+max-height:none !important;
+height:auto !important;
+}
+
+/* scroll tylko na całej stronie */
+body{
+overflow-y:auto !important;
+}
 </style>
 </head>
 <body>
@@ -1488,17 +1500,21 @@ window.addEventListener('resize', () => {
 
 document.addEventListener("click", function(e){
 
-  const row = e.target.closest(".student, .student-row, .kursant, .att-row");
+  const checkbox = e.target.closest("input[type='checkbox']");
+
+  if(checkbox) return;
+
+  const row = e.target.closest("div");
 
   if(!row) return;
 
-  const checkbox = row.querySelector("input[type='checkbox']");
+  const cb = row.querySelector("input[type='checkbox']");
 
-  if(!checkbox) return;
+  if(!cb) return;
 
-  checkbox.checked = !checkbox.checked;
+  cb.checked = !cb.checked;
 
-  checkbox.dispatchEvent(new Event("change"));
+  cb.dispatchEvent(new Event("change"));
 
 });
 </script>
