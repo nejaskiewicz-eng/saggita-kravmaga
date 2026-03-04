@@ -163,11 +163,19 @@ module.exports = async (req, res) => {
           `SELECT * FROM instructor_permissions WHERE instructor_id=$1`, [P.sub]);
         const perm = perms || {};
 
-        // Sprawdź czy instruktor_students istnieje dla tego instruktora
-        const { rows:assignedRows } = await pool.query(
-          `SELECT student_id FROM instructor_students WHERE instructor_id=$1`, [P.sub]);
-        const hasAssigned = assignedRows.length > 0;
-        const assignedIds = new Set(assignedRows.map(r => r.student_id));
+        // Sprawdź czy instruktor ma przypisanych kursantów (tabela może nie istnieć)
+        let hasAssigned = false;
+        let assignedIds = new Set();
+        try {
+          const { rows:assignedRows } = await pool.query(
+            `SELECT student_id FROM instructor_students WHERE instructor_id=$1`, [P.sub]);
+          hasAssigned = assignedRows.length > 0;
+          assignedIds = new Set(assignedRows.map(r => r.student_id));
+          console.log('[students] instructor', P.sub, 'hasAssigned:', hasAssigned, 'count:', assignedRows.length);
+        } catch(assignErr) {
+          console.warn('[students] instructor_students table missing or error:', assignErr.message);
+          // Tabela nie istnieje — pokaż wszystkich aktywnych z grupy
+        }
 
         let q = `
           SELECT s.id, s.first_name, s.last_name, s.email, s.phone, s.birth_year, s.is_active,
@@ -178,6 +186,7 @@ module.exports = async (req, res) => {
              WHERE a.student_id=s.id AND ts.session_date>=$2 AND a.present=true)::int AS att_season
           FROM students s
           JOIN student_groups sg ON sg.student_id=s.id AND sg.group_id=$1 AND sg.active=true
+          WHERE s.is_active=true
           ORDER BY s.last_name, s.first_name
         `;
         const { rows } = await pool.query(q, [id, SEASON]);
@@ -203,9 +212,9 @@ module.exports = async (req, res) => {
         const { student_id, amount, note, group_id } = req.body || {};
         if (!student_id || !amount) return res.status(400).json({ error: 'student_id i amount są wymagane.' });
         const { rows:[pay] } = await pool.query(
-          `INSERT INTO legacy_payments (student_id, amount, paid_at, note, created_by)
-           VALUES ($1,$2,NOW(),$3,$4) RETURNING id, amount, paid_at::date AS paid_at`,
-          [student_id, amount, note||null, `instructor:${P.sub}`]);
+          `INSERT INTO legacy_payments (student_id, amount, paid_at, note)
+           VALUES ($1,$2,NOW(),$3) RETURNING id, amount, paid_at::date AS paid_at`,
+          [student_id, amount, note||null]);
         // Zapisz alert dla admina
         const { rows:[inst] } = await pool.query(`SELECT first_name,last_name FROM instructors WHERE id=$1`,[P.sub]);
         const { rows:[stud] } = await pool.query(`SELECT first_name,last_name FROM students WHERE id=$1`,[student_id]);
@@ -302,7 +311,7 @@ module.exports = async (req, res) => {
         try {
           const { group_id, from, to } = req.query;
           let q = `
-            SELECT ts.id AS session_id, ts.session_date::date AS session_date, ts.group_id,
+            SELECT ts.id AS session_id, TO_CHAR(ts.session_date, 'YYYY-MM-DD') AS session_date, ts.group_id,
               g.name AS group_name, l.city AS location_city, l.name AS location_name,
               COUNT(a.id) FILTER (WHERE a.present=true)::int AS present_count,
               COUNT(a.id)::int AS total_marked
@@ -354,7 +363,7 @@ module.exports = async (req, res) => {
             COALESCE(a.present,false) AS present,
             (SELECT MAX(lp.paid_at) FROM legacy_payments lp WHERE lp.student_id=s.id AND lp.paid_at>=$2)::date AS last_payment
           FROM student_groups sg
-          JOIN students s ON s.id=sg.student_id
+          JOIN students s ON s.id=sg.student_id AND s.is_active=true
           LEFT JOIN attendances a ON a.session_id=$1 AND a.student_id=s.id
           WHERE sg.group_id=$3 AND sg.active=true
           ORDER BY s.last_name, s.first_name
