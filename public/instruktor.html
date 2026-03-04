@@ -306,16 +306,9 @@ html,body{
 overflow-y:auto;
 }
 /* ===== TRYB INSTRUKTORA — MINIMALNY PANEL ===== */
+
 /* usuń statystyki */
 .stats{
-display:none !important;
-}
-
-/* usuń przycisk odznacz */
-button:has(.fa-times),
-button:has(.icon-x),
-button:has(.bi-x),
-button:nth-of-type(2){
 display:none !important;
 }
 
@@ -349,6 +342,28 @@ padding-top:10px !important;
 .student-list,
 .list{
 margin-top:6px !important;
+}
+/* ===== JEDEN SCROLL NA CAŁĄ STRONĘ ===== */
+
+/* usuń scroll z listy kursantów */
+.student-list,
+.list,
+.attendance-list,
+#students,
+#kursanci{
+overflow:visible !important;
+max-height:none !important;
+height:auto !important;
+}
+
+/* scroll tylko na stronie */
+html, body{
+overflow-y:auto !important;
+}
+
+/* zabezpieczenie */
+main{
+overflow:visible !important;
 }
 </style>
 </head>
@@ -1081,7 +1096,7 @@ async function renderAtt() {
         <button class="btn btn-g btn-sm" onclick="markAll(true)">✓ Wszyscy obecni</button>
         <button class="btn btn-o btn-sm" onclick="markAll(false)">✗ Odznacz wszystkich</button>
         <div class="sep"></div>
-        ${S.perms.can_add_student ? `<button class="btn btn-r btn-sm" onclick="moAddStud(${sess.group_id})">+ Dodaj z ulicy</button>` : ''}
+        ${S.perms.can_add_student ? `<button class="btn btn-r btn-sm" onclick="moAddStud(${sess.group_id})">+ Dodaj kusanta</button>` : ''}
       </div>
       <div class="att-list" id="attlist">
         ${st.map(s=>`
@@ -1469,6 +1484,23 @@ window.addEventListener('resize', () => {
     }catch(e){localStorage.removeItem('it');localStorage.removeItem('ii');localStorage.removeItem('ip');}
   }
 })();
+/* ===== TAP NA CAŁY WIERSZ = OBECNOŚĆ ===== */
+
+document.addEventListener("click", function(e){
+
+  const row = e.target.closest(".student, .student-row, .kursant, .att-row");
+
+  if(!row) return;
+
+  const checkbox = row.querySelector("input[type='checkbox']");
+
+  if(!checkbox) return;
+
+  checkbox.checked = !checkbox.checked;
+
+  checkbox.dispatchEvent(new Event("change"));
+
+});
 </script>
 </body>
 </html>
