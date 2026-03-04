@@ -2037,5 +2037,58 @@ function validateAndGoStep5(){
     // Expand first uncompleted doc
     const unfinished = errors[0].includes('dok. 1') || errors[0].includes('dokument 1') ? 1
                      : errors[0].includes('dok. 2') || errors[0].includes('dokument 2') ? 2 : 3;
-    const dc = document.getElementById(`docContent${unfinished}`);
-    if(dc && dc.s
+tyle.display==='none') toggleDoc(unfinished);
+    return;
+  }
+  errEl.style.display='none';
+  setStep(5);
+}
+
+document.getElementById('btnClearCart').addEventListener('click', clearCart);
+document.getElementById('backToCennik').addEventListener('click', ()=>{
+  clearCart();
+  setStep(1);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+
+// Odśwież koszyk gdy zmienia się liczba miesięcy lub typ kursanta
+document.getElementById('f_months').addEventListener('change', ()=>{ if(selectedPlan) updateCartPrice(); });
+document.getElementById('f_is_new').addEventListener('change', ()=>{ if(selectedPlan) updateCartPrice(); });
+
+document.getElementById('goStep2').addEventListener('click', ()=>setStep(2));
+document.getElementById('back1').addEventListener('click', ()=>setStep(1));
+document.getElementById('back2').addEventListener('click', ()=>setStep(2));
+document.getElementById('back3').addEventListener('click', ()=>setStep(3));
+document.getElementById('back35').addEventListener('click', ()=>setStep(4));
+document.getElementById('back4').addEventListener('click', ()=>setStep(45));
+
+document.getElementById('f_location').addEventListener('change', rebuildGroups);
+document.getElementById('f_group').addEventListener('change', rebuildSchedules);
+document.getElementById('f_schedule').addEventListener('change', ()=>{
+  selected.schedule_id = Number(document.getElementById('f_schedule').value||0) || null;
+});
+
+document.getElementById('goStep3').addEventListener('click', ()=>setStep(3));
+document.getElementById('goStep4').addEventListener('click', ()=>{
+  buildSummary();
+  setStep(4);
+});
+
+['f_first_name','f_last_name','f_email','f_phone','f_consent_data','f_consent_rules'].forEach(id=>{
+  document.getElementById(id).addEventListener('input', validateStep3);
+  document.getElementById(id).addEventListener('change', validateStep3);
+});
+document.getElementById('f_has_membership').addEventListener('change', ()=>{
+  // tylko UX — płatność i kwota finalna ustawiają się po rejestracji
+});
+document.getElementById('submitBtn').addEventListener('click', submit);
+
+(function boot(){
+  loadAll();
+  // walidacje startowe
+  validateStep2();
+  validateStep3();
+})();
+</script>
+</body>
+</html>
