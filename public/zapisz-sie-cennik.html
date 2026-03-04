@@ -110,7 +110,11 @@ h1{
   min-height:140px;
   box-shadow:var(--shadow-card);
   display:flex;flex-direction:column;gap:10px;
-  transition:background .35s ease, border-color .35s ease, box-shadow .35s ease, padding .35s ease;
+  transition:background .4s ease, border-color .4s ease, box-shadow .4s ease, padding .4s ease, min-height .4s ease;
+}
+/* Rozszerzenie koszyka gdy ma pozycję */
+.cart-inline.has-item{
+  min-height:220px;
 }
 .cart-inline__label{
   font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
@@ -615,7 +619,8 @@ h1{
     <div class="step" data-step="2"><span class="n">2</span><span>Lokalizacja i termin</span></div>
     <div class="step" data-step="3"><span class="n">3</span><span>Dane i zgody</span></div>
     <div class="step" data-step="4"><span class="n">4</span><span>Podsumowanie</span></div>
-    <div class="step" data-step="5"><span class="n">5</span><span>Płatność</span></div>
+    <div class="step" data-step="45"><span class="n">5</span><span>Dokumenty</span></div>
+    <div class="step" data-step="5"><span class="n">6</span><span>Płatność</span></div>
   </div>
 
   <!-- STEP 1 — dwie kolumny cennika -->
@@ -863,6 +868,240 @@ h1{
     </div>
   </section>
 
+
+  <!-- STEP 4.5 — Dokumenty do podpisania (tylko dla dzieci) -->
+  <section class="panel hidden" id="step45" style="margin-top:14px">
+    <div class="panelHead">
+      <div>
+        <h2>5) Dokumenty i zgody rodzicielskie</h2>
+        <p>Przed przejściem do płatności prosimy o zapoznanie się z dokumentami i złożenie podpisu elektronicznego.</p>
+      </div>
+      <button class="btn btnSmall ghost" id="back35">Wstecz</button>
+    </div>
+    <div class="panelBody">
+
+      <!-- Blok dokumentów -->
+      <div id="docsContainer" style="display:flex;flex-direction:column;gap:14px">
+
+        <!-- Dokument 1: Umowa - Regulamin -->
+        <div class="doc-block" id="docBlock1" style="
+          border:1px solid rgba(255,255,255,0.12);
+          border-radius:var(--radius-sm);
+          overflow:hidden;
+          background:rgba(255,255,255,0.025);
+        ">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px;background:rgba(255,255,255,0.03);border-bottom:1px solid rgba(255,255,255,0.08)">
+            <div>
+              <div style="font-size:14px;font-weight:700;color:var(--white)">📄 Umowa – Regulamin Sekcji Krav Maga Kids</div>
+              <div style="font-size:12px;color:rgba(255,255,255,0.45);margin-top:3px">Zapoznaj się z regulaminem i potwierdź akceptację</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <span id="docStatus1" style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:999px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.45)">Do przeczytania</span>
+              <button class="btn btnSmall ghost" onclick="toggleDoc(1)">Rozwiń ▾</button>
+            </div>
+          </div>
+          <div id="docContent1" style="display:none;padding:20px 18px">
+            <div style="max-height:320px;overflow-y:auto;padding:16px;background:rgba(0,0,0,0.25);border-radius:10px;border:1px solid rgba(255,255,255,0.07);font-size:13px;line-height:1.7;color:rgba(255,255,255,0.78)">
+              <strong style="display:block;margin-bottom:12px;font-size:15px;color:var(--white)">UMOWA – REGULAMIN SEKCJI KRAV MAGA</strong>
+              <strong>Akademia Obrony Saggita</strong><br><br>
+              <strong>1. Bądź punktualny i systematyczny.</strong><br>
+              Na zajęcia przychodź zawsze kilka minut wcześniej. Staraj się regularnie uczestniczyć w treningach.<br><br>
+              <strong>2. Zamieniaj strój na treningowy.</strong><br>
+              Na każdym treningu obowiązuje strój sportowy – spodnie dresowe, koszulka, obuwie sportowe.<br><br>
+              <strong>3. Pamiętaj o higienie.</strong><br>
+              W czasie treningu będziesz w bliskim kontakcie z innymi osobami. Zadbaj o czysty strój i higienę osobistą.<br><br>
+              <strong>4. Dbaj o zdrowie swoje i innych.</strong><br>
+              Jeśli jesteś chory bądź osłabiony – zrezygnuj z treningu. Zawsze informuj Instruktora o niedyspozycji.<br><br>
+              <strong>5. Przestrzegaj zasad bezpieczeństwa.</strong><br>
+              Wykonuj ćwiczenia zgodnie z poleceniem Instruktora. Zdejmij zegarek, biżuterię i inne akcesoria mogące uszkodzić Ciebie lub partnera.<br><br>
+              <strong>6. Składki członkowskie.</strong><br>
+              Opłatę za treningi wnosi się miesięcznie do ostatniego dnia miesiąca poprzedzającego nowy miesiąc. Przy karnecie miesięcznym: 240 zł/mies. Przy umowie na 10 miesięcy: 180 zł/mies.<br><br>
+              <strong>7. Godziny i miejsce treningów.</strong><br>
+              Dokładne godziny opisane są na stronie www.akademiaobrony.pl.<br><br>
+              <strong>8. Dbaj o wizerunek miejsca.</strong><br>
+              Nie pozostawiaj butelek, ubrań ani innych rzeczy. Dbaj o porządek.<br><br>
+              <strong>9. Tolerancja.</strong><br>
+              Utrzymuj dobre stosunki z wszystkimi uczestnikami niezależnie od płci, wyznania, koloru skóry czy innych cech.<br><br>
+              <strong>REGULAMIN SEKCJI KRAV MAGA KIDS</strong><br><br>
+              <strong>1. Wymagania zdrowotne.</strong> W przypadku wątpliwości rodzic/opiekun przedkłada zaświadczenie lekarskie.<br><br>
+              <strong>2. Odbiór dziecka.</strong> Dziecko może być odebrane tylko przez rodzica, opiekuna prawnego lub osobę wcześniej wskazaną pisemnie.<br><br>
+              <strong>3. Liczba uczestników.</strong> Maksymalna liczba uczestników w grupie: 25 osób.<br><br>
+              <strong>10. Zasady zwrotu opłat.</strong> Opłaty nie podlegają zwrotowi w przypadku nieobecności, chyba że strony uzgodnią inaczej. W przypadku dłuższej choroby (z zaświadczeniem) możliwe jest przeniesienie opłaty na kolejny okres.<br><br>
+              <em style="color:rgba(255,255,255,0.40)">Akademia Obrony Saggita | biuro@akademiaobrony.pl | 510 930 460</em>
+            </div>
+            <!-- Pola do wpisania danych -->
+            <div style="margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:10px">
+              <div class="field">
+                <label>Imię i nazwisko rodzica/opiekuna *</label>
+                <input id="doc1_parent" type="text" placeholder="np. Jan Kowalski">
+              </div>
+              <div class="field">
+                <label>Imię i nazwisko dziecka *</label>
+                <input id="doc1_child" type="text" placeholder="np. Anna Kowalska">
+              </div>
+            </div>
+            <div style="margin-top:12px;padding:10px 14px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.09);border-radius:10px;display:flex;align-items:flex-start;gap:10px">
+              <input type="checkbox" id="doc1_confirm" onchange="updateDocStatus(1)" style="margin-top:2px;flex-shrink:0">
+              <label for="doc1_confirm" style="font-size:13px;color:rgba(255,255,255,0.82);cursor:pointer;font-weight:600">
+                Oświadczam, że zapoznałem/am się z niniejszą Umową – Regulaminem Sekcji Krav Maga oraz Regulaminem Sekcji Krav Maga Kids i akceptuję wszystkie zawarte w nim postanowienia.
+              </label>
+            </div>
+            <!-- Podpis online -->
+            <div style="margin-top:14px">
+              <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,0.55);margin-bottom:8px">Podpis elektroniczny</div>
+              <canvas id="sigCanvas1" width="560" height="120" style="width:100%;max-width:560px;height:120px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.15);border-radius:10px;cursor:crosshair;touch-action:none;display:block"></canvas>
+              <div style="display:flex;gap:8px;margin-top:8px">
+                <button class="btn btnSmall ghost" onclick="clearSig(1)">Wyczyść podpis</button>
+                <span id="sigStatus1" style="font-size:12px;color:rgba(255,255,255,0.40);align-self:center">Podpisz powyżej</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dokument 2: Zgoda rodzica -->
+        <div class="doc-block" id="docBlock2" style="
+          border:1px solid rgba(255,255,255,0.12);
+          border-radius:var(--radius-sm);
+          overflow:hidden;
+          background:rgba(255,255,255,0.025);
+        ">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px;background:rgba(255,255,255,0.03);border-bottom:1px solid rgba(255,255,255,0.08)">
+            <div>
+              <div style="font-size:14px;font-weight:700;color:var(--white)">📄 Zgoda Rodzica / Opiekuna Prawnego</div>
+              <div style="font-size:12px;color:rgba(255,255,255,0.45);margin-top:3px">Zgoda na udział dziecka w zajęciach Krav Maga Kids</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <span id="docStatus2" style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:999px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.45)">Do przeczytania</span>
+              <button class="btn btnSmall ghost" onclick="toggleDoc(2)">Rozwiń ▾</button>
+            </div>
+          </div>
+          <div id="docContent2" style="display:none;padding:20px 18px">
+            <div style="max-height:280px;overflow-y:auto;padding:16px;background:rgba(0,0,0,0.25);border-radius:10px;border:1px solid rgba(255,255,255,0.07);font-size:13px;line-height:1.7;color:rgba(255,255,255,0.78)">
+              <strong style="display:block;margin-bottom:12px;font-size:15px;color:var(--white)">ZGODA RODZICA / OPIEKUNA PRAWNEGO</strong>
+              <em>na udział dziecka w zajęciach Krav Maga Kids • Akademia Obrony Saggita</em><br><br>
+              <strong>OŚWIADCZENIA RODZICA / OPIEKUNA:</strong><br><br>
+              1. Oświadczam, że stan zdrowia mojego dziecka pozwala na udział w zajęciach ruchowych oraz treningach samoobrony.<br><br>
+              2. Przyjmuję do wiadomości, że zajęcia mają charakter sportowo-treningowy i mogą wiązać się z wysiłkiem fizycznym.<br><br>
+              3. Zobowiązuję się do poinformowania instruktora o wszelkich przeciwwskazaniach zdrowotnych, chorobach lub urazach dziecka.<br><br>
+              4. Potwierdzam, że zapoznałem/am się z zasadami obowiązującymi uczestników zajęć oraz z dokumentem Standardy Ochrony Małoletnich Akademii Obrony Saggita.<br><br>
+              5. Przyjmuję do wiadomości, że bezpieczeństwo uczestników jest nadrzędną wartością zajęć.<br><br>
+              <strong>ZGODA NA WYKORZYSTANIE WIZERUNKU (opcjonalnie)</strong><br>
+              Wyrażam zgodę / nie wyrażam zgody* na nieodpłatne wykorzystanie wizerunku mojego dziecka w materiałach promocyjnych Akademii. *niepotrzebne skreślić
+            </div>
+            <!-- Pola formularza -->
+            <div style="margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:10px">
+              <div class="field">
+                <label>Imię i nazwisko rodzica *</label>
+                <input id="doc2_parent" type="text" placeholder="np. Jan Kowalski">
+              </div>
+              <div class="field">
+                <label>Adres zamieszkania *</label>
+                <input id="doc2_address" type="text" placeholder="np. ul. Przykładowa 1, 00-000 Miasto">
+              </div>
+              <div class="field">
+                <label>Telefon kontaktowy *</label>
+                <input id="doc2_phone" type="tel" placeholder="np. 600 000 000">
+              </div>
+              <div class="field">
+                <label>Imię i nazwisko dziecka *</label>
+                <input id="doc2_child" type="text" placeholder="np. Anna Kowalska">
+              </div>
+              <div class="field">
+                <label>Data urodzenia dziecka *</label>
+                <input id="doc2_dob" type="date">
+              </div>
+              <div class="field">
+                <label>Osoba do kontaktu (nagłe wypadki)</label>
+                <input id="doc2_emergency" type="text" placeholder="np. Maria Kowalska · 500 000 000">
+              </div>
+            </div>
+            <div style="margin-top:10px;padding:10px 14px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.09);border-radius:10px;display:flex;align-items:flex-start;gap:10px">
+              <input type="checkbox" id="doc2_wizerunek" style="margin-top:2px;flex-shrink:0">
+              <label for="doc2_wizerunek" style="font-size:13px;color:rgba(255,255,255,0.75);cursor:pointer">
+                Wyrażam zgodę na nieodpłatne wykorzystanie wizerunku dziecka w materiałach promocyjnych Akademii (opcjonalnie)
+              </label>
+            </div>
+            <div style="margin-top:8px;padding:10px 14px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.09);border-radius:10px;display:flex;align-items:flex-start;gap:10px">
+              <input type="checkbox" id="doc2_confirm" onchange="updateDocStatus(2)" style="margin-top:2px;flex-shrink:0">
+              <label for="doc2_confirm" style="font-size:13px;color:rgba(255,255,255,0.82);cursor:pointer;font-weight:600">
+                Oświadczam, że podane informacje są prawdziwe i wyrażam zgodę na udział mojego dziecka w zajęciach Krav Maga Kids.
+              </label>
+            </div>
+            <div style="margin-top:14px">
+              <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,0.55);margin-bottom:8px">Podpis elektroniczny</div>
+              <canvas id="sigCanvas2" width="560" height="120" style="width:100%;max-width:560px;height:120px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.15);border-radius:10px;cursor:crosshair;touch-action:none;display:block"></canvas>
+              <div style="display:flex;gap:8px;margin-top:8px">
+                <button class="btn btnSmall ghost" onclick="clearSig(2)">Wyczyść podpis</button>
+                <span id="sigStatus2" style="font-size:12px;color:rgba(255,255,255,0.40);align-self:center">Podpisz powyżej</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dokument 3: Polityka Ochrony Małoletnich -->
+        <div class="doc-block" id="docBlock3" style="
+          border:1px solid rgba(255,255,255,0.12);
+          border-radius:var(--radius-sm);
+          overflow:hidden;
+          background:rgba(255,255,255,0.025);
+        ">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px;background:rgba(255,255,255,0.03);border-bottom:1px solid rgba(255,255,255,0.08)">
+            <div>
+              <div style="font-size:14px;font-weight:700;color:var(--white)">📄 Polityka Ochrony Dzieci i Młodzieży</div>
+              <div style="font-size:12px;color:rgba(255,255,255,0.45);margin-top:3px">Standardy Ochrony Małoletnich — dokument dla Rodziców / Opiekunów</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <span id="docStatus3" style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:999px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.45)">Do przeczytania</span>
+              <button class="btn btnSmall ghost" onclick="toggleDoc(3)">Rozwiń ▾</button>
+            </div>
+          </div>
+          <div id="docContent3" style="display:none;padding:20px 18px">
+            <div style="max-height:280px;overflow-y:auto;padding:16px;background:rgba(0,0,0,0.25);border-radius:10px;border:1px solid rgba(255,255,255,0.07);font-size:13px;line-height:1.7;color:rgba(255,255,255,0.78)">
+              <strong style="display:block;margin-bottom:12px;font-size:15px;color:var(--white)">POLITYKA OCHRONY DZIECI I MŁODZIEŻY</strong>
+              <em>Akademia Obrony Saggita • Dokument dla Rodziców / Opiekunów Prawnych</em><br><br>
+              Niniejszy dokument zawiera skróconą wersję Standardów Ochrony Małoletnich obowiązujących w Akademii Obrony Saggita.<br><br>
+              <strong>1. WPROWADZENIE</strong><br>
+              Akademia Obrony Saggita wprowadziła procedury mające na celu ochronę przed krzywdzeniem podczas treningów i obozów (STANDARDY OCHRONY MAŁOLETNICH).<br><br>
+              <strong>2. PRZYKŁADY NIEWŁAŚCIWEGO ZACHOWANIA</strong><br>
+              Absolutnie niedozwolone: bicie, kopanie, popychanie, zamykanie, niszczenie rzeczy, ośmieszanie, grożenie, szantażowanie, faworyzowanie, wykluczanie, robienie zdjęć bez zgody, nakłanianie do dotykania miejsc intymnych, podglądanie.<br><br>
+              <strong>3. NASZE ZASADY OCHRONY UCZESTNIKÓW</strong><br>
+              Instruktorzy mają obowiązek: szanować godność wszystkich, reagować na niewłaściwe zachowania, komunikować się z dziećmi konstruktywnie, nie stosować przemocy, szanować prywatność, nie publikować zdjęć dzieci bez zgody.<br><br>
+              <strong>4. ZASADY OBOWIĄZUJĄCE UCZESTNIKA</strong><br>
+              Dziecko zobowiązuje się: postępować zgodnie z instrukcjami, szanować innych, nie stosować słów obraźliwych, zgłaszać nękanie.<br><br>
+              <strong>5. PRAWA UCZESTNIKA</strong><br>
+              Dobrze się bawić, czuć się bezpiecznie, być chronionym, być wysłuchanym, wiedzieć gdzie udać się po pomoc.<br><br>
+              <strong>6. ZGŁASZANIE PRZEMOCY</strong><br>
+              Zgłoszenie do INSTRUKTORA lub KOORDYNATORA nigdy nie zostanie zlekceważone.<br><br>
+              <strong>7. DODATKOWE ŹRÓDŁA WSPARCIA</strong><br>
+              Fundacja Dajemy Dzieciom Siłę: www.116111.pl | Telefon Rzecznika Praw Dziecka: www.brpd.gov.pl
+            </div>
+            <div style="margin-top:12px;padding:10px 14px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.09);border-radius:10px;display:flex;align-items:flex-start;gap:10px">
+              <input type="checkbox" id="doc3_confirm" onchange="updateDocStatus(3)" style="margin-top:2px;flex-shrink:0">
+              <label for="doc3_confirm" style="font-size:13px;color:rgba(255,255,255,0.82);cursor:pointer;font-weight:600">
+                Oświadczam, że zapoznałem/am się z Polityką Ochrony Dzieci i Młodzieży Akademii Obrony Saggita i przyjmuję ją do wiadomości. Zobowiązuję się do zapoznania z nią swojego dziecka.
+              </label>
+            </div>
+            <div style="margin-top:14px">
+              <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,0.55);margin-bottom:8px">Podpis elektroniczny</div>
+              <canvas id="sigCanvas3" width="560" height="120" style="width:100%;max-width:560px;height:120px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.15);border-radius:10px;cursor:crosshair;touch-action:none;display:block"></canvas>
+              <div style="display:flex;gap:8px;margin-top:8px">
+                <button class="btn btnSmall ghost" onclick="clearSig(3)">Wyczyść podpis</button>
+                <span id="sigStatus3" style="font-size:12px;color:rgba(255,255,255,0.40);align-self:center">Podpisz powyżej</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /docsContainer -->
+
+      <div id="docsErrorMsg" style="display:none;margin-top:12px;padding:11px 14px;background:rgba(178,25,0,0.10);border:1px solid rgba(178,25,0,0.35);border-radius:10px;font-size:13px;color:#ffb2a6;font-weight:600"></div>
+
+      <div class="footerBar">
+        <button class="btn primary" id="goStep5" onclick="validateAndGoStep5()">Dalej: płatność →</button>
+      </div>
+    </div>
+  </section>
+
   <!-- STEP 5 -->
   <section class="panel hidden" id="step5" style="margin-top:14px">
     <div class="panelHead">
@@ -945,13 +1184,21 @@ function money(v){
 }
 
 function setStep(n){
-  document.querySelectorAll('[id^="step"]').forEach(s=>{
-    const sn = parseInt(s.id.replace('step',''),10);
-    s.classList.toggle('hidden', sn!==n);
+  // Handle step45 as special case
+  const stepIds = ['step1','step2','step3','step4','step45','step5'];
+  stepIds.forEach(id=>{
+    const el = document.getElementById(id);
+    if(el){
+      const sn = id === 'step45' ? 45 : parseInt(id.replace('step',''),10);
+      el.classList.toggle('hidden', sn!==n);
+    }
   });
   document.querySelectorAll('#stepper .step').forEach(el=>{
-    el.classList.toggle('active', parseInt(el.dataset.step,10)===n);
+    const ds = el.dataset.step === '45' ? 45 : parseInt(el.dataset.step,10);
+    el.classList.toggle('active', ds===n);
   });
+  // Initialize signature canvases when entering step45
+  if(n===45) setTimeout(initSignatureCanvases, 100);
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -1348,8 +1595,8 @@ function buildSummary(){
   let priceDesc = '';
   if(hasMembership)                               priceDesc = '0 zł (posiadacz karnetu)';
   else if(isOneTime(selectedPlan))                priceDesc = `${money(base)} zł (jednorazowe)`;
-  else if(isSchoolYear(selectedPlan))             priceDesc = `180 zł × ${months} mies. = ${money(base)} zł`;
-  else if(Number(selectedPlan.months||0)>1)       priceDesc = `${money(Math.round(monthlyRate(selectedPlan)))} zł × ${selectedPlan.months} mies. = ${money(base)} zł`;
+  else if(isSchoolYear(selectedPlan))             priceDesc = `180 zł × ${months} mies.`;
+  else if(Number(selectedPlan.months||0)>1)       priceDesc = `${money(Math.round(monthlyRate(selectedPlan)))} zł × ${selectedPlan.months} mies.`;
   else                                            priceDesc = `${money(base)} zł / mies.`;
 
   const sum = document.getElementById('summaryBox');
@@ -1357,7 +1604,7 @@ function buildSummary(){
     <div class="sRow"><b>Usługa</b><span>${escapeHtml(selectedPlan?.name||'—')}</span></div>
     <div class="sRow"><b>Koszt karnetu</b><span>${priceDesc}</span></div>
     ${fee>0 ? `<div class="sRow"><b>Opłata wpisowa</b><span>${money(fee)} zł (jednorazowo dla nowych)</span></div>` : ''}
-    <div class="sRow" style="border-color:rgba(255,255,255,0.20)"><b style="color:var(--white);font-size:14px">Do zapłaty</b><span style="color:var(--white);font-size:16px;font-weight:800">${money(total)} zł</span></div>
+    <!-- Suma ukryta w podsumowaniu - pojawi się dopiero na dokumencie płatniczym -->
     <div class="sRow"><b>Lokalizacja</b><span>${escapeHtml(locLabel)}</span></div>
     <div class="sRow"><b>Grupa</b><span>${escapeHtml(groupLabel)}</span></div>
     <div class="sRow"><b>Termin</b><span>${escapeHtml(s?scheduleLabel(s):'do ustalenia')}</span></div>
@@ -1415,7 +1662,13 @@ async function submit(){
 
     toast('Zgłoszenie przyjęte');
     preparePaymentUI();
-    setStep(5);
+    // Jeśli karnet dzieci — przejdź do podpisania dokumentów, inaczej od razu płatność
+    if(selectedPlan && isKidsPlan(selectedPlan)){
+      prefillDocForms();
+      setStep(45);
+    } else {
+      setStep(5);
+    }
 
   }catch(e){
     toast(e.message || 'Błąd zapisu','err', 4200);
@@ -1619,7 +1872,8 @@ document.getElementById('goStep2').addEventListener('click', ()=>setStep(2));
 document.getElementById('back1').addEventListener('click', ()=>setStep(1));
 document.getElementById('back2').addEventListener('click', ()=>setStep(2));
 document.getElementById('back3').addEventListener('click', ()=>setStep(3));
-document.getElementById('back4').addEventListener('click', ()=>setStep(4));
+document.getElementById('back35').addEventListener('click', ()=>setStep(4));
+document.getElementById('back4').addEventListener('click', ()=>setStep(45));
 
 document.getElementById('f_location').addEventListener('change', rebuildGroups);
 document.getElementById('f_group').addEventListener('change', rebuildSchedules);
@@ -1641,6 +1895,151 @@ document.getElementById('f_has_membership').addEventListener('change', ()=>{
   // tylko UX — płatność i kwota finalna ustawiają się po rejestracji
 });
 document.getElementById('submitBtn').addEventListener('click', submit);
+
+
+// ═══════════════════════════════════════
+// STEP 4.5 — Dokumenty + podpis cyfrowy
+// ═══════════════════════════════════════
+
+const sigPads = {};
+const sigSigned = { 1: false, 2: false, 3: false };
+
+function initSignatureCanvases(){
+  [1,2,3].forEach(n=>{
+    const canvas = document.getElementById(`sigCanvas${n}`);
+    if(!canvas || sigPads[n]) return;
+    const ctx = canvas.getContext('2d');
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 2;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    let drawing = false;
+    let lastX=0, lastY=0;
+
+    function getPos(e){
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      if(e.touches){
+        return { x:(e.touches[0].clientX-rect.left)*scaleX, y:(e.touches[0].clientY-rect.top)*scaleY };
+      }
+      return { x:(e.clientX-rect.left)*scaleX, y:(e.clientY-rect.top)*scaleY };
+    }
+    function start(e){ e.preventDefault(); drawing=true; const p=getPos(e); lastX=p.x; lastY=p.y; }
+    function move(e){
+      if(!drawing) return;
+      e.preventDefault();
+      const p=getPos(e);
+      ctx.beginPath();
+      ctx.moveTo(lastX,lastY);
+      ctx.lineTo(p.x,p.y);
+      ctx.stroke();
+      lastX=p.x; lastY=p.y;
+      sigSigned[n]=true;
+      document.getElementById(`sigStatus${n}`).textContent='Podpisano ✓';
+      document.getElementById(`sigStatus${n}`).style.color='rgba(46,204,113,0.9)';
+    }
+    function end(){ drawing=false; }
+    canvas.addEventListener('mousedown', start);
+    canvas.addEventListener('mousemove', move);
+    canvas.addEventListener('mouseup', end);
+    canvas.addEventListener('mouseleave', end);
+    canvas.addEventListener('touchstart', start, {passive:false});
+    canvas.addEventListener('touchmove', move, {passive:false});
+    canvas.addEventListener('touchend', end);
+    sigPads[n] = true;
+  });
+}
+
+function clearSig(n){
+  const canvas = document.getElementById(`sigCanvas${n}`);
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  sigSigned[n]=false;
+  document.getElementById(`sigStatus${n}`).textContent='Podpisz powyżej';
+  document.getElementById(`sigStatus${n}`).style.color='rgba(255,255,255,0.40)';
+}
+
+function toggleDoc(n){
+  const content = document.getElementById(`docContent${n}`);
+  const btn = content.closest('.doc-block').querySelector('button');
+  if(content.style.display==='none'){
+    content.style.display='block';
+    btn.textContent='Zwiń ▴';
+    // Mark as opened
+    const status = document.getElementById(`docStatus${n}`);
+    if(status.textContent==='Do przeczytania'){
+      status.textContent='Otwarto';
+      status.style.background='rgba(26,111,212,0.15)';
+      status.style.borderColor='rgba(26,111,212,0.40)';
+      status.style.color='rgba(160,210,255,0.90)';
+    }
+  } else {
+    content.style.display='none';
+    btn.textContent='Rozwiń ▾';
+  }
+}
+
+function updateDocStatus(n){
+  const cb = document.getElementById(`doc${n}_confirm`);
+  const status = document.getElementById(`docStatus${n}`);
+  if(cb && cb.checked){
+    status.textContent='Zaakceptowano ✓';
+    status.style.background='rgba(46,204,113,0.15)';
+    status.style.borderColor='rgba(46,204,113,0.40)';
+    status.style.color='rgba(100,220,130,0.90)';
+  }
+}
+
+function prefillDocForms(){
+  const fn = document.getElementById('f_first_name')?.value.trim() || '';
+  const ln = document.getElementById('f_last_name')?.value.trim() || '';
+  const phone = document.getElementById('f_phone')?.value.trim() || '';
+  const fullName = (fn+' '+ln).trim();
+  // Pre-fill parent name fields with kursant data
+  ['doc1_parent','doc2_parent'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el && !el.value) el.value = fullName;
+  });
+  if(document.getElementById('doc2_phone') && !document.getElementById('doc2_phone').value)
+    document.getElementById('doc2_phone').value = phone;
+}
+
+function validateAndGoStep5(){
+  const errEl = document.getElementById('docsErrorMsg');
+  const errors = [];
+
+  // Check doc 1
+  if(!document.getElementById('doc1_confirm').checked) errors.push('Zaakceptuj Umowę – Regulamin (dokument 1)');
+  if(!document.getElementById('doc1_parent').value.trim()) errors.push('Wpisz imię i nazwisko rodzica (dok. 1)');
+  if(!document.getElementById('doc1_child').value.trim()) errors.push('Wpisz imię i nazwisko dziecka (dok. 1)');
+  if(!sigSigned[1]) errors.push('Złóż podpis elektroniczny pod dokumentem 1');
+
+  // Check doc 2
+  if(!document.getElementById('doc2_confirm').checked) errors.push('Zaakceptuj Zgodę Rodzica (dokument 2)');
+  if(!document.getElementById('doc2_parent').value.trim()) errors.push('Wpisz imię i nazwisko rodzica (dok. 2)');
+  if(!document.getElementById('doc2_child').value.trim()) errors.push('Wpisz imię i nazwisko dziecka (dok. 2)');
+  if(!document.getElementById('doc2_phone').value.trim()) errors.push('Wpisz telefon kontaktowy (dok. 2)');
+  if(!sigSigned[2]) errors.push('Złóż podpis elektroniczny pod dokumentem 2');
+
+  // Check doc 3
+  if(!document.getElementById('doc3_confirm').checked) errors.push('Zaakceptuj Politykę Ochrony Małoletnich (dokument 3)');
+  if(!sigSigned[3]) errors.push('Złóż podpis elektroniczny pod dokumentem 3');
+
+  if(errors.length){
+    errEl.textContent = errors[0];
+    errEl.style.display='block';
+    // Expand first uncompleted doc
+    const unfinished = errors[0].includes('dok. 1') || errors[0].includes('dokument 1') ? 1
+                     : errors[0].includes('dok. 2') || errors[0].includes('dokument 2') ? 2 : 3;
+    const dc = document.getElementById(`docContent${unfinished}`);
+    if(dc && dc.style.display==='none') toggleDoc(unfinished);
+    return;
+  }
+  errEl.style.display='none';
+  setStep(5);
+}
 
 (function boot(){
   loadAll();

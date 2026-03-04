@@ -868,6 +868,7 @@ a{text-decoration:none;color:inherit}
 
 const API_BASE = 'https://saggita-kravmaga.vercel.app';
 const API = `${API_BASE}/api`;
+function money(v){ const n=Number(v||0); return n.toLocaleString('pl-PL',{minimumFractionDigits:0,maximumFractionDigits:2}); }
 
 const SCHEDULE_SOURCES = [
   `${API}/schedule`,
@@ -1566,13 +1567,13 @@ function showConfirmation(data, first, last) {
   if (!isWaitlist && data.total_amount) {
     const div = document.getElementById('confirmTransfer');
     div.innerHTML = `
-      <div><span class="lbl">Kwota do wpłaty</span><br><span class="val" style="font-size:1.4rem;font-weight:900;color:var(--accent)">${parseFloat(data.total_amount).toFixed(2)} zł</span></div>
+      <div><span class="lbl">Plan płatności</span><br><span class="val" style="font-size:1.1rem;font-weight:700;color:var(--accent)">${data.monthly_rate ? money(data.monthly_rate)+' zł/mies.' + (data.months_count ? ' × '+data.months_count+' mies.' : '') : parseFloat(data.total_amount||0).toFixed(2)+' zł'}</span></div>
       <br>
       <div><span class="lbl">Numer konta</span><br><span class="val" style="font-family:monospace;letter-spacing:.04em">${data.bank_account || BANK_ACCOUNT}</span></div>
       <div><span class="lbl">Odbiorca</span><br><span class="val">${data.bank_name || BANK_NAME}</span></div>
       <div><span class="lbl">Tytuł przelewu</span><br><span class="val">${data.transfer_title || data.payment_ref || ''}</span></div>
       <br>
-      <small style="color:rgba(255,255,255,0.56)">Przelew wyślij najpóźniej do ostatniego dnia poprzedzającego miesiąc rozliczeniowy.</small>
+      <small style="color:rgba(255,255,255,0.56)">Dokładna kwota zostanie podana w dokumencie płatniczym. Przelew wyślij najpóźniej do ostatniego dnia poprzedzającego miesiąc rozliczeniowy.</small>
     `;
     div.style.display = 'block';
   }
@@ -1603,7 +1604,7 @@ async function handlePayOnline(payment_ref) {
 
 function handleDownloadDoc(payment_ref) {
   // Otwórz dokument w nowym oknie i użyj natywnego drukowania przeglądarki
-  const url = `${API}/payment-document?payment_ref=${encodeURIComponent(payment_ref)}`;
+  const url = `${API}/registration/action?payment_ref=${encodeURIComponent(payment_ref)}`;
   const printWindow = window.open(url, '_blank', 'width=800,height=900');
   
   if (printWindow) {

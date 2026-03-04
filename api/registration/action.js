@@ -38,6 +38,7 @@ module.exports = async (req, res) => {
       }
       const amount = parseFloat(r.total_amount || 0).toFixed(2);
       const onlineUrl = `${SITE_URL}/kvcennik`;
+      const date = new Date().toLocaleDateString('pl-PL', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
 
       const html = `<!DOCTYPE html><html lang="pl"><head><meta charset="UTF-8">
 <style>body{font-family:Arial,sans-serif;margin:40px;color:#111;font-size:14px}
