@@ -1388,6 +1388,7 @@ function selectPlan(id){
 
   document.getElementById('goStep2').disabled = false;
   document.getElementById('btnClearCart').disabled = false;
+  document.querySelector('.cart-inline').scrollIntoView({ behavior: 'smooth', block: 'end' });
 
   // przebuduj dropdown lokalizacji żeby np. Wrocław znikał przy planie dla dzieci
   buildLocationSelect();
