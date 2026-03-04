@@ -10,7 +10,7 @@ const { requireAuth } = require('../_lib/auth');
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, PATCH, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, PATCH, DELETE, OPTIONS');
   if (req.method === 'OPTIONS') return res.status(204).end();
 
   try { requireAuth(req); }
@@ -302,6 +302,21 @@ module.exports = async (req, res) => {
       await pool.query(`UPDATE registrations SET ${set.join(',')} WHERE id=$${pi}`, vals);
       return res.status(200).json({ success: true });
     } catch (e) {
+      return res.status(500).json({ error: e.message });
+    }
+  }
+
+  // ── DELETE usunięcie zapisu ───────────────────────────────────
+  if (req.method === 'DELETE') {
+    if (!id) return res.status(400).json({ error: 'Brak id.' });
+    try {
+      const { rowCount } = await pool.query(
+        `DELETE FROM registrations WHERE id=$1`, [parseInt(id)]
+      );
+      if (!rowCount) return res.status(404).json({ error: 'Nie znaleziono zapisu.' });
+      return res.status(200).json({ success: true });
+    } catch (e) {
+      console.error('[registrations DELETE]', e);
       return res.status(500).json({ error: e.message });
     }
   }
