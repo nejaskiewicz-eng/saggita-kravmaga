@@ -1182,7 +1182,7 @@
       z-index: 500;
       background: var(--panel);
       border-top: 1px solid var(--line);
-      height: calc(58px + env(safe-area-inset-bottom));
+      height: calc(48px + env(safe-area-inset-bottom));
       padding-bottom: env(safe-area-inset-bottom);
       align-items: center;
       justify-content: space-around
@@ -1194,14 +1194,14 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 2px;
-      padding: 6px 4px;
+      gap: 1px;
+      padding: 4px;
       cursor: pointer;
       color: var(--dim);
-      font-size: 9px;
+      font-size: 8px;
       font-weight: 600;
       text-transform: uppercase;
-      letter-spacing: .06em;
+      letter-spacing: .05em;
       border: none;
       background: none;
       font-family: inherit
@@ -1231,8 +1231,8 @@
 
       #app.on {
         flex-direction: column;
-        padding-top: calc(52px + env(safe-area-inset-top));
-        padding-bottom: calc(58px + env(safe-area-inset-bottom))
+        padding-top: calc(44px + env(safe-area-inset-top));
+        padding-bottom: calc(48px + env(safe-area-inset-bottom))
       }
 
       #main {
@@ -1240,36 +1240,42 @@
       }
 
       #pb {
-        padding: 14px 12px
+        padding: 10px 8px
       }
 
       .ph {
-        padding: 10px 12px 8px
+        padding: 8px 10px 6px
       }
 
       .ph-title {
-        font-size: 15px
+        font-size: 14px
       }
 
       /* Stats — 2 cols */
       .stats {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        gap: 8px
+        gap: 6px
       }
 
       .sc {
         min-width: 0;
-        padding: 10px 12px
+        padding: 8px 10px
       }
 
       .sc-v {
-        font-size: 20px
+        font-size: 16px
       }
 
       /* Group cards — single col */
       .gcards {
-        grid-template-columns: 1fr
+        grid-template-columns: 1fr;
+        gap: 8px
+      }
+
+      .gc {
+        padding: 10px;
+        gap: 6px
       }
 
       /* Tables → card layout */
@@ -1293,8 +1299,8 @@
       .tw tbody tr {
         background: var(--panel);
         border: 1px solid var(--line);
-        margin-bottom: 8px;
-        padding: 10px 12px
+        margin-bottom: 6px;
+        padding: 7px 10px
       }
 
       .tw tbody tr:hover td {
@@ -1302,30 +1308,30 @@
       }
 
       .tw td {
-        padding: 4px 0;
-        font-size: 12px;
+        padding: 2px 0;
+        font-size: 11px;
         border: none;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        gap: 8px;
-        min-height: 28px
+        gap: 6px;
+        min-height: 22px
       }
 
       .tw td::before {
         content: attr(data-label);
-        font-size: 10px;
+        font-size: 9px;
         text-transform: uppercase;
         letter-spacing: .08em;
         color: var(--dim);
         flex-shrink: 0;
-        min-width: 90px
+        min-width: 80px
       }
 
       .tw td:last-child {
         justify-content: flex-end;
-        padding-top: 10px;
-        margin-top: 6px;
+        padding-top: 6px;
+        margin-top: 4px;
         border-top: 1px solid var(--line)
       }
 
@@ -1334,7 +1340,8 @@
       }
 
       .pg2 {
-        grid-template-columns: 1fr
+        grid-template-columns: 1fr;
+        gap: 12px
       }
 
       .ff2 {
@@ -1348,26 +1355,30 @@
       }
 
       .att-row {
-        grid-template-columns: 40px 1fr;
+        grid-template-columns: 34px 1fr;
         grid-template-rows: auto auto;
-        gap: 6px 10px;
-        padding: 12px;
-        margin-bottom: 6px;
-        border-radius: 8px;
+        gap: 4px 8px;
+        padding: 9px;
+        margin-bottom: 5px;
+        border-radius: 6px;
         border: 1px solid var(--line);
         cursor: pointer;
         -webkit-tap-highlight-color: rgba(0, 0, 0, 0)
       }
 
+      .att-name {
+        font-size: 13px
+      }
+
       .att-pay {
         grid-column: 2;
-        font-size: 11px
+        font-size: 10px
       }
 
       .att-chk {
-        width: 34px;
-        height: 34px;
-        font-size: 16px;
+        width: 28px;
+        height: 28px;
+        font-size: 15px;
         grid-row: 1/3;
         align-self: center;
         pointer-events: none
@@ -1380,7 +1391,7 @@
       }
 
       .cal-title {
-        font-size: 14px;
+        font-size: 13px;
         min-width: 100%;
         order: -1
       }
@@ -1390,27 +1401,35 @@
       }
 
       .cal-filt select {
-        width: 100%
+        width: 100%;
+        padding: 6px;
+        font-size: 12px
+      }
+
+      .cal-nav button {
+        padding: 4px 8px
       }
 
       .cgc {
-        min-height: 50px;
-        padding: 3px 2px
+        min-height: 42px;
+        padding: 2px 1px
       }
 
       .cgc-d {
-        font-size: 10px
+        font-size: 9px
       }
 
       .cpill {
         font-size: 8px;
-        padding: 1px 3px
+        padding: 1px 2px;
+        margin-top: 1px
       }
 
       .cal-legend {
         flex-direction: column;
-        gap: 5px;
-        font-size: 10px
+        gap: 3px;
+        font-size: 9px;
+        margin-top: 6px
       }
 
       /* Toolbar */
@@ -1422,7 +1441,9 @@
       .bar input,
       .bar select {
         max-width: none;
-        width: 100%
+        width: 100%;
+        padding: 6px 10px;
+        font-size: 12px
       }
 
       .sep {
@@ -1431,7 +1452,9 @@
 
       .bar .btn {
         width: 100%;
-        justify-content: center
+        justify-content: center;
+        padding: 8px 12px;
+        font-size: 12px
       }
 
       /* Modal */
@@ -1451,12 +1474,14 @@
 
       .prow {
         flex-wrap: wrap;
-        gap: 4px
+        gap: 4px;
+        padding: 8px;
+        font-size: 12px
       }
 
       #ph-act .btn {
-        font-size: 11px;
-        padding: 6px 10px
+        font-size: 10px;
+        padding: 5px 8px
       }
     }
 
@@ -1475,9 +1500,9 @@
       }
     }
 
-    /* naprawa przewijania listy przy dolnym menu */
+    /* naprawa przewijania listy przy dolnym menu (odchudzonego menu mobilnego) */
     body {
-      padding-bottom: calc(75px + env(safe-area-inset-bottom)) !important;
+      padding-bottom: calc(55px + env(safe-area-inset-bottom)) !important;
     }
 
     /* wymuszenie prawidłowego scrolla strony */
