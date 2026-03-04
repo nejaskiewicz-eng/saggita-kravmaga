@@ -1937,9 +1937,11 @@
     </div>
     <div class="gc-sched">${sch || '<span style="color:var(--dim2)">Brak grafiku</span>'}</div>
     <div class="gc-foot">
-      ${canOpenStudents
-          ? `<button class="btn btn-r btn-sm" onclick="event.stopPropagation();openGrp(${g.id})">Kursanci</button>`
-          : `<span style="font-size:11px;color:var(--dim2);padding:4px 0">Dostępne w dniu zajęć</span>`
+      ${hasClassToday
+          ? `<button class="btn btn-g btn-sm" onclick="event.stopPropagation();quickSess(${g.id})" style="background:var(--green);color:#000;font-weight:800;border:none;box-shadow:0 3px 10px rgba(46,204,113,0.3)">✓ Obecność</button>`
+          : (canOpenStudents
+            ? `<button class="btn btn-r btn-sm" onclick="event.stopPropagation();openGrp(${g.id})">Kursanci</button>`
+            : `<span style="font-size:11px;color:var(--dim2);padding:4px 0">Dostępne w dniu zajęć</span>`)
         }
       <button class="btn btn-o btn-sm" onclick="event.stopPropagation();openCalGrp(${g.id})">Kalendarz</button>
     </div>
@@ -2306,8 +2308,34 @@
       S.sessData = { session_id: sessId, group_id: gid, session_date: date, group_name: name };
       document.querySelectorAll(".ni").forEach(el => el.classList.remove("on"));
       const n = document.getElementById("ni-sess"); if (n) n.classList.add("on");
+      // Zaktualizuj zakładki mobilne (bot-nav)
+      document.querySelectorAll(".bn").forEach(el => el.classList.remove("on"));
+      const b = document.getElementById("bn-sess"); if (b) b.classList.add("on");
       S.page = "sess";
       renderAtt();
+    }
+
+    async function quickSess(gid) {
+      // Znajdź grupę i spróbuj wejść od razu w dzisiejszą sesję lub wykreuj nową.
+      const date = todayISO();
+      $('pb').innerHTML = '<div class="loading">Ładowanie sesji...</div>';
+      try {
+        // Sprawdźmy czy jest dzisiaj już jakaś sesja dla tej grupy
+        const url = `/api/instructor/sessions?from=${date}&group_id=${gid}`;
+        const d = await api(url);
+        const todaySess = (d.rows || []).find(s => normISO(s.session_date) === date);
+        if (todaySess) {
+          openSessFromCal(todaySess.session_id, gid, date, todaySess.group_name || '');
+        } else {
+          // Jeśli sesja nie istnieje, stwórz nową w tle bez pytania użytkownika ("Skrót")
+          const groupName = S.groups.find(x => x.id == gid)?.name || '';
+          const res = await api('/api/instructor/sessions', 'POST', { group_id: gid, session_date: date });
+          openSessFromCal(res.id, gid, date, groupName);
+        }
+      } catch (e) {
+        alert('Błąd otwierania sesji: ' + e.message);
+        renderDash();
+      }
     }
 
     // ── SESSIONS ──────────────────────────────────────────────────
