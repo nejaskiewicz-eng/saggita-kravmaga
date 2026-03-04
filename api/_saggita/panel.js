@@ -120,7 +120,7 @@ module.exports = async (req, res) => {
         const { rows } = await pool.query(`
           SELECT g.id, g.name, g.category, g.age_range, g.notes,
             l.id AS location_id, l.city AS location_city, l.name AS location_name,
-            COUNT(DISTINCT sg.student_id) FILTER (WHERE sg.active=true)::int AS student_count,
+            COUNT(DISTINCT sg.student_id) FILTER (WHERE sg.active=true AND st.is_active=true)::int AS student_count,
             COALESCE(json_agg(
               json_build_object('id',s.id,'day_of_week',s.day_of_week,'day_name',s.day_name,
                 'time_start',s.time_start,'time_end',s.time_end,'time_label',s.time_label)
@@ -130,6 +130,7 @@ module.exports = async (req, res) => {
           JOIN groups g         ON g.id = ig.group_id
           LEFT JOIN locations l ON l.id = g.location_id
           LEFT JOIN student_groups sg ON sg.group_id = g.id
+          LEFT JOIN students st ON st.id = sg.student_id
           LEFT JOIN schedules s ON s.group_id = g.id AND s.active=true
           WHERE ig.instructor_id = $1
             AND g.active = true
