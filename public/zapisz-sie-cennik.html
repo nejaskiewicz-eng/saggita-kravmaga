@@ -2037,7 +2037,7 @@ function validateAndGoStep5(){
     // Expand first uncompleted doc
     const unfinished = errors[0].includes('dok. 1') || errors[0].includes('dokument 1') ? 1
                      : errors[0].includes('dok. 2') || errors[0].includes('dokument 2') ? 2 : 3;
-tyle.display==='none') toggleDoc(unfinished);
+    if(dc && dc.style.display==='none') toggleDoc(unfinished);
     return;
   }
   errEl.style.display='none';
