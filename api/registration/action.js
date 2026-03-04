@@ -1,5 +1,5 @@
 const { getPool } = require('../_lib/db');
-const { sendMail, mailPaymentDoc, mailPayOnlineChosen, mailPaymentConfirmed } = require('../_lib/mail');
+const { sendMail, mailKursant, mailPayOnlineChosen, mailPaymentConfirmed } = require('../_lib/mail');
 
 const BANK_ACCOUNT = process.env.BANK_ACCOUNT || '21 1140 2004 0000 3902 3890 8895';
 const BANK_NAME    = process.env.BANK_NAME    || 'Akademia Obrony Saggita';
@@ -92,9 +92,9 @@ Kontakt: <strong>biuro@akademiaobrony.pl</strong> · <strong>510 930 460</strong
   // ── POST: akcja (wybór metody płatności / potwierdzenie) ──────────────────
   if (req.method === 'POST') {
     try {
-      const { payment_ref, action, pay_url } = req.body || {};
+      const { payment_ref, action, pay_url, payment_mode, months, monthly_rate, reminders } = req.body || {};
       if (!payment_ref) return res.status(400).json({ error: 'Brak payment_ref' });
-      const VALID = ['pay_online', 'download_doc', 'payment_confirmed'];
+      const VALID = ['pay_online', 'download_doc', 'payment_confirmed', 'schedule_doc'];
       if (!VALID.includes(action)) return res.status(400).json({ error: 'Nieprawidłowa akcja' });
 
       // Pobierz pełne dane rejestracji
@@ -135,29 +135,53 @@ Kontakt: <strong>biuro@akademiaobrony.pl</strong> · <strong>510 930 460</strong
       // Wyślij odpowiedni mail do kursanta
       let userMail = null;
 
+      // Dane kontraktowe (przekazane z frontendu lub wyliczone)
+      const pMonths      = parseInt(months || r.months || 1);
+      const pMonthlyRate = monthly_rate ? parseFloat(monthly_rate)
+                         : (pMonths > 1 ? Math.round(parseFloat(r.total_amount||0) / pMonths) : parseFloat(r.total_amount||0));
+      const pSignupFee   = parseFloat(r.signup_fee || 0);
+      const pMode        = payment_mode || r.payment_mode || null;
+      const pReminders   = reminders !== false;
+
+      const contractData = {
+        first_name:   r.first_name,
+        payment_ref,
+        plan_name:    r.plan_name,
+        group_name:   r.group_name,
+        city:         r.city,
+        total_amount: r.total_amount,
+        bank_account: BANK_ACCOUNT,
+        bank_name:    BANK_NAME,
+        payment_mode: pMode,
+        months:       pMonths,
+        monthly_rate: pMonthlyRate,
+        signup_fee:   pSignupFee,
+        reminders:    pReminders,
+        doc_url:      docUrl,
+        online_url:   onlineUrl,
+      };
+
       if (action === 'download_doc') {
-        userMail = mailPaymentDoc({
-          first_name:   r.first_name,
-          payment_ref,
-          plan_name:    r.plan_name,
-          group_name:   r.group_name,
-          city:         r.city,
-          total_amount: r.total_amount,
-          bank_account: BANK_ACCOUNT,
-          bank_name:    BANK_NAME,
-          doc_url:      docUrl,
-          online_url:   onlineUrl,
-        });
+        // Wyślij mail uzależniony od trybu płatności
+        userMail = mailKursant(contractData);
+      } else if (action === 'schedule_doc') {
+        // Mail z harmonogramem miesięcznym
+        userMail = mailKursant({ ...contractData, payment_mode: 'monthly' });
       } else if (action === 'pay_online') {
-        userMail = mailPayOnlineChosen({
-          first_name:   r.first_name,
-          payment_ref,
-          plan_name:    r.plan_name,
-          group_name:   r.group_name,
-          city:         r.city,
-          total_amount: r.total_amount,
-          pay_url:      pay_url || '',
-        });
+        if (pMode === 'full' || pMode === 'monthly') {
+          // Szczegółowy mail kontraktowy
+          userMail = mailKursant(contractData);
+        } else {
+          userMail = mailPayOnlineChosen({
+            first_name:   r.first_name,
+            payment_ref,
+            plan_name:    r.plan_name,
+            group_name:   r.group_name,
+            city:         r.city,
+            total_amount: pMode === 'monthly' ? pMonthlyRate + pSignupFee : r.total_amount,
+            pay_url:      pay_url || '',
+          });
+        }
       } else if (action === 'payment_confirmed') {
         userMail = mailPaymentConfirmed({
           first_name:        r.first_name,

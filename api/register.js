@@ -1,7 +1,7 @@
 // api/register.js  — Funkcja #3
 // POST /api/register → zapis kursanta, zwraca dane płatności
 const { getPool } = require('./_lib/db');
-const { sendMail, mailAdmin, mailPaymentDoc, mailWaitlist } = require('./_lib/mail');
+const { sendMail, mailAdmin, mailWaitlist, mailKursant } = require('./_lib/mail');
 
 const BANK_ACCOUNT = process.env.BANK_ACCOUNT || '21 1140 2004 0000 3902 3890 8895';
 const BANK_NAME    = process.env.BANK_NAME    || 'Akademia Obrony Saggita';
@@ -51,6 +51,8 @@ module.exports = async (req, res) => {
     // Pobierz cennik
     let total_amount = 0;
     let plan_name = null;
+    let planMonths = 1;
+    let planRow = null;
     
     // Jeśli osoba ma karnet, nie płaci
     if (b.has_membership) {
@@ -58,12 +60,25 @@ module.exports = async (req, res) => {
       plan_name = 'Posiadacz karnetu miesięcznego';
     } else if (b.price_plan_id) {
       const { rows: [plan] } = await pool.query(
-        `SELECT id, name, price, signup_fee FROM price_plans WHERE id = $1 AND active = true`,
+        `SELECT id, name, price, signup_fee, months FROM price_plans WHERE id = $1 AND active = true`,
         [b.price_plan_id]
       );
+      planRow = plan;
       if (plan) {
         const fee = b.is_new ? parseFloat(plan.signup_fee || 0) : 0;
-        total_amount = parseFloat(plan.price) + fee;
+        const planPrice = parseFloat(plan.price || 0);
+        const planMaxMonths = parseInt(plan.months || 1);
+        // Dla planów szkolnych (price_per_month * months): jeśli front przekazał months_selected, przelicz
+        const monthsSelected = parseInt(b.months_selected || 0);
+        if (monthsSelected > 0 && monthsSelected < planMaxMonths && planMaxMonths > 1) {
+          // Stawka miesięczna = plan.price / plan.months
+          const monthlyRate = planPrice / planMaxMonths;
+          total_amount = Math.round(monthlyRate * monthsSelected) + fee;
+          planMonths = monthsSelected;
+        } else {
+          total_amount = planPrice + fee;
+          planMonths = planMaxMonths;
+        }
         plan_name = plan.name;
       }
     }
@@ -97,28 +112,35 @@ module.exports = async (req, res) => {
       ]
     );
 
+    // Tryb płatności przekazany z frontendu
+    const payment_mode = b.payment_mode || null;          // 'full' | 'monthly' | null
+    const months       = parseInt(b.months || planMonths || 1);
+    const signup_fee   = b.is_new ? parseFloat(planRow?.signup_fee || 0) : 0;
+    const base_amount  = total_amount - signup_fee;
+    const monthly_rate = b.monthly_rate
+      ? parseFloat(b.monthly_rate)
+      : (months > 1 ? Math.round(base_amount / months) : base_amount);
+    const reminders    = b.reminders !== false;
+
     const mailData = {
       first_name: b.first_name, last_name: b.last_name,
       email: b.email, phone: b.phone,
       payment_ref, group_name: group.name, city: group.city,
       total_amount, plan_name, is_waitlist,
       bank_account: BANK_ACCOUNT, bank_name: BANK_NAME,
+      payment_mode, months, monthly_rate, signup_fee, reminders,
+      doc_url: '', online_url: '',
     };
 
     const mails = [
-      sendMail({ to: ADMIN_EMAIL, ...mailAdmin(mailData) }),
+      sendMail({ to: ADMIN_EMAIL, ...mailAdmin({ ...mailData, payment_mode, months, monthly_rate }) }),
     ];
 
-    // Wyślij mail do kursanta zawsze — niezależnie od tego czy kliknie przycisk płatności
+    // Wyślij mail do kursanta — treść zależy od wybranego trybu płatności
     if (is_waitlist) {
       mails.push(sendMail({ to: b.email, ...mailWaitlist(mailData) }));
     } else {
-      // Mail z potwierdzeniem przyjęcia zapisu + dane do przelewu
-      mails.push(sendMail({ to: b.email, ...mailPaymentDoc({
-        ...mailData,
-        doc_url: '',
-        online_url: '',
-      }) }));
+      mails.push(sendMail({ to: b.email, ...mailKursant(mailData) }));
     }
 
     Promise.all(mails).catch(e => console.error('[register/mail]', e));

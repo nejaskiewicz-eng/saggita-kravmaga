@@ -1783,7 +1783,7 @@ function preparePaymentUI(){
   const ref     = registrationResult?.payment_ref;
   const feeAmt  = Number(selected._feeAmount||0);
   const baseAmt = amount - feeAmt;
-  const months  = Number(selectedPlan?.months || selectedPlan?.duration_months || 1);
+  const months  = Number(selected._months || selectedPlan?.months || selectedPlan?.duration_months || 1);
 
   // Czy to karnet z umową (wielomiesięczny ze stałą ceną)?
   const isContract = selectedPlan && (
@@ -1816,7 +1816,7 @@ function onPayModeChange(){
   const ref     = registrationResult?.payment_ref;
   const feeAmt  = Number(selected._feeAmount||0);
   const baseAmt = amount - feeAmt;
-  const months  = Number(selectedPlan?.months || selectedPlan?.duration_months || 1);
+  const months  = Number(selected._months || selectedPlan?.months || selectedPlan?.duration_months || 1);
   const monthlyRate = Math.round(baseAmt / months);
 
   // Styl kart
@@ -1918,7 +1918,22 @@ function downloadScheduleDoc(payment_ref, monthlyRate, months){
   toast(msg,'ok',4000);
 }
 
-async function handlePayOnline(payment_ref){
+function getPaymentModePayload(){
+  const mode   = document.querySelector('input[name="payMode"]:checked')?.value || null;
+  // selected._months jest ustawiony z f_months selecta (rok szkolny) — ma priorytet nad selectedPlan.months
+  const months = Number(selected._months || selectedPlan?.months || selectedPlan?.duration_months || 1);
+  const amount = Number(registrationResult?.total_amount||0);
+  const feeAmt = Number(selected._feeAmount||0);
+  const rate   = months > 1 ? Math.round((amount - feeAmt) / months) : (amount - feeAmt);
+  return {
+    payment_mode:  mode,
+    months:        months,
+    monthly_rate:  rate,
+    reminders:     document.getElementById('chkReminders')?.checked !== false,
+  };
+}
+
+async function handlePayOnline(payment_ref, amount){
   if(!payment_ref) return toast('Brak referencji płatności','err');
 
   const btn = document.getElementById('payOnlineBtn');
@@ -1926,12 +1941,13 @@ async function handlePayOnline(payment_ref){
   btn.disabled = true;
   btn.innerHTML = `<span class="spin"></span> Przekierowuję…`;
 
+  const modePayload = getPaymentModePayload();
+
   try{
-    // Wysyłamy akcję pay_online — to trigguje mail do kursanta
     const d = await fetch(`${API}/registration/action`, {
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ payment_ref, action: 'pay_online' })
+      body: JSON.stringify({ payment_ref, action: 'pay_online', ...modePayload })
     }).then(async r=>{
       const j = await r.json().catch(()=>({error:'Błąd odpowiedzi serwera'}));
       if(!r.ok) throw new Error(j.error || `Błąd HTTP ${r.status}`);
@@ -1939,7 +1955,6 @@ async function handlePayOnline(payment_ref){
     });
 
     if(d?.url){
-      // Zapisz że płacił online — po powrocie z bramki wyślemy potwierdzenie
       sessionStorage.setItem('km_pending_confirm', payment_ref);
       window.location.href = d.url;
     } else {
@@ -1974,14 +1989,14 @@ async function handlePayOnline(payment_ref){
 async function downloadPaymentDoc(payment_ref){
   if(!payment_ref) return toast('Brak referencji płatności','err');
 
-  // Wyślij akcję → trigguje mail z dokumentem do kursanta
+  const modePayload = getPaymentModePayload();
+
   fetch(`${API}/registration/action`, {
     method:'POST',
     headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ payment_ref, action: 'download_doc' })
+    body: JSON.stringify({ payment_ref, action: 'download_doc', ...modePayload })
   }).catch(()=>{});
 
-  // Otwórz dokument do wydruku
   const url = `${API}/registration/action?payment_ref=${encodeURIComponent(payment_ref)}`;
   window.open(url, '_blank');
   toast('Dokument otwarty · mail z potwierdzeniem wysłany na Twoją skrzynkę','ok',4000);
