@@ -2427,16 +2427,22 @@
       </div>
       <div class="att-list" id="attlist">
         ${st.map(s => {
-          // Zmiana: podlinkuj wpłatę bezpośrednio do profilu, by nie musieć skakać po stronach
-          const payText = S.perms.can_see_payments ? `<div class="att-pay ${daysAgo(s.last_payment) > 35 ? 'late' : ''}" onclick="event.stopPropagation();openStud(${s.student_id})" style="cursor:pointer;text-decoration:underline;text-underline-offset:2px">Wpłata: ${fd(s.last_payment)}</div>` : '';
-          const payBtn = S.perms.can_accept_payment ? `<button class="btn btn-xs" style="padding:3px 8px;font-size:10px;background:rgba(46,204,113,.15);border:1px solid rgba(46,204,113,.4);color:#2ecc71;grid-column:2;justify-self:start" onclick="event.stopPropagation();moAcceptPayment(${s.student_id},'${esc(s.first_name)} ${esc(s.last_name)}',${sess.group_id})">+ Wpłata</button>` : '';
+          const days = daysAgo(s.last_payment);
+          const payBadge = S.perms.can_see_payments ? `<div style="font-size:12px;font-weight:800;letter-spacing:0.02em;color:var(--text);border-bottom:1px solid rgba(255,255,255,0.05);padding-bottom:8px;margin-bottom:8px;width:100%">Wpłata: <span class="badge ${days > 35 ? 'br' : 'bg'}" style="padding:4px 8px;border-radius:6px;font-size:12px;margin-left:4px">${s.last_payment ? fd(s.last_payment) : 'Brak danych'}</span></div>` : '';
+          const profBtn = `<button class="btn btn-o btn-sm" onclick="event.stopPropagation();openStud(${s.student_id})" style="width:100%;justify-content:center;font-size:11px;padding:6px 0">Kartoteka</button>`;
+          const addPayBtn = S.perms.can_accept_payment ? `<button class="btn btn-sm" style="width:100%;justify-content:center;font-size:11px;padding:6px 0;background:rgba(46,204,113,.15);border:1px solid rgba(46,204,113,.4);color:#2ecc71" onclick="event.stopPropagation();moAcceptPayment(${s.student_id},'${esc(s.first_name)} ${esc(s.last_name)}',${sess.group_id})">+ Wpłata</button>` : '';
 
           return `
           <div class="att-row ${s.present ? 'present' : 'absent'}" id="atr-${s.student_id}" onclick="toggleAttRow(event, ${sess.session_id}, ${s.student_id})">
             <div class="att-chk ${s.present ? 'on' : ''}" id="chk-${s.student_id}">${s.present ? '✓' : ''}</div>
-            <div class="att-name">${esc(s.last_name)}, ${esc(s.first_name)}</div>
-            ${payText}
-            ${payBtn}
+            <div class="att-name" style="font-weight:800;font-size:15px;padding-top:2px">${esc(s.last_name)}, ${esc(s.first_name)}</div>
+            <div style="grid-column:2;display:flex;flex-direction:column;align-items:flex-start;margin-top:6px;padding-top:2px;width:100%;">
+              ${payBadge}
+              <div style="display:flex;width:100%;gap:8px">
+                ${profBtn}
+                ${addPayBtn}
+              </div>
+            </div>
           </div>`;
         }).join('')}
       </div>
