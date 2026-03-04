@@ -1372,8 +1372,8 @@ function buildPrices(){
       subHtml   = `<div class="price-desc" style="color:rgba(255,255,255,0.4);font-size:11px">Brak opłaty wpisowej</div>`;
     } else if(isSchoolYear(p)){
       // Karnet rok szkolny — pokaż stawkę/miesiąc
-      priceHtml = `<div class="price-amount">${money(180)}<small>zł / mies.</small></div>`;
-      subHtml   = `<div class="price-fee">Do ${months} miesięcy — od ${money(180)} do ${money(180*months)} zł łącznie</div>`;
+      priceHtml = `<div class="price-amount">${money(monthly)}<small>zł / mies.</small></div>`;
+      subHtml   = `<div class="price-fee">Karnet szkolny z umową — regularne miesięczne płatności przez wybraną liczbę miesięcy</div>`;
       if(fee>0) subHtml += `<div class="price-fee">+ wpisowe ${money(fee)} zł dla nowych</div>`;
     } else if(isMultiMonth(p) && type==='adults'){
       // Dorosłe wielomiesięczne — cena/miesiąc + rabat + łącznie
@@ -1595,11 +1595,17 @@ function rebuildGroups(){
 
   const groups = (loc?.groups || []).filter(g=>{
     if(g.active===false) return false;
-    // zmiana 6: jeśli wybrany plan to dzieci, pokaż tylko grupy dziecięce
+    // Ukryj grupy bez wolnych miejsc
+    if(typeof g.available==='number' && g.available===0) return false;
+    // Jeśli plan dziecięcy — tylko grupy kids/young
     if(selectedPlan && isKidsPlan(selectedPlan)){
-      // Filtruj tylko po category
       const cat = norm(g.category||'');
       return cat==='kids'||cat==='young'||cat.includes('kid')||cat.includes('junior');
+    }
+    // Jeśli plan dorosłych — ukryj grupy dziecięce
+    if(selectedPlan && !isKidsPlan(selectedPlan)){
+      const cat = norm(g.category||'');
+      if(cat==='kids'||cat==='young'||cat.includes('kid')||cat.includes('junior')) return false;
     }
     return true;
   });
@@ -1789,6 +1795,14 @@ async function submit(){
 }
 
 function preparePaymentUI(){
+  // Zawsze resetuj confirmBtn — może być zdezaktywowany z poprzedniej rejestracji
+  const confirmBtn = document.getElementById('confirmBtn');
+  if(confirmBtn){
+    confirmBtn.disabled = false;
+    confirmBtn.innerHTML = '✓ Potwierdź i zakończ rejestrację';
+    confirmBtn.style.background = '';
+  }
+
   const amount  = Number(registrationResult?.total_amount||0);
   const ref     = registrationResult?.payment_ref;
   const feeAmt  = Number(selected._feeAmount||0);
