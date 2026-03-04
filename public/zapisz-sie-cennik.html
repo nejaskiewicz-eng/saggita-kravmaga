@@ -1185,19 +1185,19 @@ h1{
 
         <!-- Opcje miesięczne -->
         <div id="monthlyOptions" style="display:none;margin-top:12px;padding:14px 16px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.09);border-radius:12px">
-          <div style="font-size:12px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:rgba(255,255,255,0.55);margin-bottom:10px">Opcje płatności miesięcznej</div>
-          <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;margin-bottom:8px">
-            <input type="checkbox" id="chkSchedule" style="margin-top:2px;flex-shrink:0" checked>
+          <div style="font-size:12px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:rgba(255,255,255,0.55);margin-bottom:12px">Ustaw opcje płatności miesięcznej</div>
+          <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;margin-bottom:12px">
+            <input type="checkbox" id="chkReminders" style="margin-top:2px;flex-shrink:0;width:16px;height:16px;accent-color:#940000" checked>
             <span style="font-size:13px;color:rgba(255,255,255,0.82)">
-              <strong>Pobierz harmonogram wpłat</strong><br>
-              <span style="font-size:11px;color:rgba(255,255,255,0.45)">Dokument PDF z datami i kwotami kolejnych wpłat</span>
+              <strong>Przypomnienia mailowe o terminie wpłaty</strong><br>
+              <span style="font-size:11px;color:rgba(255,255,255,0.45)">Dostaniesz maila 3 dni przed każdą kolejną wpłatą z kwotą i linkiem do płatności online</span>
             </span>
           </label>
           <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer">
-            <input type="checkbox" id="chkReminders" style="margin-top:2px;flex-shrink:0" checked>
+            <input type="checkbox" id="chkSchedule" style="margin-top:2px;flex-shrink:0;width:16px;height:16px;accent-color:#940000" checked>
             <span style="font-size:13px;color:rgba(255,255,255,0.82)">
-              <strong>Przypomnienia mailowe o płatności</strong><br>
-              <span style="font-size:11px;color:rgba(255,255,255,0.45)">Automatyczny mail 3 dni przed każdą wpłatą</span>
+              <strong>Pobierz harmonogram wpłat (PDF)</strong><br>
+              <span style="font-size:11px;color:rgba(255,255,255,0.45)">Dokument z datami i kwotami wszystkich miesięcy do wydruku</span>
             </span>
           </label>
         </div>
@@ -1210,11 +1210,21 @@ h1{
         </div>
         <div class="small" id="payText">—</div>
 
-        <div class="row" style="margin-top:14px">
+        <div class="row" style="margin-top:14px;flex-wrap:wrap;gap:10px">
           <button class="btn primary" id="payOnlineBtn">Płatność online</button>
           <button class="btn" id="docBtn">Pobierz dokument płatniczy</button>
           <button class="btn ghost" id="scheduleBtn" style="display:none">📅 Harmonogram wpłat</button>
           <button class="btn ghost" id="backToCennik">← Wróć do cennika</button>
+        </div>
+
+        <!-- Przycisk potwierdzenia -->
+        <div id="confirmBlock" style="margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.08)">
+          <button class="btn primary" id="confirmBtn" style="width:100%;padding:14px;font-size:15px;background:linear-gradient(180deg,rgba(0,140,0,0.85),rgba(0,80,0,0.85));border-color:rgba(0,200,0,0.25)">
+            ✓ Potwierdź i zakończ rejestrację
+          </button>
+          <div style="font-size:11px;color:rgba(255,255,255,0.4);text-align:center;margin-top:6px">
+            Kliknij po dokonaniu płatności lub wybraniu metody rozliczenia
+          </div>
         </div>
 
         <div class="help" id="payHelp" style="margin-top:10px">—</div>
@@ -1895,29 +1905,6 @@ function renderPayCard(amount, baseAmt, feeAmt, ref, monthlyRate, months){
   docBtn.onclick = ()=>downloadPaymentDoc(ref);
 }
 
-function downloadScheduleDoc(payment_ref, monthlyRate, months){
-  const wantReminders = document.getElementById('chkReminders')?.checked;
-  // Wyślij akcję z info o harmonogramie i przypomnieniach
-  fetch(`${API}/registration/action`, {
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({
-      payment_ref,
-      action: 'schedule_doc',
-      monthly_rate: monthlyRate,
-      months,
-      reminders: wantReminders
-    })
-  }).catch(()=>{});
-
-  const url = `${API}/registration/action?payment_ref=${encodeURIComponent(payment_ref)}&action=schedule_doc&months=${months}&monthly_rate=${monthlyRate}`;
-  window.open(url, '_blank');
-  const msg = wantReminders
-    ? 'Harmonogram otwarty · przypomnienia mailowe włączone 📅'
-    : 'Harmonogram otwarty 📅';
-  toast(msg,'ok',4000);
-}
-
 function getPaymentModePayload(){
   const mode   = document.querySelector('input[name="payMode"]:checked')?.value || null;
   // selected._months jest ustawiony z f_months selecta (rok szkolny) — ma priorytet nad selectedPlan.months
@@ -1989,17 +1976,72 @@ async function handlePayOnline(payment_ref, amount){
 async function downloadPaymentDoc(payment_ref){
   if(!payment_ref) return toast('Brak referencji płatności','err');
 
-  const modePayload = getPaymentModePayload();
+  const p = getPaymentModePayload();
 
+  // Wyślij POST → trigguje mail do kursanta z właściwą treścią
   fetch(`${API}/registration/action`, {
     method:'POST',
     headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ payment_ref, action: 'download_doc', ...modePayload })
+    body: JSON.stringify({ payment_ref, action: 'download_doc', ...p })
   }).catch(()=>{});
 
-  const url = `${API}/registration/action?payment_ref=${encodeURIComponent(payment_ref)}`;
+  // Otwórz dokument — miesięczny lub jednorazowy w zależności od trybu
+  const isMonthly = p.payment_mode === 'monthly';
+  const base = `${API}/registration/action?payment_ref=${encodeURIComponent(payment_ref)}`;
+  const url = isMonthly
+    ? `${base}&action=monthly_doc&months=${p.months}&monthly_rate=${p.monthly_rate}`
+    : base;
   window.open(url, '_blank');
-  toast('Dokument otwarty · mail z potwierdzeniem wysłany na Twoją skrzynkę','ok',4000);
+  toast('Dokument otwarty · mail wysłany na Twoją skrzynkę 📄','ok',3500);
+}
+
+function downloadScheduleDoc(payment_ref, monthlyRate, months){
+  const wantReminders = document.getElementById('chkReminders')?.checked;
+
+  // POST → trigguje mail z harmonogramem i zapisem przypomnień
+  fetch(`${API}/registration/action`, {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({
+      payment_ref,
+      action: 'schedule_doc',
+      payment_mode: 'monthly',
+      monthly_rate: monthlyRate,
+      months,
+      reminders: wantReminders
+    })
+  }).catch(()=>{});
+
+  // GET → generuje dokument harmonogramu do wydruku
+  const url = `${API}/registration/action?payment_ref=${encodeURIComponent(payment_ref)}&action=schedule_doc&months=${months}&monthly_rate=${monthlyRate}`;
+  window.open(url, '_blank');
+  toast('Harmonogram wpłat otwarty 📅','ok',3000);
+}
+
+async function confirmAndFinish(payment_ref){
+  if(!payment_ref) return;
+  const btn = document.getElementById('confirmBtn');
+  if(!btn) return;
+  btn.disabled = true;
+  btn.innerHTML = `<span class="spin"></span> Potwierdzam…`;
+
+  const p = getPaymentModePayload();
+
+  try{
+    await fetch(`${API}/registration/action`, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ payment_ref, action: 'payment_confirmed', ...p })
+    });
+    btn.innerHTML = '✓ Rejestracja potwierdzona!';
+    btn.style.background = 'linear-gradient(180deg,rgba(0,140,0,0.95),rgba(0,80,0,0.95))';
+    btn.disabled = true;
+    toast('Dziękujemy! Sprawdź maila z potwierdzeniem 🎉','ok',6000);
+  }catch(e){
+    btn.disabled = false;
+    btn.innerHTML = '✓ Potwierdź i zakończ rejestrację';
+    toast('Błąd — spróbuj ponownie','err',3000);
+  }
 }
 
 // zmiana 7: VIP Wałbrzych — wyślij przez Formspree
@@ -2256,6 +2298,10 @@ document.getElementById('backToCennik').addEventListener('click', ()=>{
   clearCart();
   setStep(1);
   window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+document.getElementById('confirmBtn').addEventListener('click', ()=>{
+  const ref = registrationResult?.payment_ref;
+  if(ref) confirmAndFinish(ref);
 });
 
 // Odśwież koszyk gdy zmienia się liczba miesięcy lub typ kursanta

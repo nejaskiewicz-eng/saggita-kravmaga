@@ -16,7 +16,7 @@ module.exports = async (req, res) => {
 
   // ── GET: generuj dokument płatniczy HTML (do wydruku) ─────────────────────
   if (req.method === 'GET') {
-    const { payment_ref } = req.query;
+    const { payment_ref, action: docAction, months: docMonths, monthly_rate: docMonthlyRate } = req.query;
     if (!payment_ref) return res.status(400).json({ error: 'Brak payment_ref' });
 
     try {
@@ -36,16 +36,56 @@ module.exports = async (req, res) => {
       if (r.city && String(r.city).toLowerCase().includes('świdnica')) {
         r.location_address = 'ul. Długa 33, 58-100 Świdnica';
       }
-      const amount = parseFloat(r.total_amount || 0).toFixed(2);
+      const totalAmount = parseFloat(r.total_amount || 0);
+      const isScheduleDoc = docAction === 'schedule_doc';
+      const isMonthlyDoc  = docAction === 'monthly_doc';
+      // Jeśli dokument miesięczny — pokaż kwotę pierwszego miesiąca
+      let displayAmount = totalAmount;
+      let docTitle = 'Dokument płatniczy';
+      let docNote = '';
+      const pMonths = parseInt(docMonths || 1);
+      const pRate = docMonthlyRate ? parseFloat(docMonthlyRate) : null;
+      const pSignupFee = parseFloat(r.signup_fee || 0);
+
+      if (isMonthlyDoc && pRate) {
+        displayAmount = pRate + pSignupFee;
+        docTitle = 'Dokument płatniczy — 1. miesiąc';
+        docNote = `<p style="margin:8px 0;font-size:13px;color:#555">Dotyczy <strong>pierwszej wpłaty</strong>. Kolejne: ${pMonths - 1} × ${fmt(pRate)} zł/mies. — łącznie ${fmt(totalAmount)} zł.</p>`;
+      } else if (isScheduleDoc) {
+        docTitle = 'Harmonogram wpłat';
+      }
+
+      const fmt2 = (v) => parseFloat(v||0).toFixed(2);
+      const amount = fmt2(displayAmount);
       const onlineUrl = `${SITE_URL}/kvcennik`;
       const date = new Date().toLocaleDateString('pl-PL', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
+
+      // Generuj tabelę harmonogramu dla schedule_doc
+      let scheduleTable = '';
+      if (isScheduleDoc && pRate && pMonths > 1) {
+        const now = new Date();
+        let rows = '';
+        for (let i = 0; i < pMonths; i++) {
+          const d = new Date(now.getFullYear(), now.getMonth() + i, 10);
+          const label = d.toLocaleDateString('pl-PL', { month: 'long', year: 'numeric' });
+          const amt = i === 0 ? (pRate + pSignupFee) : pRate;
+          const note = i === 0 && pSignupFee > 0 ? ' (karnet + wpisowe)' : '';
+          rows += `<tr><td>${i+1}.</td><td>${label}</td><td>do 10. dnia miesiąca</td><td style="font-weight:bold;color:#c42000">${fmt2(amt)} zł${note}</td></tr>`;
+        }
+        scheduleTable = `<h2 style="margin-top:24px;font-size:16px">📅 Harmonogram wpłat</h2>
+<table>
+<thead><tr style="background:#1a1a1a;color:#fff"><th style="padding:8px 10px;text-align:left">#</th><th style="padding:8px 10px;text-align:left">Miesiąc</th><th style="padding:8px 10px;text-align:left">Termin</th><th style="padding:8px 10px;text-align:left">Kwota</th></tr></thead>
+<tbody>${rows}</tbody>
+</table>
+<p style="margin-top:8px;font-size:12px;color:#666">Łącznie za cały okres: <strong>${fmt2(totalAmount)} zł</strong></p>`;
+      }
 
       const html = `<!DOCTYPE html><html lang="pl"><head><meta charset="UTF-8">
 <style>body{font-family:Arial,sans-serif;margin:40px;color:#111;font-size:14px}
 h1{font-size:22px;border-bottom:2px solid #c42000;padding-bottom:8px;margin-bottom:20px}
 .logo{font-size:18px;font-weight:bold;color:#c42000;margin-bottom:4px}
 table{width:100%;border-collapse:collapse;margin-top:16px}
-td{padding:8px 10px;border:1px solid #ddd}td:first-child{font-weight:bold;width:200px;background:#f8f8f8}
+td,th{padding:8px 10px;border:1px solid #ddd}td:first-child{font-weight:bold;width:200px;background:#f8f8f8}
 .ref{font-size:20px;font-weight:bold;letter-spacing:2px;color:#c42000;margin:16px 0}
 .note{margin-top:24px;padding:12px;border:1px solid #ddd;background:#fffbe6;font-size:13px}
 .footer{margin-top:40px;font-size:12px;color:#666;border-top:1px solid #ddd;padding-top:12px}
@@ -54,7 +94,8 @@ td{padding:8px 10px;border:1px solid #ddd}td:first-child{font-weight:bold;width:
 </style></head><body>
 <div class="logo">Akademia Obrony Saggita — Krav Maga</div>
 <p style="color:#666;font-size:12px">Dokument wygenerowany: ${date}</p>
-<h1>Dokument płatniczy</h1>
+<h1>${docTitle}</h1>
+${docNote}
 <p class="ref">Kod: ${r.payment_ref}</p>
 <table>
 <tr><td>Imię i nazwisko</td><td>${r.first_name} ${r.last_name}</td></tr>
@@ -64,20 +105,20 @@ td{padding:8px 10px;border:1px solid #ddd}td:first-child{font-weight:bold;width:
 <tr><td>Adres</td><td>${r.location_address || '—'}</td></tr>
 <tr><td>Grupa</td><td>${r.group_name || '—'}</td></tr>
 <tr><td>Karnet</td><td>${r.plan_name || '—'}</td></tr>
-<tr><td>Kwota do wpłaty</td><td><strong>${amount} zł</strong></td></tr>
+${!isScheduleDoc ? `<tr><td>Kwota do wpłaty</td><td><strong>${amount} zł</strong></td></tr>` : ''}
 </table>
-<h2 style="margin-top:24px;font-size:16px">Dane do przelewu</h2>
+${isScheduleDoc ? scheduleTable : `<h2 style="margin-top:24px;font-size:16px">Dane do przelewu</h2>
 <table>
 <tr><td>Numer konta</td><td>${BANK_ACCOUNT}</td></tr>
 <tr><td>Odbiorca</td><td>${BANK_NAME}</td></tr>
 <tr><td>Tytuł przelewu</td><td><strong>${r.payment_ref} — ${r.first_name} ${r.last_name}</strong></td></tr>
 <tr><td>Kwota</td><td><strong>${amount} zł</strong></td></tr>
-</table>
+</table>`}
 <div class="note"><strong>Ważne:</strong> Przelew w ciągu <strong>3 dni roboczych</strong>.
 Po tym terminie rezerwacja przepada.<br>
 Po przelewie wyślij potwierdzenie na: <strong>biuro@akademiaobrony.pl</strong><br>
 Kontakt: <strong>biuro@akademiaobrony.pl</strong> · <strong>510 930 460</strong></div>
-<a href="${onlineUrl}" class="online-btn">💳 Przejdź do płatności online</a>
+${!isScheduleDoc ? `<a href="${onlineUrl}" class="online-btn">💳 Przejdź do płatności online</a>` : ''}
 <div class="footer">Akademia Obrony Saggita | biuro@akademiaobrony.pl | 510 930 460</div>
 <script>window.onload=()=>window.print();</script>
 </body></html>`;
