@@ -1938,7 +1938,7 @@
     <div class="gc-sched">${sch || '<span style="color:var(--dim2)">Brak grafiku</span>'}</div>
     <div class="gc-foot">
       ${hasClassToday
-          ? `<button class="btn btn-g btn-sm" onclick="event.stopPropagation();quickSess(${g.id})" style="background:var(--green);color:#000;font-weight:800;border:none;box-shadow:0 3px 10px rgba(46,204,113,0.3)">✓ Obecność</button>`
+          ? `<button class="btn btn-r btn-sm" onclick="event.stopPropagation();quickSess(${g.id})" style="font-weight:800;border:none;box-shadow:0 3px 10px rgba(196,32,0,0.3)">Sprawdź obecność</button>`
           : (canOpenStudents
             ? `<button class="btn btn-r btn-sm" onclick="event.stopPropagation();openGrp(${g.id})">Kursanci</button>`
             : `<span style="font-size:11px;color:var(--dim2);padding:4px 0">Dostępne w dniu zajęć</span>`)
