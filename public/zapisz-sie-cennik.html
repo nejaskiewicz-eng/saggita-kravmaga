@@ -70,7 +70,7 @@ body::before{ display:none; }
   display:grid;
   grid-template-columns:1fr minmax(240px, 320px);
   gap:32px;
-  align-items:start;
+  align-items:stretch;   /* koszyk rozciąga się do wysokości lewej kolumny */
   margin-bottom:32px;
   width:100%;
 }
@@ -99,17 +99,18 @@ h1{
   margin-top:4px;
 }
 
-/* Koszyk — mały blok inline z nagłówkiem */
+/* ── KOSZYK ─────────────────────────────────────── */
 .cart-inline{
-  background:rgba(255,255,255,0.045);
-  backdrop-filter:blur(20px) saturate(180%);
-  -webkit-backdrop-filter:blur(20px) saturate(180%);
-  border:1px solid rgba(255,255,255,0.12);
+  background:rgba(255,255,255,0.04);
+  border:1.5px solid rgba(255,255,255,0.12);
   border-radius:var(--radius-sm);
-  padding:18px 20px;
+  padding:20px 22px;
   width:100%;
-  box-shadow:var(--shadow-card), inset 0 1px 0 rgba(255,255,255,0.08);
-  display:flex;flex-direction:column;gap:12px;
+  height:100%;
+  min-height:140px;
+  box-shadow:var(--shadow-card);
+  display:flex;flex-direction:column;gap:10px;
+  transition:background .35s ease, border-color .35s ease, box-shadow .35s ease, padding .35s ease;
 }
 .cart-inline__label{
   font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
@@ -121,47 +122,49 @@ h1{
 }
 .cart-inline__price{
   font-family:'Montserrat',sans-serif;
-  font-size:26px;font-weight:900;color:var(--white);
+  font-size:32px;font-weight:900;color:var(--white);
   line-height:1;
 }
 .cart-inline__price small{
-  font-size:13px;font-family:'Open Sans',sans-serif;font-weight:500;
-  color:rgba(255,255,255,0.45);margin-left:4px;
+  font-size:14px;font-family:'Open Sans',sans-serif;font-weight:500;
+  color:rgba(255,255,255,0.60);margin-left:4px;
 }
 .cart-inline__actions{
   display:flex;gap:8px;
+  margin-top:auto;  /* przyciski zawsze na dole */
 }
 .cart-inline__hint{
-  font-size:11px;color:rgba(255,255,255,0.38);line-height:1.4;
+  font-size:11px;color:rgba(255,255,255,0.50);line-height:1.4;
   font-style:italic;
 }
-/* Koszyk — pulsuje i rośnie po dodaniu pozycji */
+
+/* ── STAN PUSTY ── */
+.cart-inline.empty .cart-inline__service{color:rgba(255,255,255,0.30);font-style:italic;font-weight:400}
+.cart-inline.empty .cart-inline__price{color:rgba(255,255,255,0.18)}
+
+/* ── STAN Z POZYCJĄ — DZIECI (niebieski) ── */
 @keyframes cartGlowBlue{
-  0%,100%{ box-shadow:var(--shadow-card), 0 6px 0px rgba(16,86,168,0), inset 0 1px 0 rgba(255,255,255,0.06); }
-  50%    { box-shadow:var(--shadow-card), 0 22px 44px rgba(16,86,168,0.65), inset 0 1px 0 rgba(255,255,255,0.10); }
-}
-@keyframes cartGlowRed{
-  0%,100%{ box-shadow:var(--shadow-card), 0 6px 0px rgba(178,25,0,0), inset 0 1px 0 rgba(255,255,255,0.06); }
-  50%    { box-shadow:var(--shadow-card), 0 22px 44px rgba(178,25,0,0.65), inset 0 1px 0 rgba(255,255,255,0.10); }
-}
-.cart-inline.has-item{
-  padding:22px 22px 22px;     /* rośnie */
-  min-height:210px;
-  transition: border-color 0.3s ease, padding 0.3s ease, min-height 0.3s ease;
+  0%,100%{ box-shadow:var(--shadow-card), 0 8px 0 rgba(16,86,168,0); }
+  50%    { box-shadow:var(--shadow-card), 0 28px 56px rgba(16,86,168,0.75); }
 }
 .cart-inline.has-item.glow-kids{
+  background:linear-gradient(160deg, #0c2d6e 0%, #091e4a 100%);
   border-color:#1459b0;
-  background:#091e4a;
+  padding:24px 24px;
   animation: cartGlowBlue 2.2s ease-in-out infinite;
 }
+
+/* ── STAN Z POZYCJĄ — DOROŚLI (czerwony) ── */
+@keyframes cartGlowRed{
+  0%,100%{ box-shadow:var(--shadow-card), 0 8px 0 rgba(178,25,0,0); }
+  50%    { box-shadow:var(--shadow-card), 0 28px 56px rgba(178,25,0,0.75); }
+}
 .cart-inline.has-item.glow-adults{
-  border-color:rgba(178,25,0,0.70);
+  background:linear-gradient(160deg, rgba(100,12,0,0.90) 0%, rgba(60,6,0,0.95) 100%);
+  border-color:rgba(218,42,0,0.80);
+  padding:24px 24px;
   animation: cartGlowRed 2.2s ease-in-out infinite;
 }
-
-/* cart state: empty */
-.cart-inline.empty .cart-inline__service{color:rgba(255,255,255,0.3);font-style:italic;font-weight:400}
-.cart-inline.empty .cart-inline__price{color:rgba(255,255,255,0.18)}
 
 /* ═══════════════════════════════════════
    STEPPER
