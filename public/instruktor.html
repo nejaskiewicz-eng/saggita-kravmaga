@@ -2430,21 +2430,25 @@
         ${st.map(s => {
           const days = daysAgo(s.last_payment);
 
-          // Data wpłaty robi teraz za potężny, klikalny przycisk przenoszący do profilu
+          // Widoczna, uwypuklona data wpłaty (bez funkcji przycisku)
           const payBadge = S.perms.can_see_payments ? `
-          <div onclick="event.stopPropagation();openStud(${s.student_id})" style="cursor:pointer;font-size:12px;font-weight:800;letter-spacing:0.02em;color:var(--text);border-bottom:1px solid rgba(255,255,255,0.08);padding-bottom:8px;margin-bottom:8px;width:100%;display:flex;align-items:center;justify-content:space-between">
-            <span>Wpłata: <span class="badge ${days > 35 ? 'br' : 'bg'}" style="padding:4px 8px;border-radius:6px;font-size:13px;margin-left:4px">${s.last_payment ? fd(s.last_payment) : 'Brak'}</span></span>
-            <span style="font-size:18px;color:rgba(255,255,255,0.4)">›</span>
-          </div>` : '';
+            <div style="font-size:10px;font-weight:700;letter-spacing:0.02em;color:var(--dim);margin-top:2px;display:flex;align-items:center;gap:6px;">
+              Wpłata: <span class="badge ${days > 35 ? 'br' : 'bg'}" style="padding:4px 8px;border-radius:6px;font-size:12px;font-weight:900;box-shadow:0 2px 8px ${days > 35 ? 'rgba(196,32,0,0.3)' : 'rgba(46,204,113,0.2)'}">${s.last_payment ? fd(s.last_payment) : 'Brak danych'}</span>
+            </div>` : '';
 
-          const addPayBtn = S.perms.can_accept_payment ? `<button class="btn btn-sm" style="width:100%;justify-content:center;font-size:11px;padding:6px 0;background:rgba(46,204,113,.15);border:1px solid rgba(46,204,113,.4);color:#2ecc71" onclick="event.stopPropagation();moAcceptPayment(${s.student_id},'${esc(s.first_name)} ${esc(s.last_name)}',${sess.group_id})">+ Dodaj wpłatę</button>` : '';
+          const profBtn = `<button class="btn btn-o" onclick="event.stopPropagation();openStud(${s.student_id})" style="padding:6px 10px;font-size:10px;flex:1;max-width:100px;text-align:center;">Kartoteka</button>`;
+
+          const addPayBtn = S.perms.can_accept_payment ? `<button class="btn" style="padding:6px 10px;font-size:10px;background:rgba(46,204,113,.15);border:1px solid rgba(46,204,113,.4);color:#2ecc71;flex:1;max-width:100px;text-align:center;" onclick="event.stopPropagation();moAcceptPayment(${s.student_id},'${esc(s.first_name)} ${esc(s.last_name)}',${sess.group_id})">+ Wpłata</button>` : '';
 
           return `
           <div class="att-row ${s.present ? 'present' : 'absent'}" id="atr-${s.student_id}" onclick="toggleAttRow(event, ${sess.session_id}, ${s.student_id})">
             <div class="att-chk ${s.present ? 'on' : ''}" id="chk-${s.student_id}">${s.present ? '✓' : ''}</div>
-            <div class="att-name" style="font-weight:800;font-size:15px;padding-top:2px">${esc(s.last_name)}, ${esc(s.first_name)}</div>
-            <div style="grid-column:2;display:flex;flex-direction:column;align-items:flex-start;margin-top:6px;padding-top:2px;width:100%;">
+            <div style="display:flex;flex-direction:column;justify-content:center;">
+              <div class="att-name" style="font-weight:800;font-size:14px;">${esc(s.last_name)}, ${esc(s.first_name)}</div>
               ${payBadge}
+            </div>
+            <div style="grid-column:1/-1;display:flex;gap:8px;margin-top:2px;padding-top:6px;border-top:1px solid rgba(255,255,255,0.06);justify-content:flex-end;">
+              ${profBtn}
               ${addPayBtn}
             </div>
           </div>`;
