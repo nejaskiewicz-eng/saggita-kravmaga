@@ -93,13 +93,13 @@ module.exports = async (req, res) => {
         group_id, schedule_id, price_plan_id, location_id,
         start_date, preferred_time,
         is_waitlist, status, payment_status, payment_method,
-        payment_ref, total_amount, source, consent_data, consent_rules, has_membership, signature_data
+        payment_ref, total_amount, source, consent_data, consent_rules, has_membership
       ) VALUES (
         $1,$2,$3,$4,$5,$6,
         $7,$8,$9,$10,
         $11,$12,
         $13,'new',$14,$15,
-        $16,$17,'web',$18,$19,$20,$21
+        $16,$17,'web',$18,$19,$20
       ) RETURNING id, payment_ref, total_amount, is_waitlist, email`,
       [
         b.first_name.trim(), b.last_name.trim(), b.email.trim(), b.phone.trim(),
@@ -108,7 +108,7 @@ module.exports = async (req, res) => {
         b.start_date || null, b.preferred_time || null,
         is_waitlist, payment_status, b.payment_method || 'transfer',
         payment_ref, total_amount, b.consent_data || false, b.consent_rules || false,
-        b.has_membership || false, b.sig1 || null,
+        b.has_membership || false,
       ]
     );
 
