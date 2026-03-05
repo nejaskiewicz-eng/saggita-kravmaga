@@ -39,10 +39,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Ar
 .hi{font-size:18px;font-weight:600;margin-bottom:24px;color:#1d1d1f}
 .card{background:#f5f5f7;border-radius:12px;padding:24px;margin:24px 0}
 .card-title{font-size:12px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#86868b;margin-bottom:16px}
-.row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(0,0,0,0.06);font-size:15px}
+.row{display:table;width:100%;padding:10px 0;border-bottom:1px solid rgba(0,0,0,0.06);font-size:15px}
 .row:last-child{border-bottom:none}
-.row b{color:#1d1d1f;font-weight:600}
-.row span{color:#515154;text-align:right}
+.row b{display:table-cell;vertical-align:middle;color:#1d1d1f;font-weight:600;width:40%;text-align:left}
+.row span{display:table-cell;vertical-align:middle;color:#515154;text-align:right;width:60%}
 .total-row{padding-top:16px;margin-top:8px;border-top:2px solid rgba(0,0,0,0.08)}
 .total-row b{font-size:17px;color:#1d1d1f}
 .total-row span{font-size:19px;font-weight:800;color:#ff3b30}
@@ -216,15 +216,17 @@ function mailMonthlySchedule({ first_name, payment_ref, plan_name, group_name, c
       const prevEnd = new Date(now.getFullYear(), now.getMonth() + mo, 0);
       deadline = 'do ' + prevEnd.toLocaleDateString('pl-PL', { day: 'numeric', month: 'long', year: 'numeric' });
     }
-    rows += `<div class="schedule-row">
-      <div style="display:flex;align-items:center;gap:12px">
-        <span style="color:#86868b;font-weight:600;font-variant-numeric:tabular-nums">${i + 1}.</span>
-        <div style="display:flex;flex-direction:column">
-          <strong style="font-size:15px;color:#1d1d1f;text-transform:capitalize">${label}</strong>
-          <span style="font-size:13px;color:#ff3b30;font-weight:600">${deadline}</span>
-        </div>
-      </div>
-      <span style="font-weight:700;font-size:16px;color:#1d1d1f">${fmt(amt)}</span>
+    rows += `<div style="padding:12px 16px;background:#ffffff;border:1px solid #e5e5ea;border-radius:10px;margin-bottom:8px">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+        <tr>
+          <td width="30" valign="top" style="color:#86868b;font-weight:600;font-variant-numeric:tabular-nums;padding-top:2px">${i + 1}.</td>
+          <td valign="top">
+            <strong style="display:block;font-size:15px;color:#1d1d1f;text-transform:capitalize">${label}</strong>
+            <span style="display:block;font-size:13px;color:#ff3b30;font-weight:600">${deadline}</span>
+          </td>
+          <td align="right" valign="top" style="font-weight:700;font-size:16px;color:#1d1d1f;padding-top:2px">${fmt(amt)}</td>
+        </tr>
+      </table>
     </div>`;
   }
 
@@ -240,24 +242,24 @@ function mailMonthlySchedule({ first_name, payment_ref, plan_name, group_name, c
   <div class="card-title">Co zapisano</div>
   <div class="row"><b>Karnet (Miesięczny)</b><span class="pill">${plan_name || '—'}</span></div>
   <div class="row"><b>Grupa</b><span>${group_name || '—'}</span></div>
-  <div class="row total-row"><b>Suma początkowa</b><span>${fmt(firstAmt)}${fee > 0 ? ` <br><span style="font-size:12px;color:#86868b;font-weight:500">(${fmt(rate)} rata + ${fmt(fee)} wpisowe)</span>` : ''}</span></div>
+  <div class="row total-row"><b>Suma początkowa</b><span>${fmt(firstAmt)}${fee > 0 ? ` <br><span style="font-size:12px;color:#86868b;font-weight:500">(${fmt(rate)} opłata mies. + ${fmt(fee)} wpisowe)</span>` : ''}</span></div>
 </div>
-<h3 style="margin:32px 0 16px;font-size:16px;font-weight:700;color:#1d1d1f">📅 Podsumowanie rat (${months} m-cy)</h3>
+<h3 style="margin:32px 0 16px;font-size:16px;font-weight:700;color:#1d1d1f">📅 Podsumowanie opłat miesięcznych (${months} m-cy)</h3>
 <div style="margin-bottom:8px">
   ${rows}
 </div>
-<p style="font-size:13px;color:#86868b;text-align:right;margin-top:8px">Wartość kontraktu: <strong>${fmt(total_amount)} zł</strong></p>
+<p style="font-size:13px;color:#86868b;text-align:right;margin-top:8px">Łączna wartość umowy: <strong>${fmt(total_amount)} zł</strong></p>
 
 <div class="card" style="background:#ffffff;border:1px solid #0071e3;box-shadow:0 4px 16px rgba(0,113,227,0.1)">
-  <div class="card-title" style="color:#0071e3">Twoje konto do wpłat (Rata 1)</div>
+  <div class="card-title" style="color:#0071e3">Twoje konto do wpłat (Pierwsza wpłata)</div>
   <div class="row"><b>Numer konta</b><span style="font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;letter-spacing:0.05em">${bank_account}</span></div>
   <div class="row"><b>Odbiorca</b><span>${bank_name}</span></div>
   <div class="row" style="background:rgba(255,59,48,0.05);padding:12px;border-radius:8px;margin-top:8px">
-    <b>Tytuł ramy</b><span style="font-weight:800;color:#ff3b30">${payment_ref} — ${first_name}</span>
+    <b style="width:30%">Tytuł przelewu</b><span style="font-weight:800;color:#ff3b30;width:70%">${payment_ref} — ${first_name}</span>
   </div>
 </div>
 <div class="alert">
-  <strong>Prosimy o uregulowanie 1. raty (${fmt(firstAmt)}) w ciągu 3 dni</strong> roboczych na wskazane konto bankowe by potwierdzić zapis.
+  <strong>Prosimy o uregulowanie opłaty za 1. miesiąc (${fmt(firstAmt)}) w ciągu 3 dni</strong> roboczych na wskazane konto bankowe by potwierdzić zapis.
 </div>
 ${reminders ? '<p style="font-size:14px;color:#515154;text-align:center;margin-top:24px"><span style="color:#34c759">✓</span> <strong>Automatyczne przypomnienia włączone</strong>. Przed każdym terminem trzymasz od nas krótką wiadomość email.</p>' : ''}
 <div style="text-align:center;margin-top:32px">
