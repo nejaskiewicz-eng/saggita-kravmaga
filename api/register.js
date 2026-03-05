@@ -4,8 +4,8 @@ const { getPool } = require('./_lib/db');
 const { sendMail, mailAdmin, mailWaitlist, mailKursant } = require('./_lib/mail');
 
 const BANK_ACCOUNT = process.env.BANK_ACCOUNT || '21 1140 2004 0000 3902 3890 8895';
-const BANK_NAME    = process.env.BANK_NAME    || 'Akademia Obrony Saggita';
-const ADMIN_EMAIL  = process.env.ADMIN_EMAIL  || 'biuro@akademiaobrony.pl';
+const BANK_NAME = process.env.BANK_NAME || 'Akademia Obrony Saggita';
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'biuro@akademiaobrony.pl';
 
 function genRef() {
   const ts = Date.now().toString(36).toUpperCase();
@@ -53,7 +53,7 @@ module.exports = async (req, res) => {
     let plan_name = null;
     let planMonths = 1;
     let planRow = null;
-    
+
     // Jeśli osoba ma karnet, nie płaci
     if (b.has_membership) {
       total_amount = 0;
@@ -69,8 +69,8 @@ module.exports = async (req, res) => {
         const planPrice = parseFloat(plan.price || 0);
         const planMaxMonths = parseInt(plan.months || 1);
         // Dla planów szkolnych (price_per_month * months): jeśli front przekazał months_selected, przelicz
-        const monthsSelected = parseInt(b.months_selected || 0);
-        if (monthsSelected > 0 && monthsSelected < planMaxMonths && planMaxMonths > 1) {
+        const monthsSelected = parseInt(b.months_selected || b.months_count || 0);
+        if (monthsSelected > 0 && monthsSelected <= planMaxMonths && planMaxMonths > 1) {
           // Stawka miesięczna = plan.price / plan.months
           const monthlyRate = planPrice / planMaxMonths;
           total_amount = Math.round(monthlyRate * monthsSelected) + fee;
@@ -93,13 +93,13 @@ module.exports = async (req, res) => {
         group_id, schedule_id, price_plan_id, location_id,
         start_date, preferred_time,
         is_waitlist, status, payment_status, payment_method,
-        payment_ref, total_amount, source, consent_data, consent_rules, has_membership
+        payment_ref, total_amount, source, consent_data, consent_rules, has_membership, signature_data
       ) VALUES (
         $1,$2,$3,$4,$5,$6,
         $7,$8,$9,$10,
         $11,$12,
         $13,'new',$14,$15,
-        $16,$17,'web',$18,$19,$20
+        $16,$17,'web',$18,$19,$20,$21
       ) RETURNING id, payment_ref, total_amount, is_waitlist, email`,
       [
         b.first_name.trim(), b.last_name.trim(), b.email.trim(), b.phone.trim(),
@@ -108,19 +108,19 @@ module.exports = async (req, res) => {
         b.start_date || null, b.preferred_time || null,
         is_waitlist, payment_status, b.payment_method || 'transfer',
         payment_ref, total_amount, b.consent_data || false, b.consent_rules || false,
-        b.has_membership || false,
+        b.has_membership || false, b.sig1 || null,
       ]
     );
 
     // Tryb płatności przekazany z frontendu
     const payment_mode = b.payment_mode || null;          // 'full' | 'monthly' | null
-    const months       = parseInt(b.months || planMonths || 1);
-    const signup_fee   = b.is_new ? parseFloat(planRow?.signup_fee || 0) : 0;
-    const base_amount  = total_amount - signup_fee;
+    const months = parseInt(b.months || planMonths || 1);
+    const signup_fee = b.is_new ? parseFloat(planRow?.signup_fee || 0) : 0;
+    const base_amount = total_amount - signup_fee;
     const monthly_rate = b.monthly_rate
       ? parseFloat(b.monthly_rate)
       : (months > 1 ? Math.round(base_amount / months) : base_amount);
-    const reminders    = b.reminders !== false;
+    const reminders = b.reminders !== false;
 
     const mailData = {
       first_name: b.first_name, last_name: b.last_name,

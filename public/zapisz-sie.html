@@ -1271,6 +1271,25 @@
             </label>
           </div>
 
+          <div class="form-field form-field--full" id="fieldMonths"
+            style="display:none;margin-bottom:14px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);padding:16px 18px;border-radius:var(--radius-xs)">
+            <label class="form-label" for="f_months">Liczba miesięcy <span>*</span></label>
+            <select class="form-select" id="f_months">
+              <option value="1">1 miesiąc</option>
+              <option value="2">2 miesiące</option>
+              <option value="3">3 miesiące</option>
+              <option value="4">4 miesiące</option>
+              <option value="5">5 miesięcy</option>
+              <option value="6">6 miesięcy</option>
+              <option value="7">7 miesięcy</option>
+              <option value="8">8 miesięcy</option>
+              <option value="9">9 miesięcy</option>
+              <option value="10" selected>10 miesięcy — pełny rok szkolny</option>
+            </select>
+            <div style="font-weight:600;font-size:12px;color:rgba(255,255,255,0.55);margin-top:6px">Stawka: 180 zł /
+              miesiąc. Koszt aktualizuje się automatycznie.</div>
+          </div>
+
           <div class="price-options" id="priceOptions"></div>
 
           <hr class="form-divider">
@@ -1296,7 +1315,138 @@
               placeholder="np. wtorek 18:00 lub elastyczny">
           </div>
 
-          <hr class="form-divider">
+          <hr class="form-divider" id="docsDivider" style="display:none">
+
+          <!-- KONTENER NA DOKUMENTY (TYLKO DLA KURSANTÓW DZIECIĘCYCH) -->
+          <div id="docsContainer"
+            style="display:none; grid-column:1/-1; gap:16px; flex-direction:column; margin-bottom:12px;">
+            <div class="form-section-label">Wymagane dokumenty</div>
+            <div style="font-size:.76rem;color:rgba(255,255,255,0.60);margin-bottom:8px">Jako rodzic/opiekun zapoznaj
+              się z regulaminem, polityką ochrony małoletnich oraz podpisz zgodę odręcznie palcem na ekranie.</div>
+
+            <!-- Dokument 1: Regulamin -->
+            <div class="doc-block" id="docBlock1"
+              style="border:1px solid rgba(255,255,255,0.12);border-radius:var(--radius-sm);overflow:hidden;background:rgba(255,255,255,0.025)">
+              <div
+                style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px;background:rgba(255,255,255,0.03);border-bottom:1px solid rgba(255,255,255,0.08)">
+                <div>
+                  <div style="font-weight:700;font-size:14px;color:var(--white)">1. Umowa i Regulamin Sekcji</div>
+                  <div style="font-size:12px;color:rgba(255,255,255,0.45);margin-top:3px">Zapoznaj się z regulaminem i
+                    potwierdź akceptację</div>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px">
+                  <span id="docStatus1"
+                    style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:999px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.45)">Do
+                    przeczytania</span>
+                  <button type="button" class="btn-submit" style="padding:4px 12px;font-size:.65rem;border-radius:99px"
+                    onclick="toggleDoc(1)">Rozwiń ▾</button>
+                </div>
+              </div>
+              <div id="docContent1" style="display:none;padding:20px 18px">
+                <div
+                  style="max-height:340px;overflow-y:auto;padding:16px;background:rgba(0,0,0,0.25);border-radius:10px;border:1px solid rgba(255,255,255,0.07);font-size:13px;line-height:1.8;color:rgba(255,255,255,0.78)">
+                  <strong style="display:block;margin-bottom:4px;font-size:15px;color:white">UMOWA – REGULAMIN SEKCJI
+                    KRAV MAGA</strong>
+                  <em style="color:rgba(255,255,255,0.5)">Akademia Obrony Saggita</em><br><br>
+                  <strong>1. Bądź punktualny i systematyczny.</strong><br>
+                  Na zajęcia przychodź zawsze kilka minut wcześniej, tak abyś miał czas na przebranie się i
+                  formalności.<br>
+                  <strong>6. Składki członkowskie i coroczna opłata na sprzęt.</strong><br>
+                  • Umowa na rok szkolny (maks. 10 mies., liczba miesięcy ustalana indywidualnie w zależności od daty
+                  dołączenia): <strong>180 zł/mies.</strong><br>
+                  • <strong>Rezygnacja w trakcie trwania umowy:</strong> W przypadku wcześniejszego rozwiązania umowy,
+                  za
+                  każdy miesiąc objęty rabatem umownym kursant zobowiązany jest do wyrównania
+                  różnicy (dopłaty 60 zł za każdy miesiąc).<br>
+                  <strong>KLAUZULA INFORMACYJNA RODO</strong><br>
+                  Administratorem danych jest: Tadeusz Dubicki, Świdnica, NIP 884 218 23 65.
+                </div>
+                <div style="margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                  <div class="form-field"><label class="form-label">Imię i nazwisko rodzica <span
+                        style="color:var(--accent)">*</span></label><input class="form-input" id="doc1_parent"
+                      type="text" placeholder="np. Jan Kowalski"></div>
+                  <div class="form-field"><label class="form-label">Imię i nazwisko dziecka <span
+                        style="color:var(--accent)">*</span></label><input class="form-input" id="doc1_child"
+                      type="text" placeholder="np. Anna Kowalska"></div>
+                </div>
+                <div
+                  style="margin-top:12px;padding:10px 14px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.09);border-radius:10px;display:flex;align-items:flex-start;gap:10px">
+                  <input type="checkbox" id="doc1_confirm" onchange="updateDocStatus(1)"
+                    style="margin-top:2px;flex-shrink:0;width:18px;height:18px">
+                  <label for="doc1_confirm"
+                    style="font-size:13px;color:rgba(255,255,255,0.82);cursor:pointer;font-weight:600">Oświadczam, że
+                    zapoznałem/am się z niniejszą Umową – Regulaminem Sekcji Krav Maga oraz Regulaminem Sekcji Krav Maga
+                    Kids i akceptuję wszystkie zawarte w nim postanowienia. <span
+                      style="color:var(--accent)">*</span></label>
+                </div>
+                <div style="margin-top:14px;width:100%;overflow:hidden;">
+                  <div
+                    style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,0.55);margin-bottom:8px">
+                    Podpis elektroniczny palcem <span style="color:var(--accent)">*</span></div>
+                  <div
+                    style="width:100%;position:relative;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.15);border-radius:10px;touch-action:none;">
+                    <canvas id="sigCanvas1" width="560" height="140"
+                      style="width:100%;height:140px;cursor:crosshair;touch-action:none;display:block;box-sizing:border-box;"></canvas>
+                  </div>
+                  <div style="display:flex;gap:8px;margin-top:8px">
+                    <button type="button" class="btn-submit"
+                      style="padding:4px 12px;font-size:.65rem;border-radius:99px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.15)"
+                      onclick="clearSig(1)">Wyczyść podpis</button>
+                    <span id="sigStatus1" style="font-size:12px;color:rgba(255,255,255,0.40);align-self:center">Podpisz
+                      palcem na polu powyżej</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Dokument 2: Zgoda Rodzica -->
+            <div class="doc-block" id="docBlock2"
+              style="border:1px solid rgba(255,255,255,0.12);border-radius:var(--radius-sm);overflow:hidden;background:rgba(255,255,255,0.025)">
+              <div
+                style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px;background:rgba(255,255,255,0.03);border-bottom:1px solid rgba(255,255,255,0.08)">
+                <div>
+                  <div style="font-weight:700;font-size:14px;color:var(--white)">2. Zgoda na Udział Dziecka w Zajęciach
+                  </div>
+                  <div style="font-size:12px;color:rgba(255,255,255,0.45);margin-top:3px">Wydrukuj, podpisz i przynieś
+                    na pierwsze zajęcia</div>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px">
+                  <span id="docStatus2"
+                    style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:999px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.45)">Do
+                    przeczytania</span>
+                  <button type="button" class="btn-submit" style="padding:4px 12px;font-size:.65rem;border-radius:99px"
+                    onclick="toggleDoc(2)">Rozwiń ▾</button>
+                </div>
+              </div>
+              <div id="docContent2" style="display:none;padding:20px 18px">
+                <div
+                  style="max-height:340px;overflow-y:auto;padding:16px;background:rgba(0,0,0,0.25);border-radius:10px;border:1px solid rgba(255,255,255,0.07);font-size:13px;line-height:1.8;color:rgba(255,255,255,0.78)">
+                  Jako rodzic/opiekun prawny oświadczam, że:<br>
+                  1. Wyrażam zgodę na udział mojego dziecka w zajęciach Krav Maga organizowanych przez Akademię Obrony
+                  Saggita.<br>
+                  2. Dziecko nie ma przeciwwskazań zdrowotnych do uprawiania sportów walki.<br>
+                  3. Biorę na siebie pełną odpowiedzialność za ewentualne nieszczęśliwe wypadki.<br>
+                  <br>Oryginał dokumentu zgody dziecko musi przynieść na pierwszy trening! Będzie można go pobrać po
+                  zatwierdzeniu zapisu.
+                </div>
+                <div
+                  style="margin-top:12px;padding:10px 14px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.09);border-radius:10px;display:flex;align-items:flex-start;gap:10px">
+                  <input type="checkbox" id="doc2_confirm" onchange="updateDocStatus(2)"
+                    style="margin-top:2px;flex-shrink:0;width:18px;height:18px">
+                  <label for="doc2_confirm"
+                    style="font-size:13px;color:rgba(255,255,255,0.82);cursor:pointer;font-weight:600">Rozumiem i
+                    zgadzam się z powyższym. Zobowiązuję się dostarczyć wersję papierową dokumentu na pierwszy trening.
+                    <span style="color:var(--accent)">*</span></label>
+                </div>
+              </div>
+            </div>
+
+            <div id="docsErrorMsg"
+              style="display:none;margin-top:12px;padding:11px 14px;background:rgba(178,25,0,0.10);border:1px solid rgba(178,25,0,0.35);border-radius:10px;font-size:13px;color:#ffb2a6;font-weight:600">
+            </div>
+          </div>
+
+          <hr class="form-divider" id="consentDivider">
 
           <div class="form-section-label">Zgody</div>
 
@@ -1915,7 +2065,34 @@
         card.addEventListener('click', () => {
           qsa('.price-card').forEach(c => c.classList.remove('selected'));
           card.classList.add('selected');
+
+          // Pokaż suwak miesięcy jeśli wybrano karnet 10-miesięczny (isSchoolYr)
+          const fm = document.getElementById('fieldMonths');
+          if (fm) fm.style.display = isSchoolYr(plan) ? 'flex' : 'none';
+
+          // Pokazujemy kontrakty/dokumenty podpisów, jeżeli kursant = Kids
+          const dc = document.getElementById('docsContainer');
+          const hrDoc = document.getElementById('docsDivider');
+          const hrCons = document.getElementById('consentDivider');
+          const docsActive = isKidsPlan(plan);
+          if (dc) dc.style.display = docsActive ? 'flex' : 'none';
+          if (hrDoc) hrDoc.style.display = docsActive ? 'block' : 'none';
+          if (hrCons) hrCons.style.display = docsActive ? 'none' : 'block';
         });
+
+        // Autoselect the first option visually and trigger its display logic
+        if (i === 0) {
+          const fm = document.getElementById('fieldMonths');
+          if (fm) fm.style.display = isSchoolYr(plan) ? 'flex' : 'none';
+
+          const dc = document.getElementById('docsContainer');
+          const hrDoc = document.getElementById('docsDivider');
+          const hrCons = document.getElementById('consentDivider');
+          const docsActive = isKidsPlan(plan);
+          if (dc) dc.style.display = docsActive ? 'flex' : 'none';
+          if (hrDoc) hrDoc.style.display = docsActive ? 'block' : 'none';
+          if (hrCons) hrCons.style.display = docsActive ? 'none' : 'block';
+        }
 
         container.appendChild(card);
       });
@@ -1970,6 +2147,36 @@
       label.textContent = 'Wysyłam…';
 
       try {
+        const selectedPriceEl = document.querySelector('input[name=price_plan]:checked');
+        const selectedPriceId = selectedPriceEl ? parseInt(selectedPriceEl.value) : null;
+        const fmDisplay = document.getElementById('fieldMonths').style.display;
+        const monthsCount = (fmDisplay === 'flex' || fmDisplay === 'block') ? parseInt(document.getElementById('f_months').value) : null;
+
+        let sig1 = null;
+        const docsContainer = document.getElementById('docsContainer');
+        const docsActive = docsContainer && docsContainer.style.display !== 'none';
+
+        if (docsActive) {
+          if (!document.getElementById('doc1_confirm').checked || !document.getElementById('doc2_confirm').checked) {
+            const docsErr = document.getElementById('docsErrorMsg');
+            if (docsErr) { docsErr.textContent = 'Musisz przeczytać i zaznaczyć akceptację wszystkich dokumentów przeznaczonych dla grup dziecięcych.'; docsErr.style.display = 'block'; }
+            showMsg('Brakuje podpisów lub rozwiń wszystkie formularze Umów poniżej.', 'error');
+            return;
+          }
+          if (!document.getElementById('doc1_parent').value.trim() || !document.getElementById('doc1_child').value.trim()) {
+            showMsg('Wypełnij imiona w sekcji Umowy.', 'error'); return;
+          }
+          // Validate Signature
+          if (window.sigCanvasHasDrawing && window.sigCanvasHasDrawing[1]) {
+            const canvas = document.getElementById('sigCanvas1');
+            sig1 = canvas.toDataURL('image/png');
+          } else {
+            const docsErr = document.getElementById('docsErrorMsg');
+            if (docsErr) { docsErr.textContent = 'Brakuje odręcznego podpisu rodzica w dokumencie Umowa.'; docsErr.style.display = 'block'; }
+            showMsg('Podpisz umowę palcem lub myszką.', 'error'); return;
+          }
+        }
+
         const body = {
           first_name: first,
           last_name: last,
@@ -1979,13 +2186,15 @@
           is_new: document.getElementById('f_new').value !== 'false',
           group_id: selectedGroup,
           schedule_id: selectedSchedule,
-          price_plan_id: selectedPrice ? parseInt(selectedPrice.value) : null,
+          price_plan_id: selectedPriceId,
+          months_count: monthsCount,
           has_membership: document.getElementById('f_has_membership')?.checked || false,
           start_date: document.getElementById('f_date').value || null,
           payment_method: document.getElementById('f_pay').value,
           preferred_time: document.getElementById('f_ptime').value.trim() || null,
           consent_data: true,
           consent_rules: true,
+          sig1: sig1,
         };
 
         const res = await fetch(`${API}/register`, {
@@ -2205,6 +2414,7 @@
         buildPanels();
         if (allData?.[0]?.id) switchTab(allData[0].id);
 
+        initSignatureCanvases();
       } catch (e) {
         container.innerHTML = `<div class="loading-overlay" style="color:#ffb2a6">
       Błąd ładowania grafiku.<br><br>
@@ -2215,6 +2425,131 @@
     }
 
     init();
+
+    // ── Dokumenty & Podpisy ──────────────────────────────────────────
+    function toggleDoc(id) {
+      const content = document.getElementById(`docContent${id}`);
+      const btn = content.previousElementSibling.querySelector('button');
+      if (content.style.display === 'none' || content.style.display === '') {
+        content.style.display = 'block';
+        btn.textContent = 'Zwiń ▴';
+      } else {
+        content.style.display = 'none';
+        btn.textContent = 'Rozwiń ▾';
+      }
+    }
+
+    function updateDocStatus(id) {
+      const chk = document.getElementById(`doc${id}_confirm`);
+      const stat = document.getElementById(`docStatus${id}`);
+      const block = document.getElementById(`docBlock${id}`);
+      if (chk && chk.checked) {
+        stat.textContent = 'Wyrażono zgodę';
+        stat.style.background = 'rgba(46,204,113,0.18)';
+        stat.style.borderColor = 'rgba(46,204,113,0.4)';
+        stat.style.color = '#2ecc71';
+        block.style.borderColor = 'rgba(46,204,113,0.45)';
+        block.style.boxShadow = '0 0 0 1px rgba(46,204,113,0.15)';
+      } else {
+        stat.textContent = 'Brak zgody';
+        stat.style.background = 'rgba(178,25,0,0.18)';
+        stat.style.borderColor = 'rgba(178,25,0,0.4)';
+        stat.style.color = '#ffb2a6';
+        block.style.borderColor = 'rgba(178,25,0,0.45)';
+        block.style.boxShadow = 'none';
+      }
+    }
+
+    // Canvas drawing
+    window.sigCanvasCtx = {};
+    window.sigCanvasHasDrawing = {};
+
+    function initSignatureCanvases() {
+      const canvasIds = [1];
+      canvasIds.forEach(id => {
+        const c = document.getElementById(`sigCanvas${id}`);
+        if (!c) return;
+        const ctx = c.getContext('2d');
+        window.sigCanvasCtx[id] = ctx;
+        window.sigCanvasHasDrawing[id] = false;
+
+        ctx.strokeStyle = '#DA2A00';
+        ctx.lineWidth = 3;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+
+        let isDrawing = false;
+        let lastX = 0, lastY = 0;
+
+        function getPos(e) {
+          const rect = c.getBoundingClientRect();
+          let clientX, clientY;
+          if (e.touches && e.touches.length > 0) {
+            clientX = e.touches[0].clientX;
+            clientY = e.touches[0].clientY;
+          } else {
+            clientX = e.clientX;
+            clientY = e.clientY;
+          }
+          const scaleX = c.width / rect.width;
+          const scaleY = c.height / rect.height;
+          return {
+            x: (clientX - rect.left) * scaleX,
+            y: (clientY - rect.top) * scaleY
+          };
+        }
+
+        // Mouse
+        c.addEventListener('mousedown', e => {
+          isDrawing = true;
+          const pos = getPos(e);
+          lastX = pos.x; lastY = pos.y;
+          window.sigCanvasHasDrawing[id] = true;
+        });
+        c.addEventListener('mousemove', e => {
+          if (!isDrawing) return;
+          const pos = getPos(e);
+          ctx.beginPath();
+          ctx.moveTo(lastX, lastY);
+          ctx.lineTo(pos.x, pos.y);
+          ctx.stroke();
+          lastX = pos.x; lastY = pos.y;
+        });
+        const stopDraw = () => { isDrawing = false; };
+        c.addEventListener('mouseup', stopDraw);
+        c.addEventListener('mouseout', stopDraw);
+
+        // Touch
+        c.addEventListener('touchstart', e => {
+          e.preventDefault();
+          isDrawing = true;
+          const pos = getPos(e);
+          lastX = pos.x; lastY = pos.y;
+          window.sigCanvasHasDrawing[id] = true;
+        }, { passive: false });
+        c.addEventListener('touchmove', e => {
+          e.preventDefault();
+          if (!isDrawing) return;
+          const pos = getPos(e);
+          ctx.beginPath();
+          ctx.moveTo(lastX, lastY);
+          ctx.lineTo(pos.x, pos.y);
+          ctx.stroke();
+          lastX = pos.x; lastY = pos.y;
+        }, { passive: false });
+        c.addEventListener('touchend', stopDraw);
+        c.addEventListener('touchcancel', stopDraw);
+      });
+    }
+
+    function clearSig(id) {
+      const c = document.getElementById(`sigCanvas${id}`);
+      if (!c) return;
+      const ctx = window.sigCanvasCtx[id];
+      ctx.clearRect(0, 0, c.width, c.height);
+      window.sigCanvasHasDrawing[id] = false;
+    }
+
   </script>
 
 </body>
