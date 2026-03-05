@@ -2441,13 +2441,13 @@
           const addPayBtn = S.perms.can_accept_payment ? `<button class="btn" style="padding:6px 10px;font-size:10px;background:rgba(46,204,113,.15);border:1px solid rgba(46,204,113,.4);color:#2ecc71;flex:1;max-width:100px;text-align:center;" onclick="event.stopPropagation();moAcceptPayment(${s.student_id},'${esc(s.first_name)} ${esc(s.last_name)}',${sess.group_id})">+ Wpłata</button>` : '';
 
           return `
-          <div class="att-row ${s.present ? 'present' : 'absent'}" id="atr-${s.student_id}" onclick="toggleAttRow(event, ${sess.session_id}, ${s.student_id})">
+          <div class="att-row ${s.present ? 'present' : 'absent'}" id="atr-${s.student_id}" onclick="toggleAttRow(event, ${sess.session_id}, ${s.student_id})" style="padding:10px 12px;margin-bottom:8px">
             <div class="att-chk ${s.present ? 'on' : ''}" id="chk-${s.student_id}">${s.present ? '✓' : ''}</div>
             <div style="display:flex;flex-direction:column;justify-content:center;">
-              <div class="att-name" style="font-weight:800;font-size:14px;">${esc(s.last_name)}, ${esc(s.first_name)}</div>
+              <div class="att-name" style="font-weight:800;font-size:14px;line-height:1.2;margin-bottom:4px">${esc(s.last_name)}, ${esc(s.first_name)}</div>
               ${payBadge}
             </div>
-            <div style="grid-column:1/-1;display:flex;gap:8px;margin-top:2px;padding-top:6px;border-top:1px solid rgba(255,255,255,0.06);justify-content:flex-end;">
+            <div style="grid-column:1/-1;display:flex;gap:12px;margin-top:6px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.08);justify-content:flex-end;">
               ${profBtn}
               ${addPayBtn}
             </div>
