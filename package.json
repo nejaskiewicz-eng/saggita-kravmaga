@@ -5,7 +5,8 @@
   "private": true,
   "dependencies": {
     "bcryptjs": "^2.4.3",
-    "pg": "^8.18.0"
+    "dotenv": "^17.3.1",
+    "pg": "^8.20.0"
   },
   "engines": {
     "node": "24.x"
