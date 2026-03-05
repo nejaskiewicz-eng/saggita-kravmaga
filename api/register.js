@@ -153,6 +153,9 @@ module.exports = async (req, res) => {
       bank_account: BANK_ACCOUNT,
       bank_name: BANK_NAME,
       transfer_title: `${payment_ref} — ${b.first_name} ${b.last_name}`,
+      monthly_rate: monthly_rate,
+      signup_fee: signup_fee,
+      months_count: planMonths
     });
 
   } catch (e) {
