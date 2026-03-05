@@ -3081,6 +3081,45 @@
     });
     document.getElementById('submitBtn').addEventListener('click', submit);
 
+    // === IFRAME RESIZER & STICKY CART LOGIC (WEBWAVE TWO-WAY COMM) ===
+    const resizeObserver = new ResizeObserver(() => {
+      window.parent.postMessage({
+        type: 'saggita_iframe_resize',
+        height: document.documentElement.scrollHeight
+      }, '*');
+    });
+    resizeObserver.observe(document.body);
+
+    window.addEventListener('message', (event) => {
+      if (event.data && event.data.type === 'saggita_parent_scroll') {
+        const parentScrollY = event.data.scrollY;
+        const parentHeight = event.data.windowHeight;
+        const iframeTop = event.data.iframeTop;
+
+        const cart = document.getElementById('cartInline');
+        // Tylko jeśli jesteśmy na mobile (<= 680px) i mamy wybraną pozycję 
+        if (cart && window.innerWidth <= 680 && cart.classList.contains('has-item')) {
+          let visibleBottom = parentScrollY + parentHeight - iframeTop;
+          const maxBottom = document.documentElement.scrollHeight;
+
+          if (visibleBottom > maxBottom) visibleBottom = maxBottom;
+          if (visibleBottom < cart.offsetHeight) visibleBottom = cart.offsetHeight;
+
+          cart.style.position = 'absolute';
+          cart.style.top = (visibleBottom - cart.offsetHeight) + 'px';
+          cart.style.bottom = 'auto'; // nadpisz by zignorować klasę CSS 
+          cart.style.left = '0';
+          cart.style.right = '0';
+          cart.style.zIndex = '9990';
+        } else if (cart) {
+          cart.style.position = '';
+          cart.style.top = '';
+          cart.style.bottom = '';
+        }
+      }
+    });
+    // ===========================================
+
     (function boot() {
       loadAll();
       // walidacje startowe
