@@ -2739,47 +2739,6 @@
       handleDownloadDoc(d.ref, payload);
     };
 
-    function showConfirmation(data, first, last) {
-      document.getElementById('formSection').style.display = 'none';
-
-      const box = document.getElementById('confirmBox');
-      const isWaitlist = data.is_waitlist;
-
-      document.getElementById('confirmText').textContent = isWaitlist
-        ? `Twój zapis na listę rezerwową został przyjęty, ${first}. Skontaktujemy się, gdy pojawi się wolne miejsce.`
-        : `Dziękujemy za zapis, ${first} !Twoje zgłoszenie zostało przyjęte.Skontaktujemy się, aby potwierdzić miejsce w grupie.`;
-
-      document.getElementById('confirmRef').textContent = data.payment_ref || '';
-
-      const BANK_ACCOUNT = '21 1140 2004 0000 3902 3890 8895';
-      const BANK_NAME = 'Akademia Obrony Saggita';
-
-      if (!isWaitlist && data.total_amount) {
-        const div = document.getElementById('confirmTransfer');
-        div.innerHTML = `
-        < div ><span class="lbl">Plan płatności</span><br><span class="val" style="font-size:1.1rem;font-weight:700;color:var(--accent)">${data.monthly_rate ? money(data.monthly_rate) + ' zł/mies.' + (data.months_count ? ' × ' + data.months_count + ' mies.' : '') : parseFloat(data.total_amount || 0).toFixed(2) + ' zł'}</span></div>
-      <br>
-      <div><span class="lbl">Numer konta</span><br><span class="val" style="font-family:monospace;letter-spacing:.04em">${data.bank_account || BANK_ACCOUNT}</span></div>
-      <div><span class="lbl">Odbiorca</span><br><span class="val">${data.bank_name || BANK_NAME}</span></div>
-      <div><span class="lbl">Tytuł przelewu</span><br><span class="val">${data.transfer_title || data.payment_ref || ''}</span></div>
-      <br>
-      <small style="color:rgba(255,255,255,0.56)">Dokładna kwota zostanie podana w dokumencie płatniczym. Przelew wyślij najpóźniej do ostatniego dnia poprzedzającego miesiąc rozliczeniowy.</small>
-    `;
-        div.style.display = 'block';
-      }
-
-      if (!isWaitlist) {
-        const actions = document.getElementById('confirmActions');
-        actions.style.display = 'flex';
-        actions.innerHTML = `
-      <button onclick="handlePayOnline('${data.payment_ref}')" style="background:linear-gradient(180deg,rgba(178,25,0,0.98),rgba(80,8,0,0.95));color:#fff;border:none;padding:13px 22px;font-family:'Open Sans',sans-serif;font-weight:800;font-size:.80rem;letter-spacing:.06em;text-transform:uppercase;cursor:pointer">Opłać online →</button>
-      <button onclick="handleDownloadDoc('${data.payment_ref}')" style="background:transparent;color:rgba(255,255,255,0.90);border:1px solid rgba(255,255,255,0.22);padding:13px 22px;font-family:'Open Sans',sans-serif;font-weight:800;font-size:.80rem;letter-spacing:.06em;text-transform:uppercase;cursor:pointer">Pobierz dokument płatniczy</button>
-    `;
-      }
-
-      box.classList.add('visible');
-      box.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
 
     async function handlePayOnline(payment_ref, amount, extraPayload) {
       try {
@@ -2795,8 +2754,25 @@
       } catch (e) { alert('Błąd. Spróbuj ponownie.'); }
     }
 
-    function handleDownloadDoc(payment_ref, extraPayload) {
-      // Otwórz dokument w nowym oknie i użyj natywnego drukowania przeglądarki
+    async function handleDownloadDoc(payment_ref, extraPayload) {
+      // 1. Zgłoś akcję backendowi by wysłał maila do kursanta
+      try {
+        const body = { payment_ref, action: 'download_doc' };
+        if (extraPayload && extraPayload.payment_mode === 'monthly') {
+          body.action = 'schedule_doc';
+        }
+        if (extraPayload) Object.assign(body, extraPayload);
+
+        await fetch(`${API}/registration/action`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+      } catch (e) {
+        console.error('Nie udało się wysłać powiadomienia e-mail:', e);
+      }
+
+      // 2. Otwórz dokument w nowym oknie i użyj natywnego drukowania przeglądarki
       let url = `${API}/registration/action?payment_ref=${encodeURIComponent(payment_ref)}`;
 
       if (extraPayload) {
