@@ -2653,6 +2653,7 @@
       actions.innerHTML = `
       <button onclick="handlePayOnline('${data.payment_ref}', '${data.total_amount}', null)" style="background:linear-gradient(180deg,rgba(178,25,0,0.98),rgba(80,8,0,0.95));color:#fff;border:none;padding:13px 22px;font-family:'Open Sans',sans-serif;font-weight:800;font-size:.80rem;letter-spacing:.06em;text-transform:uppercase;cursor:pointer">Opłać online →</button>
       <button onclick="handleDownloadDoc('${data.payment_ref}', null)" style="background:transparent;color:rgba(255,255,255,0.90);border:1px solid rgba(255,255,255,0.22);padding:13px 22px;font-family:'Open Sans',sans-serif;font-weight:800;font-size:.80rem;letter-spacing:.06em;text-transform:uppercase;cursor:pointer">Pobierz dokument płatniczy</button>
+      <button onclick="downloadAdultContract('${data.payment_ref}')" style="background:transparent;color:rgba(255,255,255,0.70);border:1px solid rgba(255,255,255,0.15);padding:13px 22px;font-family:'Open Sans',sans-serif;font-weight:800;font-size:.80rem;letter-spacing:.06em;text-transform:uppercase;cursor:pointer">📄 Pobierz umowę i regulamin<br><span style="font-size:.65rem;font-weight:400">do druku i podpisu</span></button>
       `;
     }
 
@@ -2712,10 +2713,12 @@
       actions.innerHTML = `
       <button id="splitPayOnlineBtn" style="background:linear-gradient(180deg,rgba(178,25,0,0.98),rgba(80,8,0,0.95));color:#fff;border:none;padding:13px 22px;font-family:'Open Sans',sans-serif;font-weight:800;font-size:.80rem;letter-spacing:.06em;text-transform:uppercase;cursor:pointer" onclick="submitSplitPayOnline()">Opłać online →</button>
       <button id="splitDownloadDocBtn" style="background:transparent;color:rgba(255,255,255,0.90);border:1px solid rgba(255,255,255,0.22);padding:13px 22px;font-family:'Open Sans',sans-serif;font-weight:800;font-size:.80rem;letter-spacing:.06em;text-transform:uppercase;cursor:pointer" onclick="submitSplitDownloadDoc()">Pobierz dokument płatności</button>
-      ${isKids ? `
       <button id="splitDownloadScheduleBtn" style="background:transparent;color:rgba(255,255,255,0.70);border:1px solid rgba(255,255,255,0.15);padding:13px 22px;font-family:'Open Sans',sans-serif;font-weight:800;font-size:.80rem;letter-spacing:.06em;text-transform:uppercase;cursor:pointer" onclick="submitDownloadSchedule()">📅 Pobierz harmonogram<br><span style="font-size:.65rem;font-weight:400">wszystkie miesiące</span></button>
+      ${isKids ? `
       <button id="splitDownloadSignedBtn" style="background:transparent;color:rgba(255,255,255,0.70);border:1px solid rgba(255,255,255,0.15);padding:13px 22px;font-family:'Open Sans',sans-serif;font-weight:800;font-size:.80rem;letter-spacing:.06em;text-transform:uppercase;cursor:pointer" onclick="downloadSignedDocs()">📝 Pobierz podpisane zgody<br><span style="font-size:.65rem;font-weight:400">umowa + zgoda + polityka</span></button>
-      ` : ''}
+      ` : `
+      <button id="splitDownloadAdultContractBtn" style="background:transparent;color:rgba(255,255,255,0.70);border:1px solid rgba(255,255,255,0.15);padding:13px 22px;font-family:'Open Sans',sans-serif;font-weight:800;font-size:.80rem;letter-spacing:.06em;text-transform:uppercase;cursor:pointer" onclick="downloadAdultContract('${data.payment_ref}')">📄 Pobierz umowę i regulamin<br><span style="font-size:.65rem;font-weight:400">do druku i podpisu</span></button>
+      `}
       `;
 
       // Trigger initial render
@@ -2823,6 +2826,176 @@
       window.open(url, '_blank');
     };
 
+
+    window.downloadAdultContract = function (paymentRef) {
+      const ref = paymentRef || registrationResult?.payment_ref || '';
+      const firstName = document.getElementById('f_first')?.value?.trim() || '';
+      const lastName = document.getElementById('f_last')?.value?.trim() || '';
+      const fullName = (firstName + ' ' + lastName).trim();
+      const date = new Date().toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
+      const instructorSigPlaceholder = `<div style="border:1px solid #ccc;border-radius:4px;padding:8px;margin-top:8px;min-width:240px;min-height:70px;display:inline-flex;align-items:center;justify-content:center;color:#999;font-style:italic;background:#fafafa;font-size:12px">[ miejsce na podpis Tadeusza Dubickiego ]</div>`;
+
+      const priceTable = `<table border="1" cellpadding="8" cellspacing="0" style="border-collapse:collapse;width:100%;font-size:12px;margin:12px 0">
+        <thead><tr style="background:#c42000;color:#fff">
+          <th>OPCJA</th><th>CENA / MIES.</th><th>ŁĄCZNIE</th><th>ZNIŻKA</th>
+        </tr></thead>
+        <tbody>
+          <tr><td>Zajęcia jednorazowe</td><td style="color:#c42000;font-weight:bold">50 zł</td><td>&mdash;</td><td>&mdash;</td></tr>
+          <tr><td>Karnet 1 miesiąc</td><td style="color:#c42000;font-weight:bold">240 zł</td><td>240 zł</td><td>&mdash;</td></tr>
+          <tr><td>Karnet 3 miesiące</td><td style="color:#c42000;font-weight:bold">217 zł</td><td>650 zł</td><td>-10%</td></tr>
+          <tr><td>Karnet 6 miesięcy</td><td style="color:#c42000;font-weight:bold">204 zł</td><td>1 225 zł</td><td>-15%</td></tr>
+          <tr><td>Karnet 10 miesięcy</td><td style="color:#c42000;font-weight:bold">192 zł</td><td>1 920 zł</td><td>-20%</td></tr>
+        </tbody>
+      </table>`;
+
+      const html = `<!DOCTYPE html><html lang="pl"><head><meta charset="UTF-8">
+      <title>Umowa i Regulamin &mdash; ${ref}</title>
+      <style>
+        body{font-family:Arial,sans-serif;margin:48px;color:#111;font-size:13px;line-height:1.7;max-width:760px}
+        .logo-area{text-align:center;margin-bottom:24px}
+        .logo-top{font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#c42000;margin-bottom:2px}
+        .logo-main{font-size:42px;font-weight:900;color:#c42000;letter-spacing:.04em;margin:0}
+        h1{font-size:18px;font-weight:800;text-align:center;border-bottom:none;margin:24px 0 4px}
+        .doc-subtitle{text-align:center;font-size:13px;color:#555;margin-bottom:24px}
+        hr.doc-rule{border:none;border-top:1px solid #ddd;margin:18px 0}
+        h2{font-size:13px;font-weight:700;margin:18px 0 4px}
+        p{margin:2px 0 10px}
+        .rodo{margin-top:20px;padding-top:12px;border-top:1px solid #ddd}
+        .rodo-title{font-weight:700;color:#c42000;font-size:13px}
+        .consent-block{text-align:center;margin-top:28px;padding:16px;border-top:2px solid #c42000}
+        .consent-title{font-weight:800;font-size:14px;color:#c42000;letter-spacing:.05em;margin-bottom:8px}
+        .sig-row{display:flex;justify-content:space-between;margin-top:32px;gap:40px}
+        .sig-col{flex:1}
+        .sig-col .label{font-size:11px;color:#666;margin-bottom:32px}
+        .sig-col .line{border-top:1px solid #aaa;padding-top:4px;font-size:11px;color:#555;text-align:center}
+        .footer{margin-top:40px;padding-top:10px;border-top:1px solid #ddd;font-size:11px;color:#666;text-align:center}
+        @media print{button,.no-print{display:none}}
+      </style></head><body>
+
+      <div class="no-print" style="margin-bottom:16px;padding:10px 16px;background:#fff8f8;border:1px solid #f0c0c0;border-radius:4px;font-size:12px;color:#555">
+        Wydrukuj ten dokument, podpisz go i przyś
+        go na pierwsze zajęcia.
+      </div>
+      <div style="margin:0 0 16px" class="no-print">
+        <button onclick="window.print()" style="padding:10px 28px;background:#c42000;color:#fff;border:none;border-radius:4px;font-size:14px;font-weight:bold;cursor:pointer">🖨️ Drukuj / Zapisz jako PDF</button>
+      </div>
+
+      <div class="logo-area">
+        <div class="logo-top">KRAV MAGA</div>
+        <div class="logo-main">SAGGITA</div>
+      </div>
+
+      <h1>UMOWA &ndash; REGULAMIN SEKCJI KRAV MAGA</h1>
+      <div class="doc-subtitle">Akademia Obrony Saggita</div>
+      ${ref ? '<div style="text-align:center;font-size:11px;color:#888;margin-bottom:16px">Nr zapisu: ' + ref + '</div>' : ''}
+      <hr class="doc-rule">
+
+      <h2>1. Bądź punktualny i systematyczny.</h2>
+      <p>Na zajęcia przychodź zawsze kilka minut wcześniej, tak abyś miał czas na przebranie się i formalności. Staraj się również regularnie uczestniczyć w treningach.</p>
+
+      <h2>2. Zamieniaj strój na treningowy.</h2>
+      <p>Na każdym treningu obowiązuje strój sportowy &ndash; spodnie dresowe, koszulka, obuwie sportowe, a po pewnym czasie ochraniacze.</p>
+
+      <h2>3. Pamiętaj o higienie.</h2>
+      <p>W czasie treningu będziesz w bliskim kontakcie z innymi osobami. Zadbaj o czysty strój i higienę osobistą przed każdymi zajęciami.</p>
+
+      <h2>4. Dbaj o zdrowie swoje i innych.</h2>
+      <p>Jeśli jesteś chory bądź osłabiony &ndash; zrezygnuj z treningu. Zawsze informuj Instruktora o niedyspozycji lub nagłym pogorszeniu stanu zdrowia. Pamiętaj również, że na treningu można doznać kontuzji &ndash; dbaj o bezpieczeństwo swoje i partnera.</p>
+
+      <h2>5. Przestrzegaj zasad bezpieczeństwa.</h2>
+      <p>Wykonuj ćwiczenia zgodnie z poleceniem Instruktora. Podczas trwania zajęć nie oddal się bez wcześniejszego powiadomienia Instruktora bądź partnera. Korzystaj ze sprzętu treningowego zgodnie z jego przeznaczeniem. Wybieraj obuwie sportowe bezpieczne dla Ciebie i partnera tzn. takie, w którym sam akceptowałbyś kopnięcie. Zdejmij zegarek, biżuterię i inne akcesoria mogące uszkodzić Ciebie lub partnera.</p>
+
+      <h2>6. Opłaty za treningi i opcje karnetów.</h2>
+      <p>Wysokość opłat za treningi ustala Główny Instruktor Sekcji Krav Maga Akademii Obrony Saggita. Główny Instruktor zastrzega sobie prawo do zmiany wysokości opłaty w dowolnym momencie.</p>
+      <p>&bull; Opłatę za treningi wnosi się z góry &ndash; zgodnie z wybraną opcją karnetu. W tytule przelewu należy wpisać: imię i nazwisko uczestnika, wybrany okręs, &bdquo;opłata za trening&rdquo;.</p>
+      <p>&bull; Nowi uczestnicy zobowiązani są do wniesienia jednorazowej opłaty wpisowej w wysokości 40 zł.</p>
+      ${priceTable}
+      <p>&bull; Coroczna opłata na sprzęt treningowy wynosi 40 zł. Przeznaczana jest na regenerację lub wymianę sprzętu Akademii.</p>
+
+      <h2>6a. Rezygnacja z umowy w trakcie jej trwania.</h2>
+      <p>W przypadku rezygnacji z karnetu wielomiesięcznego przed upływem opłaconego okresu uczestnik zobowiązany jest do wyrównania różnicy między ceną faktycznie zapłaconą a ceną karnetu miesięcznego (240 zł/mies.) za każdy już wykorzystany miesiąc.</p>
+
+      <hr class="doc-rule">
+      <h1>REGULAMIN SEKCJI KRAV MAGA &ndash; DOROŚLI</h1>
+      <div class="doc-subtitle">Akademia Obrony Saggita</div>
+      <hr class="doc-rule">
+
+      <h2>1. Wymagania zdrowotne.</h2>
+      <p>Zajęcia Krav Maga dla dorosłych nie wymagają specjalnej opieki medycznej. W przypadku wątpliwości co do stanu zdrowia uczestnik zobowiązany jest do przedłożenia zaświadczenia lekarskiego. Uczestnik informuje Instruktora o wszelkich chorobach, urazach lub przeciwwskazaniach zdrowotnych przed przystąpieniem do zajęć.</p>
+
+      <h2>2. Liczba uczestników.</h2>
+      <p>Maksymalna liczba uczestników w grupie nie może być większa niż 25. Akademia zastrzega sobie prawo do zmian w grafiku i podziale grup.</p>
+
+      <h2>3. Bezpieczeństwo podczas zajęć.</h2>
+      <p>Instruktorzy prowadzą zajęcia w pełni wyposażonych salach. Uczestnicy nie mogą oddalać się z miejsca zajęć bez wiedzy Instruktora. Wszelkie ćwiczenia wykonywane są zgodnie z poleceniem i pod nadzorem prowadzącego.</p>
+
+      <h2>4. Zachowanie podczas zajęć.</h2>
+      <p>Uczestnicy zobowiązani są do kulturalnego zachowania wobec Instruktorów i pozostałych uczestników. Niedopuszczalne jest stosowanie przemocy, wulgarnego języka oraz agresywnego zachowania poza ćwiczeniami prowadzonymi przez Instruktora.</p>
+
+      <h2>5. Zakaz używania telefonów komórkowych.</h2>
+      <p>Podczas zajęć telefony komórkowe powinny być wyciszone i schowane. Zabrania się nagrywania i fotografowania bez zgody Instruktora i pozostałych uczestników.</p>
+
+      <h2>6. Alkohol i substancje odurzające.</h2>
+      <p>Bezwzględnie zabrania się przychodzenia na zajęcia pod wpływem alkoholu lub jakichkolwiek substancji odurzających. Naruszenie tej zasady skutkuje natychmiastowym usunięciem z zajęć i może skutkować zakończeniem członkostwa.</p>
+
+      <h2>7. Agresywne zachowanie.</h2>
+      <p>Agresywne zachowanie wobec innych uczestników, Instruktorów lub osób trzecich skutkuje natychmiastowym zatrzymaniem zajęć. W przypadku poważnych incydentów Akademia zastrzega sobie prawo do powiadomienia właściwej jednostki Policji.</p>
+
+      <h2>8. Zachowanie negatywne w mediach społecznościowych.</h2>
+      <p>Zabrania się umieszczania w mediach społecznościowych treści negatywnych, obraźliwych lub naruszających dobra osobiste uczestników, Instruktorów lub Akademii. Naruszenie może skutkować odpowiedzialnością prawną.</p>
+
+      <h2>9. Zasady zwrotu opłat.</h2>
+      <p>Opłaty za zajęcia nie podlegają zwrotowi w przypadku nieobecności uczestnika, chyba że strony uzgodnią inaczej. W przypadku dłuższej choroby (potwierdzonej zaświadczeniem lekarskim) możliwe jest przeniesienie opłaty na kolejny okres.</p>
+
+      <h2>10. Wyjście poza miejsce zajęć.</h2>
+      <p>Jeżeli uczestnik chce wyjść z sali lub miejsca treningów, zobowiązany jest poinformować o tym Instruktora i uzyskać jego zgodę. Samowolne oddalenie się jest niedopuszczalne.</p>
+
+      <h2>11. Decyzja o wykluczeniu.</h2>
+      <p>Akademia zastrzega sobie prawo do wykluczenia uczestnika z zajęć bez zwrotu opłat w przypadku rażących naruszeń niniejszego Regulaminu.</p>
+
+      <h2>12. Kontakt w sytuacjach nagłych.</h2>
+      <p>W sytuacjach nagłych (wypadek, złe samopoczucie, incydent) Instruktor niezwłocznie podejmuje odpowiednie działania oraz &ndash; jeśli zajdzie potrzeba &ndash; kontaktuje się z numerem alarmowym lub wskazaną przez uczestnika osobą do kontaktu.</p>
+
+      <div class="rodo">
+        <div class="rodo-title">KLAUZULA INFORMACYJNA RODO</div>
+        <p>Zgodnie z art. 13 ogólnego rozporządzenia o ochronie danych osobowych z dnia 27 kwietnia 2016 r. (RODO) informujemy, że administratorem danych osobowych jest: Tadeusz Dubicki, ul. Jagiellońska 2/4, 58-100 Świdnica, NIP 884 218 23 65, tel. 510 930 460, e-mail: biuro@akademiaobrony.pl. Dane przetwarzane są w celu prowadzenia korespondencji, telefonów, działań marketingowych (oferty szkoleniowe). Dane nie będą przekazywane odbiorcom zewnętrznym bez podstawy prawnej. Przysługuje Panu/Pani prawo dostępu do danych, ich sprostowania, usunięcia lub ograniczenia przetwarzania oraz prawo do wniesienia sprzeciwu lub skargi do organu nadzorczego. Pełna polityka prywatności dostępna jest na stronie Akademii.</p>
+      </div>
+
+      <div class="consent-block">
+        <div class="consent-title">WYRAŻAM ZGODĘ NA UDZIAŁ W ZAJĘCIACH</div>
+        <p>Oświadczam, że zapoznałem/am się z niniejszą Umową &ndash; Regulaminem Sekcji Krav Maga Akademii Obrony Saggita i akceptuję wszystkie zawarte w nim postanowienia.</p>
+        ${fullName ? '<p>Imię i nazwisko uczestnika: <strong>' + fullName + '</strong></p>' : '<p>Imię i nazwisko uczestnika: .................................................</p>'}
+
+        <div class="sig-row">
+          <div class="sig-col">
+            <div class="label">&nbsp;</div>
+            <div class="line">miejscowość, data</div>
+          </div>
+          <div class="sig-col">
+            <div class="label">&nbsp;</div>
+            <div class="line">czytelny podpis uczestnika</div>
+          </div>
+        </div>
+
+        <div class="sig-row" style="margin-top:24px">
+          <div class="sig-col">
+            <div class="label">&nbsp;</div>
+            ${instructorSigPlaceholder}
+            <div class="line" style="margin-top:8px">Tadeusz Dubicki &ndash; Koordynator, Szef wyszkolenia</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer">
+        Akademia Obrony Saggita | Tadeusz Dubicki &ndash; Koordynator, Szef wyszkolenia | Tel.: 510 930 460 | biuro@akademiaobrony.pl
+      </div>
+      </body></html>`;
+
+      const win = window.open('', '_blank', 'width=960,height=900');
+      if (win) { win.document.write(html); win.document.close(); }
+      else alert('Zablokowano wyskakujące okno. Pozwól na wyskakujące okna dla tej strony.');
+    };
 
     async function handlePayOnline(payment_ref, amount, extraPayload) {
       try {
