@@ -3644,15 +3644,15 @@
     // ═══════════════════════════════════════
 
     const sigPads = {};
-    const sigSigned = { 1: false, 2: false, 3: false };
+    window.sigSigned = { 1: false, 2: false, 3: false, 4: false, 5: false };
 
     function initSignatureCanvases() {
       [1, 2, 3, 4, 5].forEach(n => {
         const canvas = document.getElementById(`sigCanvas${n}`);
         if (!canvas || sigPads[n]) return;
         const ctx = canvas.getContext('2d');
-        ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#DA2A00';
+        ctx.lineWidth = 3;
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
         let drawing = false;
@@ -3677,7 +3677,7 @@
           ctx.lineTo(p.x, p.y);
           ctx.stroke();
           lastX = p.x; lastY = p.y;
-          sigSigned[n] = true;
+          window.sigSigned[n] = true;
           document.getElementById(`sigStatus${n}`).textContent = 'Podpisano ✓';
           document.getElementById(`sigStatus${n}`).style.color = 'rgba(46,204,113,0.9)';
         }
@@ -3698,7 +3698,7 @@
       if (!canvas) return;
       const ctx = canvas.getContext('2d');
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      sigSigned[n] = false;
+      window.sigSigned[n] = false;
       document.getElementById(`sigStatus${n}`).textContent = 'Podpisz powyżej';
       document.getElementById(`sigStatus${n}`).style.color = 'rgba(255,255,255,0.40)';
     }
@@ -3731,7 +3731,7 @@
     }
 
     function markDocCennik(id) {
-      if (!sigSigned[id]) {
+      if (!window.sigSigned[id]) {
         const c = document.getElementById(`sigCanvas${id}`);
         if (c) c.style.border = '2px solid rgba(255,68,68,0.7)';
         alert('Proszę złożyć podpis na polu powyżej przed zatwierdzeniem.');
@@ -3791,20 +3791,20 @@
         if (!document.getElementById('doc1_confirm').checked) errors.push('Zaakceptuj Umowę – Regulamin (dokument 1)');
         if (!document.getElementById('doc1_parent').value.trim()) errors.push('Wpisz imię i nazwisko rodzica (dok. 1)');
         if (!document.getElementById('doc1_child').value.trim()) errors.push('Wpisz imię i nazwisko dziecka (dok. 1)');
-        if (!sigSigned[1]) errors.push('Złóż podpis elektroniczny pod dokumentem 1');
+        if (!window.sigSigned[1]) errors.push('Złóż podpis elektroniczny pod dokumentem 1');
 
         // Check doc 2
         if (!document.getElementById('doc2_confirm').checked) errors.push('Zaakceptuj Zgodę Rodzica (dokument 2)');
         if (!document.getElementById('doc2_parent').value.trim()) errors.push('Wpisz imię i nazwisko rodzica (dok. 2)');
         if (!document.getElementById('doc2_child').value.trim()) errors.push('Wpisz imię i nazwisko dziecka (dok. 2)');
         if (!document.getElementById('doc2_phone').value.trim()) errors.push('Wpisz telefon kontaktowy (dok. 2)');
-        if (!sigSigned[2]) errors.push('Złóż podpis elektroniczny pod dokumentem 2');
+        if (!window.sigSigned[2]) errors.push('Złóż podpis elektroniczny pod dokumentem 2');
 
         // Check doc 3
         if (!document.getElementById('doc3_confirm').checked) errors.push('Zaakceptuj Politykę Ochrony Małoletnich (dokument 3)');
         if (!document.getElementById('doc3_parent').value.trim()) errors.push('Wpisz imię i nazwisko rodzica (dok. 3)');
         if (!document.getElementById('doc3_child').value.trim()) errors.push('Wpisz imię i nazwisko dziecka (dok. 3)');
-        if (!sigSigned[3]) errors.push('Złóż podpis elektroniczny pod dokumentem 3');
+        if (!window.sigSigned[3]) errors.push('Złóż podpis elektroniczny pod dokumentem 3');
 
         if (errors.length) {
           errEl.textContent = errors[0];
@@ -3814,13 +3814,13 @@
         errEl.style.display = 'none';
       } else if (adultActive) {
         if (errEl) errEl.style.display = 'none';
-        if (!sigSigned[4]) errors.push('Zaakceptuj i podpisz Umowę – Regulamin (dokument 1)');
+        if (!window.sigSigned[4]) errors.push('Zaakceptuj i podpisz Umowę – Regulamin (dokument 1)');
         if (!document.getElementById('adoc2_name').value.trim() ||
           !document.getElementById('adoc2_pesel').value.trim() ||
           !document.getElementById('adoc2_id').value.trim()) {
           errors.push('Wypełnij wszystkie dane w Oświadczeniu o Niekaralności (dokument 2)');
         }
-        if (!sigSigned[5]) errors.push('Podpisz Oświadczenie o Niekaralności (dokument 2)');
+        if (!window.sigSigned[5]) errors.push('Podpisz Oświadczenie o Niekaralności (dokument 2)');
 
         if (errors.length) {
           aErrEl.textContent = errors[0];

@@ -4426,12 +4426,12 @@
         const dDate = new Date(r.created_at).toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
         const instructorSigPlaceholder = `<div style="border:1px solid #ccc;border-radius:4px;padding:8px;margin-top:8px;min-width:240px;min-height:70px;display:inline-flex;align-items:center;justify-content:center;color:#999;font-style:italic;background:#fafafa;font-size:12px">[ miejsce na podpis Tadeusza Dubickiego ]</div>`;
-        const dateHtml = `<p>Data: <b>\${dDate}</b></p>`;
+        const dateHtml = `<p>Data: <b>${dDate}</b></p>`;
 
         let html = '';
         if (isAdult) {
-          const sig4Html = s.sig4 ? `<img src="${s.sig4}" style="max-height:80px;max-width:260px;display:block;margin:4px 0">` : 'Brak popisu 1';
-          const sig5Html = s.sig5 ? `<img src="${s.sig5}" style="max-height:80px;max-width:260px;display:block;margin:4px 0">` : 'Brak popisu 2';
+          const sig4Html = s.sig4 ? `<img src="${s.sig4}" style="max-height:80px;max-width:260px;display:block;margin:4px 0">` : 'Brak podpisu 1';
+          const sig5Html = s.sig5 ? `<img src="${s.sig5}" style="max-height:80px;max-width:260px;display:block;margin:4px 0">` : 'Brak podpisu 2';
 
           html = `
             <html><head><title>Umowa - ${r.first_name} ${r.last_name}</title>
@@ -4470,9 +4470,9 @@
           `;
         } else {
           // Dzieci
-          const sig1Html = s.sig1 ? `<img src="${s.sig1}" style="max-height:80px;max-width:260px;display:block;margin:4px 0">` : 'Brak popisu 1';
-          const sig2Html = s.sig2 ? `<img src="${s.sig2}" style="max-height:80px;max-width:260px;display:block;margin:4px 0">` : 'Brak popisu 2';
-          const sig3Html = s.sig3 ? `<img src="${s.sig3}" style="max-height:80px;max-width:260px;display:block;margin:4px 0">` : 'Brak popisu 3';
+          const sig1Html = s.sig1 ? `<img src="${s.sig1}" style="max-height:80px;max-width:260px;display:block;margin:4px 0">` : 'Brak podpisu 1';
+          const sig2Html = s.sig2 ? `<img src="${s.sig2}" style="max-height:80px;max-width:260px;display:block;margin:4px 0">` : 'Brak podpisu 2';
+          const sig3Html = s.sig3 ? `<img src="${s.sig3}" style="max-height:80px;max-width:260px;display:block;margin:4px 0">` : 'Brak podpisu 3';
 
           html = `
             <html><head><title>Umowa - ${f.doc1_child || r.first_name + ' ' + r.last_name}</title>
