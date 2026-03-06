@@ -161,6 +161,13 @@ module.exports = async (req, res) => {
 
   } catch (e) {
     console.error('[register]', e);
-    return res.status(500).json({ error: e.message });
+    return res.status(500).json({
+      error: 'Błąd serwera: ' + e.message,
+      stack: e.stack,
+      debug_info: {
+        body_keys: Object.keys(req.body || {}),
+        env_db: !!process.env.DATABASE_URL
+      }
+    });
   }
 };
