@@ -2161,8 +2161,8 @@
             const vipGrid = document.createElement('div');
             vipGrid.className = 'sched-grid';
             vipGrid.innerHTML = `
-          <div class="group-card group-card--kids" style="box-shadow:0 0 0 1px rgba(16,86,168,0.60) inset,var(--shadow-card)">
-            <div class="group-card__head" style="background:rgba(26,111,212,0.22);border-bottom-color:rgba(16,86,168,0.55);">
+          <div class="group-card group-card--kids" style="box-shadow:0 0 0 1px rgba(196,32,0,0.3) inset,var(--shadow-card)">
+            <div class="group-card__head" style="background:rgba(0,0,0,0.2);border-bottom:1px solid rgba(196,32,0,0.3);">
               <div class="group-card__name" style="color:#5BA8FF">Zajęcia VIP</div>
               <div class="group-card__meta">
                 <span class="badge badge--blue">Wałbrzych</span>
@@ -2170,7 +2170,7 @@
                 <span class="badge badge--blue">Piątki 19:00–21:00</span>
               </div>
             </div>
-            <div style="background:linear-gradient(145deg,rgba(26,111,212,0.08) 0%,rgba(0,0,0,0.22) 100%);">
+            <div style="background:linear-gradient(145deg, rgba(196,32,0,0.18) 0%, rgba(196,32,0,0.18) 40%, rgba(26,111,212,0.18) 100%);">
               <div class="vip-info" style="padding:22px 22px 14px">
                 <strong style="color:#fff;font-size:.96rem;">Szczególny rodzaj zajęć w bardzo kameralnej grupie.</strong><br><br>
                 Zajęcia VIP trwają 2h i są w pełni personalizowane — dostosowujemy je dokładnie pod Twoje potrzeby i możliwości.
@@ -2179,7 +2179,7 @@
               </div>
 
               <div style="padding:0 22px 26px">
-                <div id="vipWbForm" style="background:rgba(16,86,168,0.08);border:1px solid rgba(16,86,168,0.30);border-radius:12px;padding:20px 18px;">
+                <div id="vipWbForm" style="background:rgba(0,0,0,0.2);border:1px solid rgba(255,255,255,0.05);border-radius:12px;padding:20px 18px;">
                   <div style="font-family:'Montserrat',sans-serif;font-weight:700;font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,0.55);margin-bottom:14px">Formularz zgłoszeniowy — Zajęcia VIP Wałbrzych</div>
                   <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px" class="vip-fg">
                     <div class="form-field">
@@ -2199,12 +2199,12 @@
                       <textarea class="form-textarea" id="vipWb_notes" placeholder="Np. doświadczenie, cele treningowe, pytania…"></textarea>
                     </div>
                   </div>
-                  <div style="margin-top:12px;padding:10px 12px;background:rgba(16,86,168,0.10);border:1px solid rgba(16,86,168,0.22);border-radius:8px;font-size:.76rem;color:rgba(255,255,255,0.52);line-height:1.55">
+                  <div style="margin-top:12px;padding:10px 12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;font-size:.76rem;color:rgba(255,255,255,0.6);line-height:1.55">
                     Po wysłaniu zgłoszenia skontaktujemy się z Tobą wkrótce w celu ustalenia szczegółów i wyceny.
                   </div>
                   <div id="vipWbMsg" style="display:none;margin-top:10px;padding:10px 13px;border-radius:8px;font-weight:700;font-size:.82rem"></div>
                   <button type="button" id="vipWbBtn" onclick="submitVipWb()"
-                    style="margin-top:14px;display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,#1056A8,#0d4990);border:1px solid rgba(16,86,168,0.90);color:#fff;font-family:'Open Sans',sans-serif;font-weight:800;font-size:.80rem;letter-spacing:.06em;text-transform:uppercase;padding:13px 24px;border-radius:10px;cursor:pointer;box-shadow:0 4px 14px rgba(8,40,110,0.55);transition:transform 150ms ease,box-shadow 150ms ease"
+                    style="margin-top:14px;display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg, #c42000 0%, #c42000 40%, #1056A8 100%);border:1px solid rgba(255,255,255,0.2);color:#fff;font-family:'Open Sans',sans-serif;font-weight:800;font-size:.80rem;letter-spacing:.06em;text-transform:uppercase;padding:13px 24px;border-radius:10px;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,0.5);transition:transform 150ms ease,box-shadow 150ms ease"
                     onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 24px rgba(8,40,110,0.70)'"
                     onmouseout="this.style.transform='';this.style.boxShadow='0 4px 14px rgba(8,40,110,0.55)'">
                     Zapisz się na Zajęcia VIP →
