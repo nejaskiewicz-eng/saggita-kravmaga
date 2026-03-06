@@ -1866,10 +1866,166 @@
 
         </div><!-- /docsContainer -->
 
+        <!-- KONTENER NA DOKUMENTY (TYLKO DLA DOROSŁYCH) -->
+        <div id="docsContainerAdult" style="display:none;flex-direction:column;gap:14px">
 
-        <div id="docsErrorMsg"
+          <!-- Dokument 4: Umowa + Regulamin Dorosłych -->
+          <div class="doc-block" id="docBlock4"
+            style="border:1px solid rgba(255,255,255,0.12);border-radius:10px;overflow:hidden;background:rgba(255,255,255,0.025)">
+            <div
+              style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px;background:rgba(255,255,255,0.03);border-bottom:1px solid rgba(255,255,255,0.08)">
+              <div>
+                <div style="font-weight:700;font-size:14px;color:#fff">1. Umowa i Regulamin Sekcji Krav Maga</div>
+                <div style="font-size:12px;color:rgba(255,255,255,0.45);margin-top:3px">Przeczytaj regulamin i potwierdź
+                  akceptację podpisem</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px">
+                <span id="docStatus4"
+                  style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:999px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.45)">Do
+                  przeczytania</span>
+                <button type="button" class="btn btnSmall ghost" onclick="toggleDoc4()">Rozwiń ▾</button>
+              </div>
+            </div>
+            <div id="docContent4" style="display:none;padding:20px 18px">
+              <div
+                style="max-height:340px;overflow-y:auto;padding:16px;background:rgba(0,0,0,0.25);border-radius:10px;border:1px solid rgba(255,255,255,0.07);font-size:13px;line-height:1.8;color:rgba(255,255,255,0.78)">
+                <strong style="display:block;margin-bottom:4px;font-size:15px;color:white">UMOWA – REGULAMIN SEKCJI KRAV
+                  MAGA</strong>
+                <em style="color:rgba(255,255,255,0.5)">Akademia Obrony Saggita</em><br><br>
+                <strong>1. Bądź punktualny i systematyczny.</strong><br>Na zajęcia przychodź zawsze kilka minut
+                wcześniej. Staraj się regularnie uczestniczyć w treningach.<br><br>
+                <strong>2. Zamieniaj strój na treningowy.</strong><br>Na każdym treningu obowiązuje strój sportowy –
+                spodnie dresowe, koszulka, obuwie sportowe, a po pewnym czasie ochraniacze.<br><br>
+                <strong>3. Pamiętaj o higienie.</strong><br>W czasie treningu będziesz w bliskim kontakcie z innymi
+                osobami. Zadbaj o czysty strój i higienę osobistą przed każdymi zajęciami.<br><br>
+                <strong>4. Dbaj o zdrowie swoje i innych.</strong><br>Jeśli jesteś chory bądź osłabiony – zrezygnuj z
+                treningu. Zawsze informuj Instruktora o niedyspozycji lub nagłym pogorszeniu stanu zdrowia.<br><br>
+                <strong>5. Przestrzegaj zasad bezpieczeństwa.</strong><br>Wykonuj ćwiczenia zgodnie z poleceniem
+                Instruktora. Nie oddalaj się bez powiadomienia. Zdejmij zegarek, biżuterię i inne akcesoria mogące
+                uszkodzić Ciebie lub partnera.<br><br>
+                <strong>6. Opłaty i opcje karnetów.</strong><br>• Karnet 1 mies.: 240 zł | 3 mies.: 217 zł | 6 mies.:
+                204 zł | 10 mies.: 192 zł/mies.<br>• Wpisowe (jednorazowe): 40 zł dla nowych.<br>• Coroczna opłata na
+                sprzęt: 40 zł.<br><br>
+                <strong>6a. Rezygnacja z umowy.</strong><br>Rezygnacja z karnetu wielomiesięcznego: wyrównanie różnicy
+                do 240 zł/mies. za każdy miesiąc objęty rabatem.<br><br>
+                <strong>Regulamin dorosłych:</strong> Zakaz alkoholu, telefony wyciszone, kulturalne zachowanie, zakaz
+                nagrywania bez zgody, opłaty nie podlegają zwrotowi za nieobecność (wyjątek: zaświadczenie
+                lekarskie).<br><br>
+                <strong>KLAUZULA RODO:</strong> Administrator: Tadeusz Dubicki, ul. Jagiellońska 2/4, 58-100 Świdnica,
+                NIP 884 218 23 65, tel. 510 930 460, biuro@akademiaobrony.pl.
+              </div>
+              <div style="margin-top:16px">
+                <label style="font-size:12px;color:rgba(255,255,255,0.6)">Imię i nazwisko uczestnika</label>
+                <input id="adoc1_name" type="text" placeholder="Imię i nazwisko"
+                  style="margin-top:4px;width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:10px 14px;color:#fff;font-size:13px">
+              </div>
+              <div style="margin-top:16px">
+                <div style="font-size:12px;color:rgba(255,255,255,0.7);margin-bottom:8px">Podpis uczestnika (palcem na
+                  polu poniżej) <span style="color:#ff4444">*</span></div>
+                <canvas id="sigCanvas4" width="560" height="140"
+                  style="display:block;border:1px solid rgba(255,255,255,0.18);border-radius:10px;background:rgba(255,255,255,0.04);cursor:crosshair;touch-action:none;max-width:100%"></canvas>
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px">
+                  <span id="sigStatus4" style="font-size:11px;color:rgba(255,255,255,0.40)">Podpisz palcem na polu
+                    powyżej</span>
+                  <button type="button" onclick="clearSigCennik(4)"
+                    style="font-size:11px;background:transparent;border:1px solid rgba(255,255,255,0.20);color:rgba(255,255,255,0.55);padding:4px 10px;border-radius:6px;cursor:pointer">Wyczyść</button>
+                </div>
+              </div>
+              <div style="margin-top:12px;font-size:12px;color:rgba(255,255,255,0.55)">Oświadczam, że zapoznałem/am się
+                z Umową – Regulaminem Sekcji Krav Maga i akceptuję wszystkie postanowienia.</div>
+              <button type="button" onclick="markDocCennik(4)" class="btn primary"
+                style="margin-top:14px;padding:10px 24px;font-size:.78rem">✔ Potwierdzam zapoznanie i podpisuję</button>
+            </div>
+          </div>
+
+          <!-- Dokument 5: Oświadczenie o Niekaralności -->
+          <div class="doc-block" id="docBlock5"
+            style="border:1px solid rgba(255,255,255,0.12);border-radius:10px;overflow:hidden;background:rgba(255,255,255,0.025)">
+            <div
+              style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px;background:rgba(255,255,255,0.03);border-bottom:1px solid rgba(255,255,255,0.08)">
+              <div>
+                <div style="font-weight:700;font-size:14px;color:#fff">2. Oświadczenie o Niekaralności</div>
+                <div style="font-size:12px;color:rgba(255,255,255,0.45);margin-top:3px">Oświadczenie wymagane przez
+                  Akademię Obrony Saggita</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px">
+                <span id="docStatus5"
+                  style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:999px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.45)">Do
+                  przeczytania</span>
+                <button type="button" class="btn btnSmall ghost" onclick="toggleDoc5()">Rozwiń ▾</button>
+              </div>
+            </div>
+            <div id="docContent5" style="display:none;padding:20px 18px">
+              <div
+                style="max-height:340px;overflow-y:auto;padding:16px;background:rgba(0,0,0,0.25);border-radius:10px;border:1px solid rgba(255,255,255,0.07);font-size:13px;line-height:1.8;color:rgba(255,255,255,0.78)">
+                <strong style="display:block;margin-bottom:4px;font-size:15px;color:white">OŚWIADCZENIE O
+                  NIEKARALNOŚCI</strong>
+                <em style="color:rgba(255,255,255,0.5)">Akademia Obrony Saggita</em><br><br>
+                Niniejsze oświadczenie składane jest w związku z udziałem w zajęciach prowadzonych przez Akademię Obrony
+                Saggita z siedzibą w Świdnicy.<br><br>
+                Ja niżej podpisany/a, świadomy/a odpowiedzialności karnej za składanie fałszywych oświadczeń (art. 233 §
+                1 KK), oświadczam, że:<br><br>
+                <strong>1.</strong> Nie byłem/am skazany/a prawomocnym wyrokiem sądu za umyślne przestępstwo lub umyślne
+                przestępstwo skarbowe;<br>
+                <strong>2.</strong> Nie toczy się przeciwko mnie żadne postępowanie karne ani karno-skarbowe;<br>
+                <strong>3.</strong> Nie figuruję w Rejestrze Sprawców Przestępstw na Tle Seksualnym;<br>
+                <strong>4.</strong> Nie byłem/am karany/a za przestępstwa przeciwko życiu i zdrowiu, wolności, wolności
+                seksualnej i obyczajności, rodzinie i opiece, a także za przestępstwa z użyciem przemocy;<br>
+                <strong>5.</strong> Jestem świadomy/a, że podanie nieprawdziwych informacji stanowi podstawę do
+                natychmiastowego rozwiązania umowy z Akademią oraz może skutkować odpowiedzialnością karną.
+              </div>
+              <div style="margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                <div>
+                  <label style="font-size:12px;color:rgba(255,255,255,0.6)">Imię i nazwisko</label>
+                  <input id="adoc2_name" type="text" placeholder="Imię i nazwisko"
+                    style="margin-top:4px;width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:10px 14px;color:#fff;font-size:13px">
+                </div>
+                <div>
+                  <label style="font-size:12px;color:rgba(255,255,255,0.6)">Data urodzenia</label>
+                  <input id="adoc2_dob" type="date"
+                    style="margin-top:4px;width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:10px 14px;color:#fff;font-size:13px">
+                </div>
+                <div>
+                  <label style="font-size:12px;color:rgba(255,255,255,0.6)">Adres zamieszkania</label>
+                  <input id="adoc2_address" type="text" placeholder="Ulica, nr, kod, miasto"
+                    style="margin-top:4px;width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:10px 14px;color:#fff;font-size:13px">
+                </div>
+                <div>
+                  <label style="font-size:12px;color:rgba(255,255,255,0.6)">Numer PESEL</label>
+                  <input id="adoc2_pesel" type="text" placeholder="PESEL"
+                    style="margin-top:4px;width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:10px 14px;color:#fff;font-size:13px">
+                </div>
+                <div>
+                  <label style="font-size:12px;color:rgba(255,255,255,0.6)">Seria i numer dowodu osobistego</label>
+                  <input id="adoc2_id" type="text" placeholder="np. ABC 123456"
+                    style="margin-top:4px;width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:10px 14px;color:#fff;font-size:13px">
+                </div>
+              </div>
+              <div style="margin-top:16px">
+                <div style="font-size:12px;color:rgba(255,255,255,0.7);margin-bottom:8px">Podpis uczestnika (palcem na
+                  polu poniżej) <span style="color:#ff4444">*</span></div>
+                <canvas id="sigCanvas5" width="560" height="140"
+                  style="display:block;border:1px solid rgba(255,255,255,0.18);border-radius:10px;background:rgba(255,255,255,0.04);cursor:crosshair;touch-action:none;max-width:100%"></canvas>
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px">
+                  <span id="sigStatus5" style="font-size:11px;color:rgba(255,255,255,0.40)">Podpisz palcem na polu
+                    powyżej</span>
+                  <button type="button" onclick="clearSigCennik(5)"
+                    style="font-size:11px;background:transparent;border:1px solid rgba(255,255,255,0.20);color:rgba(255,255,255,0.55);padding:4px 10px;border-radius:6px;cursor:pointer">Wyczyść</button>
+                </div>
+              </div>
+              <button type="button" onclick="markDocCennik(5)" class="btn primary"
+                style="margin-top:14px;padding:10px 24px;font-size:.78rem">✔ Potwierdzam i podpisuję
+                oświadczenie</button>
+            </div>
+          </div>
+
+        </div><!-- /docsContainerAdult -->
+
+        <div id="adultDocsErrorMsg"
           style="display:none;margin-top:12px;padding:11px 14px;background:rgba(178,25,0,0.10);border:1px solid rgba(178,25,0,0.35);border-radius:10px;font-size:13px;color:#ffb2a6;font-weight:600">
         </div>
+
+
 
         <div class="footerBar">
           <button class="btn primary" id="goStep5" onclick="validateAndGoStep5()">Dalej: płatność →</button>
@@ -1965,6 +2121,10 @@
             <button class="btn primary" id="payOnlineBtn">Płatność online</button>
             <button class="btn" id="docBtn">Pobierz dokument płatniczy</button>
             <button class="btn ghost" id="scheduleBtn" style="display:none">📅 Harmonogram wpłat</button>
+            <button class="btn ghost" id="downloadKidsBtn" style="display:none" onclick="downloadSignedDocsCennik()">📝
+              Pobierz zgody (PDF)</button>
+            <button class="btn ghost" id="downloadAdultBtn" style="display:none"
+              onclick="downloadAdultContractCennik()">📄 Pobierz umowę (PDF)</button>
             <button class="btn ghost" id="backToCennik">← Wróć do cennika</button>
           </div>
 
@@ -2528,9 +2688,27 @@
 
         toast('Zgłoszenie przyjęte');
         preparePaymentUI();
-        // Jeśli karnet dzieci — przejdź do podpisania dokumentów, inaczej od razu płatność
+        // Dla dzieci i dorosłych karnetów — krok z dokumentami przed płatnością
         if (selectedPlan && isKidsPlan(selectedPlan)) {
+          const dc = document.getElementById('docsContainer');
+          const dca = document.getElementById('docsContainerAdult');
+          if (dc) dc.style.display = 'flex';
+          if (dca) dca.style.display = 'none';
           prefillDocForms();
+          setStep(45);
+        } else if (selectedPlan && !isOneTime(selectedPlan)) {
+          // Dorośli z karnetem — docs dorosłych
+          const dc = document.getElementById('docsContainer');
+          const dca = document.getElementById('docsContainerAdult');
+          if (dc) dc.style.display = 'none';
+          if (dca) dca.style.display = 'flex';
+          const fn = (document.getElementById('f_first_name')?.value || '').trim();
+          const ln = (document.getElementById('f_last_name')?.value || '').trim();
+          const fullN = [fn, ln].filter(Boolean).join(' ');
+          const a1 = document.getElementById('adoc1_name');
+          const a2 = document.getElementById('adoc2_name');
+          if (a1 && !a1.value) a1.value = fullN;
+          if (a2 && !a2.value) a2.value = fullN;
           setStep(45);
         } else {
           setStep(5);
@@ -2667,6 +2845,14 @@
       payBtn.disabled = docBtn.disabled = false;
       payBtn.onclick = () => handlePayOnline(ref, amount);
       docBtn.onclick = () => downloadPaymentDoc(ref);
+
+      const dKidsBtn = document.getElementById('downloadKidsBtn');
+      const dAdultBtn = document.getElementById('downloadAdultBtn');
+
+      const isContract = selectedPlan && ((selectedPlan.plan_type === 'contract') || (selectedPlan.slug && selectedPlan.slug.includes('umow')) || (selectedPlan.name && selectedPlan.name.toLowerCase().includes('umow')) || (months > 1));
+
+      if (dKidsBtn) dKidsBtn.style.display = (isContract && isKidsPlan(selectedPlan)) ? 'inline-block' : 'none';
+      if (dAdultBtn) dAdultBtn.style.display = (isContract && !isKidsPlan(selectedPlan)) ? 'inline-block' : 'none';
     }
 
     function getPaymentModePayload() {
@@ -2684,6 +2870,496 @@
         reminders: document.getElementById('chkReminders')?.checked !== false,
       };
     }
+
+    async function downloadAdultContractCennik(paymentRef) {
+      const ref = paymentRef || registrationResult?.payment_ref || '';
+      const firstName = document.getElementById('f_first_name')?.value?.trim() || '';
+      const lastName = document.getElementById('f_last_name')?.value?.trim() || '';
+      const fullName = (firstName + ' ' + lastName).trim();
+
+      try {
+        const p = getPaymentModePayload();
+        // Fallback w razie pustego payment_mode (nie zostało wybrane wprost z radia)
+        if (!p.payment_mode) {
+          const mCard = document.getElementById('payModeMonthCard');
+          const isM = mCard && (mCard.style.border || '').includes('148,0,0');
+          p.payment_mode = isM ? 'monthly' : 'full';
+        }
+        if (ref && p && p.payment_mode) {
+          const action = p.payment_mode === 'monthly' ? 'schedule_doc' : 'download_doc';
+          const doc_data = getDocDataCennik();
+          await fetch(`${API}/registration/action`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ payment_ref: ref, action, ...p, doc_data })
+          });
+        }
+      } catch (e) { }
+
+      const date = new Date().toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
+      // Embed actual signature from canvas if drawn, else placeholder line
+      const sigCanvas4El = document.getElementById('sigCanvas4');
+      const sigCanvas5El = document.getElementById('sigCanvas5');
+      const sig4Src = (sigCanvas4El && window.sigSigned?.[4]) ? sigCanvas4El.toDataURL('image/png') : null;
+      const sig5Src = (sigCanvas5El && window.sigSigned?.[5]) ? sigCanvas5El.toDataURL('image/png') : null;
+      const sig4Html = sig4Src
+        ? `<img src="${sig4Src}" style="max-height:80px;max-width:260px;display:block;margin:4px 0">`
+        : `<div style="border-bottom:1px solid #aaa;width:260px;height:60px"></div>`;
+      const sig5Html = sig5Src
+        ? `<img src="${sig5Src}" style="max-height:80px;max-width:260px;display:block;margin:4px 0">`
+        : `<div style="border-bottom:1px solid #aaa;width:260px;height:60px"></div>`;
+
+      // Collect Oświadczenie data from form fields
+      const adoc2Name = document.getElementById('adoc2_name')?.value?.trim() || fullName;
+      const adoc2Dob = document.getElementById('adoc2_dob')?.value || '';
+      const adoc2Address = document.getElementById('adoc2_address')?.value?.trim() || '';
+      const adoc2Pesel = document.getElementById('adoc2_pesel')?.value?.trim() || '';
+      const adoc2Id = document.getElementById('adoc2_id')?.value?.trim() || '';
+
+      const instructorSigPlaceholder = `<div style="border:1px solid #ccc;border-radius:4px;padding:8px;margin-top:8px;min-width:240px;min-height:70px;display:inline-flex;align-items:center;justify-content:center;color:#999;font-style:italic;background:#fafafa;font-size:12px">[ miejsce na podpis Tadeusza Dubickiego ]</div>`;
+
+      const priceTable = `<table border="1" cellpadding="8" cellspacing="0" style="border-collapse:collapse;width:100%;font-size:12px;margin:12px 0">
+        <thead><tr style="background:#c42000;color:#fff">
+          <th>OPCJA</th><th>CENA / MIES.</th><th>ŁĄCZNIE</th><th>ZNIŻKA</th>
+        </tr></thead>
+        <tbody>
+          <tr><td>Zajęcia jednorazowe</td><td style="color:#c42000;font-weight:bold">50 zł</td><td>&mdash;</td><td>&mdash;</td></tr>
+          <tr><td>Karnet 1 miesiąc</td><td style="color:#c42000;font-weight:bold">240 zł</td><td>240 zł</td><td>&mdash;</td></tr>
+          <tr><td>Karnet 3 miesiące</td><td style="color:#c42000;font-weight:bold">217 zł</td><td>650 zł</td><td>-10%</td></tr>
+          <tr><td>Karnet 6 miesięcy</td><td style="color:#c42000;font-weight:bold">204 zł</td><td>1 225 zł</td><td>-15%</td></tr>
+          <tr><td>Karnet 10 miesięcy</td><td style="color:#c42000;font-weight:bold">192 zł</td><td>1 920 zł</td><td>-20%</td></tr>
+        </tbody>
+      </table>`;
+
+      const html = `<!DOCTYPE html><html lang="pl"><head><meta charset="UTF-8">
+      <title>Umowa i Regulamin &mdash; ${ref}</title>
+      <style>
+        body{font-family:Arial,sans-serif;margin:48px;color:#111;font-size:13px;line-height:1.7;max-width:760px}
+        .logo-area{text-align:center;margin-bottom:24px}
+        .logo-top{font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#c42000;margin-bottom:2px}
+        .logo-main{font-size:42px;font-weight:900;color:#c42000;letter-spacing:.04em;margin:0}
+        h1{font-size:18px;font-weight:800;text-align:center;border-bottom:none;margin:24px 0 4px}
+        .doc-subtitle{text-align:center;font-size:13px;color:#555;margin-bottom:24px}
+        hr.doc-rule{border:none;border-top:1px solid #ddd;margin:18px 0}
+        h2{font-size:13px;font-weight:700;margin:18px 0 4px}
+        p{margin:2px 0 10px}
+        .rodo{margin-top:20px;padding-top:12px;border-top:1px solid #ddd}
+        .rodo-title{font-weight:700;color:#c42000;font-size:13px}
+        .consent-block{text-align:center;margin-top:28px;padding:16px;border-top:2px solid #c42000}
+        .consent-title{font-weight:800;font-size:14px;color:#c42000;letter-spacing:.05em;margin-bottom:8px}
+        .sig-row{display:flex;justify-content:space-between;margin-top:32px;gap:40px}
+        .sig-col{flex:1}
+        .sig-col .label{font-size:11px;color:#666;margin-bottom:32px}
+        .sig-col .line{border-top:1px solid #aaa;padding-top:4px;font-size:11px;color:#555;text-align:center}
+        .footer{margin-top:40px;padding-top:10px;border-top:1px solid #ddd;font-size:11px;color:#666;text-align:center}
+        @media print{button,.no-print{display:none}}
+      </style></head><body>
+
+      <div class="no-print" style="margin-bottom:16px;padding:10px 16px;background:#fff8f8;border:1px solid #f0c0c0;border-radius:4px;font-size:12px;color:#555">
+        Wydrukuj ten dokument, podpisz go i przynieś
+        go na pierwsze zajęcia.
+      </div>
+      <div style="margin:0 0 16px" class="no-print">
+        <button onclick="window.print()" style="padding:10px 28px;background:#c42000;color:#fff;border:none;border-radius:4px;font-size:14px;font-weight:bold;cursor:pointer">🖨️ Drukuj / Zapisz jako PDF</button>
+      </div>
+
+      <div class="logo-area">
+        <div class="logo-top">KRAV MAGA</div>
+        <div class="logo-main">SAGGITA</div>
+      </div>
+
+      <h1>UMOWA &ndash; REGULAMIN SEKCJI KRAV MAGA</h1>
+      <div class="doc-subtitle">Akademia Obrony Saggita</div>
+      ${ref ? '<div style="text-align:center;font-size:11px;color:#888;margin-bottom:16px">Nr zapisu: ' + ref + '</div>' : ''}
+      <hr class="doc-rule">
+
+      <h2>1. Bądź punktualny i systematyczny.</h2>
+      <p>Na zajęcia przychodź zawsze kilka minut wcześniej, tak abyś miał czas na przebranie się i formalności. Staraj się również regularnie uczestniczyć w treningach.</p>
+
+      <h2>2. Zamieniaj strój na treningowy.</h2>
+      <p>Na każdym treningu obowiązuje strój sportowy &ndash; spodnie dresowe, koszulka, obuwie sportowe, a po pewnym czasie ochraniacze.</p>
+
+      <h2>3. Pamiętaj o higienie.</h2>
+      <p>W czasie treningu będziesz w bliskim kontakcie z innymi osobami. Zadbaj o czysty strój i higienę osobistą przed każdymi zajęciami.</p>
+
+      <h2>4. Dbaj o zdrowie swoje i innych.</h2>
+      <p>Jeśli jesteś chory bądź osłabiony &ndash; zrezygnuj z treningu. Zawsze informuj Instruktora o niedyspozycji lub nagłym pogorszeniu stanu zdrowia. Pamiętaj również, że na treningu można doznać kontuzji &ndash; dbaj o bezpieczeństwo swoje i partnera.</p>
+
+      <h2>5. Przestrzegaj zasad bezpieczeństwa.</h2>
+      <p>Wykonuj ćwiczenia zgodnie z poleceniem Instruktora. Podczas trwania zajęć nie oddal się bez wcześniejszego powiadomienia Instruktora bądź partnera. Korzystaj ze sprzętu treningowego zgodnie z jego przeznaczeniem. Wybieraj obuwie sportowe bezpieczne dla Ciebie i partnera tzn. takie, w którym sam akceptowałbyś kopnięcie. Zdejmij zegarek, biżuterię i inne akcesoria mogące uszkodzić Ciebie lub partnera.</p>
+
+      <h2>6. Opłaty za treningi i opcje karnetów.</h2>
+      <p>Wysokość opłat za treningi ustala Główny Instruktor Sekcji Krav Maga Akademii Obrony Saggita. Główny Instruktor zastrzega sobie prawo do zmiany wysokości opłaty w dowolnym momencie.</p>
+      <p>&bull; Opłatę za treningi wnosi się z góry &ndash; zgodnie z wybraną opcją karnetu. W tytule przelewu należy wpisać: imię i nazwisko uczestnika, wybrany okręs, &bdquo;opłata za trening&rdquo;.</p>
+      <p>&bull; Nowi uczestnicy zobowiązani są do wniesienia jednorazowej opłaty wpisowej w wysokości 40 zł.</p>
+      ${priceTable}
+      <p>&bull; Coroczna opłata na sprzęt treningowy wynosi 40 zł. Przeznaczana jest na regenerację lub wymianę sprzętu Akademii.</p>
+
+      <h2>6a. Rezygnacja z umowy w trakcie jej trwania.</h2>
+      <p>W przypadku rezygnacji z karnetu wielomiesięcznego przed upływem opłaconego okresu uczestnik zobowiązany jest do wyrównania różnicy między ceną faktycznie zapłaconą a ceną karnetu miesięcznego (240 zł/mies.) za każdy już wykorzystany miesiąc.</p>
+
+      <hr class="doc-rule">
+      <h1>REGULAMIN SEKCJI KRAV MAGA &ndash; DOROŚLI</h1>
+      <div class="doc-subtitle">Akademia Obrony Saggita</div>
+      <hr class="doc-rule">
+
+      <h2>1. Wymagania zdrowotne.</h2>
+      <p>Zajęcia Krav Maga dla dorosłych nie wymagają specjalnej opieki medycznej. W przypadku wątpliwości co do stanu zdrowia uczestnik zobowiązany jest do przedłożenia zaświadczenia lekarskiego. Uczestnik informuje Instruktora o wszelkich chorobach, urazach lub przeciwwskazaniach zdrowotnych przed przystąpieniem do zajęć.</p>
+
+      <h2>2. Liczba uczestników.</h2>
+      <p>Maksymalna liczba uczestników w grupie nie może być większa niż 25. Akademia zastrzega sobie prawo do zmian w grafiku i podziale grup.</p>
+
+      <h2>3. Bezpieczeństwo podczas zajęć.</h2>
+      <p>Instruktorzy prowadzą zajęcia w pełni wyposażonych salach. Uczestnicy nie mogą oddalać się z miejsca zajęć bez wiedzy Instruktora. Wszelkie ćwiczenia wykonywane są zgodnie z poleceniem i pod nadzorem prowadzącego.</p>
+
+      <h2>4. Zachowanie podczas zajęć.</h2>
+      <p>Uczestnicy zobowiązane są do kulturalnego zachowania wobec Instruktorów i pozostałych uczestników. Niedopuszczalne jest stosowanie przemocy, wulgarnego języka oraz agresywnego zachowania poza ćwiczeniami prowadzonymi przez Instruktora.</p>
+
+      <h2>5. Zakaz używania telefonów komórkowych.</h2>
+      <p>Podczas zajęć telefony komórkowe powinny być wyciszone i schowane. Zabrania się nagrywania i fotografowania bez zgody Instruktora i pozostałych uczestników.</p>
+
+      <h2>6. Alkohol i substancje odurzające.</h2>
+      <p>Bezwzględnie zabrania się przychodzenia na zajęcia pod wpływem alkoholu lub jakichkolwiek substancji odurzających. Naruszenie tej zasady skutkuje natychmiastowym usunięciem z zajęć i może skutkować zakończeniem członkostwa.</p>
+
+      <h2>7. Agresywne zachowanie.</h2>
+      <p>Agresywne zachowanie wobec innych uczestników, Instruktorów lub osób trzecich skutkuje natychmiastowym zatrzymaniem zajęć. W przypadku poważnych incydentów Akademia zastrzega sobie prawo do powiadomienia właściwej jednostki Policji.</p>
+
+      <h2>8. Zachowanie negatywne w mediach społecznościowych.</h2>
+      <p>Zabrania się umieszczania w mediach społecznościowych treści negatywnych, obraźliwych lub naruszających dobra osobiste uczestników, Instruktorów lub Akademii. Naruszenie może skutkować odpowiedzialnością prawną.</p>
+
+      <h2>9. Zasady zwrotu opłat.</h2>
+      <p>Opłaty za zajęcia nie podlegają zwrotowi w przypadku nieobecności uczestnika, chyba że strony uzgodnią inaczej. W przypadku dłuższej choroby (potwierdzonej zaświadczeniem lekarskim) możliwe jest przeniesienie opłaty na kolejny okres.</p>
+
+      <h2>10. Wyjście poza miejsce zajęć.</h2>
+      <p>Jeżeli uczestnik chce wyjść z sali lub miejsca treningów, zobowiązany jest poinformować o tym Instruktora i uzyskać jego zgodę. Samowolne oddalenie się jest niedopuszczalne.</p>
+
+      <h2>11. Decyzja o wykluczeniu.</h2>
+      <p>Akademia zastrzega sobie prawo do wykluczenia uczestnika z zajęć bez zwrotu opłat w przypadku rażących naruszeń niniejszego Regulaminu.</p>
+
+      <h2>12. Kontakt w sytuacjach nagłych.</h2>
+      <p>W sytuacjach nagłych (wypadek, złe samopoczucie, incydent) Instruktor niezwłocznie podejmuje odpowiednie działania oraz &ndash; jeśli zajdzie potrzeba &ndash; kontaktuje się z numerem alarmowym lub wskazaną przez uczestnika osobą do kontaktu.</p>
+
+      <div class="rodo">
+        <div class="rodo-title">KLAUZULA INFORMACYJNA RODO</div>
+        <p>Zgodnie z art. 13 ogólnego rozporządzenia o ochronie danych osobowych z dnia 27 kwietnia 2016 r. (RODO) informujemy, że administratorem danych osobowych jest: Tadeusz Dubicki, ul. Jagiellońska 2/4, 58-100 Świdnica, NIP 884 218 23 65, tel. 510 930 460, e-mail: biuro@akademiaobrony.pl. Dane przetwarzane są w celu prowadzenia korespondencji, telefonów, działań marketingowych (oferty szkoleniowe). Dane nie będą przekazywane odbiorcom zewnętrznym bez podstawy prawnej. Przysługuje Panu/Pani prawo dostępu do danych, ich sprostowania, usunięcia lub ograniczenia przetwarzania oraz prawo do wniesienia sprzeciwu lub skargi do organu nadzorczego. Pełna polityka prywatności dostępna jest na stronie Akademii.</p>
+      </div>
+
+      <div class="consent-block">
+        <div class="consent-title">WYRAŻAM ZGODĘ NA UDZIAŁ W ZAJĘCIACH</div>
+        <p>Oświadczam, że zapoznałem/am się z niniejszą Umową &ndash; Regulaminem Sekcji Krav Maga Akademii Obrony Saggita i akceptuję wszystkie zawarte w nim postanowienia.</p>
+        ${fullName ? '<p>Imię i nazwisko uczestnika: <strong>' + fullName + '</strong></p>' : '<p>Imię i nazwisko uczestnika: .................................................</p>'}
+
+        <div class="sig-row">
+          <div class="sig-col">
+            <div class="label">&nbsp;</div>
+            <div class="line">miejscowość, data</div>
+          </div>
+          <div class="sig-col">
+            <div class="label">Podpis uczestnika:</div>
+            ${sig4Html}
+            <div class="line">podpis uczestnika</div>
+          </div>
+        </div>
+
+        <div class="sig-row" style="margin-top:24px">
+          <div class="sig-col">
+            <div class="label">&nbsp;</div>
+            ${instructorSigPlaceholder}
+            <div class="line" style="margin-top:8px">Tadeusz Dubicki &ndash; Koordynator, Szef wyszkolenia</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer">
+        Akademia Obrony Saggita | Tadeusz Dubicki &ndash; Koordynator, Szef wyszkolenia | Tel.: 510 930 460 | biuro@akademiaobrony.pl
+      </div>
+
+      <!-- STRONA 2: OŚWIADCZENIE O NIEKARALNOŚCI -->
+      <div style="page-break-before:always;padding-top:40px">
+
+        <div class="logo-area">
+          <div class="logo-top">KRAV MAGA</div>
+          <div class="logo-main">SAGGITA</div>
+        </div>
+        <hr style="border:none;border-top:2px solid #c42000;margin:0 0 16px">
+
+        <h1 style="font-size:18px;font-weight:800;text-align:center;margin:0 0 4px">OŚWIADCZENIE O NIEKARALNOŚCI</h1>
+        <div style="text-align:center;font-size:13px;color:#555;margin-bottom:20px">Akademia Obrony Saggita</div>
+        <hr style="border:none;border-top:1px solid #ddd;margin:0 0 16px">
+
+        <p>Niniejsze oświadczenie składane jest w związku z udziałem w zajęciach prowadzonych przez Akademię Obrony Saggita z siedzibą w Świdnicy. Akademia dba o bezpieczeństwo wszystkich uczestników zajęć i zobowiązuje dorosłych uczestników do złożenia poniższego oświadczenia.</p>
+
+        <div style="margin-top:20px">
+          <div style="font-weight:700;color:#c42000;font-size:13px;letter-spacing:.04em;margin-bottom:10px">DANE OSOBOWE UCZESTNIKA</div>
+          <hr style="border:none;border-top:1px solid #ddd;margin:0 0 14px">
+
+          <p style="margin-bottom:2px"><strong>Imię i nazwisko:</strong></p>
+          <p style="margin-bottom:14px;border-bottom:1px dotted #aaa;padding-bottom:4px">${adoc2Name || fullName || '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'}</p>
+
+          <p style="margin-bottom:2px"><strong>Data urodzenia:</strong></p>
+          <p style="margin-bottom:14px;border-bottom:1px dotted #aaa;padding-bottom:4px">${adoc2Dob || '&nbsp;'}</p>
+
+          <p style="margin-bottom:2px"><strong>Adres zamieszkania:</strong></p>
+          <p style="margin-bottom:14px;border-bottom:1px dotted #aaa;padding-bottom:4px">${adoc2Address || '&nbsp;'}</p>
+
+          <p style="margin-bottom:2px"><strong>Numer PESEL:</strong></p>
+          <p style="margin-bottom:14px;border-bottom:1px dotted #aaa;padding-bottom:4px">${adoc2Pesel || '&nbsp;'}</p>
+
+          <p style="margin-bottom:2px"><strong>Seria i numer dowodu osobistego:</strong></p>
+          <p style="margin-bottom:14px;border-bottom:1px dotted #aaa;padding-bottom:4px">${adoc2Id || '&nbsp;'}</p>
+        </div>
+
+
+        <div style="margin-top:20px">
+          <div style="font-weight:700;color:#c42000;font-size:13px;letter-spacing:.04em;margin-bottom:10px">TREŚĆ OŚWIADCZENIA</div>
+          <hr style="border:none;border-top:1px solid #ddd;margin:0 0 14px">
+          <p>Ja, niżej podpisany/a, świadomy/a odpowiedzialności karnej za składanie fałszywych oświadczeń, wynikającej z art. 233 &sect; 1 Kodeksu karnego, niniejszym oświadczam, że:</p>
+
+          <ol style="padding-left:20px;line-height:1.9">
+            <li>nie byłem/am skazany/a prawomocnym wyrokiem sądu za umyślne przestępstwo lub umyślne przestępstwo skarbowe;</li>
+            <li>nie toczy się przeciwko mnie żadne postępowanie karne ani karno-skarbowe;</li>
+            <li>nie figuruję w Rejestrze Sprawców Przestępstw na Tle Seksualnym (dostęp z ograniczeniem, o którym mowa w art. 9 ustawy z dnia 13 maja 2016 r. o przeciwdziałaniu zagrożeniom przestępczością na tle seksualnym i ochronie małoletnich);</li>
+            <li>nie byłem/am karany/a za przestępstwa przeciwko życiu i zdrowiu, wolności, wolności seksualnej i obyczajności, rodzinie i opiece, a także za przestępstwa z użyciem przemocy;</li>
+            <li>jestem świadomy/a, że podanie nieprawdziwych informacji w niniejszym oświadczeniu stanowi podstawę do natychmiastowego rozwiązania umowy z Akademią Obrony Saggita oraz może skutkować odpowiedzialnością karną.</li>
+          </ol>
+        </div>
+
+        <div style="margin-top:20px;padding:12px 16px;border:1px solid #c42000;border-radius:4px;font-size:12px;color:#333;line-height:1.7">
+          Oświadczam ponadto, że zapoznałem/am się z Regulaminem Sekcji Krav Maga Akademii Obrony Saggita i przyjmuję do wiadomości, że Akademia może zażądać przedstawienia zaświadczenia o niekaralności z Krajowego Rejestru Karnego w każdym czasie.
+        </div>
+
+        <div style="display:flex;justify-content:space-between;margin-top:48px;gap:20px">
+          <div style="flex:1;border-top:1px solid #aaa;padding-top:4px;font-size:11px;color:#555;text-align:center">miejscowość</div>
+          <div style="flex:1;border-top:1px solid #aaa;padding-top:4px;font-size:11px;color:#555;text-align:center">data</div>
+          <div style="flex:1.5;padding-top:4px;font-size:11px;color:#555;text-align:center">
+            ${sig5Html}
+            <div style="border-top:1px solid #aaa;padding-top:4px;margin-top:4px">czytelny podpis uczestnika</div>
+          </div>
+        </div>
+
+        <p style="margin-top:24px;font-style:italic;font-size:12px;color:#555;text-align:center">
+          Oświadczenie należy wypełnić czytelnie, własnoręcznie podpisać i przekazać Instruktorowi przed pierwszym treningiem lub na żądanie Akademii.
+        </p>
+
+        <div style="margin-top:32px;padding-top:10px;border-top:1px solid #ddd;font-size:11px;color:#666;text-align:center">
+          Akademia Obrony Saggita | Tadeusz Dubicki &ndash; Koordynator, Szef wyszkolenia | Tel.: 510 930 460 | biuro@akademiaobrony.pl | www.akademiaobrony.pl
+        </div>
+      </div>
+
+      </body></html>`;
+
+      const win = window.open('', '_blank', 'width=960,height=900');
+      if (win) {
+        win.document.write(html);
+        win.document.close();
+      } else {
+        alert('Zablokowano wyskakujące okno. Pozwól na wyskakujące okna dla tej strony.');
+      }
+    };
+
+    async function downloadSignedDocsCennik() {
+      const parentName = document.getElementById('doc1_parent')?.value?.trim() || '';
+      const childName1 = document.getElementById('doc1_child')?.value?.trim() || '';
+      const doc2Parent = document.getElementById('doc2_parent')?.value?.trim() || '';
+      const doc2Address = document.getElementById('doc2_address')?.value?.trim() || '';
+      const childPhone = document.getElementById('doc2_phone')?.value?.trim() || '';
+      const childName2 = document.getElementById('doc2_child')?.value?.trim() || '';
+      const childDob = document.getElementById('doc2_dob')?.value || '';
+      const emergency = document.getElementById('doc2_emergency')?.value?.trim() || '';
+      const doc3Parent = document.getElementById('doc3_parent')?.value?.trim() || '';
+      const childName3 = document.getElementById('doc3_child')?.value?.trim() || '';
+      const wizerPhoto = document.getElementById('doc2_wizerunek')?.checked ? 'TAK' : 'NIE';
+      const ref = registrationResult?.payment_ref || '';
+
+      try {
+        const p = getPaymentModePayload();
+        // Fallback w razie pustego payment_mode (nie zostało wybrane wprost z radia)
+        if (!p.payment_mode) {
+          const mCard = document.getElementById('payModeMonthCard');
+          const isM = mCard && (mCard.style.border || '').includes('148,0,0');
+          p.payment_mode = isM ? 'monthly' : 'full';
+        }
+        if (ref && p && p.payment_mode) {
+          const action = p.payment_mode === 'monthly' ? 'schedule_doc' : 'download_doc';
+          const doc_data = getDocDataCennik();
+          await fetch(`${API}/registration/action`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ payment_ref: ref, action, ...p, doc_data })
+          });
+        }
+      } catch (e) { }
+
+      const date = new Date().toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
+      const sig1Src = document.getElementById('sigCanvas1')?.toDataURL('image/png') || '';
+      const sig2Src = document.getElementById('sigCanvas2')?.toDataURL('image/png') || '';
+      const sig3Src = document.getElementById('sigCanvas3')?.toDataURL('image/png') || '';
+
+      const instructorSigPlaceholder = `<div style="border:1px solid #ccc;border-radius:4px;padding:8px;margin-top:8px;min-width:280px;min-height:80px;display:inline-flex;align-items:center;justify-content:center;color:#999;font-style:italic;background:#fafafa">[ miejsce na podpis Tadeusza Dubickiego ]</div>`;
+
+      const css = `<style>
+        body{font-family:Arial,sans-serif;margin:40px;color:#111;font-size:13px;line-height:1.7}
+        h1{font-size:17px;border-bottom:2px solid #c42000;padding-bottom:6px;margin-bottom:12px}
+        h2{font-size:14px;margin:20px 0 6px;color:#222}
+        p{margin:4px 0}
+        strong{color:#111}
+        .meta{color:#555;font-size:12px;margin-bottom:20px}
+        .sig-area{display:flex;gap:40px;flex-wrap:wrap;margin-top:16px;padding-top:12px;border-top:1px solid #ddd}
+        .sig-col{min-width:200px}
+        .sig-col .label{font-size:11px;color:#666;margin-bottom:4px}
+        .sig-box{border:1px solid #ccc;border-radius:4px;background:#fafafa;padding:8px;display:inline-block}
+        .sig-box img{display:block;max-width:360px;height:auto}
+        .page-break{page-break-before:always;padding-top:32px;margin-top:40px;border-top:3px solid #c42000}
+        .doc-body{background:#fafafa;border:1px solid #ddd;border-radius:4px;padding:16px;margin:8px 0;font-size:12.5px}
+        @media print{button{display:none} .no-print{display:none}}
+      </style>`;
+
+      const html = `<!DOCTYPE html><html lang="pl"><head><meta charset="UTF-8">
+      <title>Podpisane dokumenty &mdash; ${ref}</title>${css}</head><body>
+      <div style="font-size:20px;font-weight:bold;color:#c42000;margin-bottom:4px">Akademia Obrony Saggita &mdash; Krav Maga</div>
+      <div class="meta">Numer zapisu: <strong>${ref}</strong> &nbsp;|&nbsp; Data: ${date}</div>
+      <div style="margin:0 0 24px;padding:10px 14px;background:#fff8f8;border:1px solid #f0c0c0;border-radius:4px;font-size:12px;color:#555" class="no-print">
+        Aby zapisać te dokumenty jako PDF: kliknij przycisk &bdquo;🖨️ Drukuj&rdquo; i wybierz &bdquo;Zapisz jako PDF&rdquo; w oknie drukarki.
+      </div>
+      <div style="margin:0 0 16px;text-align:left" class="no-print">
+        <button onclick="window.print()" style="padding:10px 28px;background:#c42000;color:#fff;border:none;border-radius:4px;font-size:14px;font-weight:bold;cursor:pointer">🖨️ Drukuj / Zapisz jako PDF</button>
+      </div>
+
+      <!-- DOKUMENT 1 -->
+      <h1>Dokument 1: Umowa i Regulamin Sekcji Krav Maga</h1>
+      <div class="meta">
+        Rodzic/Opiekun: <strong>${parentName}</strong> &nbsp;|&nbsp; Dziecko: <strong>${childName1}</strong>
+      </div>
+      <div class="doc-body">
+        <strong style="font-size:15px">UMOWA &ndash; REGULAMIN SEKCJI KRAV MAGA</strong><br>
+        <em style="color:#666">Akademia Obrony Saggita</em><br><br>
+        <strong>1. Bądź punktualny i systematyczny.</strong><br>
+        Na zajęcia przychodź zawsze kilka minut wcześniej, tak abyś miał czas na przebranie się i formalności. Staraj się również regularnie uczestniczyć w treningach.<br><br>
+        <strong>2. Zamieniaj strój na treningowy.</strong><br>
+        Na każdym treningu obowiązuje strój sportowy &ndash; spodnie dresowe, koszulka, obuwie sportowe, a po pewnym czasie ochraniacze.<br><br>
+        <strong>3. Pamiętaj o higienie.</strong><br>
+        W czasie treningu będziesz w bliskim kontakcie z innymi osobami. Zadbaj o czysty strój i higienę osobistą przed każdymi zajęciami.<br><br>
+        <strong>4. Dbaj o zdrowie swoje i innych.</strong><br>
+        Jeśli jesteś chory bądź osłabiony &ndash; zrezygnuj z treningu. Zawsze informuj Instruktora o niedyspozycji lub nagłym pogorszeniu stanu zdrowia.<br><br>
+        <strong>5. Przestrzegaj zasad bezpieczeństwa.</strong><br>
+        Wykonuj ćwiczenia zgodnie z poleceniem Instruktora. Korzystaj ze sprzętu zgodnie z przeznaczeniem.<br><br>
+        <strong>6. Składki członkowskie i coroczna opłata na sprzęt.</strong><br>
+        Wysokość opłat ustala Główny Instruktor. Opłatę wnosi się miesięcznie do ostatniego dnia miesiąca poprzedzającego nowy miesiąc treningów.<br>
+        &bull; Karnet miesięczny bez zobowiązań: <strong>240 zł/mies.</strong><br>
+        &bull; Umowa na rok szkolny (maks. 10 mies.): <strong>180 zł/mies.</strong><br>
+        &bull; Rezygnacja w trakcie umowy: wyrównanie różnicy 60 zł za każdy miesiąc z rabatem.<br>
+        &bull; Koszt jednorazowego treningu: 50,00 zł. Coroczna opłata członkowska: 40 zł.<br><br>
+        <strong>REGULAMIN SEKCJI KRAV MAGA KIDS</strong><br><br>
+        <strong>1. Wymagania zdrowotne.</strong> W razie wątpliwości rodzic/opiekun przedkłada zaświadczenie lekarskie i informuje Instruktora o wszelkich przeciwwskazaniach zdrowotnych.<br><br>
+        <strong>2. Odbiór dziecka.</strong> Dziecko może być odebrane wyłącznie przez rodzica, opiekuna prawnego lub osobę wcześniej wskazaną pisemnie.<br><br>
+        <strong>3. Liczba uczestników.</strong> Maksymalna liczba uczestników w grupie: 25 osób.<br><br>
+        <strong>4. Bezpieczeństwo podczas zajęć.</strong> Dzieci nie mogą oddalać się z miejsca zajęć bez wiedzy Instruktora.<br><br>
+        <strong>5. Zachowanie.</strong> Uczestnicy zobowiązane są do kulturalnego zachowania. Niedopuszczalna jest przemoc, wulgarny język oraz agresywne zachowanie poza ćwiczeniami.<br><br>
+        <strong>6. Zakaz używania telefonów komórkowych.</strong> Podczas zajęć telefony powinny być wyciszone i schowane.<br><br>
+        <strong>7. Alkohol i substancje odurzające.</strong> Bezwzględnie zabrania się przychodzenia na zajęcia pod wpływem alkoholu lub substancji odurzających.<br><br>
+        <strong>8&ndash;13.</strong> Agresywne zachowanie skutkuje powiadomieniem rodziców i ewentualnie Policji. Obowiązuje zakaz treści obraźliwych w mediach społecznościowych. Opłaty nie podlegają zwrotowi w przypadku nieobecności (z wyjątkiem udokumentowanej choroby).<br><br>
+        <strong>KLAUZULA INFORMACYJNA RODO</strong><br>
+        Administratorem danych jest: Tadeusz Dubicki, ul. Jagiellońska 2/4, 58-100 Świdnica, NIP 884 218 23 65, tel. 510 930 460, biuro@akademiaobrony.pl.
+      </div>
+      <p><em>Oświadczam, że zapoznałem/am się z niniejszą Umową &ndash; Regulaminem Sekcji Krav Maga oraz Regulaminem Sekcji Krav Maga Kids i akceptuję wszystkie zawarte w nim postanowienia.</em></p>
+      <div class="sig-area">
+        <div class="sig-col">
+          <div class="label">Podpis Rodzica/Opiekuna (${parentName}):</div>
+          <div class="sig-box"><img src="${sig1Src}" alt="Podpis 1"></div>
+        </div>
+        <div class="sig-col">
+          <div class="label">Podpis Instruktora (Tadeusz Dubicki):</div>
+          ${instructorSigPlaceholder}
+        </div>
+      </div>
+
+      <!-- DOKUMENT 2 -->
+      <div class="page-break"></div>
+      <h1>Dokument 2: Zgoda Rodzica / Opiekuna Prawnego na udział dziecka w zajęciach</h1>
+      <div class="meta">
+        Rodzic/Opiekun: <strong>${doc2Parent}</strong> &nbsp;|&nbsp; Adres: ${doc2Address} &nbsp;|&nbsp; Tel: ${childPhone}<br>
+        Dziecko: <strong>${childName2}</strong> &nbsp;|&nbsp; Data urodzenia: ${childDob}<br>
+        ${emergency ? 'Kontakt w nagłej sytuacji: ' + emergency + '<br>' : ''}
+        Zgoda na wizerunek: <strong>${wizerPhoto}</strong>
+      </div>
+      <div class="doc-body">
+        <strong style="font-size:15px">ZGODA RODZICA / OPIEKUNA PRAWNEGO</strong><br>
+        <em style="color:#666">na udział dziecka w zajęciach Krav Maga Kids &bull; Akademia Obrony Saggita</em><br><br>
+        Ja niżej podpisany/a wyrażam zgodę na udział mojego dziecka w zajęciach sportowych <strong>Krav Maga Kids</strong> organizowanych przez <strong>Akademię Obrony Saggita</strong>.<br><br>
+        <strong>OŚWIADCZENIA RODZICA / OPIEKUNA</strong><br><br>
+        1. Oświadczam, że stan zdrowia mojego dziecka pozwala na udział w zajęciach ruchowych oraz treningach samoobrony.<br>
+        2. Przyjmuję do wiadomości, że zajęcia mają charakter sportowo-treningowy i mogą wiązać się z wysiłkiem fizycznym.<br>
+        3. Zobowiązuję się do poinformowania instruktora o wszelkich przeciwwskazaniach zdrowotnych, chorobach lub urazach dziecka.<br>
+        4. Potwierdzam, że zapoznałem/am się z zasadami obowiązującymi uczestników zajęć oraz z dokumentem <strong>Standardy Ochrony Małoletnich</strong> Akademii Obrony Saggita i zobowiązuję się do ich przestrzegania.<br>
+        5. Przyjmuję do wiadomości, że bezpieczeństwo uczestników jest nadrzędną wartością zajęć, a instruktorzy prowadzą treningi zgodnie z zasadami określonymi w Polityce Ochrony Małoletnich.<br><br>
+        <em>Akademia Obrony Saggita | Tadeusz Dubicki &ndash; Koordynator | Tel.: 510 930 460 | biuro@akademiaobrony.pl</em>
+      </div>
+      <p><em>Oświadczam, że podane informacje są prawdziwe i biorę odpowiedzialność za udział mojego dziecka w zajęciach.</em></p>
+      <div class="sig-area">
+        <div class="sig-col">
+          <div class="label">Podpis Rodzica/Opiekuna (${doc2Parent}):</div>
+          <div class="sig-box"><img src="${sig2Src}" alt="Podpis 2"></div>
+        </div>
+        <div class="sig-col">
+          <div class="label">Podpis Instruktora (Tadeusz Dubicki):</div>
+          ${instructorSigPlaceholder}
+        </div>
+      </div>
+
+      <!-- DOKUMENT 3 -->
+      <div class="page-break"></div>
+      <h1>Dokument 3: Polityka Ochrony Dzieci i Młodzieży</h1>
+      <div class="meta">
+        Rodzic/Opiekun: <strong>${doc3Parent}</strong> &nbsp;|&nbsp; Dziecko: <strong>${childName3}</strong>
+      </div>
+      <div class="doc-body">
+        <strong style="font-size:15px">POLITYKA OCHRONY DZIECI I MŁODZIEŻY</strong><br>
+        <em style="color:#666">Akademia Obrony Saggita &bull; Dokument dla Rodziców / Opiekunów Prawnych</em><br><br>
+        Niniejszy dokument zawiera skróconą wersję <strong>Standardów Ochrony Małoletnich</strong> obowiązujących w Akademii Obrony Saggita.<br><br>
+        <strong>1. WPROWADZENIE</strong><br>
+        Akademia Obrony Saggita wprowadziła procedury mające na celu ochronę przed krzywdzeniem podczas treningów i obozów. Procedury te noszą nazwę: <strong>STANDARDY OCHRONY MAŁOLETNICH</strong>.<br><br>
+        <strong>2. PRZYKŁADY NIEWŁAŚCIWEGO ZACHOWANIA</strong><br>
+        Poniższe zachowania są absolutnie niedozwolone: bicie, kopanie, popychanie, zamykanie, niszczenie rzeczy, ośmieszanie, wyśmiewanie, obrażanie, grożenie, faworyzowanie, wrogie gesty, wykluczanie, robienie zdjęć bez zgody, nakłanianie do pokazywania miejsc intymnych, podglądanie.<br><br>
+        <strong>3. NASZE ZASADY OCHRONY UCZESTNIKÓW</strong><br>
+        Instruktorzy mają obowiązek szanować godność i wartości wszystkich osób, reagować na niewłaściwe zachowania, komunikować się z dziećmi konstruktywnie, nie stosować przemocy fizycznej ani psychicznej, szanować prywatność dzieci, nie wdawać się w prywatne rozmowy z dziećmi w mediach społecznościowych, nie publikować zdjęć i filmów bez zgody.<br><br>
+        <strong>4. ZASADY OBOWIĄZUJĄCE UCZESTNIKA ZAJĘĆ</strong><br>
+        Postępowanie zgodnie z instrukcjami, szanowanie innych dzieci, niestosowanie słów obraźliwych, nieuderzanie innych, niespożywanie alkoholu/narkotyków, niecelowe krzywdzenie, zgłaszanie kontuzji i nękania.<br><br>
+        <strong>5. PRAWA UCZESTNIKA</strong><br>
+        Dobrze się bawić, czuć się bezpiecznie, być chronionym, rozmawiać i być wysłuchanym, wiedzieć gdzie szukać pomocy.<br><br>
+        <strong>6. ZGŁASZANIE PRZEMOCY I NIEWŁAŚCIWYCH ZACHOWAŃ</strong><br>
+        W przypadku krzywdzenia lub przemocy &ndash; poinformuj <strong>INSTRUKTORA</strong> lub <strong>KOORDYNATORA</strong>. Podejmiemy działania, aby zapewnić bezpieczeństwo.<br><br>
+        <strong>7. DODATKOWE ŹRÓDŁA WSPARCIA</strong><br>
+        &bull; Fundacja Dajemy Dzieciom Siłę: www.116111.pl / www.fdds.pl &ndash; pomoc bezpłatna, całą dobę.<br>
+        &bull; Telefon zaufania Rzecznika Praw Dziecka: www.brpd.gov.pl<br><br>
+        <em>Akademia Obrony Saggita | Tadeusz Dubicki &ndash; Koordynator | Tel.: 510 930 460 | biuro@akademiaobrony.pl</em>
+      </div>
+      <p><em>Oświadczam, że zapoznałem/am się z Polityką Ochrony Dzieci i Młodzieży Akademii Obrony Saggita.</em></p>
+      <div class="sig-area">
+        <div class="sig-col">
+          <div class="label">Podpis Rodzica/Opiekuna (${doc3Parent}):</div>
+          <div class="sig-box"><img src="${sig3Src}" alt="Podpis 3"></div>
+        </div>
+        <div class="sig-col">
+          <div class="label">Podpis Instruktora (Tadeusz Dubicki):</div>
+          ${instructorSigPlaceholder}
+        </div>
+      </div>
+
+      <div style="margin-top:40px;padding-top:12px;border-top:1px solid #ddd;font-size:11px;color:#666">
+        Akademia Obrony Saggita | biuro@akademiaobrony.pl | 510 930 460
+      </div>
+      </body></html>`;
+
+      const win = window.open('', '_blank', 'width=960,height=900');
+      if (win) {
+        win.document.write(html);
+        win.document.close();
+      } else {
+        alert('Zablokowano wyskakujące okno. Pozwól na wyskakujące okna dla tej strony.');
+      }
+    };
 
     async function handlePayOnline(payment_ref, amount) {
       if (!payment_ref) return toast('Brak referencji płatności', 'err');
@@ -2761,6 +3437,46 @@
       toast('Harmonogram wpłat otwarty 📅 — potwierdź rejestrację zielonym przyciskiem', 'ok', 4000);
     }
 
+    function getDocDataCennik() {
+      // Pobiera dane wszystkich pól do JSON z Cennika (podobnie jak dla grafiku)
+      const ds = document.getElementById('docsContainer')?.style.display;
+      const dsa = document.getElementById('docsContainerAdult')?.style.display;
+      const isAdult = dsa === 'flex' || dsa === 'block';
+      const isKids = ds === 'flex' || ds === 'block';
+
+      if (!isAdult && !isKids) return null;
+
+      return {
+        isAdult,
+        fields: {
+          doc1_parent: document.getElementById('doc1_parent')?.value?.trim() || '',
+          doc1_child: document.getElementById('doc1_child')?.value?.trim() || '',
+          doc2_parent: document.getElementById('doc2_parent')?.value?.trim() || '',
+          doc2_address: document.getElementById('doc2_address')?.value?.trim() || '',
+          doc2_phone: document.getElementById('doc2_phone')?.value?.trim() || '',
+          doc2_child: document.getElementById('doc2_child')?.value?.trim() || '',
+          doc2_dob: document.getElementById('doc2_dob')?.value || '',
+          doc2_wizerunek: document.getElementById('doc2_wizerunek')?.checked,
+          doc2_emergency: document.getElementById('doc2_emergency')?.value?.trim() || '',
+          doc3_parent: document.getElementById('doc3_parent')?.value?.trim() || '',
+          doc3_child: document.getElementById('doc3_child')?.value?.trim() || '',
+          adoc1_name: document.getElementById('adoc1_name')?.value?.trim() || '',
+          adoc2_name: document.getElementById('adoc2_name')?.value?.trim() || '',
+          adoc2_dob: document.getElementById('adoc2_dob')?.value || '',
+          adoc2_address: document.getElementById('adoc2_address')?.value?.trim() || '',
+          adoc2_pesel: document.getElementById('adoc2_pesel')?.value?.trim() || '',
+          adoc2_id: document.getElementById('adoc2_id')?.value?.trim() || ''
+        },
+        signatures: {
+          sig1: document.getElementById('sigCanvas1')?.toDataURL('image/png') || '',
+          sig2: document.getElementById('sigCanvas2')?.toDataURL('image/png') || '',
+          sig3: document.getElementById('sigCanvas3')?.toDataURL('image/png') || '',
+          sig4: document.getElementById('sigCanvas4')?.toDataURL('image/png') || '',
+          sig5: document.getElementById('sigCanvas5')?.toDataURL('image/png') || ''
+        }
+      };
+    }
+
     async function confirmAndFinish(payment_ref) {
       if (!payment_ref) return;
       const btn = document.getElementById('confirmBtn');
@@ -2780,10 +3496,11 @@
       const action = p.payment_mode === 'monthly' ? 'schedule_doc' : 'download_doc';
 
       try {
+        const doc_data = getDocDataCennik();
         const resp = await fetch(`${API}/registration/action`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ payment_ref, action, ...p })
+          body: JSON.stringify({ payment_ref, action, ...p, doc_data })
         });
         const json = await resp.json().catch(() => ({}));
         if (!resp.ok) {
@@ -2915,7 +3632,7 @@
     const sigSigned = { 1: false, 2: false, 3: false };
 
     function initSignatureCanvases() {
-      [1, 2, 3].forEach(n => {
+      [1, 2, 3, 4, 5].forEach(n => {
         const canvas = document.getElementById(`sigCanvas${n}`);
         if (!canvas || sigPads[n]) return;
         const ctx = canvas.getContext('2d');
@@ -2991,6 +3708,33 @@
       }
     }
 
+    function toggleDoc4() { toggleDoc(4); }
+    function toggleDoc5() { toggleDoc(5); }
+
+    function clearSigCennik(id) {
+      clearSig(id);
+    }
+
+    function markDocCennik(id) {
+      if (!sigSigned[id]) {
+        const c = document.getElementById(`sigCanvas${id}`);
+        if (c) c.style.border = '2px solid rgba(255,68,68,0.7)';
+        alert('Proszę złożyć podpis na polu powyżej przed zatwierdzeniem.');
+        return;
+      }
+      const stat = document.getElementById(`docStatus${id}`);
+      if (stat) {
+        stat.textContent = 'Podpisano ✓';
+        stat.style.background = 'rgba(46,204,113,0.18)';
+        stat.style.borderColor = 'rgba(46,204,113,0.4)';
+        stat.style.color = '#2ecc71';
+      }
+      const content = document.getElementById(`docContent${id}`);
+      if (content) content.style.display = 'none';
+      const btn = document.querySelector(`[onclick="toggleDoc${id}()"]`);
+      if (btn) btn.textContent = 'Rozwiń ▾';
+    }
+
     function updateDocStatus(n) {
       const cb = document.getElementById(`doc${n}_confirm`);
       const status = document.getElementById(`docStatus${n}`);
@@ -3017,40 +3761,63 @@
     }
 
     function validateAndGoStep5() {
+      const dc = document.getElementById('docsContainer');
+      const dca = document.getElementById('docsContainerAdult');
+      const kidsActive = dc && dc.style.display !== 'none';
+      const adultActive = dca && dca.style.display !== 'none';
+
       const errEl = document.getElementById('docsErrorMsg');
+      const aErrEl = document.getElementById('adultDocsErrorMsg');
       const errors = [];
 
-      // Check doc 1
-      if (!document.getElementById('doc1_confirm').checked) errors.push('Zaakceptuj Umowę – Regulamin (dokument 1)');
-      if (!document.getElementById('doc1_parent').value.trim()) errors.push('Wpisz imię i nazwisko rodzica (dok. 1)');
-      if (!document.getElementById('doc1_child').value.trim()) errors.push('Wpisz imię i nazwisko dziecka (dok. 1)');
-      if (!sigSigned[1]) errors.push('Złóż podpis elektroniczny pod dokumentem 1');
+      if (kidsActive) {
+        if (aErrEl) aErrEl.style.display = 'none';
+        // Check doc 1
+        if (!document.getElementById('doc1_confirm').checked) errors.push('Zaakceptuj Umowę – Regulamin (dokument 1)');
+        if (!document.getElementById('doc1_parent').value.trim()) errors.push('Wpisz imię i nazwisko rodzica (dok. 1)');
+        if (!document.getElementById('doc1_child').value.trim()) errors.push('Wpisz imię i nazwisko dziecka (dok. 1)');
+        if (!sigSigned[1]) errors.push('Złóż podpis elektroniczny pod dokumentem 1');
 
-      // Check doc 2
-      if (!document.getElementById('doc2_confirm').checked) errors.push('Zaakceptuj Zgodę Rodzica (dokument 2)');
-      if (!document.getElementById('doc2_parent').value.trim()) errors.push('Wpisz imię i nazwisko rodzica (dok. 2)');
-      if (!document.getElementById('doc2_child').value.trim()) errors.push('Wpisz imię i nazwisko dziecka (dok. 2)');
-      if (!document.getElementById('doc2_phone').value.trim()) errors.push('Wpisz telefon kontaktowy (dok. 2)');
-      if (!sigSigned[2]) errors.push('Złóż podpis elektroniczny pod dokumentem 2');
+        // Check doc 2
+        if (!document.getElementById('doc2_confirm').checked) errors.push('Zaakceptuj Zgodę Rodzica (dokument 2)');
+        if (!document.getElementById('doc2_parent').value.trim()) errors.push('Wpisz imię i nazwisko rodzica (dok. 2)');
+        if (!document.getElementById('doc2_child').value.trim()) errors.push('Wpisz imię i nazwisko dziecka (dok. 2)');
+        if (!document.getElementById('doc2_phone').value.trim()) errors.push('Wpisz telefon kontaktowy (dok. 2)');
+        if (!sigSigned[2]) errors.push('Złóż podpis elektroniczny pod dokumentem 2');
 
-      // Check doc 3
-      if (!document.getElementById('doc3_confirm').checked) errors.push('Zaakceptuj Politykę Ochrony Małoletnich (dokument 3)');
-      if (!document.getElementById('doc3_parent').value.trim()) errors.push('Wpisz imię i nazwisko rodzica (dok. 3)');
-      if (!document.getElementById('doc3_child').value.trim()) errors.push('Wpisz imię i nazwisko dziecka (dok. 3)');
-      if (!sigSigned[3]) errors.push('Złóż podpis elektroniczny pod dokumentem 3');
+        // Check doc 3
+        if (!document.getElementById('doc3_confirm').checked) errors.push('Zaakceptuj Politykę Ochrony Małoletnich (dokument 3)');
+        if (!document.getElementById('doc3_parent').value.trim()) errors.push('Wpisz imię i nazwisko rodzica (dok. 3)');
+        if (!document.getElementById('doc3_child').value.trim()) errors.push('Wpisz imię i nazwisko dziecka (dok. 3)');
+        if (!sigSigned[3]) errors.push('Złóż podpis elektroniczny pod dokumentem 3');
 
-      if (errors.length) {
-        errEl.textContent = errors[0];
-        errEl.style.display = 'block';
-        // Expand first uncompleted doc
-        const unfinished = errors[0].includes('dok. 1') || errors[0].includes('dokument 1') ? 1
-          : errors[0].includes('dok. 2') || errors[0].includes('dokument 2') ? 2 : 3;
-        if (dc && dc.style.display === 'none') toggleDoc(unfinished);
-        return;
+        if (errors.length) {
+          errEl.textContent = errors[0];
+          errEl.style.display = 'block';
+          return;
+        }
+        errEl.style.display = 'none';
+      } else if (adultActive) {
+        if (errEl) errEl.style.display = 'none';
+        if (!sigSigned[4]) errors.push('Zaakceptuj i podpisz Umowę – Regulamin (dokument 1)');
+        if (!document.getElementById('adoc2_name').value.trim() ||
+          !document.getElementById('adoc2_pesel').value.trim() ||
+          !document.getElementById('adoc2_id').value.trim()) {
+          errors.push('Wypełnij wszystkie dane w Oświadczeniu o Niekaralności (dokument 2)');
+        }
+        if (!sigSigned[5]) errors.push('Podpisz Oświadczenie o Niekaralności (dokument 2)');
+
+        if (errors.length) {
+          aErrEl.textContent = errors[0];
+          aErrEl.style.display = 'block';
+          return;
+        }
+        aErrEl.style.display = 'none';
       }
-      errEl.style.display = 'none';
+
       setStep(5);
     }
+
 
     document.getElementById('btnClearCart').addEventListener('click', clearCart);
     document.getElementById('backToCennik').addEventListener('click', () => {

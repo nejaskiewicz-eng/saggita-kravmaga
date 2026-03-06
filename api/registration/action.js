@@ -2,9 +2,9 @@ const { getPool } = require('../_lib/db');
 const { sendMail, mailKursant, mailPayOnlineChosen, mailPaymentConfirmed } = require('../_lib/mail');
 
 const BANK_ACCOUNT = process.env.BANK_ACCOUNT || '21 1140 2004 0000 3902 3890 8895';
-const BANK_NAME    = process.env.BANK_NAME    || 'Akademia Obrony Saggita';
-const SITE_URL     = process.env.SITE_URL     || 'https://akademiaobrony.pl';
-const API_BASE     = process.env.API_URL      || `${SITE_URL}/api`;
+const BANK_NAME = process.env.BANK_NAME || 'Akademia Obrony Saggita';
+const SITE_URL = process.env.SITE_URL || 'https://akademiaobrony.pl';
+const API_BASE = process.env.API_URL || `${SITE_URL}/api`;
 
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -38,12 +38,12 @@ module.exports = async (req, res) => {
       }
       const totalAmount = parseFloat(r.total_amount || 0);
       const isScheduleDoc = docAction === 'schedule_doc';
-      const isMonthlyDoc  = docAction === 'monthly_doc';
+      const isMonthlyDoc = docAction === 'monthly_doc';
       // Jeśli dokument miesięczny — pokaż kwotę pierwszego miesiąca
       let displayAmount = totalAmount;
       let docTitle = 'Dokument płatniczy';
       let docNote = '';
-      const fmt = (v) => parseFloat(v||0).toFixed(2);
+      const fmt = (v) => parseFloat(v || 0).toFixed(2);
       const pMonths = parseInt(docMonths || 1);
       const pRate = docMonthlyRate ? parseFloat(docMonthlyRate) : null;
       // signup_fee: najpierw z URL (frontend wie więcej), fallback do DB
@@ -57,10 +57,10 @@ module.exports = async (req, res) => {
         docTitle = 'Harmonogram wpłat';
       }
 
-      const fmt2 = (v) => parseFloat(v||0).toFixed(2);
+      const fmt2 = (v) => parseFloat(v || 0).toFixed(2);
       const amount = fmt2(displayAmount);
       const onlineUrl = `${SITE_URL}/kvcennik`;
-      const date = new Date().toLocaleDateString('pl-PL', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
+      const date = new Date().toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
       // Generuj tabelę harmonogramu dla schedule_doc
       let scheduleTable = '';
@@ -90,7 +90,7 @@ module.exports = async (req, res) => {
             deadline = `do ${prevLabel}`;
           }
 
-          rows += `<tr><td>${i+1}.</td><td>${label}</td><td>${deadline}</td><td style="font-weight:bold;color:#c42000">${fmt(amt)} zł${note}</td></tr>`;
+          rows += `<tr><td>${i + 1}.</td><td>${label}</td><td>${deadline}</td><td style="font-weight:bold;color:#c42000">${fmt(amt)} zł${note}</td></tr>`;
         }
         scheduleTable = `<h2 style="margin-top:24px;font-size:16px">📅 Harmonogram wpłat</h2>
 <table>
@@ -153,7 +153,7 @@ ${!isScheduleDoc ? `<a href="${onlineUrl}" class="online-btn">💳 Przejdź do p
   // ── POST: akcja (wybór metody płatności / potwierdzenie) ──────────────────
   if (req.method === 'POST') {
     try {
-      const { payment_ref, action, pay_url, payment_mode, months, monthly_rate, signup_fee: bodySignupFee, reminders } = req.body || {};
+      const { payment_ref, action, pay_url, payment_mode, months, monthly_rate, signup_fee: bodySignupFee, reminders, doc_data } = req.body || {};
       if (!payment_ref) return res.status(400).json({ error: 'Brak payment_ref' });
       const VALID = ['pay_online', 'download_doc', 'payment_confirmed', 'schedule_doc'];
       if (!VALID.includes(action)) return res.status(400).json({ error: 'Nieprawidłowa akcja' });
@@ -182,18 +182,20 @@ ${!isScheduleDoc ? `<a href="${onlineUrl}" class="online-btn">💳 Przejdź do p
       try {
         await pool.query(
           `UPDATE registrations SET finalize_action=$1, finalized_at=NOW(), updated_at=NOW(),
-           payment_status = CASE WHEN $1='payment_confirmed' THEN 'paid' ELSE payment_status END
+           payment_status = CASE WHEN $1='payment_confirmed' THEN 'paid' ELSE payment_status END,
+           doc_data = COALESCE($3::jsonb, doc_data)
            WHERE payment_ref=$2`,
-          [action, payment_ref]
+          [action, payment_ref, doc_data ? JSON.stringify(doc_data) : null]
         );
       } catch (updateErr) {
         // Próbujemy bez kolumn finalize_action/finalized_at
         try {
           await pool.query(
             `UPDATE registrations SET updated_at=NOW(),
-             payment_status = CASE WHEN $1='payment_confirmed' THEN 'paid' ELSE payment_status END
+             payment_status = CASE WHEN $1='payment_confirmed' THEN 'paid' ELSE payment_status END,
+             doc_data = COALESCE($3::jsonb, doc_data)
              WHERE payment_ref=$2`,
-            [action, payment_ref]
+            [action, payment_ref, doc_data ? JSON.stringify(doc_data) : null]
           );
         } catch (e2) {
           console.warn('[action/update]', e2.message);
@@ -202,39 +204,39 @@ ${!isScheduleDoc ? `<a href="${onlineUrl}" class="online-btn">💳 Przejdź do p
 
       // Przygotuj dane do maila
       const scheduleLabel = r.day_name
-        ? `${r.day_name} ${String(r.time_start||'').slice(0,5)}–${String(r.time_end||'').slice(0,5)}${r.schedule_address ? ' · ' + r.schedule_address : ''}`
+        ? `${r.day_name} ${String(r.time_start || '').slice(0, 5)}–${String(r.time_end || '').slice(0, 5)}${r.schedule_address ? ' · ' + r.schedule_address : ''}`
         : null;
-      const docUrl    = `${API_BASE}/registration/action?payment_ref=${payment_ref}`;
+      const docUrl = `${API_BASE}/registration/action?payment_ref=${payment_ref}`;
       const onlineUrl = pay_url || `${SITE_URL}/kvcennik`;
 
       // Wyślij odpowiedni mail do kursanta
       let userMail = null;
 
       // Dane kontraktowe (przekazane z frontendu lub wyliczone)
-      const pMonths      = parseInt(months || r.months || 1);
+      const pMonths = parseInt(months || r.months || 1);
       const pMonthlyRate = monthly_rate ? parseFloat(monthly_rate)
-                         : (pMonths > 1 ? Math.round(parseFloat(r.total_amount||0) / pMonths) : parseFloat(r.total_amount||0));
+        : (pMonths > 1 ? Math.round(parseFloat(r.total_amount || 0) / pMonths) : parseFloat(r.total_amount || 0));
       // signup_fee: frontend przekazuje przez body, fallback do DB
-      const pSignupFee   = bodySignupFee !== undefined ? parseFloat(bodySignupFee) : parseFloat(r.signup_fee || 0);
-      const pMode        = payment_mode || r.payment_mode || null;
-      const pReminders   = reminders !== false;
+      const pSignupFee = bodySignupFee !== undefined ? parseFloat(bodySignupFee) : parseFloat(r.signup_fee || 0);
+      const pMode = payment_mode || r.payment_mode || null;
+      const pReminders = reminders !== false;
 
       const contractData = {
-        first_name:   r.first_name,
+        first_name: r.first_name,
         payment_ref,
-        plan_name:    r.plan_name,
-        group_name:   r.group_name,
-        city:         r.city,
+        plan_name: r.plan_name,
+        group_name: r.group_name,
+        city: r.city,
         total_amount: r.total_amount,
         bank_account: BANK_ACCOUNT,
-        bank_name:    BANK_NAME,
+        bank_name: BANK_NAME,
         payment_mode: pMode,
-        months:       pMonths,
+        months: pMonths,
         monthly_rate: pMonthlyRate,
-        signup_fee:   pSignupFee,
-        reminders:    pReminders,
-        doc_url:      docUrl,
-        online_url:   onlineUrl,
+        signup_fee: pSignupFee,
+        reminders: pReminders,
+        doc_url: docUrl,
+        online_url: onlineUrl,
       };
 
       console.log('[action] action:', action, 'pMode:', pMode, 'email:', r.email, 'months:', pMonths, 'signup_fee:', pSignupFee);
@@ -251,16 +253,16 @@ ${!isScheduleDoc ? `<a href="${onlineUrl}" class="online-btn">💳 Przejdź do p
         userMail = null;
       } else if (action === 'payment_confirmed') {
         userMail = mailPaymentConfirmed({
-          first_name:        r.first_name,
+          first_name: r.first_name,
           payment_ref,
-          plan_name:         r.plan_name,
-          group_name:        r.group_name,
-          city:              r.city,
-          location_address:  r.location_address,
-          schedule_label:    scheduleLabel,
-          total_amount:      r.total_amount,
-          signup_fee:        r.signup_fee || 0,
-          base_amount:       parseFloat(r.total_amount || 0) - parseFloat(r.signup_fee || 0),
+          plan_name: r.plan_name,
+          group_name: r.group_name,
+          city: r.city,
+          location_address: r.location_address,
+          schedule_label: scheduleLabel,
+          total_amount: r.total_amount,
+          signup_fee: r.signup_fee || 0,
+          base_amount: parseFloat(r.total_amount || 0) - parseFloat(r.signup_fee || 0),
         });
       }
 

@@ -2730,6 +2730,38 @@
           sig1: sig1,
         };
 
+        if (docsKidsActive || docsAdultActive) {
+          body.doc_data = {
+            isAdult: docsAdultActive,
+            fields: {
+              doc1_parent: document.getElementById('doc1_parent')?.value?.trim() || '',
+              doc1_child: document.getElementById('doc1_child')?.value?.trim() || '',
+              doc2_parent: document.getElementById('doc2_parent')?.value?.trim() || '',
+              doc2_address: document.getElementById('doc2_address')?.value?.trim() || '',
+              doc2_phone: document.getElementById('doc2_phone')?.value?.trim() || '',
+              doc2_child: document.getElementById('doc2_child')?.value?.trim() || '',
+              doc2_dob: document.getElementById('doc2_dob')?.value || '',
+              doc2_wizerunek: document.getElementById('doc2_wizerunek')?.checked,
+              doc2_emergency: document.getElementById('doc2_emergency')?.value?.trim() || '',
+              doc3_parent: document.getElementById('doc3_parent')?.value?.trim() || '',
+              doc3_child: document.getElementById('doc3_child')?.value?.trim() || '',
+              adoc1_name: document.getElementById('adoc1_name')?.value?.trim() || '',
+              adoc2_name: document.getElementById('adoc2_name')?.value?.trim() || '',
+              adoc2_dob: document.getElementById('adoc2_dob')?.value || '',
+              adoc2_address: document.getElementById('adoc2_address')?.value?.trim() || '',
+              adoc2_pesel: document.getElementById('adoc2_pesel')?.value?.trim() || '',
+              adoc2_id: document.getElementById('adoc2_id')?.value?.trim() || ''
+            },
+            signatures: {
+              sig1: document.getElementById('sigCanvas1')?.toDataURL('image/png') || '',
+              sig2: document.getElementById('sigCanvas2')?.toDataURL('image/png') || '',
+              sig3: document.getElementById('sigCanvas3')?.toDataURL('image/png') || '',
+              sig4: document.getElementById('sigCanvas4')?.toDataURL('image/png') || '',
+              sig5: document.getElementById('sigCanvas5')?.toDataURL('image/png') || ''
+            }
+          };
+        }
+
         const res = await fetch(`${API}/register`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -3084,11 +3116,26 @@
     };
 
 
-    window.downloadAdultContract = function (paymentRef) {
+    window.downloadAdultContract = async function (paymentRef) {
       const ref = paymentRef || registrationResult?.payment_ref || '';
       const firstName = document.getElementById('f_first')?.value?.trim() || '';
       const lastName = document.getElementById('f_last')?.value?.trim() || '';
       const fullName = (firstName + ' ' + lastName).trim();
+
+      try {
+        const modeInput = document.querySelector('input[name="splitMode"]:checked');
+        const mode = modeInput ? modeInput.value : null;
+        const d = window._currentSplitData;
+        if (ref && mode && d) {
+          const action = mode === 'monthly' ? 'schedule_doc' : 'download_doc';
+          await fetch(`${API}/registration/action`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ payment_ref: ref, action, payment_mode: mode, months: d.months, monthly_rate: d.monthlyRate, signup_fee: d.feeAmt })
+          });
+        }
+      } catch (e) { }
+
       const date = new Date().toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
       // Embed actual signature from canvas if drawn, else placeholder line
@@ -3361,7 +3408,7 @@
       } catch (e) { alert('Błąd. Spróbuj ponownie.'); }
     }
 
-    window.downloadSignedDocs = function () {
+    window.downloadSignedDocs = async function () {
       const parentName = document.getElementById('doc1_parent')?.value?.trim() || '';
       const childName1 = document.getElementById('doc1_child')?.value?.trim() || '';
       const doc2Parent = document.getElementById('doc2_parent')?.value?.trim() || '';
@@ -3374,6 +3421,21 @@
       const childName3 = document.getElementById('doc3_child')?.value?.trim() || '';
       const wizerPhoto = document.getElementById('doc2_wizerunek')?.checked ? 'TAK' : 'NIE';
       const ref = registrationResult?.payment_ref || '';
+
+      try {
+        const modeInput = document.querySelector('input[name="splitMode"]:checked');
+        const mode = modeInput ? modeInput.value : null;
+        const d = window._currentSplitData;
+        if (ref && mode && d) {
+          const action = mode === 'monthly' ? 'schedule_doc' : 'download_doc';
+          await fetch(`${API}/registration/action`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ payment_ref: ref, action, payment_mode: mode, months: d.months, monthly_rate: d.monthlyRate, signup_fee: d.feeAmt })
+          });
+        }
+      } catch (e) { }
+
       const date = new Date().toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
       const sig1Src = document.getElementById('sigCanvas1')?.toDataURL('image/png') || '';

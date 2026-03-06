@@ -2143,7 +2143,10 @@
         <td>${pb(r.payment_status)}</td>
         <td><span class="badge ${r.source === 'admin' ? 'bb' : 'bx'}">${r.source === 'admin' ? 'Admin' : 'WWW'}</span></td>
         <td style="color:var(--dim);font-size:12px">${fdt(r.created_at)}</td>
-        <td class="tda">
+        <td class="tda" style="white-space:nowrap;">
+          ${r.status === 'new' ? `<button class="bi" style="background:#0a6800;color:#fff;border-color:#074d00" onclick="acceptReg(${r.id})">Akceptuj</button>` : ''}
+          <button class="bi" onclick="changeGroupPrompt(${r.id}, ${r.group_id})">Zmień Grupę</button>
+          <button class="bi" ${r.doc_data ? `onclick="downloadAdminDocs(${r.id})"` : `disabled title="Brak dokumentów"`} style="${r.doc_data ? 'background:#0055ff;color:#fff' : ''}">Pobierz Dokumenty</button>
           <button class="bi" onclick="openKartoteka(${r.id},'view')">Kartoteka</button>
           <button class="bi" onclick="openKartoteka(${r.id},'edit')">Edytuj</button>
           <button class="bi del" onclick="deleteReg(${r.id})">Usuń</button>
@@ -4344,6 +4347,191 @@
       const obs = new MutationObserver(() => applyTableLabels(content));
       obs.observe(content, { childList: true, subtree: true });
     })();
+
+    // ── AKCJE DLA ZAPISÓW ZE STRONY ──────────────────────────────────────
+    async function acceptReg(id) {
+      if (!confirm('Czy na pewno chcesz zaakceptować to zgłoszenie?')) return;
+      try {
+        await aF('/registrations?id=' + id, {
+          method: 'PATCH',
+          body: JSON.stringify({ status: 'accepted' })
+        });
+        toast('Zgłoszenie zaakceptowane!', 'success');
+        if (typeof loadReg === 'function') loadReg();
+      } catch (e) {
+        toast('Błąd akceptacji: ' + e.message, 'error');
+      }
+    }
+
+    async function changeGroupPrompt(id, currentGroupId) {
+      if (!Array.isArray(window.__groups)) {
+        toast('Odśwież stronę, aby załadować listę grup.', 'error');
+        return;
+      }
+
+      let options = '<option value="">-- wybierz grupę --</option>';
+      window.__groups.forEach(g => {
+        options += `<option value="${g.id}" ${g.id === currentGroupId ? 'selected' : ''}>${g.name}</option>`;
+      });
+
+      const body = `
+        <div style="padding:10px">
+          <label>Wybierz nową grupę dla tego kursanta:</label><br><br>
+          <select id="modal-new-group" style="width:100%;padding:8px;border:1px solid #ccc;border-radius:4px;">
+            ${options}
+          </select>
+        </div>
+      `;
+      const footer = `
+        <button class="btn btn-secondary" onclick="closeModal()">Anuluj</button>
+        <button class="btn btn-primary" onclick="confirmGroupChange(${id})">Zapisz zmianę</button>
+      `;
+      showModal('Zmiana Grupy', body, footer);
+    }
+
+    async function confirmGroupChange(id) {
+      const newGroupId = parseInt(document.getElementById('modal-new-group').value);
+      if (!newGroupId) {
+        alert('Musisz wybrać grupę.');
+        return;
+      }
+      try {
+        await aF('/registrations?id=' + id, {
+          method: 'PATCH',
+          body: JSON.stringify({ group_id: newGroupId })
+        });
+        closeModal();
+        toast('Grupa została zmieniona', 'success');
+        if (typeof loadReg === 'function') loadReg();
+      } catch (e) {
+        toast('Błąd zmiany grupy: ' + e.message, 'error');
+      }
+    }
+
+    async function downloadAdminDocs(id) {
+      try {
+        toast('Pobieram dokumenty...', 'info');
+        // Najpierw pobierz szczegóły rejestracji by mieć doc_data
+        const r = await aF('/registrations?id=' + id);
+        if (!r || !r.doc_data) {
+          toast('Brak dokumentów dla tego uczestnika', 'error');
+          return;
+        }
+
+        const docData = typeof r.doc_data === 'string' ? JSON.parse(r.doc_data) : r.doc_data;
+        const isAdult = docData.isAdult;
+        const f = docData.fields || {};
+        const s = docData.signatures || {};
+
+        const dDate = new Date(r.created_at).toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
+        const instructorSigPlaceholder = `<div style="border:1px solid #ccc;border-radius:4px;padding:8px;margin-top:8px;min-width:240px;min-height:70px;display:inline-flex;align-items:center;justify-content:center;color:#999;font-style:italic;background:#fafafa;font-size:12px">[ miejsce na podpis Tadeusza Dubickiego ]</div>`;
+        const dateHtml = `<p>Data: <b>\${dDate}</b></p>`;
+
+        let html = '';
+        if (isAdult) {
+          const sig4Html = s.sig4 ? `<img src="${s.sig4}" style="max-height:80px;max-width:260px;display:block;margin:4px 0">` : 'Brak popisu 1';
+          const sig5Html = s.sig5 ? `<img src="${s.sig5}" style="max-height:80px;max-width:260px;display:block;margin:4px 0">` : 'Brak popisu 2';
+
+          html = `
+            <html><head><title>Umowa - ${r.first_name} ${r.last_name}</title>
+            <style>body{font-family:sans-serif;padding:30px;line-height:1.5;color:#333}</style></head>
+            <body>
+              <h1 style="color:#c42000">Umowa o świadczenie usług i Regulamin (Dorosły)</h1>
+              <p>Miejscowość: <b>${f.adoc2_address || r.city || '-'}</b></p>
+              ${dateHtml}
+              <br>
+              <p><b>Kursant:</b> ${f.adoc1_name || r.first_name + ' ' + r.last_name}</p>
+              <p><b>PESEL:</b> ${f.adoc2_pesel || '-'}</p>
+              <p><b>Dokument tożsamości:</b> ${f.adoc2_id || '-'}</p>
+              <br><br>
+              <div style="display:flex; justify-content:space-between; margin-top:30px;">
+                <div style="border-top:1px solid #aaa; padding-top:10px; text-align:center; min-width:260px;">
+                  ${sig4Html}
+                  <i>Podpis czytelny Kursanta</i>
+                </div>
+                <div>${instructorSigPlaceholder}</div>
+              </div>
+              
+              <br><br><br><hr><br><br><br>
+              
+              <h1 style="color:#c42000">Oświadczenie o pełnej zdolności do udziału w zajęciach krav maga i braku przeciwwskazań zdrowotnych i niekaralności</h1>
+              <p><b>Ja niżej podpisany(a):</b> ${f.adoc2_name || '-'}</p>
+              <p><b>Data urodzenia:</b> ${f.adoc2_dob || '-'}</p>
+              <p><b>Adres zamieszkania:</b> ${f.adoc2_address || '-'}</p>
+              <br>
+              <p>Oświadczam i potwierdzam, że posiadam pełną zdolność do udziału w zajęciach oraz nie byłem karany/a. Zobowiązuję się do przestrzegania regulaminu Akademii Obrony Saggita i poleceń instruktora.</p>
+              <br><br>
+              <div style="border-top:1px solid #aaa; padding-top:10px; text-align:center; min-width:260px; margin-top:30px; float:right;">
+                ${sig5Html}
+                <i>Czytelny podpis uczestnika</i>
+              </div>
+            </body></html>
+          `;
+        } else {
+          // Dzieci
+          const sig1Html = s.sig1 ? `<img src="${s.sig1}" style="max-height:80px;max-width:260px;display:block;margin:4px 0">` : 'Brak popisu 1';
+          const sig2Html = s.sig2 ? `<img src="${s.sig2}" style="max-height:80px;max-width:260px;display:block;margin:4px 0">` : 'Brak popisu 2';
+          const sig3Html = s.sig3 ? `<img src="${s.sig3}" style="max-height:80px;max-width:260px;display:block;margin:4px 0">` : 'Brak popisu 3';
+
+          html = `
+            <html><head><title>Umowa - ${f.doc1_child || r.first_name + ' ' + r.last_name}</title>
+            <style>body{font-family:sans-serif;padding:30px;line-height:1.5;color:#333}</style></head>
+            <body>
+              <h1 style="color:#c42000">Umowa o świadczenie usług i Regulamin (Dziecko)</h1>
+              ${dateHtml}
+              <br>
+              <p><b>Opiekun prawny:</b> ${f.doc1_parent || '-'}</p>
+              <p><b>Dziecko:</b> ${f.doc1_child || '-'}</p>
+              <br><br>
+              <div style="display:flex; justify-content:space-between; margin-top:30px;">
+                <div style="border-top:1px solid #aaa; padding-top:10px; text-align:center; min-width:260px;">
+                  ${sig1Html}
+                  <i>Podpis czytelny Rodzica / Opiekuna</i>
+                </div>
+                <div>${instructorSigPlaceholder}</div>
+              </div>
+
+              <br><br><br><hr><br><br><br>
+              
+              <h1 style="color:#c42000">Zgoda na udział dziecka w zajęciach i ubezpieczenie</h1>
+              <p><b>Ja niżej podpisany(a) rodzic/opiekun:</b> ${f.doc2_parent || '-'}</p>
+              <p><b>Adres e-mail i telefon:</b> ${f.doc2_address || ''} ${f.doc2_phone || '-'}</p>
+              <p><b>Wyrażam zgodę na uczęszczanie mojego dziecka:</b> ${f.doc2_child || '-'}</p>
+              <p><b>Data urodzenia dziecka:</b> ${f.doc2_dob || '-'}</p>
+              <br>
+              <p><b>Zgoda na wizerunek:</b> ${f.doc2_wizerunek ? 'TAK' : 'NIE'}</p>
+              <p><b>Osoba odbierająca (inna niż podpisana powyżej):</b> ${f.doc2_emergency || '-'}</p>
+              <br><br>
+              <div style="border-top:1px solid #aaa; padding-top:10px; text-align:center; min-width:260px; float:right;">
+                ${sig2Html}
+                <i>Czytelny podpis Rodzica / Opiekuna</i>
+              </div>
+              <div style="clear:both;"></div>
+
+              <br><br><br><hr><br><br><br>
+
+              <h1 style="color:#c42000">Standardy Ochrony Małoletnich w Akademii</h1>
+              <p><b>Ja niżej podpisany(a):</b> ${f.doc3_parent || '-'}</p>
+              <p>jako rodzic / prawny opiekun dziecka: <b>${f.doc3_child || '-'}</b></p>
+              <p>oświadczam, że zapoznałem/am się ze <i>Standardami Ochrony Małoletnich</i> obowiązującymi w klubie Akademia Obrony Saggita i je akceptuję.</p>
+              <br><br>
+              <div style="border-top:1px solid #aaa; padding-top:10px; text-align:center; min-width:260px; float:right;">
+                ${sig3Html}
+                <i>Czytelny podpis Rodzica / Opiekuna</i>
+              </div>
+            </body></html>
+          `;
+        }
+
+        const win = window.open('', '_blank');
+        win.document.write(html);
+        win.document.close();
+      } catch (e) {
+        console.error(e);
+        toast('Błąd podczas pobierania dokumentu', 'error');
+      }
+    }
 
   </script>
 </body>
