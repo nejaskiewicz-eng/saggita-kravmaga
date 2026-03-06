@@ -2490,7 +2490,7 @@
 
         const data = await res.json();
         if (!res.ok) { showMsg(data.error || 'Błąd zapisu. Spróbuj ponownie.', 'error'); return; }
-        showConfirmation(data, first, last);
+        showConfirmation(data, first, last, docsActive);
 
       } catch (err) {
         showMsg('Błąd połączenia. Sprawdź internet i spróbuj ponownie.', 'error');
@@ -2588,7 +2588,7 @@
 
     let registrationResult = null; // Store it globally for payment helpers
 
-    function showConfirmation(data, first, last) {
+    function showConfirmation(data, first, last, isKids) {
       registrationResult = data;
       document.getElementById('formSection').style.display = 'none';
 
@@ -2620,8 +2620,8 @@
 
       const div = document.getElementById('confirmTransfer');
       if (isContract) {
-        // Contract layout with split
-        renderSplitPaymentUI(data, div);
+        // Contract layout with split (may be kids or adults 3-month)
+        renderSplitPaymentUI(data, div, isKids);
       } else {
         // Standard single layout
         renderStandardPaymentUI(data, div);
@@ -2656,7 +2656,7 @@
       `;
     }
 
-    function renderSplitPaymentUI(data, div) {
+    function renderSplitPaymentUI(data, div, isKids) {
       const months = Number(data.months_count || 1);
       const amount = Number(data.total_amount || 0);
 
@@ -2712,8 +2712,10 @@
       actions.innerHTML = `
       <button id="splitPayOnlineBtn" style="background:linear-gradient(180deg,rgba(178,25,0,0.98),rgba(80,8,0,0.95));color:#fff;border:none;padding:13px 22px;font-family:'Open Sans',sans-serif;font-weight:800;font-size:.80rem;letter-spacing:.06em;text-transform:uppercase;cursor:pointer" onclick="submitSplitPayOnline()">Opłać online →</button>
       <button id="splitDownloadDocBtn" style="background:transparent;color:rgba(255,255,255,0.90);border:1px solid rgba(255,255,255,0.22);padding:13px 22px;font-family:'Open Sans',sans-serif;font-weight:800;font-size:.80rem;letter-spacing:.06em;text-transform:uppercase;cursor:pointer" onclick="submitSplitDownloadDoc()">Pobierz dokument płatności</button>
+      ${isKids ? `
       <button id="splitDownloadScheduleBtn" style="background:transparent;color:rgba(255,255,255,0.70);border:1px solid rgba(255,255,255,0.15);padding:13px 22px;font-family:'Open Sans',sans-serif;font-weight:800;font-size:.80rem;letter-spacing:.06em;text-transform:uppercase;cursor:pointer" onclick="submitDownloadSchedule()">📅 Pobierz harmonogram<br><span style="font-size:.65rem;font-weight:400">wszystkie miesiące</span></button>
       <button id="splitDownloadSignedBtn" style="background:transparent;color:rgba(255,255,255,0.70);border:1px solid rgba(255,255,255,0.15);padding:13px 22px;font-family:'Open Sans',sans-serif;font-weight:800;font-size:.80rem;letter-spacing:.06em;text-transform:uppercase;cursor:pointer" onclick="downloadSignedDocs()">📝 Pobierz podpisane zgody<br><span style="font-size:.65rem;font-weight:400">umowa + zgoda + polityka</span></button>
+      ` : ''}
       `;
 
       // Trigger initial render
