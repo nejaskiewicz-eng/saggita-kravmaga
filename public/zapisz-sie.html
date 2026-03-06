@@ -2667,11 +2667,11 @@
         let sig1 = null;
         let sig3 = null; // Added for sigCanvas3
         const docsContainer = document.getElementById('docsContainer');
-        const docsActive = docsContainer && docsContainer.style.display !== 'none';
+        const docsKidsActive = docsContainer && docsContainer.style.display !== 'none';
         const docsContainerAdult = document.getElementById('docsContainerAdult');
         const docsAdultActive = docsContainerAdult && docsContainerAdult.style.display !== 'none';
 
-        if (docsActive) {
+        if (docsKidsActive) {
           if (!document.getElementById('doc1_confirm').checked || !document.getElementById('doc2_confirm').checked || !document.getElementById('doc3_confirm').checked) {
             const docsErr = document.getElementById('docsErrorMsg');
             if (docsErr) { docsErr.textContent = 'Musisz przeczytać i zaznaczyć akceptację wszystkich dokumentów przeznaczonych dla grup dziecięcych.'; docsErr.style.display = 'block'; }
@@ -2781,7 +2781,7 @@
           console.error('[register/500]', res.status, data);
           return;
         }
-        showConfirmation(data, first, last, docsActive);
+        showConfirmation(data, first, last, docsKidsActive);
 
       } catch (err) {
         console.error('[register/catch]', err);
