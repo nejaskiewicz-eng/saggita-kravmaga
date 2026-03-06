@@ -1139,10 +1139,10 @@
       color: var(--text-muted);
     }
 
-    /* VIP card — red-to-blue gradient */
+    /* VIP card — neutral dark (color set inline) */
     .group-card--vip {
-      background: linear-gradient(135deg, rgba(178, 25, 0, 0.12) 0%, rgba(0, 0, 0, 0.20) 50%, rgba(26, 111, 212, 0.12) 100%);
-      box-shadow: 0 0 0 1px rgba(100, 100, 255, 0.18) inset, var(--shadow-card);
+      background: rgba(255, 255, 255, 0.02);
+      box-shadow: var(--shadow-card);
     }
 
     .btn-vip-contact {
@@ -2161,7 +2161,7 @@
             const vipGrid = document.createElement('div');
             vipGrid.className = 'sched-grid';
             vipGrid.innerHTML = `
-          <div class="group-card group-card--kids" style="box-shadow:0 0 0 1px rgba(255,255,255,0.05) inset,var(--shadow-card)">
+          <div class="group-card group-card--vip" style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.08);box-shadow:var(--shadow-card)">
             <div class="group-card__head" style="background:rgba(255,255,255,0.05);border-bottom:1px solid rgba(255,255,255,0.08);">
               <div class="group-card__name" style="color:#5BA8FF">Zajęcia VIP</div>
               <div class="group-card__meta">
