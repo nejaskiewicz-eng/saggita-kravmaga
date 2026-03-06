@@ -2118,8 +2118,8 @@
         if (ps) qs.set('payment_status', ps);
 
         const d = await aF(`/registrations?${qs.toString()}&_=${Date.now()}`);
-
         const rows = arrRows(d);
+        window.currentRows = rows;
         const total = d.total ?? d.count ?? (Array.isArray(d) ? d.length : rows.length);
 
         if (!rows.length) {
@@ -4409,12 +4409,20 @@
     }
 
     async function downloadAdminDocs(id) {
+      const win = window.open('', '_blank');
+      win.document.write('<html><body><div style="font-family:sans-serif;padding:20px">Ładowanie dokumentu...</div></body></html>');
+
       try {
-        toast('Pobieram dokumenty...', 'info');
-        // Najpierw pobierz szczegóły rejestracji by mieć doc_data
-        const r = await aF('/registrations?id=' + id);
+        // Try to find in cache first
+        let r = (window.currentRows || []).find(x => x.id == id);
+
+        // If not in cache or missing doc_data, fetch fresh
         if (!r || !r.doc_data) {
-          toast('Brak dokumentów dla tego uczestnika', 'error');
+          r = await aF('/registrations?id=' + id);
+        }
+
+        if (!r || !r.doc_data) {
+          win.document.body.innerHTML = '<div style="color:red;padding:20px">Brak dokumentów (doc_data) dla tego uczestnika.</div>';
           return;
         }
 
@@ -4424,7 +4432,6 @@
         const s = docData.signatures || {};
 
         const dDate = new Date(r.created_at).toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit', year: 'numeric' });
-
         const instructorSigPlaceholder = `<div style="border:1px solid #ccc;border-radius:4px;padding:8px;margin-top:8px;min-width:240px;min-height:70px;display:inline-flex;align-items:center;justify-content:center;color:#999;font-style:italic;background:#fafafa;font-size:12px">[ miejsce na podpis Tadeusza Dubickiego ]</div>`;
         const dateHtml = `<p>Data: <b>${dDate}</b></p>`;
 
@@ -4524,11 +4531,12 @@
           `;
         }
 
-        const win = window.open('', '_blank');
+        win.document.open();
         win.document.write(html);
         win.document.close();
       } catch (e) {
         console.error(e);
+        win.document.body.innerHTML = '<div style="color:red;padding:20px">Błąd generowania dokumentu: ' + e.message + '</div>';
         toast('Błąd podczas pobierania dokumentu', 'error');
       }
     }
