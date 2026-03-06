@@ -2762,18 +2762,30 @@
           };
         }
 
-        const res = await fetch(`${API}/register`, {
+        const res = await fetch(`${API}/register?_cache=${Date.now()}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(body),
         });
 
-        const data = await res.json();
-        if (!res.ok) { showMsg(data.error || 'Błąd zapisu. Spróbuj ponownie.', 'error'); return; }
+        let data = { error: 'Unknown terminal error' };
+        const text = await res.text();
+        try {
+          data = JSON.parse(text);
+        } catch (e) {
+          data = { error: 'Server returned non-JSON response: ' + text.slice(0, 100) };
+        }
+
+        if (!res.ok) {
+          showMsg(data.error || `Błąd serwera (${res.status}). Spróbuj ponownie.`, 'error');
+          console.error('[register/500]', res.status, data);
+          return;
+        }
         showConfirmation(data, first, last, docsActive);
 
       } catch (err) {
-        showMsg('Błąd połączenia. Sprawdź internet i spróbuj ponownie.', 'error');
+        console.error('[register/catch]', err);
+        showMsg(`Błąd połączenia: ${err.message}. Sprawdź internet lub spróbuj za chwilę.`, 'error');
       } finally {
         btn.disabled = false;
         spinner.style.display = 'none';

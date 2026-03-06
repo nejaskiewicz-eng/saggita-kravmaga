@@ -2186,10 +2186,13 @@
     }
 
     async function fetchJson(url) {
-      const r = await fetch(url, { cache: 'no-store' });
-      const d = await r.json().catch(() => ({ error: 'Błąd odpowiedzi serwera' }));
-      if (!r.ok) throw new Error(d.error || `Błąd HTTP ${r.status}`);
-      return d;
+      const glue = url.includes('?') ? '&' : '?';
+      const r = await fetch(url + glue + '_c=' + Date.now(), { cache: 'no-store' });
+      if (!r.ok) {
+        console.error('[fetchJson] fail', r.status, url);
+        throw new Error(`Błąd pobierania danych (${r.status})`);
+      }
+      return await r.json();
     }
 
     function money(v) {
@@ -2674,17 +2677,25 @@
       btn.innerHTML = `<span class="spin"></span> Wysyłam…`;
 
       try {
-        const d = await fetch(`${API}/register`, {
+        const res = await fetch(`${API}/register?_v=${Date.now()}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body)
-        }).then(async r => {
-          const j = await r.json().catch(() => ({ error: 'Błąd odpowiedzi serwera' }));
-          if (!r.ok) throw new Error(j.error || `Błąd HTTP ${r.status}`);
-          return j;
+          body: JSON.stringify(body),
         });
 
-        registrationResult = d;
+        const text = await res.text();
+        let data;
+        try {
+          data = JSON.parse(text);
+        } catch (e) {
+          data = { error: 'Serwer zwrócił niepoprawny format danych: ' + text.slice(0, 100) };
+        }
+
+        if (!res.ok) {
+          throw new Error(data.error || `Błąd serwera (${res.status})`);
+        }
+
+        registrationResult = data;
 
         toast('Zgłoszenie przyjęte');
         preparePaymentUI();
