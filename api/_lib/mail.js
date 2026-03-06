@@ -261,7 +261,7 @@ function mailMonthlySchedule({ first_name, payment_ref, plan_name, group_name, c
 <div class="alert">
   <strong>Prosimy o uregulowanie opłaty za 1. miesiąc (${fmt(firstAmt)}) w ciągu 3 dni</strong> roboczych na wskazane konto bankowe by potwierdzić zapis.
 </div>
-${reminders ? '<p style="font-size:14px;color:#515154;text-align:center;margin-top:24px"><span style="color:#34c759">✓</span> <strong>Automatyczne przypomnienia włączone</strong>. Przed każdym terminem trzymasz od nas krótką wiadomość email.</p>' : ''}
+${reminders ? '<p style="font-size:14px;color:#515154;text-align:center;margin-top:24px"><span style="color:#34c759">✓</span> <strong>Automatyczne przypomnienia włączone</strong>. Przed każdym terminem otrzymasz od nas krótką wiadomość email.</p>' : ''}
 <div style="text-align:center;margin-top:32px">
   <p style="font-size:12px;text-transform:uppercase;letter-spacing:0.05em;color:#86868b;margin-bottom:4px">Klucz rozliczeniowy</p>
   <span class="ref">${payment_ref}</span>
