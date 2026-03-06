@@ -520,6 +520,25 @@
       font-weight: 700;
     }
 
+    .info-btn--doc {
+      cursor: pointer;
+      color: rgba(255, 255, 255, 0.88);
+      text-decoration: none;
+    }
+
+    .info-btn--doc:hover {
+      border-color: rgba(255, 255, 255, 0.40);
+      background: rgba(255, 255, 255, 0.10);
+      transform: translateY(-1px);
+    }
+
+    .group-card--kids .info-btn--doc:hover {
+      border-color: rgba(26, 111, 212, 0.55);
+      background: rgba(26, 111, 212, 0.10);
+      box-shadow: 0 4px 12px rgba(26, 111, 212, 0.18);
+    }
+
+
     .slot {
       background: rgba(0, 0, 0, 0.15);
       padding: 16px 18px;
@@ -2083,22 +2102,23 @@
             <span class="info-btn__icon">📍</span>Sprawdź dojazd
           </a>
 
-          <a class="info-btn info-btn--placeholder" title="Regulamin — PDF wkrótce">
+          <a class="info-btn info-btn--doc" href="/dokumenty/${isKids ? 'regulamin-krav-maga-kids' : 'regulamin-doroslych'}.html" target="_blank" rel="noopener" title="Regulamin — otwórz i pobierz PDF">
             <span class="info-btn__icon">📄</span>Regulamin
           </a>
 
           ${isKids ? `
-          <a class="info-btn info-btn--placeholder" title="Wzór umowy — PDF wkrótce">
+          <a class="info-btn info-btn--doc" href="/dokumenty/wzor-umowy-kids.html" target="_blank" rel="noopener" title="Wzór umowy — otwórz i pobierz PDF">
             <span class="info-btn__icon">📝</span>Wzór umowy
           </a>
-          <a class="info-btn info-btn--placeholder" title="Wzór zgody na udział — PDF wkrótce">
+          <a class="info-btn info-btn--doc" href="/dokumenty/wzor-zgody-na-udzial.html" target="_blank" rel="noopener" title="Wzór zgody na udział — otwórz i pobierz PDF">
             <span class="info-btn__icon">✍️</span>Wzór zgody na udział
           </a>
           ` : `
-          <a class="info-btn info-btn--placeholder" title="Oświadczenie o niekaralności — PDF wkrótce">
+          <a class="info-btn info-btn--doc" href="/dokumenty/oswiadczenie-niekaralnosci.html" target="_blank" rel="noopener" title="Oświadczenie o niekaralności — otwórz i pobierz PDF">
             <span class="info-btn__icon">🔏</span>Oświadczenie o niekaralności
           </a>
           `}
+
         `;
 
             return infoDiv;
