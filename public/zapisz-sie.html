@@ -2443,7 +2443,8 @@
             return;
           }
           // Validate Signature
-          if (!window.sigCanvasHasDrawing[1] || !window.sigCanvasHasDrawing[2] || !window.sigCanvasHasDrawing[3]) {
+          const sigs = window.sigCanvasHasDrawing || {};
+          if (!sigs[1] || !sigs[2] || !sigs[3]) {
             const docsErr = document.getElementById('docsErrorMsg');
             if (docsErr) { docsErr.textContent = 'Złóż wszystkie trzy wymagane podpisy elektroniczne (scrolluj w dół).'; docsErr.style.display = 'block'; }
             showMsg('Podpisz 3 dokumenty zgód palcem lub myszką na szarych polach.', 'error');
@@ -2642,9 +2643,13 @@
 
       const actions = document.getElementById('confirmActions');
       actions.style.display = 'flex';
+      actions.style.flexWrap = 'wrap';
+      actions.style.gap = '10px';
       actions.innerHTML = `
-      <button id="splitPayOnlineBtn" style="background:linear-gradient(180deg,rgba(178,25,0,0.98),rgba(80,8,0,0.95));color:#fff;border:none;padding:13px 22px;font-family:'Open Sans',sans-serif;font-weight:800;font-size:.80rem;letter-spacing:.06em;text-transform:uppercase;cursor:pointer" onclick="submitSplitPayOnline()">Opłać online (1. miesiąc) →</button>
-      <button id="splitDownloadDocBtn" style="background:transparent;color:rgba(255,255,255,0.90);border:1px solid rgba(255,255,255,0.22);padding:13px 22px;font-family:'Open Sans',sans-serif;font-weight:800;font-size:.80rem;letter-spacing:.06em;text-transform:uppercase;cursor:pointer" onclick="submitSplitDownloadDoc()">Pobierz dokument (1. miesiąc)</button>
+      <button id="splitPayOnlineBtn" style="background:linear-gradient(180deg,rgba(178,25,0,0.98),rgba(80,8,0,0.95));color:#fff;border:none;padding:13px 22px;font-family:'Open Sans',sans-serif;font-weight:800;font-size:.80rem;letter-spacing:.06em;text-transform:uppercase;cursor:pointer" onclick="submitSplitPayOnline()">Opłać online →</button>
+      <button id="splitDownloadDocBtn" style="background:transparent;color:rgba(255,255,255,0.90);border:1px solid rgba(255,255,255,0.22);padding:13px 22px;font-family:'Open Sans',sans-serif;font-weight:800;font-size:.80rem;letter-spacing:.06em;text-transform:uppercase;cursor:pointer" onclick="submitSplitDownloadDoc()">Pobierz dokument płatności</button>
+      <button id="splitDownloadScheduleBtn" style="background:transparent;color:rgba(255,255,255,0.70);border:1px solid rgba(255,255,255,0.15);padding:13px 22px;font-family:'Open Sans',sans-serif;font-weight:800;font-size:.80rem;letter-spacing:.06em;text-transform:uppercase;cursor:pointer" onclick="submitDownloadSchedule()">📅 Pobierz harmonogram<br><span style="font-size:.65rem;font-weight:400">wszystkie miesiące</span></button>
+      <button id="splitDownloadSignedBtn" style="background:transparent;color:rgba(255,255,255,0.70);border:1px solid rgba(255,255,255,0.15);padding:13px 22px;font-family:'Open Sans',sans-serif;font-weight:800;font-size:.80rem;letter-spacing:.06em;text-transform:uppercase;cursor:pointer" onclick="downloadSignedDocs()">📝 Pobierz podpisane zgody<br><span style="font-size:.65rem;font-weight:400">umowa + zgoda + polityka</span></button>
       `;
 
       // Trigger initial render
@@ -2739,6 +2744,19 @@
       handleDownloadDoc(d.ref, payload);
     };
 
+    window.submitDownloadSchedule = function () {
+      if (!window._currentSplitData) return;
+      const d = window._currentSplitData;
+      const url = `${API}/registration/action?payment_ref=${encodeURIComponent(d.ref)}&action=schedule_doc&months=${d.months}&monthly_rate=${d.monthlyRate}&signup_fee=${d.feeAmt}`;
+      // Also fire backend POST to trigger email
+      fetch(`${API}/registration/action`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ payment_ref: d.ref, action: 'schedule_doc', months: d.months, monthly_rate: d.monthlyRate, signup_fee: d.feeAmt, payment_mode: 'monthly' })
+      }).catch(() => { });
+      window.open(url, '_blank');
+    };
+
 
     async function handlePayOnline(payment_ref, amount, extraPayload) {
       try {
@@ -2753,6 +2771,68 @@
         alert('Płatność online będzie dostępna wkrótce. Skontaktujemy się z Tobą mailowo.');
       } catch (e) { alert('Błąd. Spróbuj ponownie.'); }
     }
+
+    window.downloadSignedDocs = function () {
+      const parentName = document.getElementById('doc1_parent')?.value?.trim() || '';
+      const childPhone = document.getElementById('doc2_phone')?.value?.trim() || '';
+      const ref = registrationResult?.payment_ref || '';
+      const date = new Date().toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
+      // Capture canvas signatures as base64 images
+      const sig1Src = document.getElementById('sigCanvas1')?.toDataURL('image/png') || '';
+      const sig2Src = document.getElementById('sigCanvas2')?.toDataURL('image/png') || '';
+      const sig3Src = document.getElementById('sigCanvas3')?.toDataURL('image/png') || '';
+
+      const html = `<!DOCTYPE html><html lang="pl"><head><meta charset="UTF-8">
+      <title>Podpisane dokumenty — ${ref}</title>
+      <style>
+        body{font-family:Arial,sans-serif;margin:40px;color:#111;font-size:13px;line-height:1.6}
+        h1{font-size:18px;border-bottom:2px solid #c42000;padding-bottom:6px;margin-bottom:16px}
+        h2{font-size:15px;margin-top:32px;color:#c42000}
+        .sig-box{border:1px solid #ccc;border-radius:4px;background:#fafafa;padding:8px;margin-top:8px;display:inline-block}
+        .sig-box img{display:block;max-width:400px;height:auto}
+        .page-break{page-break-before:always;margin-top:40px}
+        .meta{color:#555;font-size:12px;margin-bottom:24px}
+        @media print{button{display:none}}
+      </style></head><body>
+      <div style="margin-bottom:8px;font-size:18px;font-weight:bold;color:#c42000">Akademia Obrony Saggita — Krav Maga</div>
+      <div class="meta">Numer zapisu: <strong>${ref}</strong> &nbsp;|&nbsp; Data: ${date}</div>
+      ${parentName ? '<div class="meta">Rodzic/Opiekun: <strong>' + parentName + '</strong></div>' : ''}
+      ${childPhone ? '<div class="meta">Telefon: <strong>' + childPhone + '</strong></div>' : ''}
+
+      <h1>Dokument 1: Umowa i Regulamin Sekcji</h1>
+      <p>Podpisując niżej, Rodzic/Opiekun prawny przyjmuje do wiadomości i akceptuje pełny regulamin Sekcji Krav Maga Akademii Obrony Saggita.</p>
+      <p><strong>Podpis Rodzica/Opiekuna:</strong></p>
+      <div class="sig-box"><img src="${sig1Src}" alt="Podpis 1"></div>
+
+      <div class="page-break"></div>
+      <h1>Dokument 2: Zgoda na Udział Dziecka w Zajęciach</h1>
+      <p>Wyrażamy zgodę na udział naszego dziecka w zajęciach Krav Maga. Zobowiązujemy się do punktualnego odbierania dziecka z zajęć i stosowania się do zasad bezpieczeństwa.</p>
+      <p><strong>Podpis Rodzica/Opiekuna:</strong></p>
+      <div class="sig-box"><img src="${sig2Src}" alt="Podpis 2"></div>
+
+      <div class="page-break"></div>
+      <h1>Dokument 3: Polityka Ochrony Dzieci i Młodzieży</h1>
+      <p>Potwierdzamy zapoznanie się z Polityką Ochrony Dzieci i Młodzieży Akademii Obrony Saggita.</p>
+      <p><strong>Podpis Rodzica/Opiekuna:</strong></p>
+      <div class="sig-box"><img src="${sig3Src}" alt="Podpis 3"></div>
+
+      <div style="margin-top:40px;padding-top:12px;border-top:1px solid #ddd;font-size:11px;color:#666">
+        Akademia Obrony Saggita | biuro@akademiaobrony.pl | 510 930 460
+      </div>
+      <div style="margin:20px 0;text-align:center">
+        <button onclick="window.print()" style="padding:10px 28px;background:#c42000;color:#fff;border:none;border-radius:4px;font-size:14px;font-weight:bold;cursor:pointer">🖨️ Drukuj / Zapisz jako PDF</button>
+      </div>
+      </body></html>`;
+
+      const win = window.open('', '_blank', 'width=900,height=800');
+      if (win) {
+        win.document.write(html);
+        win.document.close();
+      } else {
+        alert('Zablokowano wyskakujące okno. Pozwól na wyskakujące okna dla tej strony.');
+      }
+    };
 
     async function handleDownloadDoc(payment_ref, extraPayload) {
       // 1. Zgłoś akcję backendowi by wysłał maila do kursanta
