@@ -2566,31 +2566,45 @@
       try {
         const d = await aF('/groups');
         const rows = arrRows(d);
-        rows.sort((a, b) => (a.active === false ? 1 : 0) - (b.active === false ? 1 : 0) || (a.city || '').localeCompare(b.city || '') || (a.name || '').localeCompare(b.name || ''));
+        const activeRows = rows.filter(g => g.active !== false);
+        const inactiveRows = rows.filter(g => g.active === false);
+
+        activeRows.sort((a, b) => (a.city || '').localeCompare(b.city || '') || (a.name || '').localeCompare(b.name || ''));
+        inactiveRows.sort((a, b) => (a.city || '').localeCompare(b.city || '') || (a.name || '').localeCompare(b.name || ''));
+
         window.__plansMap = Object.fromEntries(rows.map(r => [String(r.id), r]));
+
+        const renderT = (list, title) => {
+          if (!list.length) return '';
+          return `
+            <div class="sh" style="margin-top:24px"><h4>${title}</h4></div>
+            <div class="tw"><table>
+              <thead><tr><th>ID</th><th>Miasto</th><th>Nazwa</th><th>Kategoria</th><th>Pojemność</th><th>Aktywna</th><th></th></tr></thead>
+              <tbody>${list.map(g => `
+                <tr>
+                  <td>${g.id}</td>
+                  <td>${g.city || '—'}</td>
+                  <td><strong style="color:var(--bright)">${g.name || '—'}</strong></td>
+                  <td>${g.category || '—'}</td>
+                  <td>${g.max_capacity ?? '—'}</td>
+                  <td>${g.active === false ? '<span class="badge br">NIE</span>' : '<span class="badge bg">TAK</span>'}</td>
+                  <td class="tda">
+                    <button class="bi" onclick="openGroupModal(${g.id})">Edytuj</button>
+                    <button class="bi del" onclick="deleteGroup(${g.id})">Usuń</button>
+                  </td>
+                </tr>
+              `).join('')}</tbody>
+            </table></div>`;
+        };
+
         c.innerHTML = `
-      <div class="sh">
-        <h3>Grupy</h3>
-        <button class="btn btn-primary btn-sm" onclick="openGroupModal()">+ Dodaj grupę</button>
-      </div>
-      <div class="tw"><table>
-        <thead><tr><th>ID</th><th>Miasto</th><th>Nazwa</th><th>Kategoria</th><th>Pojemność</th><th>Aktywna</th><th></th></tr></thead>
-        <tbody>${rows.map(g => `
-          <tr>
-            <td>${g.id}</td>
-            <td>${g.city || '—'}</td>
-            <td><strong style="color:var(--bright)">${g.name || '—'}</strong></td>
-            <td>${g.category || '—'}</td>
-            <td>${g.max_capacity ?? '—'}</td>
-            <td>${g.active === false ? '<span class="badge br">NIE</span>' : '<span class="badge bg">TAK</span>'}</td>
-            <td class="tda">
-              <button class="bi" onclick="openGroupModal(${g.id})">Edytuj</button>
-              <button class="bi del" onclick="deleteGroup(${g.id})">Usuń</button>
-            </td>
-          </tr>
-        `).join('')}</tbody>
-      </table></div>
-    `;
+          <div class="sh">
+            <h3>Grupy</h3>
+            <button class="btn btn-primary btn-sm" onclick="openGroupModal()">+ Dodaj grupę</button>
+          </div>
+          ${renderT(activeRows, 'Aktywne grupy')}
+          ${renderT(inactiveRows, 'Nieaktywne / Archiwum')}
+        `;
       } catch (e) {
         c.innerHTML = `<div class="empty"><strong>Błąd</strong>${e.message}</div>`;
       }
@@ -2600,31 +2614,45 @@
       try {
         const d = await aF('/schedules');
         const rows = arrRows(d);
-        rows.sort((a, b) => (a.active === false ? 1 : 0) - (b.active === false ? 1 : 0) || (a.group_name || '').localeCompare(b.group_name || '') || (a.day_of_week - b.day_of_week));
+        const activeRows = rows.filter(s => s.active !== false);
+        const inactiveRows = rows.filter(s => s.active === false);
+
+        activeRows.sort((a, b) => (a.group_name || '').localeCompare(b.group_name || '') || (a.day_of_week - b.day_of_week));
+        inactiveRows.sort((a, b) => (a.group_name || '').localeCompare(b.group_name || '') || (a.day_of_week - b.day_of_week));
+
         window.__plansMap = Object.fromEntries(rows.map(r => [String(r.id), r]));
+
+        const renderT = (list, title) => {
+          if (!list.length) return '';
+          return `
+            <div class="sh" style="margin-top:24px"><h4>${title}</h4></div>
+            <div class="tw"><table>
+              <thead><tr><th>ID</th><th>Grupa</th><th>Dzień</th><th>Godzina</th><th>Adres</th><th>Aktywny</th><th></th></tr></thead>
+              <tbody>${list.map(s => `
+                <tr>
+                  <td>${s.id}</td>
+                  <td>${s.group_name || s.group_id || '—'}</td>
+                  <td>${DAYS[s.day_of_week] || s.day_name || s.day_of_week || '—'}</td>
+                  <td>${(s.time_start ? String(s.time_start).slice(0, 5) : '')}${s.time_end ? `–${String(s.time_end).slice(0, 5)}` : ''}</td>
+                  <td>${s.address || '—'}</td>
+                  <td>${s.active === false ? '<span class="badge br">NIE</span>' : '<span class="badge bg">TAK</span>'}</td>
+                  <td class="tda">
+                    <button class="bi" onclick="openScheduleModal(${s.id})">Edytuj</button>
+                    <button class="bi del" onclick="deleteSchedule(${s.id})">Usuń</button>
+                  </td>
+                </tr>
+              `).join('')}</tbody>
+            </table></div>`;
+        };
+
         c.innerHTML = `
-      <div class="sh">
-        <h3>Grafik zajęć</h3>
-        <button class="btn btn-primary btn-sm" onclick="openScheduleModal()">+ Dodaj termin</button>
-      </div>
-      <div class="tw"><table>
-        <thead><tr><th>ID</th><th>Grupa</th><th>Dzień</th><th>Godzina</th><th>Adres</th><th>Aktywny</th><th></th></tr></thead>
-        <tbody>${rows.map(s => `
-          <tr>
-            <td>${s.id}</td>
-            <td>${s.group_name || s.group_id || '—'}</td>
-            <td>${DAYS[s.day_of_week] || s.day_name || s.day_of_week || '—'}</td>
-            <td>${(s.time_start ? String(s.time_start).slice(0, 5) : '')}${s.time_end ? `–${String(s.time_end).slice(0, 5)}` : ''}</td>
-            <td>${s.address || '—'}</td>
-            <td>${s.active === false ? '<span class="badge br">NIE</span>' : '<span class="badge bg">TAK</span>'}</td>
-            <td class="tda">
-              <button class="bi" onclick="openScheduleModal(${s.id})">Edytuj</button>
-              <button class="bi del" onclick="deleteSchedule(${s.id})">Usuń</button>
-            </td>
-          </tr>
-        `).join('')}</tbody>
-      </table></div>
-    `;
+          <div class="sh">
+            <h3>Grafik zajęć</h3>
+            <button class="btn btn-primary btn-sm" onclick="openScheduleModal()">+ Dodaj termin</button>
+          </div>
+          ${renderT(activeRows, 'Aktywny grafik')}
+          ${renderT(inactiveRows, 'Nieaktywne / Archiwum')}
+        `;
       } catch (e) {
         c.innerHTML = `<div class="empty"><strong>Błąd</strong>${e.message}</div>`;
       }
@@ -2634,31 +2662,45 @@
       try {
         const d = await aF('/locations');
         const rows = arrRows(d);
-        rows.sort((a, b) => (a.active === false ? 1 : 0) - (b.active === false ? 1 : 0) || (a.sort_order - b.sort_order) || (a.city || '').localeCompare(b.city || ''));
+        const activeRows = rows.filter(l => l.active !== false);
+        const inactiveRows = rows.filter(l => l.active === false);
+
+        activeRows.sort((a, b) => (a.sort_order - b.sort_order) || (a.city || '').localeCompare(b.city || ''));
+        inactiveRows.sort((a, b) => (a.sort_order - b.sort_order) || (a.city || '').localeCompare(b.city || ''));
+
         window.__plansMap = Object.fromEntries(rows.map(r => [String(r.id), r]));
+
+        const renderT = (list, title) => {
+          if (!list.length) return '';
+          return `
+            <div class="sh" style="margin-top:24px"><h4>${title}</h4></div>
+            <div class="tw"><table>
+              <thead><tr><th>ID</th><th>Miasto</th><th>Nazwa</th><th>Adres</th><th>Kolejność</th><th>Aktywna</th><th></th></tr></thead>
+              <tbody>${list.map(l => `
+                <tr>
+                  <td>${l.id}</td>
+                  <td><strong style="color:var(--bright)">${l.city || '—'}</strong></td>
+                  <td>${l.name || '—'}</td>
+                  <td>${l.address || '—'}</td>
+                  <td>${l.sort_order ?? '—'}</td>
+                  <td>${l.active === false ? '<span class="badge br">NIE</span>' : '<span class="badge bg">TAK</span>'}</td>
+                  <td class="tda">
+                    <button class="bi" onclick="openLocationModal(${l.id})">Edytuj</button>
+                    <button class="bi del" onclick="deleteLocation(${l.id})">Usuń</button>
+                  </td>
+                </tr>
+              `).join('')}</tbody>
+            </table></div>`;
+        };
+
         c.innerHTML = `
-      <div class="sh">
-        <h3>Lokalizacje</h3>
-        <button class="btn btn-primary btn-sm" onclick="openLocationModal()">+ Dodaj lokalizację</button>
-      </div>
-      <div class="tw"><table>
-        <thead><tr><th>ID</th><th>Miasto</th><th>Nazwa</th><th>Adres</th><th>Kolejność</th><th>Aktywna</th><th></th></tr></thead>
-        <tbody>${rows.map(l => `
-          <tr>
-            <td>${l.id}</td>
-            <td><strong style="color:var(--bright)">${l.city || '—'}</strong></td>
-            <td>${l.name || '—'}</td>
-            <td>${l.address || '—'}</td>
-            <td>${l.sort_order ?? '—'}</td>
-            <td>${l.active === false ? '<span class="badge br">NIE</span>' : '<span class="badge bg">TAK</span>'}</td>
-            <td class="tda">
-              <button class="bi" onclick="openLocationModal(${l.id})">Edytuj</button>
-              <button class="bi del" onclick="deleteLocation(${l.id})">Usuń</button>
-            </td>
-          </tr>
-        `).join('')}</tbody>
-      </table></div>
-    `;
+          <div class="sh">
+            <h3>Lokalizacje</h3>
+            <button class="btn btn-primary btn-sm" onclick="openLocationModal()">+ Dodaj lokalizację</button>
+          </div>
+          ${renderT(activeRows, 'Aktywne lokalizacje')}
+          ${renderT(inactiveRows, 'Nieaktywne / Archiwum')}
+        `;
       } catch (e) {
         c.innerHTML = `<div class="empty"><strong>Błąd</strong>${e.message}</div>`;
       }
@@ -3182,8 +3224,8 @@
         <option value="">Wszyscy kursanci</option>
       </select>
       <select id="us-active" onchange="US.page=1;fetchUS()">
+        <option value="true" selected>Tylko aktywni</option>
         <option value="">Aktywni i nieaktywni</option>
-        <option value="true">Tylko aktywni</option>
         <option value="false">Tylko nieaktywni</option>
       </select>
       <select id="us-sort" onchange="US.page=1;fetchUS()">
@@ -3217,7 +3259,8 @@
     function usDebounce() { clearTimeout(usTimer); usTimer = setTimeout(() => { US.page = 1; fetchUS(); }, 380); }
 
     function usClear() {
-      ['us-q', 'us-grp', 'us-city', 'us-pay', 'us-active'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+      ['us-q', 'us-grp', 'us-city', 'us-pay'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+      const activeEl = document.getElementById('us-active'); if (activeEl) activeEl.value = 'true';
       const seasonEl = document.getElementById('us-season'); if (seasonEl) seasonEl.value = 'true';
       fetchUS();
     }
