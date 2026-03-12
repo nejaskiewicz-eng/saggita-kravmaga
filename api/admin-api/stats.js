@@ -56,76 +56,58 @@ module.exports = async (req, res) => {
       WHERE sg.active = true AND s.is_active = true
     `);
 
-    // 3) Obłożenie lokalizacji: registrations + legacy
+    // 3) Obłożenie lokalizacji (ujednolicone)
     const { rows: byLoc } = await pool.query(`
-      WITH reg AS (
+      WITH stud_stats AS (
         SELECT
           l.id AS location_id,
-          COUNT(r.id)::int AS total,
-          COUNT(r.id) FILTER (WHERE r.payment_status='paid')::int AS paid,
-          COUNT(r.id) FILTER (WHERE r.payment_status IN ('unpaid','pending') AND r.is_waitlist=false)::int AS pending,
-          COUNT(r.id) FILTER (WHERE r.is_waitlist=true)::int AS waitlist
-        FROM locations l
-        LEFT JOIN registrations r
-          ON r.location_id = l.id
-         AND r.status != 'cancelled'
-        WHERE l.active = true
-        GROUP BY l.id
-      ),
-      leg AS (
-        SELECT
-          l.id AS location_id,
-          COUNT(DISTINCT sg.student_id)::int AS legacy_students
+          COUNT(s.id) AS total,
+          COUNT(s.id) FILTER (
+            WHERE (r.payment_status = 'paid')
+            OR (s.registration_id IS NULL AND EXISTS(SELECT 1 FROM legacy_payments lp WHERE lp.student_id=s.id AND lp.paid_at >= CURRENT_DATE - INTERVAL '35 days'))
+          ) AS paid,
+          COUNT(s.id) FILTER (
+            WHERE (r.payment_status IN ('unpaid','pending') AND r.is_waitlist=false)
+            OR (s.registration_id IS NULL AND (
+                 NOT EXISTS(SELECT 1 FROM legacy_payments lp2 WHERE lp2.student_id=s.id)
+                 OR (SELECT MAX(lp3.paid_at) FROM legacy_payments lp3 WHERE lp3.student_id=s.id) < CURRENT_DATE - INTERVAL '35 days'
+               ))
+          ) AS pending,
+          COUNT(s.id) FILTER (WHERE r.is_waitlist=true) AS waitlist
         FROM locations l
         LEFT JOIN groups g ON g.location_id = l.id
         LEFT JOIN student_groups sg ON sg.group_id = g.id AND sg.active = true
         LEFT JOIN students s ON s.id = sg.student_id AND s.is_active = true
+        LEFT JOIN registrations r ON r.id = s.registration_id
         WHERE l.active = true
         GROUP BY l.id
       )
       SELECT
         l.city,
-        (COALESCE(reg.total,0) + COALESCE(leg.legacy_students,0))::int AS total,
-        COALESCE(reg.paid,0)::int AS paid,
-        COALESCE(reg.pending,0)::int AS pending,
-        COALESCE(reg.waitlist,0)::int AS waitlist
+        COALESCE(ss.total, 0)::int AS total,
+        COALESCE(ss.paid, 0)::int AS paid,
+        COALESCE(ss.pending, 0)::int AS pending,
+        COALESCE(ss.waitlist, 0)::int AS waitlist
       FROM locations l
-      LEFT JOIN reg ON reg.location_id = l.id
-      LEFT JOIN leg ON leg.location_id = l.id
+      LEFT JOIN stud_stats ss ON ss.location_id = l.id
       WHERE l.active = true
       ORDER BY l.city
     `);
 
-    // 4) Obłożenie grup: registrations + legacy
-    // Pokaż grupy aktywne ORAZ te, które mają przypisanych legacy kursantów (żeby Wałbrzych i "kobiety" nie znikały).
+    // 4) Obłożenie grup (ujednolicone)
     const { rows: byGroup } = await pool.query(`
-      WITH reg AS (
-        SELECT
-          g.id AS group_id,
-          COUNT(r.id) FILTER (WHERE r.is_waitlist=false AND r.status != 'cancelled')::int AS reg_count
-        FROM groups g
-        LEFT JOIN registrations r ON r.group_id = g.id
-        GROUP BY g.id
-      ),
-      leg AS (
-        SELECT
-          g.id AS group_id,
-          COUNT(DISTINCT sg.student_id)::int AS legacy_count
-        FROM groups g
-        LEFT JOIN student_groups sg ON sg.group_id = g.id AND sg.active = true
-        LEFT JOIN students s ON s.id = sg.student_id AND s.is_active = true
-        GROUP BY g.id
-      )
       SELECT
         l.city,
         g.name,
         g.max_capacity,
-        (COALESCE(reg.reg_count,0) + COALESCE(leg.legacy_count,0))::int AS registered
+        COUNT(s.id) FILTER (WHERE COALESCE(r.is_waitlist, false) = false)::int AS registered
       FROM groups g
       LEFT JOIN locations l ON l.id = g.location_id
-      LEFT JOIN reg ON reg.group_id = g.id
-      LEFT JOIN leg ON leg.group_id = g.id
-      WHERE (g.active = true OR COALESCE(leg.legacy_count,0) > 0 OR COALESCE(reg.reg_count,0) > 0)
+      LEFT JOIN student_groups sg ON sg.group_id = g.id AND sg.active = true
+      LEFT JOIN students s ON s.id = sg.student_id AND s.is_active = true
+      LEFT JOIN registrations r ON r.id = s.registration_id
+      WHERE (g.active = true OR s.id IS NOT NULL)
+      GROUP BY l.city, g.name, g.max_capacity, g.active
       ORDER BY l.city, g.name
     `);
 
