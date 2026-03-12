@@ -273,11 +273,20 @@ module.exports = async (req, res) => {
       }
 
       if (payment_status && payment_status !== 'all') {
-        conds.push(`EXISTS(
-          SELECT 1 FROM registrations r2
-          WHERE r2.id=s.registration_id AND r2.payment_status=$${pi++}
-        )`);
-        vals.push(payment_status);
+        if (payment_status === 'paid') {
+          conds.push(`(
+            EXISTS(SELECT 1 FROM registrations r2 WHERE r2.id=s.registration_id AND r2.payment_status='paid')
+            OR EXISTS(SELECT 1 FROM legacy_payments lp2 WHERE lp2.student_id=s.id AND lp2.paid_at >= CURRENT_DATE - INTERVAL '35 days')
+          )`);
+        } else if (payment_status === 'unpaid') {
+          conds.push(`(
+            (s.registration_id IS NOT NULL AND EXISTS(SELECT 1 FROM registrations r2 WHERE r2.id=s.registration_id AND r2.payment_status IN ('unpaid','pending')))
+            OR (s.registration_id IS NULL AND (
+                 NOT EXISTS(SELECT 1 FROM legacy_payments lp2 WHERE lp2.student_id=s.id)
+                 OR (SELECT MAX(lp2.paid_at) FROM legacy_payments lp2 WHERE lp2.student_id=s.id) < CURRENT_DATE - INTERVAL '35 days'
+               ))
+          )`);
+        }
       }
 
       // Zaległości
@@ -335,7 +344,9 @@ module.exports = async (req, res) => {
           ? `last_name ASC, first_name ASC`
           : sort === 'payment'
             ? `last_payment_date DESC NULLS LAST, last_name ASC, first_name ASC`
-            : `last_training DESC NULLS LAST, last_name ASC, first_name ASC`;
+            : sort === 'active'
+              ? `s.is_active DESC, last_name ASC, first_name ASC`
+              : `last_training DESC NULLS LAST, last_name ASC, first_name ASC`;
 
       const { rows } = await pool.query(
         `

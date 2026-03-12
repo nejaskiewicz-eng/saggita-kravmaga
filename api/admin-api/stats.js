@@ -22,11 +22,29 @@ module.exports = async (req, res) => {
     const { rows: [regTotals] } = await pool.query(`
       SELECT
         COUNT(*)::int AS reg_total,
-        COUNT(*) FILTER (WHERE payment_status='paid')::int AS paid,
-        COUNT(*) FILTER (WHERE payment_status IN ('unpaid','pending'))::int AS pending,
         COUNT(*) FILTER (WHERE is_waitlist=true)::int AS waitlist
       FROM registrations
       WHERE status != 'cancelled'
+    `);
+
+    // 2) Ujednolicone statystyki płatności dla wszystkich aktywnych kursantów
+    const { rows: [payStats] } = await pool.query(`
+      SELECT
+        COUNT(*)::int AS total_active,
+        COUNT(*) FILTER (
+          WHERE (r.payment_status = 'paid')
+          OR (s.registration_id IS NULL AND EXISTS(SELECT 1 FROM legacy_payments lp WHERE lp.student_id=s.id AND lp.paid_at >= CURRENT_DATE - INTERVAL '35 days'))
+        )::int AS paid,
+        COUNT(*) FILTER (
+          WHERE (r.payment_status IN ('unpaid','pending') AND r.is_waitlist=false)
+          OR (s.registration_id IS NULL AND (
+               NOT EXISTS(SELECT 1 FROM legacy_payments lp2 WHERE lp2.student_id=s.id)
+               OR (SELECT MAX(lp3.paid_at) FROM legacy_payments lp3 WHERE lp3.student_id=s.id) < CURRENT_DATE - INTERVAL '35 days'
+             ))
+        )::int AS pending
+      FROM students s
+      LEFT JOIN registrations r ON r.id = s.registration_id
+      WHERE s.is_active = true
     `);
 
     // 2) Legacy — ilu kursantów jest realnie przypisanych do grup (aktywny wpis w student_groups)
@@ -129,12 +147,10 @@ module.exports = async (req, res) => {
       LIMIT 10
     `);
 
-    const total = (regTotals.reg_total || 0) + (legacyTotals.legacy_total || 0);
-
     return res.status(200).json({
-      total,
-      paid: regTotals.paid || 0,
-      pending: regTotals.pending || 0,
+      total: payStats.total_active,
+      paid: payStats.paid || 0,
+      pending: payStats.pending || 0,
       waitlist: regTotals.waitlist || 0,
       byLoc,
       byGroup,

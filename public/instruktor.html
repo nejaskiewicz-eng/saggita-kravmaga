@@ -752,7 +752,7 @@
     .cgh {
       background: var(--bg);
       text-align: center;
-      font-size: 9px;
+      font-size: 11px;
       text-transform: uppercase;
       letter-spacing: .1em;
       color: var(--dim);
@@ -794,7 +794,7 @@
     }
 
     .cgc-d {
-      font-size: 11px;
+      font-size: 13px;
       font-weight: 700;
       margin-bottom: 3px
     }
@@ -804,7 +804,7 @@
       width: 100%;
       box-sizing: border-box;
       padding: 2px 5px;
-      font-size: 9px;
+      font-size: 10px;
       font-weight: 700;
       margin-bottom: 2px;
       cursor: pointer;
@@ -827,7 +827,8 @@
     .cpill-s {
       background: var(--gsoft);
       color: #3dd68c;
-      border-left: 2px solid var(--green)
+      border-left: 3px solid var(--green);
+      font-weight: 800;
     }
 
     .cpill-s:hover,
@@ -1987,7 +1988,10 @@
       // Tryb ograniczony — tylko widok zajęć (bez kartotek, bez pełnej tabeli)
       if (!S.perms.can_see_groups) {
         $('pb').innerHTML = `
-      <div class="bc"><span>${esc(g.name || '')}</span></div>
+      <div class="bc">
+        <button class="btn btn-ghost btn-sm" onclick="go('groups')" style="margin-right:8px;padding:4px 8px">← Wróć</button>
+        <span>${esc(g.name || '')}</span>
+      </div>
       ${sch ? `<div class="ib" style="margin-bottom:12px"><div class="ir"><span class="ir-l">Grafik</span><span class="ir-v">${esc(sch)}</span></div></div>` : ''}
       <div style="margin-bottom:14px;font-size:12px;color:var(--dim2)">Widok zajęć — ${new Date().toLocaleDateString('pl-PL', { weekday: 'long', day: 'numeric', month: 'long' })}</div>
       <div class="tw"><table>
@@ -2011,7 +2015,10 @@
 
       // Tryb pełny (can_see_groups=true)
       $('pb').innerHTML = `
-    <div class="bc"><a onclick="go('groups')">Grupy</a><span class="bc-sep">›</span><span>${esc(g.name || '')}</span></div>
+    <div class="bc">
+      <button class="btn btn-ghost btn-sm" onclick="go('groups')" style="margin-right:8px;padding:4px 8px">← Wróć</button>
+      <a onclick="go('groups')">Grupy</a><span class="bc-sep">›</span><span>${esc(g.name || '')}</span>
+    </div>
     ${sch ? `<div class="ib" style="margin-bottom:12px"><div class="ir"><span class="ir-l">Grafik</span><span class="ir-v">${esc(sch)}</span></div></div>` : ''}
     <div class="bar">
       <input type="search" placeholder="Szukaj po nazwisku..." id="ss" oninput="filterStud()">
@@ -2089,6 +2096,7 @@
 
       $('pb').innerHTML = `
     <div class="bc">
+      <button class="btn btn-ghost btn-sm" onclick="renderGrpStudents()" style="margin-right:8px;padding:4px 8px">← Wróć</button>
       <a onclick="go('groups')">Grupy</a><span class="bc-sep">›</span>
       <a onclick="renderGrpStudents()">${esc(g.name || 'Kursanci')}</a><span class="bc-sep">›</span>
       <span>${esc(s.first_name)} ${esc(s.last_name)}</span>
@@ -2374,7 +2382,12 @@
             <td data-label="Lokalizacja" class="td-dim">${esc(s.location_city || '')}${s.location_name ? ' / ' + esc(s.location_name) : ''}</td>
             <td data-label="Oznaczonych">${s.total_marked || 0}</td>
             <td data-label="Obecnych">${s.total_marked > 0 ? `<span class="bx ${s.present_count > 0 ? 'bx-g' : 'bx-r'}">${s.present_count || 0} (${pct}%)</span>` : '<span class="bx bx-d">—</span>'}</td>
-            <td><button class="btn btn-o btn-xs" onclick="openSessById(${s.session_id},${s.group_id},'${dt}','${esc(s.group_name || '')}')">Obecności →</button></td>
+            <td>
+              <div style="display:flex;gap:4px">
+                <button class="btn btn-o btn-xs" onclick="openSessById(${s.session_id},${s.group_id},'${dt}','${esc(s.group_name || '')}')">Obecności →</button>
+                <button class="btn btn-ghost btn-xs" onclick="confirmDelSess(${s.session_id})">✕</button>
+              </div>
+            </td>
           </tr>`;
       }).join('')}
       </tbody>
@@ -2385,6 +2398,14 @@
       S.sessId = sid;
       S.sessData = { session_id: sid, group_id: gid, session_date: date, group_name: name };
       renderAtt();
+    }
+
+    async function confirmDelSess(sid) {
+      if (!confirm('Czy na pewno chcesz usunąć tę sesję treningową i wszystkie zapisane obecności?')) return;
+      try {
+        await api(`/api/instructor/sessions/${sid}`, 'DELETE');
+        renderSess();
+      } catch (e) { alert('Błąd: ' + e.message); }
     }
 
     // ── ATTENDANCE ────────────────────────────────────────────────
@@ -2412,6 +2433,7 @@
 
         $('pb').innerHTML = `
       <div class="bc">
+        <button class="btn btn-ghost btn-sm" onclick="tryLeaveSess()" style="margin-right:8px;padding:4px 8px">← Wróć</button>
         <a onclick="tryLeaveSess()" style="cursor:pointer">Sesje</a><span class="bc-sep">›</span>
         <span>${esc(sess.group_name || '')} — ${dateStr}</span>
       </div>
@@ -2440,11 +2462,14 @@
 
           const addPayBtn = S.perms.can_accept_payment ? `<button class="btn" style="padding:6px 10px;font-size:10px;background:rgba(46,204,113,.15);border:1px solid rgba(46,204,113,.4);color:#2ecc71;flex:1;max-width:100px;text-align:center;" onclick="event.stopPropagation();moAcceptPayment(${s.student_id},'${esc(s.first_name)} ${esc(s.last_name)}',${sess.group_id})">+ Wpłata</button>` : '';
 
+          const isPaid = days !== null && days <= 35;
+          const nameColor = isPaid ? 'var(--text)' : 'var(--accent)';
+
           return `
           <div class="att-row ${s.present ? 'present' : 'absent'}" id="atr-${s.student_id}" onclick="toggleAttRow(event, ${sess.session_id}, ${s.student_id})" style="padding:10px 12px;margin-bottom:8px">
             <div class="att-chk ${s.present ? 'on' : ''}" id="chk-${s.student_id}">${s.present ? '✓' : ''}</div>
             <div style="display:flex;flex-direction:column;justify-content:center;">
-              <div class="att-name" style="font-weight:800;font-size:14px;line-height:1.2;margin-bottom:4px">${esc(s.last_name)}, ${esc(s.first_name)}</div>
+              <div class="att-name" style="font-weight:800;font-size:14px;line-height:1.2;margin-bottom:4px;color:${nameColor}">${esc(s.last_name)}, ${esc(s.first_name)}</div>
               ${payBadge}
             </div>
             <div style="grid-column:1/-1;display:flex;gap:12px;margin-top:6px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.08);justify-content:flex-end;">
