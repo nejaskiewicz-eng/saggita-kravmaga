@@ -18,33 +18,34 @@ module.exports = async (req, res) => {
   try {
     const pool = getPool();
 
-    // 1) Rejestracje (nowy system) — liczniki statusów płatności
-    const { rows: [regTotals] } = await pool.query(`
-      SELECT
-        COUNT(*)::int AS reg_total,
-        COUNT(*) FILTER (WHERE is_waitlist=true)::int AS waitlist
-      FROM registrations
-      WHERE status != 'cancelled'
-    `);
 
-    // 2) Ujednolicone statystyki płatności dla wszystkich aktywnych kursantów
+    // 2) Ujednolicone statystyki płatności dla wszystkich aktywnych kursantów przypisanych do grup
     const { rows: [payStats] } = await pool.query(`
+      WITH active_students AS (
+        SELECT DISTINCT s.id, s.registration_id, r.payment_status, r.is_waitlist
+        FROM students s
+        JOIN student_groups sg ON sg.student_id = s.id AND sg.active = true
+        JOIN groups g ON g.id = sg.group_id AND g.active = true
+        LEFT JOIN registrations r ON r.id = s.registration_id
+        WHERE s.is_active = true
+      )
       SELECT
         COUNT(*)::int AS total_active,
         COUNT(*) FILTER (
-          WHERE (r.payment_status = 'paid')
-          OR (s.registration_id IS NULL AND EXISTS(SELECT 1 FROM legacy_payments lp WHERE lp.student_id=s.id AND lp.paid_at >= CURRENT_DATE - INTERVAL '35 days'))
+          WHERE (payment_status = 'paid')
+          OR (registration_id IS NULL AND EXISTS(SELECT 1 FROM legacy_payments lp WHERE lp.student_id=active_students.id AND lp.paid_at >= CURRENT_DATE - INTERVAL '35 days'))
         )::int AS paid,
         COUNT(*) FILTER (
-          WHERE (r.payment_status IN ('unpaid','pending') AND r.is_waitlist=false)
-          OR (s.registration_id IS NULL AND (
-               NOT EXISTS(SELECT 1 FROM legacy_payments lp2 WHERE lp2.student_id=s.id)
-               OR (SELECT MAX(lp3.paid_at) FROM legacy_payments lp3 WHERE lp3.student_id=s.id) < CURRENT_DATE - INTERVAL '35 days'
-             ))
-        )::int AS pending
-      FROM students s
-      LEFT JOIN registrations r ON r.id = s.registration_id
-      WHERE s.is_active = true
+          WHERE (COALESCE(is_waitlist, false) = false) AND (
+            (payment_status IN ('unpaid','pending'))
+            OR (registration_id IS NULL AND (
+                 NOT EXISTS(SELECT 1 FROM legacy_payments lp2 WHERE lp2.student_id=active_students.id)
+                 OR (SELECT MAX(lp3.paid_at) FROM legacy_payments lp3 WHERE lp3.student_id=active_students.id) < CURRENT_DATE - INTERVAL '35 days'
+               ))
+          )
+        )::int AS pending,
+        COUNT(*) FILTER (WHERE is_waitlist = true)::int AS waitlist
+      FROM active_students
     `);
 
     // 2) Legacy — ilu kursantów jest realnie przypisanych do grup (aktywny wpis w student_groups)
@@ -133,7 +134,7 @@ module.exports = async (req, res) => {
       total: payStats.total_active,
       paid: payStats.paid || 0,
       pending: payStats.pending || 0,
-      waitlist: regTotals.waitlist || 0,
+      waitlist: payStats.waitlist || 0,
       byLoc,
       byGroup,
       recent
