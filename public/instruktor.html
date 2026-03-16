@@ -1747,10 +1747,19 @@
     function todayISO() { return toISO(new Date()); }
     function normISO(v) { return String(v || '').substring(0, 10); } // normalize any date value to YYYY-MM-DD
     function daysAgo(v) { if (!v) return null; return Math.floor((Date.now() - new Date(normISO(v))) / 86400000); }
+    // Jeśli paid_until ustawione — użyj go; jeśli nie — oblicz z last_payment+35 dni
+    function calcPaidUntil(paid_until, last_payment) {
+      if (paid_until) return normISO(paid_until);
+      if (!last_payment) return null;
+      const d = new Date(normISO(last_payment));
+      d.setDate(d.getDate() + 35);
+      return d.toISOString().slice(0, 10);
+    }
     // Zwraca true=opłacony, false=nieopłacony, null=brak danych
-    function paidStatus(paid_until) {
-      if (!paid_until) return null;
-      return normISO(paid_until) >= todayISO();
+    function paidStatus(paid_until, last_payment) {
+      const pu = calcPaidUntil(paid_until, last_payment);
+      if (!pu) return null;
+      return pu >= todayISO();
     }
     // Ostatni dzień miesiąca za N miesięcy od dziś
     function endOfMonthPlus(months) {
@@ -2057,9 +2066,10 @@
     }
 
     function studRowHTML(s) {
-      const paid = paidStatus(s.paid_until);
+      const paid = paidStatus(s.paid_until, s.last_payment);
       const payClass = paid === true ? 'bx bx-g' : paid === false ? 'bx bx-r' : '';
-      const payLabel = s.paid_until ? fd(s.paid_until) : '—';
+      const puDate = calcPaidUntil(s.paid_until, s.last_payment);
+      const payLabel = puDate ? fd(puDate) : '—';
       const active = s.is_active !== false;
       const canEdit = S.perms.can_accept_payment;
       const paidCell = payClass
@@ -2134,7 +2144,7 @@
       <div class="ib">
         <h4>Podsumowanie</h4>
         <div class="ir"><span class="ir-l">Grupy</span><span class="ir-v">${grps || '—'}</span></div>
-        <div class="ir"><span class="ir-l">Opłacony do</span><span class="ir-v">${(() => { const cg = (s.groups || []).find(x => x.id == S.grpId); return cg?.paid_until ? fd(cg.paid_until) : '—'; })()}</span></div>
+        <div class="ir"><span class="ir-l">Opłacony do</span><span class="ir-v">${(() => { const cg = (s.groups || []).find(x => x.id == S.grpId); const pu = calcPaidUntil(cg?.paid_until, pays[0]?.paid_at); return pu ? fd(pu) : '—'; })()}</span></div>
         ${S.perms.can_assign_instructors ? `<div class="ir"><span class="ir-l">Ostatnia wpłata</span><span class="ir-v">${pays[0] ? fd(pays[0].paid_at) : '—'}</span></div>` : ''}
         <div class="ir"><span class="ir-l">Obecności w sezonie</span><span class="ir-v">${attPres} / ${att.length}</span></div>
       </div>
@@ -2499,12 +2509,13 @@
       </div>
       <div class="att-list" id="attlist">
         ${st.map(s => {
-          const paid = paidStatus(s.paid_until);
+          const paid = paidStatus(s.paid_until, s.last_payment);
+          const puDate = calcPaidUntil(s.paid_until, s.last_payment);
 
           // Widoczna, uwypuklona data opłaty
           const payBadge = S.perms.can_see_payments ? `
             <div style="font-size:10px;font-weight:700;letter-spacing:0.02em;color:var(--dim);margin-top:2px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
-              Opłacony do: <span class="badge ${paid === false ? 'br' : paid === true ? 'bg' : ''}" style="padding:4px 8px;border-radius:6px;font-size:12px;font-weight:900;${paid === false ? 'box-shadow:0 2px 8px rgba(196,32,0,0.3)' : paid === true ? 'box-shadow:0 2px 8px rgba(46,204,113,0.2)' : 'color:var(--dim)'}">${s.paid_until ? fd(s.paid_until) : 'Brak danych'}</span>
+              Opłacony do: <span class="badge ${paid === false ? 'br' : paid === true ? 'bg' : ''}" style="padding:4px 8px;border-radius:6px;font-size:12px;font-weight:900;${paid === false ? 'box-shadow:0 2px 8px rgba(196,32,0,0.3)' : paid === true ? 'box-shadow:0 2px 8px rgba(46,204,113,0.2)' : 'color:var(--dim)'}">${puDate ? fd(puDate) : 'Brak danych'}</span>
               ${S.perms.can_accept_payment ? `<button class="btn btn-xs" style="padding:2px 7px;font-size:10px;border:1px solid var(--line2);color:var(--dim);background:var(--panel2)" onclick="event.stopPropagation();moPaidUntil(${s.student_id},${sess.group_id},'${s.paid_until || ''}')">✎</button>` : ''}
             </div>` : '';
 
