@@ -555,7 +555,7 @@ module.exports = async (req, res) => {
         const { rows: [s] } = await pool.query(`
           SELECT s.id, s.first_name, s.last_name, s.email, s.phone, s.birth_year, s.is_active,
             COALESCE(json_agg(
-              json_build_object('id',g.id,'name',g.name,'city',l.city,'active',sg.active)
+              json_build_object('id',g.id,'name',g.name,'city',l.city,'active',sg.active,'paid_until',sg.paid_until)
               ORDER BY l.city, g.name
             ) FILTER (WHERE g.id IS NOT NULL), '[]') AS groups
           FROM students s
