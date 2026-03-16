@@ -73,11 +73,11 @@
     },
     {
       "source": "/api/admin-api/sessions/:id",
-      "destination": "/api/admin-api/sessions?id=:id"
+      "destination": "/api/admin-api/resource?type=sessions&id=:id"
     },
     {
       "source": "/api/admin-api/sessions",
-      "destination": "/api/admin-api/sessions"
+      "destination": "/api/admin-api/resource?type=sessions"
     },
     {
       "source": "/api/admin-api/schedules/:id",
