@@ -30,7 +30,7 @@ module.exports = async (req, res) => {
           LEFT JOIN instructor_groups ig ON ig.instructor_id = i.id
           LEFT JOIN groups g ON g.id = ig.group_id
           GROUP BY i.id
-          ORDER BY i.last_name, i.first_name
+          ORDER BY i.active DESC, i.last_name, i.first_name
         `);
         return res.status(200).json({ rows });
       } catch(e) { return res.status(500).json({ error: e.message }); }
@@ -106,7 +106,16 @@ module.exports = async (req, res) => {
 
     if (req.method === 'DELETE' && id) {
       try {
-        await pool.query(`UPDATE instructors SET active=false WHERE id=$1`, [id]);
+        if (req.query.hard === 'true') {
+          // Twarde usunięcie: usuń w kolejności zależności
+          await pool.query(`DELETE FROM instructor_events WHERE instructor_id=$1`, [id]);
+          await pool.query(`DELETE FROM instructor_students WHERE instructor_id=$1`, [id]);
+          await pool.query(`DELETE FROM instructor_permissions WHERE instructor_id=$1`, [id]);
+          await pool.query(`DELETE FROM instructor_groups WHERE instructor_id=$1`, [id]);
+          await pool.query(`DELETE FROM instructors WHERE id=$1`, [id]);
+        } else {
+          await pool.query(`UPDATE instructors SET active=false WHERE id=$1`, [id]);
+        }
         return res.status(200).json({ success: true });
       } catch(e) { return res.status(500).json({ error: e.message }); }
     }
@@ -129,7 +138,8 @@ module.exports = async (req, res) => {
     if (req.method === 'PATCH' && id) {
       const b = req.body || {};
       const allowed = ['can_see_groups','can_see_student_count','can_see_payments',
-                       'can_accept_payment','can_add_student','can_mark_attendance'];
+                       'can_accept_payment','can_add_student','can_mark_attendance',
+                       'can_assign_instructors'];
       try {
         const set = [], vals = []; let pi = 1;
         for (const k of allowed) if (k in b) { set.push(`${k}=$${pi++}`); vals.push(b[k]); }

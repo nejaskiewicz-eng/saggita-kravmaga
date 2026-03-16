@@ -180,6 +180,7 @@ module.exports = async (req, res) => {
 
         let q = `
           SELECT s.id, s.first_name, s.last_name, s.email, s.phone, s.birth_year, s.is_active,
+            sg.paid_until,
             (SELECT MAX(lp.paid_at) FROM legacy_payments lp WHERE lp.student_id=s.id AND lp.paid_at>=$2)::date AS last_payment,
             (SELECT COALESCE(SUM(lp.amount),0) FROM legacy_payments lp WHERE lp.student_id=s.id AND lp.paid_at>=$2)::numeric AS paid_season,
             (SELECT COUNT(*) FROM attendances a
@@ -195,10 +196,12 @@ module.exports = async (req, res) => {
         // Filtruj do przypisanych kursantów jeśli lista jest ustawiona
         const filtered = hasAssigned ? rows.filter(r => assignedIds.has(r.id)) : rows;
 
-        // Ukryj płatności jeśli brak uprawnienia
-        if (!perm.can_see_payments) {
-          filtered.forEach(r => { r.last_payment = null; r.paid_season = null; });
-        }
+        // paid_season (suma sezonu) zawsze ukryta dla instruktora
+        // Ukryj też last_payment jeśli brak uprawnienia
+        filtered.forEach(r => {
+          r.paid_season = null;
+          if (!perm.can_see_payments) r.last_payment = null;
+        });
 
         return res.status(200).json({ rows: filtered, permissions: perm });
       } catch (e) { console.error('[group-students]', e); return res.status(500).json({ error: e.message }); }
@@ -225,6 +228,21 @@ module.exports = async (req, res) => {
           [P.sub, student_id, group_id || null, amount, note || null,
           JSON.stringify({ instructor_name: `${inst?.first_name} ${inst?.last_name}`, student_name: `${stud?.first_name} ${stud?.last_name}` })]);
         return res.status(201).json(pay);
+      } catch (e) { return res.status(500).json({ error: e.message }); }
+    }
+
+    // PATCH /api/instructor/student-groups/paid-until  — ustawienie daty opłacony do
+    if (route === 'paid-until' && req.method === 'PATCH') {
+      try {
+        const { rows: [perms] } = await pool.query(
+          `SELECT can_accept_payment FROM instructor_permissions WHERE instructor_id=$1`, [P.sub]);
+        if (!perms?.can_accept_payment) return res.status(403).json({ error: 'Brak uprawnień do ustawienia opłaty.' });
+        const { student_id, group_id, paid_until } = req.body || {};
+        if (!student_id || !group_id) return res.status(400).json({ error: 'student_id i group_id są wymagane.' });
+        await pool.query(
+          `UPDATE student_groups SET paid_until=$1 WHERE student_id=$2 AND group_id=$3`,
+          [paid_until || null, student_id, group_id]);
+        return res.status(200).json({ ok: true });
       } catch (e) { return res.status(500).json({ error: e.message }); }
     }
 
@@ -259,6 +277,18 @@ module.exports = async (req, res) => {
         `, hasAssigned ? [SEASON, P.sub, assignedIds] : [SEASON, P.sub]);
         return res.status(200).json({ rows });
       } catch (e) { console.error('[payments]', e); return res.status(500).json({ error: e.message }); }
+    }
+
+    // GET /api/instructor/instructors-list — lista instruktorów do przypisywania sesji
+    if (route === 'instructors-list' && req.method === 'GET') {
+      try {
+        const { rows: [perms] } = await pool.query(
+          `SELECT can_assign_instructors FROM instructor_permissions WHERE instructor_id=$1`, [P.sub]);
+        if (!perms?.can_assign_instructors) return res.status(403).json({ error: 'Brak uprawnień.' });
+        const { rows } = await pool.query(
+          `SELECT id, first_name, last_name FROM instructors WHERE active=true ORDER BY last_name, first_name`);
+        return res.status(200).json({ rows });
+      } catch (e) { return res.status(500).json({ error: e.message }); }
     }
 
     return res.status(400).json({ error: 'Nieznana trasa panel.' });
@@ -313,6 +343,8 @@ module.exports = async (req, res) => {
           const { group_id, from, to } = req.query;
           let q = `
             SELECT ts.id AS session_id, TO_CHAR(ts.session_date, 'YYYY-MM-DD') AS session_date, ts.group_id,
+              ts.instructor_id,
+              i2.first_name || ' ' || i2.last_name AS session_instructor_name,
               g.name AS group_name, l.city AS location_city, l.name AS location_name,
               COUNT(a.id) FILTER (WHERE a.present=true)::int AS present_count,
               COUNT(a.id)::int AS total_marked
@@ -320,6 +352,7 @@ module.exports = async (req, res) => {
             JOIN groups g ON g.id=ts.group_id
             LEFT JOIN locations l ON l.id=g.location_id
             LEFT JOIN attendances a ON a.session_id=ts.id
+            LEFT JOIN instructors i2 ON i2.id=ts.instructor_id
             WHERE ts.session_date >= $1
               AND ts.group_id IN (
                 SELECT group_id FROM instructor_groups WHERE instructor_id=$2
@@ -328,7 +361,7 @@ module.exports = async (req, res) => {
           const params = [from || SEASON, P.sub];
           if (to) { params.push(to); q += ` AND ts.session_date <= $${params.length}`; }
           if (group_id) { params.push(group_id); q += ` AND ts.group_id = $${params.length}`; }
-          q += ` GROUP BY ts.id, g.name, l.city, l.name ORDER BY ts.session_date DESC LIMIT 400`;
+          q += ` GROUP BY ts.id, i2.first_name, i2.last_name, g.name, l.city, l.name ORDER BY ts.session_date DESC LIMIT 400`;
           const { rows } = await pool.query(q, params);
           return res.status(200).json({ rows });
         } catch (e) { console.error('[sessions GET]', e); return res.status(500).json({ error: e.message }); }
@@ -369,6 +402,27 @@ module.exports = async (req, res) => {
         } catch (e) { console.error('[session DELETE]', e); return res.status(500).json({ error: e.message }); }
       }
 
+      // PATCH /api/instructor/sessions/:id  — przypisanie instruktora do sesji
+      if (req.method === 'PATCH' && id) {
+        try {
+          const { rows: [perms] } = await pool.query(
+            `SELECT can_assign_instructors FROM instructor_permissions WHERE instructor_id=$1`, [P.sub]);
+          if (!perms?.can_assign_instructors)
+            return res.status(403).json({ error: 'Brak uprawnienia przypisywania instruktora.' });
+          // Sprawdź dostęp do sesji
+          const { rows: [chk] } = await pool.query(`
+            SELECT 1 FROM training_sessions ts
+            JOIN instructor_groups ig ON ig.group_id=ts.group_id
+            WHERE ts.id=$1 AND ig.instructor_id=$2`, [id, P.sub]);
+          if (!chk) return res.status(403).json({ error: 'Brak dostępu do tej sesji.' });
+          const { instructor_id } = req.body || {};
+          await pool.query(
+            `UPDATE training_sessions SET instructor_id=$1 WHERE id=$2`,
+            [instructor_id || null, id]);
+          return res.status(200).json({ ok: true });
+        } catch (e) { console.error('[session PATCH]', e); return res.status(500).json({ error: e.message }); }
+      }
+
       return res.status(405).end();
     }
 
@@ -382,6 +436,7 @@ module.exports = async (req, res) => {
         const { rows } = await pool.query(`
           SELECT s.id AS student_id, s.first_name, s.last_name,
             COALESCE(a.present,false) AS present,
+            sg.paid_until,
             (SELECT MAX(lp.paid_at) FROM legacy_payments lp WHERE lp.student_id=s.id AND lp.paid_at>=$2)::date AS last_payment
           FROM student_groups sg
           JOIN students s ON s.id=sg.student_id AND s.is_active=true

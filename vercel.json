@@ -72,6 +72,14 @@
       "destination": "/api/admin-api/groups"
     },
     {
+      "source": "/api/admin-api/sessions/:id",
+      "destination": "/api/admin-api/sessions?id=:id"
+    },
+    {
+      "source": "/api/admin-api/sessions",
+      "destination": "/api/admin-api/sessions"
+    },
+    {
       "source": "/api/admin-api/schedules/:id",
       "destination": "/api/admin-api/resource?type=schedules&id=:id"
     },
@@ -176,8 +184,20 @@
       "destination": "/api/saggita?_module=instructor-panel&_route=permissions"
     },
     {
+      "source": "/api/instructor/student-groups/paid-until",
+      "destination": "/api/saggita?_module=instructor-panel&_route=paid-until"
+    },
+    {
+      "source": "/api/instructor/instructors-list",
+      "destination": "/api/saggita?_module=instructor-panel&_route=instructors-list"
+    },
+    {
       "source": "/api/instructor/sessions/:id/attendance",
       "destination": "/api/saggita?_module=instructor-attendance&_route=attendance&id=:id"
+    },
+    {
+      "source": "/api/instructor/sessions/:id",
+      "destination": "/api/saggita?_module=instructor-attendance&_route=sessions&id=:id"
     },
     {
       "source": "/api/instructor/sessions",

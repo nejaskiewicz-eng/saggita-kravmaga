@@ -1746,6 +1746,18 @@
     function todayISO() { return toISO(new Date()); }
     function normISO(v) { return String(v || '').substring(0, 10); } // normalize any date value to YYYY-MM-DD
     function daysAgo(v) { if (!v) return null; return Math.floor((Date.now() - new Date(normISO(v))) / 86400000); }
+    // Zwraca true=opłacony, false=nieopłacony, null=brak danych
+    function paidStatus(paid_until, last_payment) {
+      if (paid_until) return normISO(paid_until) >= todayISO();
+      if (!last_payment) return null;
+      return daysAgo(last_payment) <= 35;
+    }
+    // Ostatni dzień miesiąca za N miesięcy od dziś
+    function endOfMonthPlus(months) {
+      const d = new Date();
+      d.setMonth(d.getMonth() + months + 1, 0);
+      return toISO(d);
+    }
     const MONTHS = ['Styczeń', 'Luty', 'Marzec', 'Kwiecień', 'Maj', 'Czerwiec', 'Lipiec', 'Sierpień', 'Wrzesień', 'Październik', 'Listopad', 'Grudzień'];
     const DAYS_SHORT = ['Pon', 'Wt', 'Śr', 'Czw', 'Pt', 'Sob', 'Ndz'];
     const DAYS_FULL = ['Poniedziałek', 'Wtorek', 'Środa', 'Czwartek', 'Piątek', 'Sobota', 'Niedziela'];
@@ -2031,9 +2043,8 @@
         <th>Nazwisko, Imię</th>
         <th>Ur.</th>
         <th>Telefon</th>
-        <th>Ostatnia wpłata</th>
+        <th>Opłacony do</th>
         <th>Obecności</th>
-        <th>Sezon (zł)</th>
         <th></th>
       </tr></thead>
       <tbody id="stb">${st.map(studRowHTML).join('')}</tbody>
@@ -2041,10 +2052,16 @@
     }
 
     function studRowHTML(s) {
-      const days = daysAgo(s.last_payment);
-      const payClass = days === null ? '' : (days > 35 ? 'bx bx-r' : 'bx bx-g');
-      const payLabel = s.last_payment ? fd(s.last_payment) : '—';
+      const paid = paidStatus(s.paid_until, s.last_payment);
+      const payClass = paid === true ? 'bx bx-g' : paid === false ? 'bx bx-r' : '';
+      const payLabel = s.paid_until ? fd(s.paid_until) : (s.last_payment ? fd(s.last_payment) + '*' : '—');
       const active = s.is_active !== false;
+      const canEdit = S.perms.can_accept_payment;
+      const paidCell = payClass
+        ? (canEdit
+            ? `<span class="${payClass}" style="cursor:pointer" onclick="moPaidUntil(${s.id},${S.grpId},'${s.paid_until || ''}')" title="Kliknij aby zmienić">${payLabel}</span>`
+            : `<span class="${payClass}">${payLabel}</span>`)
+        : payLabel;
       return `<tr>
     <td data-label="Nazwisko, Imię" class="td-main">
       <a href="#" onclick="event.preventDefault();openStud(${s.id})" style="color:var(--text);font-weight:700">${esc(s.last_name)}, ${esc(s.first_name)}</a>
@@ -2052,9 +2069,8 @@
     </td>
     <td data-label="Ur."class="td-dim">${s.birth_year || '—'}</td>
     <td data-label="Telefon" class="td-dim">${s.phone ? esc(s.phone) : '—'}</td>
-    <td data-label="Ost. wpłata">${s.last_payment ? `<span class="${payClass}">${payLabel}</span>` : payLabel}</td>
+    <td data-label="Opłacony do">${paidCell}</td>
     <td data-label="Obecności">${s.att_season || 0}</td>
-    <td data-label="Sezon (zł)">${s.paid_season ? Number(s.paid_season).toFixed(0) + ' zł' : '—'}</td>
     <td><button class="btn btn-o btn-xs" onclick="openStud(${s.id})">Kartoteka →</button></td>
   </tr>`;
     }
@@ -2113,7 +2129,6 @@
       <div class="ib">
         <h4>Podsumowanie</h4>
         <div class="ir"><span class="ir-l">Grupy</span><span class="ir-v">${grps || '—'}</span></div>
-        <div class="ir"><span class="ir-l">Wpłacono (sezon)</span><span class="ir-v">${totalPaid.toFixed(0)} zł</span></div>
         <div class="ir"><span class="ir-l">Ostatnia wpłata</span><span class="ir-v">${pays[0] ? fd(pays[0].paid_at) : '—'}</span></div>
         <div class="ir"><span class="ir-l">Obecności w sezonie</span><span class="ir-v">${attPres} / ${att.length}</span></div>
       </div>
@@ -2301,6 +2316,12 @@
         c.innerHTML = `<div class="cgc-d">${i}</div>`;
         grid.appendChild(c);
       }
+
+      // Auto-scroll do dziś jeśli widoczny w bieżącym miesiącu
+      const todayCell = grid.querySelector('.cgc.today');
+      if (todayCell) {
+        setTimeout(() => todayCell.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50);
+      }
     }
 
     async function createSess(gid, date) {
@@ -2366,7 +2387,9 @@
     ${S.sessions.length === 0 ? '<div class="empty">Brak sesji dla wybranych filtrów.</div>' : `
     <div class="tw"><table>
       <thead><tr>
-        <th>Data</th><th>Dzień</th><th>Grupa</th><th>Lokalizacja</th><th>Oznaczonych</th><th>Obecnych</th><th></th>
+        <th>Data</th><th>Dzień</th><th>Grupa</th><th>Lokalizacja</th>
+        ${S.perms.can_assign_instructors ? '<th>Prowadzący</th>' : ''}
+        <th>Oznaczonych</th><th>Obecnych</th><th></th>
       </tr></thead>
       <tbody>
         ${S.sessions.map(s => {
@@ -2380,6 +2403,7 @@
             <td data-label="Dzień" class="td-dim">${dayLbl}</td>
             <td data-label="Grupa">${esc(s.group_name || '')}</td>
             <td data-label="Lokalizacja" class="td-dim">${esc(s.location_city || '')}${s.location_name ? ' / ' + esc(s.location_name) : ''}</td>
+            ${S.perms.can_assign_instructors ? `<td data-label="Prowadzący" class="td-dim">${s.session_instructor_name ? esc(s.session_instructor_name) : '—'}</td>` : ''}
             <td data-label="Oznaczonych">${s.total_marked || 0}</td>
             <td data-label="Obecnych">${s.total_marked > 0 ? `<span class="bx ${s.present_count > 0 ? 'bx-g' : 'bx-r'}">${s.present_count || 0} (${pct}%)</span>` : '<span class="bx bx-d">—</span>'}</td>
             <td>
@@ -2417,7 +2441,10 @@
       $('pb').innerHTML = '<div class="loading">Ładowanie listy...</div>';
 
       try {
-        const d = await api(`/api/instructor/sessions/${sess.session_id}/attendance?group_id=${sess.group_id}`);
+        const [d, instListData] = await Promise.all([
+          api(`/api/instructor/sessions/${sess.session_id}/attendance?group_id=${sess.group_id}`),
+          S.perms.can_assign_instructors ? api('/api/instructor/instructors-list').catch(() => ({ rows: [] })) : Promise.resolve({ rows: [] })
+        ]);
         const st = (d.rows || []).sort((a, b) => {
           // Sortowanie alfabetyczne po nazwisku, potem po imieniu
           const cmp = (a.last_name || '').localeCompare(b.last_name || '', 'pl');
@@ -2431,12 +2458,28 @@
         // lub kliknięciu "Brak kursantów" (gdy lista pusta)
         const attRequired = S.perms.can_mark_attendance && st.length > 0;
 
+        // Sekcja przypisania instruktora (dla can_assign_instructors)
+        const instOpts = (instListData.rows || []).map(i =>
+          `<option value="${i.id}" ${sess.instructor_id == i.id ? 'selected' : ''}>${esc(i.first_name)} ${esc(i.last_name)}</option>`).join('');
+        const instAssignSection = S.perms.can_assign_instructors ? `
+        <div class="ib" style="margin-bottom:14px">
+          <div class="ir">
+            <span class="ir-l" style="font-size:12px">Prowadzący sesję</span>
+            <span class="ir-v">
+              <select id="sess-inst-sel" onchange="assignSessInstructor(${sess.session_id})" style="padding:5px 8px;border-radius:5px;background:var(--panel2);border:1px solid var(--line2);color:var(--text);font-size:12px">
+                <option value="">— brak przypisania —</option>${instOpts}
+              </select>
+            </span>
+          </div>
+        </div>` : '';
+
         $('pb').innerHTML = `
       <div class="bc">
         <button class="btn btn-ghost btn-sm" onclick="tryLeaveSess()" style="margin-right:8px;padding:4px 8px">← Wróć</button>
         <a onclick="tryLeaveSess()" style="cursor:pointer">Sesje</a><span class="bc-sep">›</span>
         <span>${esc(sess.group_name || '')} — ${dateStr}</span>
       </div>
+      ${instAssignSection}
       <div class="stats" style="margin-bottom:14px">
         <div class="sc g"><div class="sc-l">Obecnych</div><div class="sc-v" id="att-pres-cnt">${pres}</div></div>
         <div class="sc"><div class="sc-l">Na liście</div><div class="sc-v">${st.length}</div></div>
@@ -2450,20 +2493,21 @@
       </div>
       <div class="att-list" id="attlist">
         ${st.map(s => {
-          const days = daysAgo(s.last_payment);
+          const paid = paidStatus(s.paid_until, s.last_payment);
 
-          // Widoczna, uwypuklona data wpłaty (bez funkcji przycisku)
+          // Widoczna, uwypuklona data opłaty
           const payBadge = S.perms.can_see_payments ? `
-            <div style="font-size:10px;font-weight:700;letter-spacing:0.02em;color:var(--dim);margin-top:2px;display:flex;align-items:center;gap:6px;">
-              Wpłata: <span class="badge ${days > 35 ? 'br' : 'bg'}" style="padding:4px 8px;border-radius:6px;font-size:12px;font-weight:900;box-shadow:0 2px 8px ${days > 35 ? 'rgba(196,32,0,0.3)' : 'rgba(46,204,113,0.2)'}">${s.last_payment ? fd(s.last_payment) : 'Brak danych'}</span>
+            <div style="font-size:10px;font-weight:700;letter-spacing:0.02em;color:var(--dim);margin-top:2px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+              Opłacony do: <span class="badge ${paid === false ? 'br' : 'bg'}" style="padding:4px 8px;border-radius:6px;font-size:12px;font-weight:900;box-shadow:0 2px 8px ${paid === false ? 'rgba(196,32,0,0.3)' : 'rgba(46,204,113,0.2)'}">${s.paid_until ? fd(s.paid_until) : (s.last_payment ? fd(s.last_payment) + ' (35d)' : 'Brak danych')}</span>
+              ${S.perms.can_accept_payment ? `<button class="btn btn-xs" style="padding:2px 7px;font-size:10px;border:1px solid var(--line2);color:var(--dim);background:var(--panel2)" onclick="event.stopPropagation();moPaidUntil(${s.student_id},${sess.group_id},'${s.paid_until || ''}')">✎</button>` : ''}
             </div>` : '';
 
           const profBtn = `<button class="btn btn-o" onclick="event.stopPropagation();openStud(${s.student_id})" style="padding:6px 10px;font-size:10px;flex:1;max-width:100px;text-align:center;">Kartoteka</button>`;
 
           const addPayBtn = S.perms.can_accept_payment ? `<button class="btn" style="padding:6px 10px;font-size:10px;background:rgba(46,204,113,.15);border:1px solid rgba(46,204,113,.4);color:#2ecc71;flex:1;max-width:100px;text-align:center;" onclick="event.stopPropagation();moAcceptPayment(${s.student_id},'${esc(s.first_name)} ${esc(s.last_name)}',${sess.group_id})">+ Wpłata</button>` : '';
 
-          const isPaid = days !== null && days <= 35;
-          const nameColor = isPaid ? 'var(--text)' : 'var(--accent)';
+          const isPaid = paid === true;
+          const nameColor = isPaid ? 'var(--text)' : (paid === false ? 'var(--accent)' : 'var(--dim)');
 
           return `
           <div class="att-row ${s.present ? 'present' : 'absent'}" id="atr-${s.student_id}" onclick="toggleAttRow(event, ${sess.session_id}, ${s.student_id})" style="padding:10px 12px;margin-bottom:8px">
@@ -2640,6 +2684,45 @@
       } catch (e) { errEl.textContent = e.message; errEl.classList.add('show'); }
     }
 
+    // ── PRZYPISZ INSTRUKTORA DO SESJI ────────────────────────────
+    async function assignSessInstructor(sessId) {
+      const instId = document.getElementById('sess-inst-sel')?.value || null;
+      try {
+        await api(`/api/instructor/sessions/${sessId}`, 'PATCH', { instructor_id: instId ? parseInt(instId) : null });
+        if (S.sessData) S.sessData.instructor_id = instId ? parseInt(instId) : null;
+      } catch (e) { alert('Błąd przypisania instruktora: ' + e.message); }
+    }
+
+    // ── USTAW OPŁACONY DO ─────────────────────────────────────────
+    function moPaidUntil(studentId, groupId, currentPaidUntil) {
+      showMo('OPŁACONY DO', `
+        <div style="font-size:12px;color:var(--dim);margin-bottom:12px">Ustaw do kiedy kursant jest opłacony w tej grupie.</div>
+        <div class="ff">
+          <label>Data ważności (koniec miesiąca)</label>
+          <input type="date" id="pu-date" value="${currentPaidUntil || ''}">
+        </div>
+        <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+          <button class="btn btn-o btn-sm" onclick="document.getElementById('pu-date').value='${endOfMonthPlus(3)}'">+3 miesiące</button>
+          <button class="btn btn-o btn-sm" onclick="document.getElementById('pu-date').value='${endOfMonthPlus(6)}'">+6 miesięcy</button>
+          <button class="btn btn-o btn-sm" onclick="document.getElementById('pu-date').value='${endOfMonthPlus(12)}'">+12 miesięcy</button>
+          <button class="btn btn-o btn-sm" onclick="document.getElementById('pu-date').value=''">Wyczyść</button>
+        </div>
+        <div id="pu-err" class="lerr" style="display:none"></div>`,
+        `<button class="btn btn-o" onclick="closeMo()">Anuluj</button>
+         <button class="btn btn-g" onclick="doPaidUntil(${studentId},${groupId})">Zapisz</button>`);
+    }
+    async function doPaidUntil(studentId, groupId) {
+      const dateVal = document.getElementById('pu-date')?.value || null;
+      const errEl = document.getElementById('pu-err');
+      try {
+        await api('/api/instructor/student-groups/paid-until', 'PATCH',
+          { student_id: studentId, group_id: groupId, paid_until: dateVal || null });
+        closeMo();
+        if (S.sessId) renderAtt();
+        else openGrp(S.grpId);
+      } catch (e) { errEl.textContent = e.message; errEl.style.display = 'block'; }
+    }
+
     function moAddStud(gid) {
       const opts = S.groups.map(g => `<option value="${g.id}" ${g.id == gid ? 'selected' : ''}>${esc(g.location_city)} — ${esc(g.name)}</option>`).join('');
       showMo('DODAJ KURSANTA', `
@@ -2649,7 +2732,7 @@
     </div>
     <div class="ff2">
       <div class="ff"><label>Telefon</label><input id="a-ph"></div>
-      <div class="ff"><label>E-mail</label><input id="a-em" type="email"></div>
+      <div class="ff"><label>E-mail</label><input id="a-em" type="text" inputmode="email" autocomplete="email"></div>
     </div>
     <div class="ff2">
       <div class="ff"><label>Rok urodzenia</label><input id="a-by" type="number" min="1950" max="2020"></div>

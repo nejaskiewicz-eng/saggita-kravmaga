@@ -1580,6 +1580,7 @@
         <a data-view="locations"><span class="nd"></span> Lokalizacje</a>
         <a data-view="plans"><span class="nd"></span> Cennik</a>
         <a data-view="instructors"><span class="nd"></span> Instruktorzy</a>
+        <a data-view="admin-sessions"><span class="nd"></span> Sesje treningowe</a>
         <a data-view="reports"><span class="nd"></span> Raporty</a>
         <div class="sl">Export</div>
         <a id="btn-export"><span class="nd"></span> Pobierz CSV</a>
@@ -1815,6 +1816,7 @@
         'unified-students': 'Baza kursantów',
         'legacy-history': 'Archiwum CSV',
         'instructors': 'Instruktorzy',
+        'admin-sessions': 'Sesje treningowe',
         'reports': 'Raporty'
       };
       document.getElementById('page-title').textContent = titles[view] || view;
@@ -1832,6 +1834,7 @@
         'unified-students': loadUnifiedStudents,
         'legacy-history': loadHistory,
         'instructors': loadInstructors,
+        'admin-sessions': loadAdminSessions,
         'reports': loadReports
       };
       (fns[view] || (() => document.getElementById('content').innerHTML = ''))();
@@ -3911,6 +3914,7 @@
           <td><div class="tda">
             <button class="bi" onclick="openInstructorModal(${i.id})">Edytuj</button>
             <button class="bi" onclick="toggleInstructor(${i.id},${!i.active})">${i.active ? 'Dezaktywuj' : 'Aktywuj'}</button>
+            ${!i.active ? `<button class="bi" style="color:var(--red-l)" onclick="deleteInstructor(${i.id},'${i.first_name} ${i.last_name}')">Usuń</button>` : ''}
           </div></td>
         </tr>`).join('')}
       </tbody>
@@ -3956,6 +3960,7 @@
         ${pc('can_accept_payment', 'Może przyjmować płatności')}
         ${pc('can_add_student', 'Może dodawać kursantów')}
         ${pc('can_mark_attendance', 'Może oznaczać obecność')}
+        ${pc('can_assign_instructors', 'Może przypisywać instruktorów do sesji')}
       </div>
     </div>
     <div id="ni-err" style="color:var(--red-l);font-size:12px;margin-top:8px;display:none"></div>`,
@@ -3972,7 +3977,7 @@
       if (!fn || !ln || !un || !pw) { errEl.textContent = 'Imię, nazwisko, login i hasło są wymagane.'; errEl.style.display = 'block'; return; }
       if (pw.length < 8) { errEl.textContent = 'Hasło musi mieć co najmniej 8 znaków.'; errEl.style.display = 'block'; return; }
       const groupIds = getCheckedGroupIds('ni');
-      const permKeys = ['can_see_groups', 'can_see_student_count', 'can_see_payments', 'can_accept_payment', 'can_add_student', 'can_mark_attendance'];
+      const permKeys = ['can_see_groups', 'can_see_student_count', 'can_see_payments', 'can_accept_payment', 'can_add_student', 'can_mark_attendance', 'can_assign_instructors'];
       try {
         const inst = await aF('/instructors', {
           method: 'POST', body: JSON.stringify({
@@ -4070,6 +4075,7 @@
         ${pc('can_accept_payment', 'Może przyjmować płatności')}
         ${pc('can_add_student', 'Może dodawać kursantów')}
         ${pc('can_mark_attendance', 'Może oznaczać obecność')}
+        ${pc('can_assign_instructors', 'Może przypisywać instruktorów do sesji')}
       </div>
     </div>
 
@@ -4100,7 +4106,7 @@
         await aF(`/instructors/${id}`, { method: 'PATCH', body: JSON.stringify(data) });
 
         // Zapisz uprawnienia
-        const permKeys = ['can_see_groups', 'can_see_student_count', 'can_see_payments', 'can_accept_payment', 'can_add_student', 'can_mark_attendance'];
+        const permKeys = ['can_see_groups', 'can_see_student_count', 'can_see_payments', 'can_accept_payment', 'can_add_student', 'can_mark_attendance', 'can_assign_instructors'];
         const permsData = {};
         permKeys.forEach(k => {
           const el = document.getElementById('perm-' + k);
@@ -4125,6 +4131,159 @@
         toast(active ? 'Instruktor aktywowany' : 'Instruktor dezaktywowany');
         fetchInstructors();
       } catch (e) { toast('Błąd: ' + e.message, 'error'); }
+    }
+
+    async function deleteInstructor(id, name) {
+      if (!confirm(`Czy na pewno chcesz trwale usunąć instruktora "${name}"?\n\nTej operacji nie można cofnąć. Wszystkie dane instruktora zostaną usunięte.`)) return;
+      try {
+        await aF(`/instructors/${id}?hard=true`, { method: 'DELETE' });
+        toast('Instruktor usunięty');
+        fetchInstructors();
+      } catch (e) { toast('Błąd: ' + e.message, 'error'); }
+    }
+
+    // ══════════════════════════════════════════════════════════════════
+    // SESJE TRENINGOWE (admin)
+
+    const AS = { y: new Date().getFullYear(), m: new Date().getMonth(), gid: null, instId: null };
+    const ASMONTHS = ['Styczeń','Luty','Marzec','Kwiecień','Maj','Czerwiec','Lipiec','Sierpień','Wrzesień','Październik','Listopad','Grudzień'];
+
+    async function loadAdminSessions() {
+      const c = document.getElementById('content');
+      let instructors = [];
+      try { instructors = arrRows(await aF('/instructors')).filter(i => i.active); } catch(e) {}
+
+      const instOpts = instructors.map(i =>
+        `<option value="${i.id}" ${AS.instId == i.id ? 'selected' : ''}>${i.first_name} ${i.last_name}</option>`).join('');
+
+      c.innerHTML = `
+      <div class="sh"><h3>Zarządzaj sesjami treningowymi</h3></div>
+      <div style="display:flex;gap:12px;margin-bottom:18px;flex-wrap:wrap;align-items:flex-end">
+        <div class="ff" style="min-width:200px">
+          <label>Instruktor</label>
+          <select id="as-inst" onchange="asLoadGroups()">
+            <option value="">— wybierz instruktora —</option>${instOpts}
+          </select>
+        </div>
+        <div class="ff" style="min-width:200px">
+          <label>Grupa</label>
+          <select id="as-grp" onchange="asSelectGroup()" ${AS.instId ? '' : 'disabled'}>
+            <option value="">— wybierz grupę —</option>
+          </select>
+        </div>
+        <div style="display:flex;gap:6px;align-items:flex-end">
+          <button class="btn btn-secondary btn-sm" onclick="asNavMonth(-1)">◀</button>
+          <span id="as-month-lbl" style="font-size:13px;font-weight:700;min-width:130px;text-align:center">${ASMONTHS[AS.m]} ${AS.y}</span>
+          <button class="btn btn-secondary btn-sm" onclick="asNavMonth(1)">▶</button>
+        </div>
+      </div>
+      <div id="as-cal"></div>`;
+
+      if (AS.instId) await asLoadGroups(true);
+    }
+
+    async function asLoadGroups(keepGid) {
+      const instId = document.getElementById('as-inst')?.value || AS.instId;
+      AS.instId = instId;
+      const grpSel = document.getElementById('as-grp');
+      if (!instId) { if (grpSel) { grpSel.disabled = true; grpSel.innerHTML = '<option value="">— wybierz grupę —</option>'; } return; }
+      try {
+        const inst = await aF(`/instructors/${instId}`);
+        const groups = inst.groups || [];
+        if (grpSel) {
+          grpSel.innerHTML = '<option value="">— wybierz grupę —</option>' +
+            groups.map(g => `<option value="${g.id}" ${AS.gid == g.id ? 'selected' : ''}>${g.name}</option>`).join('');
+          grpSel.disabled = false;
+        }
+        if (AS.gid && groups.find(g => g.id == AS.gid)) await asLoadCal();
+      } catch(e) { toast('Błąd: ' + e.message, 'error'); }
+    }
+
+    async function asSelectGroup() {
+      AS.gid = document.getElementById('as-grp')?.value || null;
+      await asLoadCal();
+    }
+
+    async function asLoadCal() {
+      const gid = AS.gid || document.getElementById('as-grp')?.value;
+      const cal = document.getElementById('as-cal');
+      if (!gid || !cal) return;
+      AS.gid = gid;
+
+      const y = AS.y, m = AS.m;
+      const from = `${y}-${String(m+1).padStart(2,'0')}-01`;
+      const lastD = new Date(y, m+1, 0).getDate();
+      const to = `${y}-${String(m+1).padStart(2,'0')}-${String(lastD).padStart(2,'0')}`;
+
+      try {
+        const d = await aF(`/sessions?group_id=${gid}&from=${from}&to=${to}`);
+        asRenderCal(y, m, gid, d.rows || []);
+      } catch(e) { cal.innerHTML = `<div class="empty">Błąd: ${e.message}</div>`; }
+    }
+
+    function asRenderCal(y, m, gid, sessions) {
+      const smap = {};
+      sessions.forEach(s => { smap[s.session_date] = s; });
+
+      const today = new Date();
+      const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+      const firstDow = new Date(y, m, 1).getDay();
+      const offset = firstDow === 0 ? 6 : firstDow - 1;
+      const daysInM = new Date(y, m+1, 0).getDate();
+      const DAYS = ['Pon','Wt','Śr','Czw','Pt','Sob','Ndz'];
+
+      let html = `<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;max-width:700px">`;
+      DAYS.forEach(d => { html += `<div style="text-align:center;font-size:10px;font-weight:700;color:var(--dim);padding:4px 0">${d}</div>`; });
+      for (let i = 0; i < offset; i++) html += `<div style="min-height:50px"></div>`;
+
+      for (let d = 1; d <= daysInM; d++) {
+        const iso = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        const sess = smap[iso];
+        const isToday = iso === todayStr;
+        if (sess) {
+          html += `<div onclick="asDeleteSession(${sess.session_id},'${iso}',${gid})"
+            style="background:rgba(26,153,82,.12);border:1px solid rgba(26,153,82,.35);border-radius:6px;min-height:50px;padding:6px;cursor:pointer;text-align:center">
+            <div style="font-weight:700;font-size:13px;color:#3dd68c">${d}</div>
+            <div style="font-size:9px;color:rgba(61,214,140,.7)">✓ sesja</div>
+            <div style="font-size:9px;color:var(--dim)">${sess.present_count}/${sess.total_marked}</div>
+          </div>`;
+        } else {
+          html += `<div onclick="asCreateSession('${iso}',${gid})"
+            style="background:${isToday ? 'rgba(200,35,10,.08)' : 'var(--panel2)'};border:1px solid ${isToday ? 'rgba(200,35,10,.3)' : 'var(--line)'};border-radius:6px;min-height:50px;padding:6px;cursor:pointer;text-align:center">
+            <div style="font-weight:700;font-size:13px;color:${isToday ? 'var(--accent2)' : 'var(--text)'}">${d}</div>
+            <div style="font-size:9px;color:var(--dim2)">+ dodaj</div>
+          </div>`;
+        }
+      }
+      html += `</div><div style="margin-top:10px;font-size:11px;color:var(--dim)">Kliknij zielony dzień aby usunąć sesję. Kliknij pusty dzień aby dodać sesję.</div>`;
+      document.getElementById('as-cal').innerHTML = html;
+    }
+
+    async function asCreateSession(date, gid) {
+      if (!confirm(`Dodać sesję treningową na ${date}?`)) return;
+      try {
+        await aF('/sessions', { method: 'POST', body: JSON.stringify({ group_id: parseInt(gid), session_date: date }) });
+        toast('Sesja dodana');
+        await asLoadCal();
+      } catch(e) { toast('Błąd: ' + e.message, 'error'); }
+    }
+
+    async function asDeleteSession(sid, date, gid) {
+      if (!confirm(`Usunąć sesję z dnia ${date}?\n\nWszystkie zapisane obecności zostaną skasowane.`)) return;
+      try {
+        await aF(`/sessions/${sid}`, { method: 'DELETE' });
+        toast('Sesja usunięta');
+        await asLoadCal();
+      } catch(e) { toast('Błąd: ' + e.message, 'error'); }
+    }
+
+    function asNavMonth(dir) {
+      AS.m += dir;
+      if (AS.m < 0) { AS.m = 11; AS.y--; }
+      if (AS.m > 11) { AS.m = 0; AS.y++; }
+      const lbl = document.getElementById('as-month-lbl');
+      if (lbl) lbl.textContent = ASMONTHS[AS.m] + ' ' + AS.y;
+      asLoadCal();
     }
 
     // ══════════════════════════════════════════════════════════════════
