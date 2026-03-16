@@ -248,6 +248,113 @@ module.exports = async (req, res) => {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  // ── RAPORTY ───────────────────────────────────────────────────
+  if (req.query._rep) {
+    const rType = req.query.type;   // 'group' | 'instructor'
+    const rId   = parseInt(req.query.id);
+    const year  = parseInt(req.query.year) || new Date().getFullYear();
+    const month = req.query.month ? parseInt(req.query.month) : null;
+    if (!rId) return res.status(400).json({ error: 'Brak id.' });
+
+    // Warunek daty
+    function dateCond(col, p) {
+      if (month) return `EXTRACT(year FROM ${col})=$${p} AND EXTRACT(month FROM ${col})=$${p+1}`;
+      return `EXTRACT(year FROM ${col})=$${p}`;
+    }
+    const dateParams = month ? [year, month] : [year];
+
+    try {
+      if (rType === 'group') {
+        const [grpRes, sessRes, attRes, payRes] = await Promise.all([
+          pool.query(`SELECT g.name, l.city, g.category, g.age_range,
+            (SELECT COUNT(*) FROM student_groups sg WHERE sg.group_id=g.id AND sg.active=true)::int AS active_students
+            FROM groups g LEFT JOIN locations l ON l.id=g.location_id WHERE g.id=$1`, [rId]),
+          pool.query(`SELECT ts.session_date::date AS date,
+            COUNT(a.id) FILTER (WHERE a.present=true)::int AS present,
+            COUNT(a.id)::int AS total
+            FROM training_sessions ts LEFT JOIN attendances a ON a.session_id=ts.id
+            WHERE ts.group_id=$1 AND ${dateCond('ts.session_date', 2)}
+            GROUP BY ts.id ORDER BY ts.session_date`, [rId, ...dateParams]),
+          pool.query(`WITH ps AS (SELECT id FROM training_sessions WHERE group_id=$1 AND ${dateCond('session_date', 2)})
+            SELECT s.first_name||' '||s.last_name AS name,
+              COUNT(a.id) FILTER (WHERE a.present=true)::int AS present,
+              (SELECT COUNT(*) FROM ps)::int AS total_sessions,
+              CASE WHEN (SELECT COUNT(*) FROM ps)>0 THEN ROUND(COUNT(a.id) FILTER (WHERE a.present=true)*100.0/(SELECT COUNT(*) FROM ps))::int ELSE NULL END AS pct
+            FROM student_groups sg JOIN students s ON s.id=sg.student_id
+            LEFT JOIN attendances a ON a.student_id=s.id AND a.session_id IN (SELECT id FROM ps)
+            WHERE sg.group_id=$1 AND sg.active=true
+            GROUP BY s.id,s.first_name,s.last_name ORDER BY s.last_name,s.first_name`, [rId, ...dateParams]),
+          pool.query(`SELECT lp.paid_at::date AS date, s.first_name||' '||s.last_name AS student_name,
+            lp.amount, lp.note,
+            (SELECT ie.metadata->>'instructor_name' FROM instructor_events ie
+              WHERE ie.student_id=lp.student_id AND ie.event_type='payment_accepted'
+              AND ie.created_at::date=lp.paid_at::date ORDER BY ie.created_at DESC LIMIT 1) AS accepted_by
+            FROM legacy_payments lp JOIN students s ON s.id=lp.student_id
+            JOIN student_groups sg ON sg.student_id=s.id AND sg.group_id=$1
+            WHERE ${dateCond('lp.paid_at', 2)}
+            ORDER BY lp.paid_at DESC`, [rId, ...dateParams]),
+        ]);
+        const sessions = sessRes.rows;
+        const totalSess = sessions.length;
+        const totalPresent = sessions.reduce((s,r)=>s+r.present,0);
+        const totalSeats = sessions.reduce((s,r)=>s+r.total,0);
+        return res.status(200).json({
+          period: { year, month },
+          group: grpRes.rows[0] || {},
+          summary: {
+            sessions_count: totalSess,
+            total_payments: payRes.rows.reduce((s,p)=>s+Number(p.amount||0),0),
+            avg_attendance: totalSeats > 0 ? Math.round(totalPresent/totalSeats*100) : 0
+          },
+          attendance: attRes.rows,
+          payments: payRes.rows,
+          sessions: sessions
+        });
+      }
+
+      if (rType === 'instructor') {
+        const [instRes, grpRes, payRes, evRes, sessRes] = await Promise.all([
+          pool.query(`SELECT first_name||' '||last_name AS name, email FROM instructors WHERE id=$1`, [rId]),
+          pool.query(`SELECT g.name, l.city, COUNT(DISTINCT sg.student_id) FILTER (WHERE sg.active=true)::int AS students
+            FROM instructor_groups ig JOIN groups g ON g.id=ig.group_id
+            LEFT JOIN locations l ON l.id=g.location_id
+            LEFT JOIN student_groups sg ON sg.group_id=g.id
+            WHERE ig.instructor_id=$1 GROUP BY g.id,g.name,l.city ORDER BY l.city,g.name`, [rId]),
+          pool.query(`SELECT ie.created_at::date AS date, s.first_name||' '||s.last_name AS student_name,
+            g.name AS group_name, ie.amount, ie.note
+            FROM instructor_events ie LEFT JOIN students s ON s.id=ie.student_id LEFT JOIN groups g ON g.id=ie.group_id
+            WHERE ie.instructor_id=$1 AND ie.event_type='payment_accepted' AND ${dateCond('ie.created_at', 2)}
+            ORDER BY ie.created_at DESC`, [rId, ...dateParams]),
+          pool.query(`SELECT ie.created_at, ie.event_type,
+            s.first_name||' '||s.last_name AS student_name, g.name AS group_name, ie.amount
+            FROM instructor_events ie LEFT JOIN students s ON s.id=ie.student_id LEFT JOIN groups g ON g.id=ie.group_id
+            WHERE ie.instructor_id=$1 AND ${dateCond('ie.created_at', 2)}
+            ORDER BY ie.created_at DESC LIMIT 200`, [rId, ...dateParams]),
+          pool.query(`SELECT COUNT(*)::int AS cnt FROM training_sessions ts
+            JOIN instructor_groups ig ON ig.group_id=ts.group_id AND ig.instructor_id=$1
+            WHERE ${dateCond('ts.session_date', 2)}`, [rId, ...dateParams]),
+        ]);
+        const studAdded = evRes.rows.filter(e=>e.event_type==='student_added').length;
+        return res.status(200).json({
+          period: { year, month },
+          instructor: instRes.rows[0] || {},
+          summary: {
+            groups_count: grpRes.rows.length,
+            sessions_count: sessRes.rows[0]?.cnt || 0,
+            total_payments: payRes.rows.reduce((s,p)=>s+Number(p.amount||0),0),
+            payments_accepted: payRes.rows.length,
+            students_added: studAdded
+          },
+          groups: grpRes.rows,
+          payments: payRes.rows,
+          events: evRes.rows
+        });
+      }
+
+      return res.status(400).json({ error: 'Nieznany typ raportu.' });
+    } catch(e) { console.error('[report]', e); return res.status(500).json({ error: e.message }); }
+  }
+
   // ── groups (single), schedules, locations ─────────────────────
   const CONFIG = {
     groups: {

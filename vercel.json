@@ -37,11 +37,11 @@
     },
     {
       "source": "/api/admin-api/reports",
-      "destination": "/api/admin-api/reports"
+      "destination": "/api/admin-api/resource?_rep=1"
     },
     {
       "source": "/api/admin-api/report",
-      "destination": "/api/admin-api/reports"
+      "destination": "/api/admin-api/resource?_rep=1"
     },
     {
       "source": "/api/admin-api/login",

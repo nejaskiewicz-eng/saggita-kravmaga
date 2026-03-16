@@ -10,7 +10,9 @@ module.exports = async (req, res) => {
   if (m === 'instructor-panel')      return require('./_saggita/panel')(req, res);
   if (m === 'instructor-attendance') return require('./_saggita/panel')(req, res);
   if (m === 'instructor-students')   return require('./_saggita/panel')(req, res);
-  if (m === 'instructor-calendar')   return require('./_saggita/panel')(req, res);
+  if (m === 'instructor-calendar')      return require('./_saggita/panel')(req, res);
+  if (m === 'instructor-session-mgmt')  return require('./_saggita/panel')(req, res);
+  if (m === 'instructor-events')        return require('./_saggita/panel')(req, res);
 
   return res.status(404).json({ error: 'Nieznany moduł: ' + m });
 };
