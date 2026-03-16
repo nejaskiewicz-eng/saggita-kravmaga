@@ -1696,6 +1696,7 @@
         <div class="ni" id="ni-cal" onclick="goMenu('cal')"><span class="ni-ico">⊡</span>Kalendarz zajęć</div>
         <div class="ni" id="ni-sess" onclick="goMenu('sess')"><span class="ni-ico">☑</span>Sesje & Obecności</div>
         <div class="ni" id="ni-pays" onclick="goMenu('pays')"><span class="ni-ico">₴</span>Płatności</div>
+        <div class="ni" id="ni-smgmt" onclick="goMenu('smgmt')" style="display:none"><span class="ni-ico">⊞</span>Sesje instruktorów</div>
       </nav>
       <div class="sb-bot">
         <button class="lout" onclick="logout()">Wyloguj</button>
@@ -1818,6 +1819,10 @@
       const payBn = document.getElementById('bn-pays');
       if (payBn) payBn.style.display = S.perms.can_see_payments ? '' : 'none';
 
+      // Pokaż zarządzanie sesjami instruktorów (tylko dla can_assign_instructors)
+      const smgmtNav = document.getElementById('ni-smgmt');
+      if (smgmtNav) smgmtNav.style.display = S.perms.can_assign_instructors ? '' : 'none';
+
       // Jeśli can_see_groups=false — ukryj "Grupy & Kursanci" z nav (dostęp tylko z dashboardu w dniu zajęć)
       const grpNav = document.getElementById('ni-groups');
       if (grpNav) grpNav.style.display = S.perms.can_see_groups ? '' : 'none';
@@ -1888,7 +1893,7 @@
       render(page);
     }
     function render(page) {
-      const titles = { dash: 'Dashboard', groups: 'Grupy & Kursanci', cal: 'Kalendarz zajęć', sess: 'Sesje & Obecności', pays: 'Płatności' };
+      const titles = { dash: 'Dashboard', groups: 'Grupy & Kursanci', cal: 'Kalendarz zajęć', sess: 'Sesje & Obecności', pays: 'Płatności', smgmt: 'Sesje instruktorów' };
       $('ph-t').textContent = titles[page] || page;
       $('ph-s').textContent = '';
       $('ph-act').innerHTML = '';
@@ -1905,6 +1910,7 @@
           else renderSess();
           break;
         case 'pays': renderPays(); break;
+        case 'smgmt': renderSessMgmt(); break;
       }
     }
 
@@ -2651,6 +2657,140 @@
         closeMo();
         openSessById(d.id, Number(gid), dt, S.groups.find(x => x.id == gid)?.name || '');
       } catch (e) { alert('Błąd: ' + e.message); }
+    }
+
+    // ── SESJE INSTRUKTORÓW (zarządzanie dla can_assign_instructors) ──
+    const SM = { y: new Date().getFullYear(), m: new Date().getMonth(), instId: null, gid: null };
+
+    async function renderSessMgmt() {
+      $('pb').innerHTML = '<div class="loading">Ładowanie instruktorów...</div>';
+      let instructors = [];
+      try { const d = await api('/api/instructor/session-mgmt/instructors'); instructors = d.rows || []; }
+      catch(e) { $('pb').innerHTML = `<div class="empty">Błąd: ${esc(e.message)}</div>`; return; }
+
+      const instOpts = instructors.map(i =>
+        `<option value="${i.id}" ${SM.instId == i.id ? 'selected' : ''}>${esc(i.last_name)} ${esc(i.first_name)}</option>`).join('');
+
+      // Wybierz grupy jeśli instruktor jest zaznaczony
+      let grpOpts = '<option value="">— wybierz grupę —</option>';
+      if (SM.instId) {
+        const inst = instructors.find(i => i.id == SM.instId);
+        if (inst && Array.isArray(inst.groups)) {
+          grpOpts += inst.groups.map(g =>
+            `<option value="${g.id}" ${SM.gid == g.id ? 'selected' : ''}>${esc(g.name)}</option>`).join('');
+        }
+      }
+
+      $('pb').innerHTML = `
+      <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:18px">
+        <div class="ff" style="min-width:200px">
+          <label style="font-size:11px;color:var(--dim);display:block;margin-bottom:4px">Instruktor</label>
+          <select id="sm-inst" onchange="smSelectInst(this.value)">
+            <option value="">— wybierz instruktora —</option>${instOpts}
+          </select>
+        </div>
+        <div class="ff" style="min-width:200px">
+          <label style="font-size:11px;color:var(--dim);display:block;margin-bottom:4px">Grupa</label>
+          <select id="sm-grp" onchange="smSelectGrp(this.value)" ${SM.instId ? '' : 'disabled'}>
+            ${grpOpts}
+          </select>
+        </div>
+        <div style="display:flex;gap:6px;align-items:flex-end">
+          <button class="btn btn-o btn-sm" onclick="smNav(-1)">◀</button>
+          <span id="sm-month-lbl" style="font-size:13px;font-weight:700;min-width:130px;text-align:center">${MONTHS[SM.m]} ${SM.y}</span>
+          <button class="btn btn-o btn-sm" onclick="smNav(1)">▶</button>
+        </div>
+      </div>
+      <div id="sm-cal">${SM.gid ? '' : '<div class="empty">Wybierz instruktora i grupę aby zobaczyć kalendarz sesji.</div>'}</div>`;
+
+      if (SM.gid) await smLoadCal();
+    }
+
+    function smSelectInst(instId) {
+      SM.instId = instId || null;
+      SM.gid = null;
+      renderSessMgmt();
+    }
+
+    function smSelectGrp(gid) {
+      SM.gid = gid || null;
+      smLoadCal();
+    }
+
+    async function smLoadCal() {
+      const gid = SM.gid;
+      const cal = document.getElementById('sm-cal');
+      if (!gid || !cal) return;
+      const y = SM.y, m = SM.m;
+      const from = `${y}-${String(m+1).padStart(2,'0')}-01`;
+      const lastD = new Date(y, m+1, 0).getDate();
+      const to = `${y}-${String(m+1).padStart(2,'0')}-${String(lastD).padStart(2,'0')}`;
+      try {
+        const d = await api(`/api/instructor/session-mgmt/sessions?group_id=${gid}&from=${from}&to=${to}`);
+        smRenderCal(y, m, gid, d.rows || []);
+      } catch(e) { cal.innerHTML = `<div class="empty">Błąd: ${esc(e.message)}</div>`; }
+    }
+
+    function smRenderCal(y, m, gid, sessions) {
+      const smap = {};
+      sessions.forEach(s => { smap[s.session_date] = s; });
+      const today = todayISO();
+      const firstDow = new Date(y, m, 1).getDay();
+      const offset = firstDow === 0 ? 6 : firstDow - 1;
+      const daysInM = new Date(y, m+1, 0).getDate();
+
+      let html = `<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;max-width:560px">`;
+      DAYS_SHORT.forEach(d => { html += `<div style="text-align:center;font-size:10px;font-weight:700;color:var(--dim);padding:4px 0">${d}</div>`; });
+      for (let i = 0; i < offset; i++) html += `<div style="min-height:52px"></div>`;
+
+      for (let d = 1; d <= daysInM; d++) {
+        const iso = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        const sess = smap[iso];
+        const isToday = iso === today;
+        if (sess) {
+          html += `<div onclick="smDeleteSess(${sess.session_id},'${iso}',${gid})"
+            style="background:var(--gsoft);border:1px solid var(--gborder);border-radius:6px;min-height:52px;padding:6px;cursor:pointer;text-align:center">
+            <div style="font-weight:700;font-size:13px;color:#3dd68c">${d}</div>
+            <div style="font-size:9px;color:rgba(61,214,140,.7)">✓ sesja</div>
+            <div style="font-size:9px;color:var(--dim)">${sess.present_count}/${sess.total_marked}</div>
+          </div>`;
+        } else {
+          html += `<div onclick="smCreateSess('${iso}',${gid})"
+            style="background:${isToday ? 'var(--asoft)' : 'var(--panel2)'};border:1px solid ${isToday ? 'var(--aborder)' : 'var(--line)'};border-radius:6px;min-height:52px;padding:6px;cursor:pointer;text-align:center">
+            <div style="font-weight:700;font-size:13px;color:${isToday ? 'var(--accent2)' : 'var(--text)'}">${d}</div>
+            <div style="font-size:9px;color:var(--dim2)">+ dodaj</div>
+          </div>`;
+        }
+      }
+      html += `</div>
+      <div style="margin-top:10px;font-size:11px;color:var(--dim)">Kliknij zielony dzień aby usunąć sesję. Kliknij pusty dzień aby dodać.</div>`;
+      const cal = document.getElementById('sm-cal');
+      if (cal) cal.innerHTML = html;
+    }
+
+    async function smCreateSess(date, gid) {
+      if (!confirm(`Dodać sesję treningową na ${date}?`)) return;
+      try {
+        await api('/api/instructor/session-mgmt/sessions', 'POST', { group_id: parseInt(gid), session_date: date });
+        await smLoadCal();
+      } catch(e) { alert('Błąd: ' + e.message); }
+    }
+
+    async function smDeleteSess(sid, date, gid) {
+      if (!confirm(`Usunąć sesję z dnia ${date}?\nWszystkie zapisane obecności zostaną skasowane.`)) return;
+      try {
+        await api(`/api/instructor/session-mgmt/sessions/${sid}`, 'DELETE');
+        await smLoadCal();
+      } catch(e) { alert('Błąd: ' + e.message); }
+    }
+
+    function smNav(dir) {
+      SM.m += dir;
+      if (SM.m < 0) { SM.m = 11; SM.y--; }
+      if (SM.m > 11) { SM.m = 0; SM.y++; }
+      const lbl = document.getElementById('sm-month-lbl');
+      if (lbl) lbl.textContent = MONTHS[SM.m] + ' ' + SM.y;
+      smLoadCal();
     }
 
     // ── PRZYJMIJ PŁATNOŚĆ (instruktor) ────────────────────────────

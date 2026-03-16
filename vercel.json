@@ -192,6 +192,18 @@
       "destination": "/api/saggita?_module=instructor-panel&_route=instructors-list"
     },
     {
+      "source": "/api/instructor/session-mgmt/sessions/:id",
+      "destination": "/api/saggita?_module=instructor-session-mgmt&_route=sessions&id=:id"
+    },
+    {
+      "source": "/api/instructor/session-mgmt/sessions",
+      "destination": "/api/saggita?_module=instructor-session-mgmt&_route=sessions"
+    },
+    {
+      "source": "/api/instructor/session-mgmt/instructors",
+      "destination": "/api/saggita?_module=instructor-session-mgmt&_route=instructors"
+    },
+    {
       "source": "/api/instructor/sessions/:id/attendance",
       "destination": "/api/saggita?_module=instructor-attendance&_route=attendance&id=:id"
     },

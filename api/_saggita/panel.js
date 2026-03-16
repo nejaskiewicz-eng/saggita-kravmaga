@@ -468,6 +468,82 @@ module.exports = async (req, res) => {
     return res.status(400).json({ error: 'Nieznana trasa attendance.' });
   }
 
+  /* ══ SESSION MANAGEMENT (dla can_assign_instructors) ═════════ */
+  if (mod === 'instructor-session-mgmt') {
+    let P;
+    try { P = auth(req); } catch (e) { return res.status(401).json({ error: e.message }); }
+
+    // Sprawdź uprawnienie
+    const { rows: [mgmtPerms] } = await pool.query(
+      `SELECT can_assign_instructors FROM instructor_permissions WHERE instructor_id=$1`, [P.sub]);
+    if (!mgmtPerms?.can_assign_instructors)
+      return res.status(403).json({ error: 'Brak uprawnień zarządzania sesjami.' });
+
+    // GET lista wszystkich instruktorów
+    if (route === 'instructors' && req.method === 'GET') {
+      try {
+        const { rows } = await pool.query(
+          `SELECT i.id, i.first_name, i.last_name,
+             COALESCE(json_agg(json_build_object('id',g.id,'name',g.name)) FILTER (WHERE g.id IS NOT NULL), '[]') AS groups
+           FROM instructors i
+           LEFT JOIN instructor_groups ig ON ig.instructor_id=i.id
+           LEFT JOIN groups g ON g.id=ig.group_id
+           WHERE i.active=true
+           GROUP BY i.id
+           ORDER BY i.last_name, i.first_name`);
+        return res.status(200).json({ rows });
+      } catch(e) { return res.status(500).json({ error: e.message }); }
+    }
+
+    // GET sesje dla grupy
+    if (route === 'sessions' && req.method === 'GET') {
+      const { group_id, from, to } = req.query;
+      if (!group_id) return res.status(400).json({ error: 'group_id wymagane.' });
+      try {
+        const params = [group_id];
+        let q = `
+          SELECT ts.id AS session_id,
+            TO_CHAR(ts.session_date, 'YYYY-MM-DD') AS session_date,
+            ts.group_id,
+            COUNT(a.id) FILTER (WHERE a.present=true)::int AS present_count,
+            COUNT(a.id)::int AS total_marked
+          FROM training_sessions ts
+          LEFT JOIN attendances a ON a.session_id=ts.id
+          WHERE ts.group_id=$1`;
+        if (from) { params.push(from); q += ` AND ts.session_date>=$${params.length}`; }
+        if (to)   { params.push(to);   q += ` AND ts.session_date<=$${params.length}`; }
+        q += ` GROUP BY ts.id ORDER BY ts.session_date`;
+        const { rows } = await pool.query(q, params);
+        return res.status(200).json({ rows });
+      } catch(e) { return res.status(500).json({ error: e.message }); }
+    }
+
+    // POST utwórz sesję
+    if (route === 'sessions' && req.method === 'POST') {
+      const { group_id: gid, session_date } = req.body || {};
+      if (!gid || !session_date) return res.status(400).json({ error: 'group_id i session_date wymagane.' });
+      try {
+        const { rows: [x] } = await pool.query(
+          `INSERT INTO training_sessions (group_id, session_date)
+           VALUES ($1,$2)
+           ON CONFLICT (group_id, session_date) DO UPDATE SET session_date=EXCLUDED.session_date
+           RETURNING id`, [gid, session_date]);
+        return res.status(200).json({ id: x.id });
+      } catch(e) { return res.status(500).json({ error: e.message }); }
+    }
+
+    // DELETE sesję
+    if (route === 'sessions' && req.method === 'DELETE' && id) {
+      try {
+        await pool.query(`DELETE FROM attendances WHERE session_id=$1`, [id]);
+        await pool.query(`DELETE FROM training_sessions WHERE id=$1`, [id]);
+        return res.status(200).json({ ok: true });
+      } catch(e) { return res.status(500).json({ error: e.message }); }
+    }
+
+    return res.status(400).json({ error: 'Nieznana trasa session-mgmt.' });
+  }
+
   /* ══ STUDENTS (instruktor) ═══════════════════════════════════ */
   if (mod === 'instructor-students') {
     let P;
