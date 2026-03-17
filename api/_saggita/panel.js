@@ -363,9 +363,9 @@ module.exports = async (req, res) => {
                 SELECT group_id FROM instructor_groups WHERE instructor_id=$2
               )
           `;
-          // Zwykły instruktor widzi tylko sesje przypisane do siebie lub bez przypisania
+          // Zwykły instruktor widzi TYLKO sesje przypisane do siebie (bez fallbacku IS NULL)
           if (!isChief) {
-            q += ` AND (ts.instructor_id = $2 OR ts.instructor_id IS NULL)`;
+            q += ` AND ts.instructor_id = $2`;
           }
           const params = [from || SEASON, P.sub];
           if (to) { params.push(to); q += ` AND ts.session_date <= $${params.length}`; }
