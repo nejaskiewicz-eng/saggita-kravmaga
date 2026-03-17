@@ -1572,7 +1572,7 @@
         <a data-view="dashboard" class="active"><span class="nd"></span> Dashboard</a>
         <div class="sl">Kursanci</div>
         <a data-view="unified-students"><span class="nd"></span> Baza kursantów</a>
-        <a data-view="web-registrations"><span class="nd"></span> Zapisy ze strony</a>
+        <a data-view="web-registrations"><span class="nd"></span> Zapisy ze strony <span id="reg-badge" style="display:none;background:var(--red-l,#e74c3c);color:#fff;border-radius:12px;padding:1px 8px;font-size:11px;font-weight:700;margin-left:6px">0</span></a>
         <a data-view="legacy-history"><span class="nd"></span> Archiwum CSV</a>
         <div class="sl">Organizacja</div>
         <a data-view="groups"><span class="nd"></span> Grupy</a>
@@ -1598,8 +1598,8 @@
           class="bna-ico">▣</span>Dashboard</button>
       <button class="bna" data-view="unified-students" onclick="switchBotNav('unified-students')"> <span
           class="bna-ico">◈</span>Kursanci</button>
-      <button class="bna" data-view="web-registrations" onclick="switchBotNav('web-registrations')"><span
-          class="bna-ico">✉</span>Zapisy</button>
+      <button class="bna" data-view="web-registrations" onclick="switchBotNav('web-registrations')" style="position:relative"><span
+          class="bna-ico">✉</span>Zapisy<span id="reg-badge-mob" style="display:none;position:absolute;top:4px;right:6px;background:var(--red-l,#e74c3c);color:#fff;border-radius:10px;padding:0 5px;font-size:10px;font-weight:700;line-height:16px">0</span></button>
       <button class="bna" data-view="groups" onclick="switchBotNav('groups')"> <span
           class="bna-ico">⬡</span>Grupy</button>
       <button class="bna" data-view="more" onclick="toggleSidebar()"> <span class="bna-ico">≡</span>Więcej</button>
@@ -1891,8 +1891,27 @@
         ]);
         const events = eventsData.rows || [];
         const unseen = eventsData.unseen || 0;
+        const newRegs = d.new_regs || 0;
+
+        // Aktualizuj badge w nawigacji
+        const rb = document.getElementById('reg-badge');
+        const rbm = document.getElementById('reg-badge-mob');
+        if (rb) { rb.textContent = newRegs; rb.style.display = newRegs > 0 ? '' : 'none'; }
+        if (rbm) { rbm.textContent = newRegs; rbm.style.display = newRegs > 0 ? '' : 'none'; }
 
         c.innerHTML = `
+      ${newRegs > 0 ? `
+      <div style="background:rgba(231,76,60,.12);border:2px solid rgba(231,76,60,.6);border-radius:10px;padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+        <div style="font-size:28px">🚨</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;text-transform:uppercase;letter-spacing:.06em;color:#e74c3c">
+            Nowe zgłoszenia ze strony!
+            <span style="background:#e74c3c;color:#fff;border-radius:20px;padding:2px 12px;font-size:14px;margin-left:10px">${newRegs}</span>
+          </div>
+          <div style="font-size:12px;color:var(--dim);margin-top:3px">Oczekują na rozpatrzenie przez administratora</div>
+        </div>
+        <button class="btn btn-sm" style="background:#e74c3c;color:#fff;border:none;font-weight:700;padding:8px 18px" onclick="navigate('web-registrations')">→ Przejdź do Zapisów</button>
+      </div>` : ''}
       ${unseen > 0 ? `
       <div style="background:rgba(232,165,0,.1);border:1px solid rgba(232,165,0,.4);border-radius:8px;padding:16px 20px;margin-bottom:24px">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
@@ -3886,10 +3905,29 @@
       c.innerHTML = `
     <div class="sh">
       <h3>Konta instruktorów</h3>
-      <button class="btn btn-primary btn-sm" onclick="openNewInstructorModal()">+ Nowy instruktor</button>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-primary btn-sm" onclick="openNewInstructorModal()">+ Nowy instruktor</button>
+        <button class="btn btn-secondary btn-sm" onclick="loadArchivedInstructors()">Archiwum</button>
+      </div>
     </div>
     <div id="inst-list"><div class="loader"><div class="spinner"></div></div></div>`;
       fetchInstructors();
+    }
+
+    function instRowHTML(i) {
+      const name = `${i.first_name} ${i.last_name}`;
+      return `<tr>
+        <td><strong style="color:var(--bright)">${name}</strong></td>
+        <td style="font-family:monospace;font-size:12px;color:var(--dim)">${i.username}</td>
+        <td style="font-size:12px;color:var(--dim)">${i.email || '—'}${i.phone ? '<br>' + i.phone : ''}</td>
+        <td>${Array.isArray(i.groups) && i.groups.length ? i.groups.map(g => `<span class="badge bb" style="font-size:10px">${g.name}</span>`).join('') : '—'}</td>
+        <td>${i.active ? '<span class="badge bg">Aktywny</span>' : '<span class="badge br">Nieaktywny</span>'}</td>
+        <td><div class="tda">
+          <button class="bi" onclick="openInstructorModal(${i.id})">Edytuj</button>
+          <button class="bi" onclick="toggleInstructor(${i.id},${!i.active})">${i.active ? 'Dezaktywuj' : 'Aktywuj'}</button>
+          <button class="bi" style="color:var(--red-l)" onclick="archiveInstructor(${i.id},'${name.replace(/'/g,"\\'")}')">Usuń</button>
+        </div></td>
+      </tr>`;
     }
 
     async function fetchInstructors() {
@@ -3898,29 +3936,93 @@
       try {
         const d = await aF('/instructors');
         const rows = arrRows(d);
+        const active = rows.filter(i => i.active);
+        const inactive = rows.filter(i => !i.active);
+
         if (!rows.length) {
           el.innerHTML = '<div class="empty"><strong>Brak instruktorów</strong>Kliknij przycisk powyżej, żeby dodać pierwszego.</div>';
           return;
         }
+
+        const thead = `<thead><tr><th>Instruktor</th><th>Login</th><th>Kontakt</th><th>Grupy</th><th>Status</th><th></th></tr></thead>`;
+
+        let html = `<div class="tw"><table>${thead}<tbody>${active.map(instRowHTML).join('')}</tbody></table></div>`;
+
+        if (inactive.length) {
+          html += `
+          <div class="sh" style="margin-top:24px;border-top:1px solid var(--border);padding-top:16px">
+            <h4 style="color:var(--dim);font-size:13px;text-transform:uppercase;letter-spacing:.06em">Dezaktywowani</h4>
+          </div>
+          <div class="tw"><table>${thead}<tbody>${inactive.map(instRowHTML).join('')}</tbody></table></div>`;
+        }
+
+        el.innerHTML = html;
+      } catch (e) {
+        el.innerHTML = `<div class="empty"><strong>Błąd</strong>${e.message}</div>`;
+      }
+    }
+
+    async function archiveInstructor(id, name) {
+      if (!confirm(`Czy na pewno chcesz przenieść instruktora "${name}" do archiwum?\n\nInstruktor zniknie z listy aktywnych. Będzie dostępny w sekcji Archiwum.`)) return;
+      try {
+        await aF(`/instructors/${id}`, { method: 'DELETE' });
+        toast('Instruktor przeniesiony do archiwum');
+        fetchInstructors();
+      } catch (e) { toast('Błąd: ' + e.message, 'error'); }
+    }
+
+    async function restoreInstructor(id, name) {
+      if (!confirm(`Przywrócić instruktora "${name}" z archiwum?\n\nInstruktor pojawi się w dezaktywowanej liście.`)) return;
+      try {
+        await aF(`/instructors/${id}`, { method: 'PATCH', body: JSON.stringify({ archived: false, active: false }) });
+        toast('Instruktor przywrócony');
+        loadArchivedInstructors();
+      } catch (e) { toast('Błąd: ' + e.message, 'error'); }
+    }
+
+    async function hardDeleteInstructor(id, name) {
+      if (!confirm(`TRWALE USUNĄĆ instruktora "${name}"?\n\nTej operacji nie można cofnąć. Wszystkie dane zostaną usunięte bezpowrotnie.`)) return;
+      try {
+        await aF(`/instructors/${id}?hard=true`, { method: 'DELETE' });
+        toast('Instruktor trwale usunięty');
+        loadArchivedInstructors();
+      } catch (e) { toast('Błąd: ' + e.message, 'error'); }
+    }
+
+    async function loadArchivedInstructors() {
+      const c = document.getElementById('content');
+      c.innerHTML = `
+    <div class="sh">
+      <h3>Archiwum instruktorów</h3>
+      <button class="btn btn-secondary btn-sm" onclick="loadInstructors()">← Wróć</button>
+    </div>
+    <div id="arch-list"><div class="loader"><div class="spinner"></div></div></div>`;
+      try {
+        const d = await aF('/instructors?archived=true');
+        const rows = arrRows(d);
+        const el = document.getElementById('arch-list');
+        if (!rows.length) {
+          el.innerHTML = '<div class="empty"><strong>Archiwum puste</strong>Brak zarchiwizowanych instruktorów.</div>';
+          return;
+        }
         el.innerHTML = `<div class="tw"><table>
-      <thead><tr><th>Instruktor</th><th>Login</th><th>Kontakt</th><th>Grupy</th><th>Status</th><th></th></tr></thead>
-      <tbody>${rows.map(i => `
-        <tr>
-          <td><strong style="color:var(--bright)">${i.first_name} ${i.last_name}</strong></td>
+      <thead><tr><th>Instruktor</th><th>Login</th><th>Kontakt</th><th></th></tr></thead>
+      <tbody>${rows.map(i => {
+        const name = `${i.first_name} ${i.last_name}`;
+        return `<tr>
+          <td><strong style="color:var(--dim)">${name}</strong></td>
           <td style="font-family:monospace;font-size:12px;color:var(--dim)">${i.username}</td>
           <td style="font-size:12px;color:var(--dim)">${i.email || '—'}${i.phone ? '<br>' + i.phone : ''}</td>
-          <td>${Array.isArray(i.groups) && i.groups.length ? i.groups.map(g => `<span class="badge bb" style="font-size:10px">${g.name}</span>`).join('') : '—'}</td>
-          <td>${i.active ? '<span class="badge bg">Aktywny</span>' : '<span class="badge br">Nieaktywny</span>'}</td>
           <td><div class="tda">
-            <button class="bi" onclick="openInstructorModal(${i.id})">Edytuj</button>
-            <button class="bi" onclick="toggleInstructor(${i.id},${!i.active})">${i.active ? 'Dezaktywuj' : 'Aktywuj'}</button>
-            ${!i.active ? `<button class="bi" style="color:var(--red-l)" onclick="deleteInstructor(${i.id},'${i.first_name} ${i.last_name}')">Usuń</button>` : ''}
+            <button class="bi" onclick="restoreInstructor(${i.id},'${name.replace(/'/g,"\\'")}')">Przywróć</button>
+            <button class="bi" style="color:var(--red-l)" onclick="hardDeleteInstructor(${i.id},'${name.replace(/'/g,"\\'")}')">Usuń trwale</button>
           </div></td>
-        </tr>`).join('')}
+        </tr>`;
+      }).join('')}
       </tbody>
     </table></div>`;
       } catch (e) {
-        el.innerHTML = `<div class="empty"><strong>Błąd</strong>${e.message}</div>`;
+        document.getElementById('arch-list').innerHTML = `<div class="empty"><strong>Błąd</strong>${e.message}</div>`;
       }
     }
 
@@ -4137,14 +4239,6 @@
       } catch (e) { toast('Błąd: ' + e.message, 'error'); }
     }
 
-    async function deleteInstructor(id, name) {
-      if (!confirm(`Czy na pewno chcesz trwale usunąć instruktora "${name}"?\n\nTej operacji nie można cofnąć. Wszystkie dane instruktora zostaną usunięte.`)) return;
-      try {
-        await aF(`/instructors/${id}?hard=true`, { method: 'DELETE' });
-        toast('Instruktor usunięty');
-        fetchInstructors();
-      } catch (e) { toast('Błąd: ' + e.message, 'error'); }
-    }
 
     // ══════════════════════════════════════════════════════════════════
     // SESJE TRENINGOWE (admin)

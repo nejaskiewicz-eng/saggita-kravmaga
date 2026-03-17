@@ -21,14 +21,17 @@ module.exports = async (req, res) => {
 
     if (req.method === 'GET' && !id) {
       try {
+        const showArchived = req.query.archived === 'true';
         const { rows } = await pool.query(`
-          SELECT i.id, i.username, i.first_name, i.last_name, i.email, i.phone, i.active, i.created_at,
+          SELECT i.id, i.username, i.first_name, i.last_name, i.email, i.phone, i.active,
+            COALESCE(i.archived, false) AS archived, i.created_at,
             COALESCE(json_agg(
               json_build_object('id', g.id, 'name', g.name)
             ) FILTER (WHERE g.id IS NOT NULL), '[]') AS groups
           FROM instructors i
           LEFT JOIN instructor_groups ig ON ig.instructor_id = i.id
           LEFT JOIN groups g ON g.id = ig.group_id
+          WHERE ${showArchived ? 'COALESCE(i.archived, false) = true' : 'COALESCE(i.archived, false) = false'}
           GROUP BY i.id
           ORDER BY i.active DESC, i.last_name, i.first_name
         `);
@@ -82,7 +85,7 @@ module.exports = async (req, res) => {
       const b = req.body || {};
       try {
         const set = [], vals = []; let pi = 1;
-        for (const k of ['first_name','last_name','email','phone','active']) {
+        for (const k of ['first_name','last_name','email','phone','active','archived']) {
           if (k in b) { set.push(`${k}=$${pi++}`); vals.push(b[k]); }
         }
         if (b.password) {
@@ -107,14 +110,15 @@ module.exports = async (req, res) => {
     if (req.method === 'DELETE' && id) {
       try {
         if (req.query.hard === 'true') {
-          // Twarde usunięcie: usuń w kolejności zależności
+          // Trwałe usunięcie (tylko z archiwum): usuń w kolejności zależności
           await pool.query(`DELETE FROM instructor_events WHERE instructor_id=$1`, [id]);
           await pool.query(`DELETE FROM instructor_students WHERE instructor_id=$1`, [id]);
           await pool.query(`DELETE FROM instructor_permissions WHERE instructor_id=$1`, [id]);
           await pool.query(`DELETE FROM instructor_groups WHERE instructor_id=$1`, [id]);
           await pool.query(`DELETE FROM instructors WHERE id=$1`, [id]);
         } else {
-          await pool.query(`UPDATE instructors SET active=false WHERE id=$1`, [id]);
+          // Przenieś do archiwum (soft-archive)
+          await pool.query(`UPDATE instructors SET archived=true, active=false WHERE id=$1`, [id]);
         }
         return res.status(200).json({ success: true });
       } catch(e) { return res.status(500).json({ error: e.message }); }

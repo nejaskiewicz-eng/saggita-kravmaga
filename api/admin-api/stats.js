@@ -112,7 +112,12 @@ module.exports = async (req, res) => {
       ORDER BY l.city, g.name
     `);
 
-    // 5) Ostatnie zapisy — tylko nowe rejestracje (legacy nie ma "created_at zapisu")
+    // 5) Liczba nowych niezrealizowanych zgłoszeń ze strony
+    const { rows: [{ new_regs }] } = await pool.query(
+      `SELECT COUNT(*)::int AS new_regs FROM registrations WHERE status = 'new'`
+    );
+
+    // 6) Ostatnie zapisy — tylko nowe rejestracje (legacy nie ma "created_at zapisu")
     const { rows: recent } = await pool.query(`
       SELECT
         r.id,
@@ -135,6 +140,7 @@ module.exports = async (req, res) => {
       paid: payStats.paid || 0,
       pending: payStats.pending || 0,
       waitlist: payStats.waitlist || 0,
+      new_regs: new_regs || 0,
       byLoc,
       byGroup,
       recent
