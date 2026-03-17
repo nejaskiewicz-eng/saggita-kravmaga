@@ -197,10 +197,10 @@ module.exports = async (req, res) => {
         const filtered = hasAssigned ? rows.filter(r => assignedIds.has(r.id)) : rows;
 
         // paid_season (suma sezonu) zawsze ukryta dla instruktora
-        // Ukryj też last_payment jeśli brak uprawnienia
+        // Ukryj last_payment jeśli brak uprawnień do widoku płatności/statusu
         filtered.forEach(r => {
           r.paid_season = null;
-          if (!perm.can_see_payments) r.last_payment = null;
+          if (!perm.can_see_paid_status && !perm.can_see_payments) r.last_payment = null;
         });
 
         return res.status(200).json({ rows: filtered, permissions: perm });
@@ -250,8 +250,8 @@ module.exports = async (req, res) => {
     if (route === 'payments' && req.method === 'GET') {
       try {
         const { rows: [perms] } = await pool.query(
-          `SELECT can_see_payments FROM instructor_permissions WHERE instructor_id=$1`, [P.sub]);
-        if (!perms?.can_see_payments) return res.status(200).json({ rows: [], hidden: true });
+          `SELECT can_see_payments_tab FROM instructor_permissions WHERE instructor_id=$1`, [P.sub]);
+        if (!perms?.can_see_payments_tab) return res.status(200).json({ rows: [], hidden: true });
 
         // Filtrujemy tylko kursantów przypisanych do instruktora (jeśli lista ustawiona)
         const { rows: assignedRows } = await pool.query(

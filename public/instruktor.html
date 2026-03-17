@@ -1823,9 +1823,9 @@
     function applyPermNav() {
       // Ukryj zakładki na podstawie uprawnień
       const payNav = document.getElementById('ni-pays');
-      if (payNav) payNav.style.display = S.perms.can_see_payments ? '' : 'none';
+      if (payNav) payNav.style.display = S.perms.can_see_payments_tab ? '' : 'none';
       const payBn = document.getElementById('bn-pays');
-      if (payBn) payBn.style.display = S.perms.can_see_payments ? '' : 'none';
+      if (payBn) payBn.style.display = S.perms.can_see_payments_tab ? '' : 'none';
 
       // Pokaż zarządzanie sesjami instruktorów (tylko dla can_assign_instructors)
       const smgmtNav = document.getElementById('ni-smgmt');
@@ -2057,7 +2057,7 @@
         <th>Nazwisko, Imię</th>
         <th>Ur.</th>
         <th>Telefon</th>
-        <th>Opłacony do</th>
+        ${S.perms.can_see_paid_status ? '<th>Opłacony do</th>' : ''}
         <th>Obecności</th>
         <th></th>
       </tr></thead>
@@ -2084,7 +2084,7 @@
     </td>
     <td data-label="Ur."class="td-dim">${s.birth_year || '—'}</td>
     <td data-label="Telefon" class="td-dim">${s.phone ? esc(s.phone) : '—'}</td>
-    <td data-label="Opłacony do">${paidCell}</td>
+    ${S.perms.can_see_paid_status ? `<td data-label="Opłacony do">${paidCell}</td>` : ''}
     <td data-label="Obecności">${s.att_season || 0}</td>
     <td><button class="btn btn-o btn-xs" onclick="openStud(${s.id})">Kartoteka →</button></td>
   </tr>`;
@@ -2144,7 +2144,7 @@
       <div class="ib">
         <h4>Podsumowanie</h4>
         <div class="ir"><span class="ir-l">Grupy</span><span class="ir-v">${grps || '—'}</span></div>
-        <div class="ir"><span class="ir-l">Opłacony do</span><span class="ir-v">${(() => { const cg = (s.groups || []).find(x => x.id == S.grpId); const pu = calcPaidUntil(cg?.paid_until, pays[0]?.paid_at); return pu ? fd(pu) : '—'; })()}</span></div>
+        ${S.perms.can_see_paid_status ? `<div class="ir"><span class="ir-l">Opłacony do</span><span class="ir-v">${(() => { const cg = (s.groups || []).find(x => x.id == S.grpId); const pu = calcPaidUntil(cg?.paid_until, pays[0]?.paid_at); return pu ? fd(pu) : '—'; })()}</span></div>` : ''}
         ${S.perms.can_assign_instructors ? `<div class="ir"><span class="ir-l">Ostatnia wpłata</span><span class="ir-v">${pays[0] ? fd(pays[0].paid_at) : '—'}</span></div>` : ''}
         <div class="ir"><span class="ir-l">Obecności w sezonie</span><span class="ir-v">${attPres} / ${att.length}</span></div>
       </div>
@@ -2153,7 +2153,8 @@
       <button class="btn btn-o btn-sm" onclick="moEditStud()">Edytuj dane</button>
       <button class="btn btn-ghost btn-sm" onclick="doDelStud(${s.id})">Usuń kursanta</button>
     </div>
-    <div class="section-hd">PŁATNOŚCI <button class="btn btn-g btn-xs" onclick="moAddPay(${s.id})">+ Dodaj wpłatę</button></div>
+    ${S.perms.can_see_payments ? `
+    <div class="section-hd">PŁATNOŚCI ${S.perms.can_accept_payment ? `<button class="btn btn-g btn-xs" onclick="moAddPay(${s.id})">+ Dodaj wpłatę</button>` : ''}</div>
     <div style="margin-bottom:18px">
       ${pays.length === 0 ? '<div class="empty" style="padding:16px">Brak wpłat.</div>' :
           pays.map(p => `<div class="prow">
@@ -2162,7 +2163,9 @@
           <div class="prow-note">${p.note ? esc(p.note) : ''}</div>
           <button class="btn btn-ghost btn-xs" onclick="doDelPay(${s.id},${p.id})">✕</button>
         </div>`).join('')}
-    </div>
+    </div>` : (S.perms.can_accept_payment ? `
+    <div class="section-hd">WPŁATY</div>
+    <div style="margin-bottom:18px"><button class="btn btn-g btn-xs" onclick="moAddPay(${s.id})">+ Dodaj wpłatę</button></div>` : '')}
     <div class="section-hd">HISTORIA OBECNOŚCI</div>
     ${att.length === 0 ? '<div class="empty" style="padding:16px">Brak zapisanych obecności.</div>' : `
     <div class="tw"><table>
@@ -2513,7 +2516,7 @@
           const puDate = calcPaidUntil(s.paid_until, s.last_payment);
 
           // Widoczna, uwypuklona data opłaty
-          const payBadge = S.perms.can_see_payments ? `
+          const payBadge = S.perms.can_see_paid_status ? `
             <div style="font-size:10px;font-weight:700;letter-spacing:0.02em;color:var(--dim);margin-top:2px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
               Opłacony do: <span class="badge ${paid === false ? 'br' : paid === true ? 'bg' : ''}" style="padding:4px 8px;border-radius:6px;font-size:12px;font-weight:900;${paid === false ? 'box-shadow:0 2px 8px rgba(196,32,0,0.3)' : paid === true ? 'box-shadow:0 2px 8px rgba(46,204,113,0.2)' : 'color:var(--dim)'}">${puDate ? fd(puDate) : 'Brak danych'}</span>
               ${S.perms.can_accept_payment ? `<button class="btn btn-xs" style="padding:2px 7px;font-size:10px;border:1px solid var(--line2);color:var(--dim);background:var(--panel2)" onclick="event.stopPropagation();moPaidUntil(${s.student_id},${sess.group_id},'${s.paid_until || ''}')">✎</button>` : ''}

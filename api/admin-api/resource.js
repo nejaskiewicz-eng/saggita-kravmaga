@@ -137,7 +137,8 @@ module.exports = async (req, res) => {
 
     if (req.method === 'PATCH' && id) {
       const b = req.body || {};
-      const allowed = ['can_see_groups','can_see_student_count','can_see_payments',
+      const allowed = ['can_see_groups','can_see_student_count',
+                       'can_see_paid_status','can_see_payments','can_see_payments_tab',
                        'can_accept_payment','can_add_student','can_mark_attendance',
                        'can_assign_instructors'];
       try {

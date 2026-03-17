@@ -3956,11 +3956,13 @@
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px">
         ${pc('can_see_groups', 'Widzi listę grup')}
         ${pc('can_see_student_count', 'Widzi liczbę kursantów')}
-        ${pc('can_see_payments', 'Widzi płatności')}
-        ${pc('can_accept_payment', 'Może przyjmować płatności')}
-        ${pc('can_add_student', 'Może dodawać kursantów')}
         ${pc('can_mark_attendance', 'Może oznaczać obecność')}
-        ${pc('can_assign_instructors', 'Może przypisywać instruktorów do sesji')}
+        ${pc('can_add_student', 'Może dodawać kursantów')}
+        ${pc('can_see_paid_status', 'Widzi status opłacenia w obecności')}
+        ${pc('can_see_payments', 'Widzi historię wpłat (kwoty) w kartotece')}
+        ${pc('can_see_payments_tab', 'Widzi zakładkę Płatności')}
+        ${pc('can_accept_payment', 'Może przyjmować wpłaty / ustawiać "opłacony do"')}
+        ${pc('can_assign_instructors', 'Zarządzanie sesjami instruktorów')}
       </div>
     </div>
     <div id="ni-err" style="color:var(--red-l);font-size:12px;margin-top:8px;display:none"></div>`,
@@ -3977,7 +3979,7 @@
       if (!fn || !ln || !un || !pw) { errEl.textContent = 'Imię, nazwisko, login i hasło są wymagane.'; errEl.style.display = 'block'; return; }
       if (pw.length < 8) { errEl.textContent = 'Hasło musi mieć co najmniej 8 znaków.'; errEl.style.display = 'block'; return; }
       const groupIds = getCheckedGroupIds('ni');
-      const permKeys = ['can_see_groups', 'can_see_student_count', 'can_see_payments', 'can_accept_payment', 'can_add_student', 'can_mark_attendance', 'can_assign_instructors'];
+      const permKeys = ['can_see_groups','can_see_student_count','can_mark_attendance','can_add_student','can_see_paid_status','can_see_payments','can_see_payments_tab','can_accept_payment','can_assign_instructors'];
       try {
         const inst = await aF('/instructors', {
           method: 'POST', body: JSON.stringify({
@@ -4071,11 +4073,13 @@
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px">
         ${pc('can_see_groups', 'Widzi listę grup')}
         ${pc('can_see_student_count', 'Widzi liczbę kursantów')}
-        ${pc('can_see_payments', 'Widzi płatności')}
-        ${pc('can_accept_payment', 'Może przyjmować płatności')}
-        ${pc('can_add_student', 'Może dodawać kursantów')}
         ${pc('can_mark_attendance', 'Może oznaczać obecność')}
-        ${pc('can_assign_instructors', 'Może przypisywać instruktorów do sesji')}
+        ${pc('can_add_student', 'Może dodawać kursantów')}
+        ${pc('can_see_paid_status', 'Widzi status opłacenia w obecności')}
+        ${pc('can_see_payments', 'Widzi historię wpłat (kwoty) w kartotece')}
+        ${pc('can_see_payments_tab', 'Widzi zakładkę Płatności')}
+        ${pc('can_accept_payment', 'Może przyjmować wpłaty / ustawiać "opłacony do"')}
+        ${pc('can_assign_instructors', 'Zarządzanie sesjami instruktorów')}
       </div>
     </div>
 
@@ -4106,7 +4110,7 @@
         await aF(`/instructors/${id}`, { method: 'PATCH', body: JSON.stringify(data) });
 
         // Zapisz uprawnienia
-        const permKeys = ['can_see_groups', 'can_see_student_count', 'can_see_payments', 'can_accept_payment', 'can_add_student', 'can_mark_attendance', 'can_assign_instructors'];
+        const permKeys = ['can_see_groups','can_see_student_count','can_mark_attendance','can_add_student','can_see_paid_status','can_see_payments','can_see_payments_tab','can_accept_payment','can_assign_instructors'];
         const permsData = {};
         permKeys.forEach(k => {
           const el = document.getElementById('perm-' + k);
