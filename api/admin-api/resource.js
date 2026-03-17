@@ -16,6 +16,25 @@ module.exports = async (req, res) => {
   const pool = getPool();
   const { type, id } = req.query;
 
+  // ── JEDNORAZOWE MIGRACJE DB (wywołać raz po deploymencie) ──────
+  if (type === 'run-migrations' && req.method === 'POST') {
+    try {
+      const results = [];
+      const migrations = [
+        `ALTER TABLE instructors ADD COLUMN IF NOT EXISTS archived BOOLEAN NOT NULL DEFAULT false`,
+        `ALTER TABLE instructor_permissions ADD COLUMN IF NOT EXISTS can_see_paid_status BOOLEAN NOT NULL DEFAULT false`,
+        `ALTER TABLE instructor_permissions ADD COLUMN IF NOT EXISTS can_see_payments_tab BOOLEAN NOT NULL DEFAULT false`,
+      ];
+      for (const sql of migrations) {
+        await pool.query(sql);
+        results.push({ sql: sql.slice(0, 60) + '…', ok: true });
+      }
+      return res.status(200).json({ ok: true, results });
+    } catch (e) {
+      return res.status(500).json({ error: e.message });
+    }
+  }
+
   // ── INSTRUKTORZY ──────────────────────────────────────────────
   if (type === 'instructors') {
 
