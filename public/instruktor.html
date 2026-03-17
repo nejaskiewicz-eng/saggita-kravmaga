@@ -1502,14 +1502,35 @@
         font-size: 12px
       }
 
-      /* Modal */
+      /* Modal — pełny ekran na mobile */
       .mo {
-        padding: 8px
+        padding: 0;
+        align-items: flex-end
       }
 
       .md {
+        width: 100%;
         max-width: 100%;
-        max-height: 95vh
+        max-height: 92dvh;
+        border-radius: 16px 16px 0 0;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch
+      }
+
+      .md-h {
+        position: sticky;
+        top: 0;
+        background: var(--panel);
+        z-index: 1;
+        border-radius: 16px 16px 0 0
+      }
+
+      .md-f {
+        position: sticky;
+        bottom: 0;
+        background: var(--panel);
+        z-index: 1;
+        border-top: 1px solid var(--line2)
       }
 
       .bc {
@@ -1923,12 +1944,31 @@
     }
 
     // ── DASHBOARD ─────────────────────────────────────────────────
-    function renderDash() {
+    async function renderDash() {
       const showCount = S.perms.can_see_student_count;
       const total = S.groups.reduce((s, g) => s + (g.student_count || 0), 0);
-      const todayDow = new Date().getDay(); // 0=Sun
-      const tdow0 = todayDow === 0 ? 6 : todayDow - 1; // 0=Mon
-      const todayGs = S.groups.filter(g => (g.schedules || []).some(s => Number(s.day_of_week) === tdow0 + 1)); // DB: 1=Mon ISO
+      const today = todayISO();
+
+      // Pobierz dzisiejsze sesje z bazy (tak jak w kalendarzu)
+      let todaySessions = [];
+      try {
+        const d = await api(`/api/instructor/sessions?from=${today}&to=${today}`);
+        todaySessions = d.rows || [];
+      } catch (_) { /* jeśli błąd — fallback do harmonogramu */ }
+
+      // Grupy z faktyczną sesją w DB dzisiaj
+      const sessMap = {}; // group_id → session_id
+      todaySessions.forEach(s => { sessMap[s.group_id] = s.session_id; });
+
+      // Grupy do pokazania: te które mają sesję w DB LUB mają harmonogram na dziś
+      const todayDow = new Date().getDay();
+      const todayIso = todayDow === 0 ? 7 : todayDow; // DB: 1=Mon..7=Sun (ISO)
+      const schedGs = S.groups.filter(g => (g.schedules || []).some(s => Number(s.day_of_week) === todayIso));
+      const sessGids = new Set(Object.keys(sessMap).map(Number));
+
+      // Połącz: sesje DB + harmonogram, bez duplikatów
+      const allTodayGids = new Set([...Array.from(sessGids), ...schedGs.map(g => g.id)]);
+      const todayGs = S.groups.filter(g => allTodayGids.has(g.id));
 
       $('pb').innerHTML = `
     <div class="stats">
@@ -1937,12 +1977,12 @@
       <div class="sc y"><div class="sc-l">Sezon od</div><div class="sc-v" style="font-size:15px">01.09.2025</div></div>
     </div>
     ${todayGs.length ? `<div class="section-hd">DZISIAJ MASZ ZAJĘCIA</div>
-    <div class="gcards" style="margin-bottom:20px">${todayGs.map(gcardHTML).join('')}</div>` :
+    <div class="gcards" style="margin-bottom:20px">${todayGs.map(g => gcardHTML(g, sessMap[g.id])).join('')}</div>` :
           `<div class="empty" style="margin-top:20px">Dzisiaj nie masz żadnych zaplanowanych zajęć.</div>`}
     <!-- "Wszystkie grupy" usunięto zgodnie z preferencją – dostępne w menu "Grupy & Kursanci" -->`;
     }
 
-    function gcardHTML(g) {
+    function gcardHTML(g, todaySessId) {
       const _seen1 = new Set();
       const sch = (g.schedules || []).filter(s => { const k = `${s.day_of_week}|${(s.time_label || String(s.time_start || '')).slice(0, 5)}`; return _seen1.has(k) ? false : (_seen1.add(k), true); }).map(s => `<strong>${s.day_name || DAYS_FULL[s.day_of_week]}</strong>&nbsp;${s.time_label || ''}`).join('<br>');
       const showCount = S.perms.can_see_student_count;
@@ -1950,10 +1990,15 @@
       // Sprawdź czy dzisiaj są zajęcia tej grupy
       const todayDow = new Date().getDay(); // 0=Sun
       const todayIso = todayDow === 0 ? 7 : todayDow; // DB: 1=Mon..7=Sun (ISO)
-      const hasClassToday = (g.schedules || []).some(s => Number(s.day_of_week) === todayIso);
+      const hasClassToday = !!todaySessId || (g.schedules || []).some(s => Number(s.day_of_week) === todayIso);
 
       // Przycisk "Kursanci" — tylko jeśli ma pełny dostęp LUB dzisiaj ma zajęcia
       const canOpenStudents = S.perms.can_see_groups || hasClassToday;
+
+      // Akcja "Sprawdź obecność": jeśli sesja już istnieje → otwórz bezpośrednio, inaczej quickSess (utwórz)
+      const attendanceBtn = todaySessId
+        ? `<button class="btn btn-r btn-sm" onclick="event.stopPropagation();openSessFromCal(${todaySessId},${g.id},'${todayISO()}',${JSON.stringify(g.name)})" style="font-weight:800;border:none;box-shadow:0 3px 10px rgba(196,32,0,0.3)">Sprawdź obecność</button>`
+        : `<button class="btn btn-r btn-sm" onclick="event.stopPropagation();quickSess(${g.id})" style="font-weight:800;border:none;box-shadow:0 3px 10px rgba(196,32,0,0.3)">Sprawdź obecność</button>`;
 
       return `<div class="gc" onclick="${canOpenStudents ? `openGrp(${g.id})` : ''}">
     <div class="gc-city">${esc(g.location_city || '')} / ${esc(g.location_name || '')}</div>
@@ -1965,7 +2010,7 @@
     <div class="gc-sched">${sch || '<span style="color:var(--dim2)">Brak grafiku</span>'}</div>
     <div class="gc-foot">
       ${hasClassToday
-          ? `<button class="btn btn-r btn-sm" onclick="event.stopPropagation();quickSess(${g.id})" style="font-weight:800;border:none;box-shadow:0 3px 10px rgba(196,32,0,0.3)">Sprawdź obecność</button>`
+          ? attendanceBtn
           : (canOpenStudents
             ? `<button class="btn btn-r btn-sm" onclick="event.stopPropagation();openGrp(${g.id})">Kursanci</button>`
             : `<span style="font-size:11px;color:var(--dim2);padding:4px 0">Dostępne w dniu zajęć</span>`)
