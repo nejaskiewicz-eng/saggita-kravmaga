@@ -2023,15 +2023,16 @@
       <div class="tw"><table>
         <thead><tr>
           <th>Nazwisko, Imię</th>
-          ${S.perms.can_see_payments ? '<th>Ostatnia wpłata</th>' : ''}
+          ${S.perms.can_see_paid_status ? '<th>Opłacony do</th>' : ''}
           ${S.perms.can_accept_payment ? '<th>Wpłata</th>' : ''}
         </tr></thead>
         <tbody>${st.map(s => {
-          const days = daysAgo(s.last_payment);
-          const payClass = days === null ? '' : (days > 35 ? 'bx bx-r' : 'bx bx-g');
+          const paid = paidStatus(s.paid_until, s.last_payment);
+          const puDate = calcPaidUntil(s.paid_until, s.last_payment);
+          const payClass = paid === true ? 'bx bx-g' : paid === false ? 'bx bx-r' : '';
           return `<tr>
             <td><strong>${esc(s.last_name)}, ${esc(s.first_name)}</strong>${!s.is_active ? '<span class="bx bx-d" style="margin-left:6px">nieaktywny</span>' : ''}</td>
-            ${S.perms.can_see_payments ? `<td>${s.last_payment ? `<span class="${payClass}">${fd(s.last_payment)}</span>` : '—'}</td>` : ''}
+            ${S.perms.can_see_paid_status ? `<td>${puDate ? `<span class="${payClass}">${fd(puDate)}</span>` : '—'}</td>` : ''}
             ${S.perms.can_accept_payment ? `<td><button class="btn btn-xs" style="padding:3px 10px;font-size:11px;background:rgba(46,204,113,.15);border:1px solid rgba(46,204,113,.4);color:#2ecc71" onclick="moAcceptPayment(${s.id},'${esc(s.first_name)} ${esc(s.last_name)}')">+ Wpłata</button></td>` : ''}
           </tr>`;
         }).join('')}</tbody>
@@ -2144,8 +2145,8 @@
       <div class="ib">
         <h4>Podsumowanie</h4>
         <div class="ir"><span class="ir-l">Grupy</span><span class="ir-v">${grps || '—'}</span></div>
-        ${S.perms.can_see_paid_status ? `<div class="ir"><span class="ir-l">Opłacony do</span><span class="ir-v">${(() => { const cg = (s.groups || []).find(x => x.id == S.grpId); const pu = calcPaidUntil(cg?.paid_until, pays[0]?.paid_at); return pu ? fd(pu) : '—'; })()}</span></div>` : ''}
-        ${S.perms.can_assign_instructors ? `<div class="ir"><span class="ir-l">Ostatnia wpłata</span><span class="ir-v">${pays[0] ? fd(pays[0].paid_at) : '—'}</span></div>` : ''}
+        ${S.perms.can_see_payments ? `<div class="ir"><span class="ir-l">Opłacony do</span><span class="ir-v">${(() => { const cg = (s.groups || []).find(x => x.id == S.grpId); const pu = calcPaidUntil(cg?.paid_until, pays[0]?.paid_at); return pu ? fd(pu) : '—'; })()}</span></div>` : ''}
+        ${S.perms.can_see_payments ? `<div class="ir"><span class="ir-l">Ostatnia wpłata</span><span class="ir-v">${pays[0] ? fd(pays[0].paid_at) : '—'}</span></div>` : ''}
         <div class="ir"><span class="ir-l">Obecności w sezonie</span><span class="ir-v">${attPres} / ${att.length}</span></div>
       </div>
     </div>
@@ -2205,8 +2206,7 @@
     </div>
     <div class="cgrid" id="cgrid">${DAYS_SHORT.map(d => `<div class="cgh">${d}</div>`).join('')}</div>
     <div class="cal-legend">
-      <span><em style="background:var(--gsoft);border-left:2px solid var(--green)"></em>Sesja istnieje (kliknij → obecności)</span>
-      <span><em style="background:var(--asoft);border-left:2px solid var(--accent)"></em>Zaplanowane zajęcia (kliknij → utwórz sesję)</span>
+      <span><em style="background:var(--gsoft);border-left:2px solid var(--green)"></em>Sesja treningowa (kliknij → obecności)</span>
     </div>
     <div id="cal-debug" style="font-size:10px;color:rgba(255,255,255,0.35);padding:4px 6px;word-break:break-all"></div>`;
 
@@ -2255,24 +2255,7 @@
         smap[k].push(s);
       });
 
-      // Build scheduled days map from group schedules
-      const groups = S.calGid ? S.groups.filter(g => g.id == S.calGid) : S.groups;
-      const schedMap = {}; // "YYYY-MM-DD" → [{group, sched}]
-      groups.forEach(g => {
-        const seenDow = new Set();
-        (g.schedules || []).filter(s => { const k = `${s.day_of_week}|${(s.time_label || String(s.time_start || '')).slice(0, 5)}`; if (seenDow.has(k)) return false; seenDow.add(k); return true; }).forEach(sch => {
-          const dow = Number(sch.day_of_week);
-          for (let d = 1; d <= daysInM; d++) {
-            const date = new Date(y, m, d);
-            const wd = date.getDay() === 0 ? 6 : date.getDay() - 1;
-            if (wd === dow - 1) {  // DB: 1=Mon ISO; wd: 0=Mon JS
-              const iso = toISO(date);
-              if (!schedMap[iso]) schedMap[iso] = [];
-              schedMap[iso].push({ group: g, sched: sch });
-            }
-          }
-        });
-      });
+      // Instruktor widzi tylko sesje przypisane — harmonogram grup nie jest wyświetlany
 
       // Prev month padding
       for (let i = 0; i < offset; i++) {
@@ -2285,13 +2268,12 @@
       for (let d = 1; d <= daysInM; d++) {
         const iso = toISO(new Date(y, m, d));
         const hasSess = !!smap[iso];
-        const hasSched = !!schedMap[iso] && !hasSess;
         const isToday = iso === today;
         const c = document.createElement('div');
         const cls = ['cgc'];
         if (isToday) cls.push('today');
-        if (hasSess || hasSched) cls.push('clickable');
-        else cls.push('other'); // Oznaczamy puste dni jako 'other', żeby mobilny CSS je ukrył.
+        if (hasSess) cls.push('clickable');
+        else cls.push('other'); // Puste dni ukryte na mobilnym CSS.
         c.className = cls.join(' ');
 
         let html = `<div class="cgc-d">${d}</div>`;
@@ -2312,16 +2294,7 @@
             html += `<span class="cpill ${pillCls}" onclick="openSessFromCal(${s.session_id},${s.group_id},'${normISO(s.session_date)}','${esc(s.group_name || '')}')" ontouchend="event.preventDefault();openSessFromCal(${s.session_id},${s.group_id},'${normISO(s.session_date)}','${esc(s.group_name || '')}')">${pillIco} ${esc(gname)} (${s.present_count || 0}/${s.total_marked || 0})</span>`;
           });
         }
-        if (hasSched) {
-          // Sortuj zaplanowane zajęcia po godzinie (time_start)
-          const sortedSched = (schedMap[iso] || []).slice().sort((a, b) =>
-            String(a.sched.time_start || '99:99').localeCompare(String(b.sched.time_start || '99:99'))
-          );
-          sortedSched.forEach(({ group: g, sched: sch }) => {
-            const gname = g.name.replace('2025/2026', '25/26').replace(' - ', '—');
-            html += `<span class="cpill cpill-f" onclick="createSess(${g.id},'${iso}')" ontouchend="event.preventDefault();createSess(${g.id},'${iso}')">+ ${esc(gname)} ${sch.time_label || ''}</span>`;
-          });
-        }
+        // Instruktor nie widzi podpowiedzi harmonogramu — tylko przypisane sesje
         c.innerHTML = html;
         grid.appendChild(c);
       }

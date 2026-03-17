@@ -340,6 +340,11 @@ module.exports = async (req, res) => {
     if (route === 'sessions') {
       if (req.method === 'GET') {
         try {
+          // Sprawdź czy instruktor jest chief (can_assign_instructors) — widzi wszystkie sesje
+          const { rows: [permRow] } = await pool.query(
+            `SELECT can_assign_instructors FROM instructor_permissions WHERE instructor_id=$1`, [P.sub]);
+          const isChief = !!(permRow && permRow.can_assign_instructors);
+
           const { group_id, from, to } = req.query;
           let q = `
             SELECT ts.id AS session_id, TO_CHAR(ts.session_date, 'YYYY-MM-DD') AS session_date, ts.group_id,
@@ -358,6 +363,10 @@ module.exports = async (req, res) => {
                 SELECT group_id FROM instructor_groups WHERE instructor_id=$2
               )
           `;
+          // Zwykły instruktor widzi tylko sesje przypisane do siebie lub bez przypisania
+          if (!isChief) {
+            q += ` AND (ts.instructor_id = $2 OR ts.instructor_id IS NULL)`;
+          }
           const params = [from || SEASON, P.sub];
           if (to) { params.push(to); q += ` AND ts.session_date <= $${params.length}`; }
           if (group_id) { params.push(group_id); q += ` AND ts.group_id = $${params.length}`; }
