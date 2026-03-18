@@ -4716,13 +4716,13 @@
     }
 
     async function linkRegToStudent(id) {
-      if (!confirm('Przenieść zgłoszenie do bazy kursantów (students)?')) return;
+      if (!confirm('Przenieść zgłoszenie do bazy kursantów i przypisać do grupy?')) return;
       try {
-        await aF('/registrations?id=' + id, {
+        const d = await aF('/registrations?id=' + id, {
           method: 'PATCH',
           body: JSON.stringify({ status: 'accepted' })
         });
-        toast('Kursant dodany do bazy i grupy!', 'success');
+        toast(d.student_id ? `Kursant #${d.student_id} dodany do bazy i grupy!` : 'Zaktualizowano.', 'success');
         if (typeof loadReg === 'function') loadReg();
       } catch (e) {
         toast('Błąd: ' + e.message, 'error');

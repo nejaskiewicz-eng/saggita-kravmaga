@@ -304,39 +304,45 @@ module.exports = async (req, res) => {
 
       // Gdy akceptujemy zapis → automatycznie utwórz kursanta w bazie students
       if (b.status === 'accepted') {
-        try {
-          const regId = parseInt(id);
-          // Pobierz dane rejestracji
-          const { rows: [reg] } = await pool.query(`SELECT * FROM registrations WHERE id=$1`, [regId]);
-          if (reg) {
-            // Sprawdź czy kursant już istnieje (powiązany przez registration_id)
-            const { rows: [existing] } = await pool.query(
-              `SELECT id FROM students WHERE registration_id=$1`, [regId]
+        const regId = parseInt(id);
+        const { rows: [reg] } = await pool.query(`SELECT * FROM registrations WHERE id=$1`, [regId]);
+        if (reg) {
+          // Szukaj istniejącego kursanta po emailu lub telefonie (nie polegamy na registration_id)
+          let studentId = null;
+          if (reg.email) {
+            const { rows: [byEmail] } = await pool.query(
+              `SELECT id FROM students WHERE email=$1 LIMIT 1`, [reg.email]
             );
-            let studentId = existing?.id;
-            if (!studentId) {
-              // Utwórz nowego kursanta
-              const { rows: [newSt] } = await pool.query(
-                `INSERT INTO students (first_name, last_name, email, phone, birth_year, source, is_active, registration_id)
-                 VALUES ($1,$2,$3,$4,$5,'www',true,$6) RETURNING id`,
-                [reg.first_name, reg.last_name, reg.email || null, reg.phone || null, reg.birth_year || null, regId]
-              );
-              studentId = newSt.id;
-            }
-            // Dodaj do grupy (jeśli podana)
-            const gid = reg.group_id || b.group_id;
-            if (gid && studentId) {
-              await pool.query(
-                `INSERT INTO student_groups (student_id, group_id, active)
-                 VALUES ($1,$2,true)
-                 ON CONFLICT (student_id, group_id) DO UPDATE SET active=true`,
-                [studentId, gid]
-              );
-            }
+            studentId = byEmail?.id || null;
           }
-        } catch (linkErr) {
-          // Nie przerywaj — aktualizacja statusu się powiodła
-          console.error('[registrations] Błąd tworzenia kursanta:', linkErr.message);
+          if (!studentId && reg.phone) {
+            const { rows: [byPhone] } = await pool.query(
+              `SELECT id FROM students WHERE phone=$1 LIMIT 1`, [reg.phone]
+            );
+            studentId = byPhone?.id || null;
+          }
+          if (!studentId) {
+            // Utwórz nowego kursanta (bez registration_id — kolumna może nie istnieć w DB)
+            const { rows: [newSt] } = await pool.query(
+              `INSERT INTO students (first_name, last_name, email, phone, birth_year, source, is_active)
+               VALUES ($1,$2,$3,$4,$5,'www',true) RETURNING id`,
+              [reg.first_name, reg.last_name, reg.email || null, reg.phone || null, reg.birth_year || null]
+            );
+            studentId = newSt.id;
+            // Opcjonalnie: powiąż przez registration_id (ignoruj błąd jeśli kolumna nie istnieje)
+            pool.query(`UPDATE students SET registration_id=$1 WHERE id=$2`, [regId, studentId]).catch(() => {});
+          }
+          // Dodaj do grupy
+          const gid = reg.group_id;
+          if (gid && studentId) {
+            await pool.query(
+              `INSERT INTO student_groups (student_id, group_id, active)
+               VALUES ($1,$2,true)
+               ON CONFLICT (student_id, group_id) DO UPDATE SET active=true`,
+              [studentId, gid]
+            );
+          }
+          return res.status(200).json({ success: true, student_id: studentId });
         }
       }
 
