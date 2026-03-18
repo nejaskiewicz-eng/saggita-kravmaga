@@ -848,13 +848,15 @@
     }
 
     .cpill-p {
-      background: var(--asoft);
-      color: #ff6b4a;
-      border-left: 2px solid var(--accent)
+      background: rgba(255, 200, 0, 0.06);
+      color: rgba(255, 200, 0, 0.6);
+      border-left: 2px dashed rgba(255, 200, 0, 0.4);
+      font-style: italic
     }
 
     .cpill-p:hover {
-      background: rgba(200, 35, 10, .25)
+      background: rgba(255, 200, 0, 0.14);
+      color: rgba(255, 200, 0, 0.9)
     }
 
     .cal-legend {
@@ -995,7 +997,7 @@
       position: fixed;
       inset: 0;
       background: rgba(0, 0, 0, .75);
-      z-index: 200;
+      z-index: 600;
       display: flex;
       align-items: flex-start;
       justify-content: center;
@@ -1440,9 +1442,16 @@
         border-radius: 8px;
       }
 
-      /* Ukrywamy puste wypełniacze z poprzedniego miesiąca na mobilnym widoku */
+      /* Ukrywamy puste wypełniacze z poprzedniego/następnego miesiąca na mobilnym widoku */
       .cgc.other {
         display: none !important;
+      }
+
+      /* Dni zaplanowane (harmonogram, bez sesji w DB) – widoczne na mobile */
+      .cgc.planned {
+        display: flex;
+        background: rgba(255,255,255,0.02);
+        border-color: var(--line)
       }
 
       .cgc-d {
@@ -1514,7 +1523,9 @@
         max-height: 92dvh;
         border-radius: 16px 16px 0 0;
         overflow-y: auto;
-        -webkit-overflow-scrolling: touch
+        -webkit-overflow-scrolling: touch;
+        display: flex;
+        flex-direction: column
       }
 
       .md-h {
@@ -1522,7 +1533,13 @@
         top: 0;
         background: var(--panel);
         z-index: 1;
-        border-radius: 16px 16px 0 0
+        border-radius: 16px 16px 0 0;
+        flex-shrink: 0
+      }
+
+      .md-b {
+        flex: 1;
+        overflow-y: auto
       }
 
       .md-f {
@@ -1530,7 +1547,9 @@
         bottom: 0;
         background: var(--panel);
         z-index: 1;
-        border-top: 1px solid var(--line2)
+        border-top: 1px solid var(--line2);
+        flex-shrink: 0;
+        padding-bottom: max(12px, env(safe-area-inset-bottom))
       }
 
       .bc {
@@ -2252,6 +2271,7 @@
     <div class="cgrid" id="cgrid">${DAYS_SHORT.map(d => `<div class="cgh">${d}</div>`).join('')}</div>
     <div class="cal-legend">
       <span><em style="background:var(--gsoft);border-left:2px solid var(--green)"></em>Sesja treningowa (kliknij → obecności)</span>
+      ${S.perms && S.perms.can_assign_instructors ? `<span><em style="background:rgba(255,200,0,0.08);border-left:2px solid rgba(255,200,0,0.4)"></em>Planowane (kliknij → utwórz sesję)</span>` : ''}
     </div>
     <div id="cal-debug" style="font-size:10px;color:rgba(255,255,255,0.35);padding:4px 6px;word-break:break-all"></div>`;
 
@@ -2300,7 +2320,23 @@
         smap[k].push(s);
       });
 
-      // Instruktor widzi tylko sesje przypisane — harmonogram grup nie jest wyświetlany
+      // Dla instruktora głównego (can_assign_instructors): oblicz zaplanowane dni z harmonogramu
+      // Pokaż je w kalendarzu jako "planowane" dla dni bez sesji w DB
+      const plannedDays = new Set();
+      if (S.perms && S.perms.can_assign_instructors) {
+        const grps = S.calGid ? S.groups.filter(g => g.id == S.calGid) : S.groups;
+        grps.forEach(g => {
+          (g.schedules || []).forEach(sched => {
+            const dow = Number(sched.day_of_week); // 1=Mon..7=Sun (ISO)
+            for (let d = 1; d <= daysInM; d++) {
+              const date = new Date(y, m, d);
+              const dateDow = date.getDay(); // 0=Sun
+              const dateIsoDow = dateDow === 0 ? 7 : dateDow;
+              if (dateIsoDow === dow) plannedDays.add(toISO(date));
+            }
+          });
+        });
+      }
 
       // Prev month padding
       for (let i = 0; i < offset; i++) {
@@ -2313,11 +2349,13 @@
       for (let d = 1; d <= daysInM; d++) {
         const iso = toISO(new Date(y, m, d));
         const hasSess = !!smap[iso];
+        const hasPlanned = plannedDays.has(iso) && iso > today;
         const isToday = iso === today;
         const c = document.createElement('div');
         const cls = ['cgc'];
         if (isToday) cls.push('today');
         if (hasSess) cls.push('clickable');
+        else if (hasPlanned) cls.push('planned');
         else cls.push('other'); // Puste dni ukryte na mobilnym CSS.
         c.className = cls.join(' ');
 
@@ -2338,8 +2376,18 @@
             const pillIco = isFuture ? "⏳" : "✓";
             html += `<span class="cpill ${pillCls}" onclick="openSessFromCal(${s.session_id},${s.group_id},'${normISO(s.session_date)}','${esc(s.group_name || '')}')" ontouchend="event.preventDefault();openSessFromCal(${s.session_id},${s.group_id},'${normISO(s.session_date)}','${esc(s.group_name || '')}')">${pillIco} ${esc(gname)} (${s.present_count || 0}/${s.total_marked || 0})</span>`;
           });
+        } else if (hasPlanned) {
+          // Planowane sesje wg harmonogramu — bez sesji w DB
+          const grps = S.calGid ? S.groups.filter(g => g.id == S.calGid) : S.groups;
+          const dateDow = new Date(y, m, d).getDay();
+          const dateIsoDow = dateDow === 0 ? 7 : dateDow;
+          grps.forEach(g => {
+            if ((g.schedules || []).some(s => Number(s.day_of_week) === dateIsoDow)) {
+              const gname = (g.name || "").replace("2025/2026", "25/26").replace(" - ", "—");
+              html += `<span class="cpill cpill-p" onclick="createSess(${g.id},'${iso}')" ontouchend="event.preventDefault();createSess(${g.id},'${iso}')">+ ${esc(gname)}</span>`;
+            }
+          });
         }
-        // Instruktor nie widzi podpowiedzi harmonogramu — tylko przypisane sesje
         c.innerHTML = html;
         grid.appendChild(c);
       }
