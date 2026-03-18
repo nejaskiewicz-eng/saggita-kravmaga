@@ -325,7 +325,7 @@ module.exports = async (req, res) => {
             // Utwórz nowego kursanta (bez registration_id — kolumna może nie istnieć w DB)
             const { rows: [newSt] } = await pool.query(
               `INSERT INTO students (first_name, last_name, email, phone, birth_year, source, is_active)
-               VALUES ($1,$2,$3,$4,$5,'www',true) RETURNING id`,
+               VALUES ($1,$2,$3,$4,$5,'manual',true) RETURNING id`,
               [reg.first_name, reg.last_name, reg.email || null, reg.phone || null, reg.birth_year || null]
             );
             studentId = newSt.id;
