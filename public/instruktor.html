@@ -814,6 +814,7 @@
       border: none;
       border-radius: 0;
       background: none;
+      touch-action: manipulation;
       text-align: left;
       font-family: inherit;
       -webkit-appearance: none;
@@ -2374,7 +2375,7 @@
             const gname = (s.group_name || "").replace("2025/2026", "25/26").replace(" - ", "—");
             const pillCls = isFuture ? "cpill-f" : "cpill-s";
             const pillIco = isFuture ? "⏳" : "✓";
-            html += `<span class="cpill ${pillCls}" onclick="openSessFromCal(${s.session_id},${s.group_id},'${normISO(s.session_date)}','${esc(s.group_name || '')}')" ontouchend="event.preventDefault();openSessFromCal(${s.session_id},${s.group_id},'${normISO(s.session_date)}','${esc(s.group_name || '')}')">${pillIco} ${esc(gname)} (${s.present_count || 0}/${s.total_marked || 0})</span>`;
+            html += `<span class="cpill ${pillCls}" onclick="openSessFromCal(${s.session_id},${s.group_id},'${normISO(s.session_date)}','${esc(s.group_name || '')}')">${pillIco} ${esc(gname)} (${s.present_count || 0}/${s.total_marked || 0})</span>`;
           });
         } else if (hasPlanned) {
           // Planowane sesje wg harmonogramu — bez sesji w DB
@@ -2384,7 +2385,7 @@
           grps.forEach(g => {
             if ((g.schedules || []).some(s => Number(s.day_of_week) === dateIsoDow)) {
               const gname = (g.name || "").replace("2025/2026", "25/26").replace(" - ", "—");
-              html += `<span class="cpill cpill-p" onclick="createSess(${g.id},'${iso}')" ontouchend="event.preventDefault();createSess(${g.id},'${iso}')">+ ${esc(gname)}</span>`;
+              html += `<span class="cpill cpill-p" onclick="createSess(${g.id},'${iso}')">+ ${esc(gname)}</span>`;
             }
           });
         }
