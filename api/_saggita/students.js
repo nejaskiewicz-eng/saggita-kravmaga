@@ -135,6 +135,30 @@ module.exports = async (req, res) => {
     }
   }
 
+  // ── SUB-ROUTE: grupy kursanta ─────────────────────────────────
+  if (id && _route === 'groups') {
+    if (req.method === 'PATCH') {
+      const { add_group_id, remove_group_id } = req.body || {};
+      try {
+        if (remove_group_id) {
+          await pool.query(
+            `UPDATE student_groups SET active=false WHERE student_id=$1 AND group_id=$2`,
+            [id, remove_group_id]
+          );
+        }
+        if (add_group_id) {
+          await pool.query(
+            `INSERT INTO student_groups (student_id,group_id,active) VALUES ($1,$2,true)
+             ON CONFLICT (student_id,group_id) DO UPDATE SET active=true`,
+            [id, add_group_id]
+          );
+        }
+        return res.status(200).json({ success: true });
+      } catch (e) { return res.status(500).json({ error: e.message }); }
+    }
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
   // ── GET szczegóły kursanta ────────────────────────────────────
   if (req.method === 'GET' && id) {
     try {

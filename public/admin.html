@@ -2167,6 +2167,7 @@
         <td style="color:var(--dim);font-size:12px">${fdt(r.created_at)}</td>
         <td class="tda" style="white-space:nowrap;">
           ${r.status === 'new' ? `<button class="bi" style="background:#0a6800;color:#fff;border-color:#074d00" onclick="acceptReg(${r.id})">Akceptuj</button>` : ''}
+          ${r.status === 'accepted' && !r.has_student ? `<button class="bi" style="background:#004080;color:#fff;border-color:#003060" onclick="linkRegToStudent(${r.id})" title="Kursant nie jest jeszcze w bazie students">➕ Dodaj do bazy</button>` : ''}
           <button class="bi" onclick="changeGroupPrompt(${r.id}, ${r.group_id})">Zmień Grupę</button>
           <button class="bi" ${r.doc_data ? `onclick="downloadAdminDocs(${r.id})"` : `disabled title="Brak dokumentów"`} style="${r.doc_data ? 'background:#0055ff;color:#fff' : ''}">Pobierz Dokumenty</button>
           <button class="bi" onclick="openKartoteka(${r.id},'view')">Kartoteka</button>
@@ -3383,14 +3384,16 @@
 
     // ── Kartoteka kursanta (legacy/ujednolicona) ──────────────────
     async function openStudentKartoteka(id) {
-      let s, payments, attendance;
+      let s, payments, attendance, allGroupsData;
       try {
-        [s, payments, attendance] = await Promise.all([
+        [s, payments, attendance, allGroupsData] = await Promise.all([
           aF(`/students/${id}`),
           aF(`/students/${id}/payments`),
           aF(`/students/${id}/attendance`),
+          aF('/groups').catch(() => ({ rows: [] })),
         ]);
       } catch (e) { toast('Błąd pobierania danych: ' + e.message, 'error'); return; }
+      const allGroups = arrRows(allGroupsData).filter(g => g.active !== false).sort((a,b) => (a.name||'').localeCompare(b.name||''));
 
       const legacy = payments.legacy || [];
       const regs = payments.registrations || [];
@@ -3439,6 +3442,28 @@
             <option value="false" ${!s.is_active ? 'selected' : ''}>Nieaktywny</option>
           </select>
         </div>
+      </div>
+    </div>
+
+    <div class="ksec">
+      <div class="ksec-title" style="display:flex;align-items:center;justify-content:space-between">
+        Grupy
+        <div style="display:flex;gap:6px;align-items:center">
+          <select id="sk-new-grp" style="font-size:12px;padding:4px 8px;border-radius:4px;border:1px solid var(--border);background:var(--surface);color:var(--text)">
+            <option value="">— wybierz grupę —</option>
+            ${allGroups.map(g => `<option value="${g.id}">${g.name}${g.city ? ' (' + g.city + ')' : ''}</option>`).join('')}
+          </select>
+          <button class="bi btn-sm" onclick="addStudentToGroup(${id})">Dodaj</button>
+        </div>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;padding:8px 0">
+        ${(s.groups || []).filter(g => g.active).length
+          ? (s.groups || []).filter(g => g.active).map(g => `
+            <span style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;font-size:12px">
+              ${g.name}
+              <button onclick="removeStudentFromGroup(${id},${g.id},'${(g.name||'').replace(/'/g,"\\'")}',this)" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;line-height:1;padding:0;margin-left:2px" title="Usuń z grupy">×</button>
+            </span>`).join('')
+          : '<span style="color:var(--muted);font-size:12px">Brak przypisanych grup</span>'}
       </div>
     </div>
 
@@ -3550,6 +3575,27 @@
         toast('Status płatności zaktualizowany');
         if (CV === 'unified-students') fetchUS();
       } catch (e) { toast('Błąd: ' + e.message, 'error'); }
+    }
+
+    async function addStudentToGroup(studentId) {
+      const select = document.getElementById('sk-new-grp');
+      const groupId = parseInt(select?.value || '0');
+      if (!groupId) { toast('Wybierz grupę', 'error'); return; }
+      try {
+        await aF(`/students/${studentId}/groups`, { method: 'PATCH', body: JSON.stringify({ add_group_id: groupId }) });
+        toast('Dodano do grupy');
+        openStudentKartoteka(studentId);
+      } catch (e) { toast('Błąd: ' + e.message, 'error'); }
+    }
+
+    async function removeStudentFromGroup(studentId, groupId, groupName, btn) {
+      if (!confirm(`Usunąć kursanta z grupy "${groupName}"?`)) return;
+      if (btn) btn.disabled = true;
+      try {
+        await aF(`/students/${studentId}/groups`, { method: 'PATCH', body: JSON.stringify({ remove_group_id: groupId }) });
+        toast('Usunięto z grupy');
+        openStudentKartoteka(studentId);
+      } catch (e) { toast('Błąd: ' + e.message, 'error'); if (btn) btn.disabled = false; }
     }
 
     async function toggleStudentAtt(studentId, attId, present) {
@@ -4669,15 +4715,30 @@
       }
     }
 
-    async function changeGroupPrompt(id, currentGroupId) {
-      if (!Array.isArray(window.__groups)) {
-        toast('Odśwież stronę, aby załadować listę grup.', 'error');
-        return;
+    async function linkRegToStudent(id) {
+      if (!confirm('Przenieść zgłoszenie do bazy kursantów (students)?')) return;
+      try {
+        await aF('/registrations?id=' + id, {
+          method: 'PATCH',
+          body: JSON.stringify({ status: 'accepted' })
+        });
+        toast('Kursant dodany do bazy i grupy!', 'success');
+        if (typeof loadReg === 'function') loadReg();
+      } catch (e) {
+        toast('Błąd: ' + e.message, 'error');
       }
+    }
+
+    async function changeGroupPrompt(id, currentGroupId) {
+      // Pobierz listę grup dynamicznie (nie polega na window.__groups)
+      let groups = [];
+      try { groups = arrRows(await aF('/groups')).filter(g => g.active !== false); }
+      catch(_) {}
+      if (!groups.length) { toast('Nie można pobrać listy grup.', 'error'); return; }
 
       let options = '<option value="">-- wybierz grupę --</option>';
-      window.__groups.forEach(g => {
-        options += `<option value="${g.id}" ${g.id === currentGroupId ? 'selected' : ''}>${g.name}</option>`;
+      groups.forEach(g => {
+        options += `<option value="${g.id}" ${g.id === currentGroupId ? 'selected' : ''}>${g.name}${g.city ? ' (' + g.city + ')' : ''}</option>`;
       });
 
       const body = `
