@@ -2597,7 +2597,7 @@
 
         window.__plansMap = Object.fromEntries(rows.map(r => [String(r.id), r]));
 
-        const renderT = (list, title) => {
+        const renderT = (list, title, isActive) => {
           if (!list.length) return '';
           return `
             <div class="sh" style="margin-top:24px"><h4>${title}</h4></div>
@@ -2612,6 +2612,7 @@
                   <td>${g.max_capacity ?? '—'}</td>
                   <td>${g.active === false ? '<span class="badge br">NIE</span>' : '<span class="badge bg">TAK</span>'}</td>
                   <td class="tda">
+                    ${isActive ? `<button class="bi" style="background:#1a3a5c;color:#7fb3e8;border-color:#2a5080" onclick="openGroupStudents(${g.id},'${(g.name||'').replace(/'/g,"\\'")}')">Kursanci</button>` : ''}
                     <button class="bi" onclick="openGroupModal(${g.id})">Edytuj</button>
                     <button class="bi del" onclick="deleteGroup(${g.id})">Usuń</button>
                   </td>
@@ -2625,13 +2626,52 @@
             <h3>Grupy</h3>
             <button class="btn btn-primary btn-sm" onclick="openGroupModal()">+ Dodaj grupę</button>
           </div>
-          ${renderT(activeRows, 'Aktywne grupy')}
-          ${renderT(inactiveRows, 'Nieaktywne / Archiwum')}
+          ${renderT(activeRows, 'Aktywne grupy', true)}
+          ${renderT(inactiveRows, 'Nieaktywne / Archiwum', false)}
         `;
       } catch (e) {
         c.innerHTML = `<div class="empty"><strong>Błąd</strong>${e.message}</div>`;
       }
     }
+    async function openGroupStudents(groupId, groupName) {
+      showModal(`Kursanci — ${groupName}`,
+        '<div class="loading" style="padding:20px 0">Ładowanie...</div>',
+        `<button class="btn btn-secondary" onclick="closeModal()">Zamknij</button>`);
+      const mb = document.querySelector('#modal-overlay .mb');
+      try {
+        const d = await aF(`/students?group_id=${groupId}&limit=200`);
+        const rows = (d.rows || []).sort((a, b) => (a.last_name || '').localeCompare(b.last_name || '') || (a.first_name || '').localeCompare(b.first_name || ''));
+        if (!mb) return;
+        mb.innerHTML = rows.length ? `
+          <div style="margin-bottom:10px;color:var(--dim);font-size:12px">Kursantów w grupie: <strong style="color:var(--text)">${rows.length}</strong></div>
+          <div class="tw"><table>
+            <thead><tr>
+              <th>Nazwisko, Imię</th>
+              <th>Kontakt</th>
+              <th>Status</th>
+              <th>Ostatni trening</th>
+              <th></th>
+            </tr></thead>
+            <tbody>${rows.map(s => `
+              <tr style="${!s.is_active ? 'opacity:.55' : ''}">
+                <td><strong style="color:var(--bright)">${s.last_name || ''}, ${s.first_name || ''}</strong></td>
+                <td style="color:var(--dim);font-size:12px">
+                  ${s.email ? `<div>${s.email}</div>` : ''}
+                  ${s.phone ? `<div>${s.phone}</div>` : ''}
+                  ${!s.email && !s.phone ? '—' : ''}
+                </td>
+                <td>${s.is_active ? '<span class="badge bg">Aktywny</span>' : '<span class="badge br">Nieaktywny</span>'}</td>
+                <td style="font-size:12px;color:var(--dim)">${s.last_training ? fd(s.last_training) : '—'}</td>
+                <td><button class="bi btn-sm" onclick="closeModal();openStudentKartoteka(${s.id})">Kartoteka</button></td>
+              </tr>`).join('')}
+            </tbody>
+          </table></div>` :
+          '<div class="empty" style="padding:20px 0">Brak kursantów w tej grupie.</div>';
+      } catch (e) {
+        if (mb) mb.innerHTML = `<div class="empty" style="padding:20px 0">Błąd: ${e.message}</div>`;
+      }
+    }
+
     async function loadSchedules() {
       const c = document.getElementById('content');
       try {
