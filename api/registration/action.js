@@ -1,5 +1,6 @@
 const { getPool } = require('../_lib/db');
 const { sendMail, mailKursant, mailPayOnlineChosen, mailPaymentConfirmed } = require('../_lib/mail');
+const { createPayment } = require('../_lib/paynow');
 
 const BANK_ACCOUNT = process.env.BANK_ACCOUNT || '21 1140 2004 0000 3902 3890 8895';
 const BANK_NAME = process.env.BANK_NAME || 'Akademia Obrony Saggita';
@@ -248,9 +249,27 @@ ${!isScheduleDoc ? `<a href="${onlineUrl}" class="online-btn">💳 Przejdź do p
         // Mail z harmonogramem miesięcznym — wysyłany po kliknięciu zielonego przycisku
         userMail = mailKursant({ ...contractData, payment_mode: 'monthly' });
       } else if (action === 'pay_online') {
-        // Brak maila — użytkownik dopiero jest przekierowywany do bramki płatności.
-        // Mail zostanie wysłany przez payment_confirmed po powrocie z płatności.
-        userMail = null;
+        // Utwórz płatność w PayNow i zwróć redirectUrl
+        const amountGrosze = Math.round(parseFloat(r.total_amount || 0) * 100);
+        if (amountGrosze <= 0) {
+          return res.status(400).json({ error: 'Nieprawidłowa kwota płatności.' });
+        }
+        const continueUrl = `${SITE_URL}/kvcennik?payment=success&ref=${payment_ref}`;
+        const pnResult = await createPayment({
+          amount:      amountGrosze,
+          externalId:  payment_ref,
+          description: `Krav Maga — ${r.group_name || 'Akademia Obrony Saggita'}`,
+          email:       r.email || '',
+          firstName:   r.first_name || '',
+          lastName:    r.last_name || '',
+          continueUrl,
+        });
+        // Zapisz paynow_payment_id jeśli kolumna istnieje (ignoruj błąd)
+        pool.query(
+          `UPDATE registrations SET paynow_payment_id=$1, updated_at=NOW() WHERE payment_ref=$2`,
+          [pnResult.paymentId, payment_ref]
+        ).catch(() => {});
+        return res.status(200).json({ success: true, url: pnResult.redirectUrl, paymentId: pnResult.paymentId });
       } else if (action === 'payment_confirmed') {
         userMail = mailPaymentConfirmed({
           first_name: r.first_name,

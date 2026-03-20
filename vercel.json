@@ -24,6 +24,10 @@
       "destination": "/api/registration/action"
     },
     {
+      "source": "/api/webhooks/paynow",
+      "destination": "/api/webhooks/paynow"
+    },
+    {
       "source": "/api/registration/action",
       "destination": "/api/registration/action"
     },
