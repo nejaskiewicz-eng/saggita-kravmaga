@@ -3399,7 +3399,7 @@
 
         if (d?.url) {
           sessionStorage.setItem('km_pending_confirm', payment_ref);
-          window.location.href = d.url;
+          window.top.location.href = d.url;
         } else {
           toast('Brak linku do płatności (sprawdź konfigurację)', 'err', 4200);
         }

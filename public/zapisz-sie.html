@@ -3421,7 +3421,7 @@
 
         if (d?.url) {
           sessionStorage.setItem('km_pending_confirm', payment_ref);
-          window.location.href = d.url;
+          window.top.location.href = d.url;
         } else {
           alert('Brak linku do płatności. Skontaktuj się z nami.');
         }
