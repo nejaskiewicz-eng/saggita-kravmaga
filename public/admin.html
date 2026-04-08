@@ -4130,7 +4130,7 @@
     </div>
     <div class="fg">
       <div class="ff"><label>Login (username) *</label><input id="ni-un" placeholder="anna.kowalska"></div>
-      <div class="ff"><label>Hasło * (min. 8 znaków)</label><input id="ni-pw" type="password" placeholder="••••••••"></div>
+      <div class="ff"><label>Hasło * (min. 8 znaków)</label><div style="position:relative"><input id="ni-pw" type="password" placeholder="••••••••" style="width:100%;padding-right:36px"><button type="button" onclick="var i=document.getElementById('ni-pw');i.type=i.type==='password'?'text':'password';this.textContent=i.type==='password'?'👁':'🙈'" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;padding:0;line-height:1">👁</button></div></div>
     </div>
     <div class="fg">
       <div class="ff"><label>Email</label><input id="ni-em" type="email"></div>
@@ -4244,7 +4244,7 @@
       <div class="ff"><label>Telefon</label><input id="ei-ph" value="${inst.phone || ''}"></div>
     </div>
     <div class="fg">
-      <div class="ff"><label>Nowe hasło (puste = bez zmian)</label><input id="ei-pw" type="password" placeholder="••••••••"></div>
+      <div class="ff"><label>Nowe hasło (puste = bez zmian)</label><div style="position:relative"><input id="ei-pw" type="password" placeholder="••••••••" style="width:100%;padding-right:36px"><button type="button" onclick="var i=document.getElementById('ei-pw');i.type=i.type==='password'?'text':'password';this.textContent=i.type==='password'?'👁':'🙈'" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;padding:0;line-height:1">👁</button></div></div>
       <div class="ff"><label>Status</label>
         <select id="ei-ac">
           <option value="true" ${inst.active ? 'selected' : ''}>Aktywny</option>
