@@ -387,10 +387,10 @@ module.exports = async (req, res) => {
           );
           if (!chk) return res.status(403).json({ error: 'Brak dostępu do tej grupy' });
           const { rows: [x] } = await pool.query(
-            `INSERT INTO training_sessions (group_id, session_date)
-             VALUES ($1,$2)
-             ON CONFLICT (group_id, session_date) DO UPDATE SET session_date=EXCLUDED.session_date
-             RETURNING id`, [group_id, session_date]
+            `INSERT INTO training_sessions (group_id, session_date, instructor_id)
+             VALUES ($1,$2,$3)
+             ON CONFLICT (group_id, session_date, COALESCE(instructor_id, 0)) DO UPDATE SET session_date=EXCLUDED.session_date
+             RETURNING id`, [group_id, session_date, P.sub]
           );
           return res.status(200).json({ id: x.id });
         } catch (e) { console.error('[session POST]', e); return res.status(500).json({ error: e.message }); }

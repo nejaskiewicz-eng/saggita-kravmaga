@@ -280,7 +280,7 @@ module.exports = async (req, res) => {
       if (group_id) {
         conds.push(`EXISTS(
           SELECT 1 FROM student_groups sg2
-          WHERE sg2.student_id=s.id AND sg2.group_id=$${pi++}
+          WHERE sg2.student_id=s.id AND sg2.group_id=$${pi++} AND sg2.active=true
         )`);
         vals.push(parseInt(group_id));
       }

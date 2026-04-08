@@ -24,6 +24,9 @@ module.exports = async (req, res) => {
         `ALTER TABLE instructors ADD COLUMN IF NOT EXISTS archived BOOLEAN NOT NULL DEFAULT false`,
         `ALTER TABLE instructor_permissions ADD COLUMN IF NOT EXISTS can_see_paid_status BOOLEAN NOT NULL DEFAULT false`,
         `ALTER TABLE instructor_permissions ADD COLUMN IF NOT EXISTS can_see_payments_tab BOOLEAN NOT NULL DEFAULT false`,
+        `ALTER TABLE training_sessions ADD COLUMN IF NOT EXISTS instructor_id INTEGER REFERENCES instructors(id) ON DELETE SET NULL`,
+        `DO $mig$ BEGIN ALTER TABLE training_sessions DROP CONSTRAINT training_sessions_group_id_session_date_key; EXCEPTION WHEN undefined_object THEN NULL; END $mig$`,
+        `CREATE UNIQUE INDEX IF NOT EXISTS training_sessions_uniq ON training_sessions (group_id, session_date, COALESCE(instructor_id, 0))`,
       ];
       for (const sql of migrations) {
         await pool.query(sql);
@@ -228,17 +231,20 @@ module.exports = async (req, res) => {
 
     if (req.method === 'GET') {
       if (!group_id) return res.status(400).json({ error: 'group_id jest wymagane.' });
+      const { instructor_id } = req.query;
       try {
         const params = [group_id];
         let q = `
           SELECT ts.id AS session_id,
             TO_CHAR(ts.session_date, 'YYYY-MM-DD') AS session_date,
             ts.group_id,
+            ts.instructor_id,
             COUNT(a.id) FILTER (WHERE a.present=true)::int AS present_count,
             COUNT(a.id)::int AS total_marked
           FROM training_sessions ts
           LEFT JOIN attendances a ON a.session_id=ts.id
           WHERE ts.group_id=$1`;
+        if (instructor_id) { params.push(instructor_id); q += ` AND ts.instructor_id=$${params.length}`; }
         if (from) { params.push(from); q += ` AND ts.session_date>=$${params.length}`; }
         if (to)   { params.push(to);   q += ` AND ts.session_date<=$${params.length}`; }
         q += ` GROUP BY ts.id ORDER BY ts.session_date`;
@@ -248,15 +254,15 @@ module.exports = async (req, res) => {
     }
 
     if (req.method === 'POST') {
-      const { group_id: gid, session_date } = req.body || {};
+      const { group_id: gid, session_date, instructor_id } = req.body || {};
       if (!gid || !session_date) return res.status(400).json({ error: 'group_id i session_date są wymagane.' });
       try {
         const { rows: [x] } = await pool.query(
-          `INSERT INTO training_sessions (group_id, session_date)
-           VALUES ($1,$2)
-           ON CONFLICT (group_id, session_date) DO UPDATE SET session_date=EXCLUDED.session_date
+          `INSERT INTO training_sessions (group_id, session_date, instructor_id)
+           VALUES ($1,$2,$3)
+           ON CONFLICT (group_id, session_date, COALESCE(instructor_id, 0)) DO UPDATE SET session_date=EXCLUDED.session_date
            RETURNING id`,
-          [gid, session_date]);
+          [gid, session_date, instructor_id || null]);
         return res.status(200).json({ id: x.id });
       } catch(e) { return res.status(500).json({ error: e.message }); }
     }
