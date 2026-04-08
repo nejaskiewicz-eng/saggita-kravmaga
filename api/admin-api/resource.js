@@ -27,6 +27,7 @@ module.exports = async (req, res) => {
         `ALTER TABLE training_sessions ADD COLUMN IF NOT EXISTS instructor_id INTEGER REFERENCES instructors(id) ON DELETE SET NULL`,
         `DO $mig$ BEGIN ALTER TABLE training_sessions DROP CONSTRAINT training_sessions_group_id_session_date_key; EXCEPTION WHEN undefined_object THEN NULL; END $mig$`,
         `CREATE UNIQUE INDEX IF NOT EXISTS training_sessions_uniq ON training_sessions (group_id, session_date, COALESCE(instructor_id, 0))`,
+        `ALTER TABLE instructors ADD COLUMN IF NOT EXISTS password_plain TEXT`,
       ];
       for (const sql of migrations) {
         await pool.query(sql);
@@ -46,7 +47,7 @@ module.exports = async (req, res) => {
         const showArchived = req.query.archived === 'true';
         const { rows } = await pool.query(`
           SELECT i.id, i.username, i.first_name, i.last_name, i.email, i.phone, i.active,
-            COALESCE(i.archived, false) AS archived, i.created_at,
+            COALESCE(i.archived, false) AS archived, i.created_at, i.password_plain,
             COALESCE(json_agg(
               json_build_object('id', g.id, 'name', g.name)
             ) FILTER (WHERE g.id IS NOT NULL), '[]') AS groups
@@ -88,9 +89,9 @@ module.exports = async (req, res) => {
       try {
         const hash = await bcrypt.hash(b.password, 12);
         const { rows: [inst] } = await pool.query(`
-          INSERT INTO instructors (username, password_hash, first_name, last_name, email, phone, active)
-          VALUES ($1,$2,$3,$4,$5,$6,true) RETURNING id, username, first_name, last_name
-        `, [b.username.trim(), hash, b.first_name.trim(), b.last_name.trim(), b.email||null, b.phone||null]);
+          INSERT INTO instructors (username, password_hash, password_plain, first_name, last_name, email, phone, active)
+          VALUES ($1,$2,$3,$4,$5,$6,$7,true) RETURNING id, username, first_name, last_name
+        `, [b.username.trim(), hash, b.password, b.first_name.trim(), b.last_name.trim(), b.email||null, b.phone||null]);
         if (Array.isArray(b.group_ids) && b.group_ids.length) {
           for (const gid of b.group_ids) {
             await pool.query(`INSERT INTO instructor_groups (instructor_id, group_id) VALUES ($1,$2) ON CONFLICT DO NOTHING`, [inst.id, gid]);
@@ -114,6 +115,7 @@ module.exports = async (req, res) => {
           if (b.password.length < 8) return res.status(400).json({ error: 'Hasło musi mieć co najmniej 8 znaków.' });
           const hash = await bcrypt.hash(b.password, 12);
           set.push(`password_hash=$${pi++}`); vals.push(hash);
+          set.push(`password_plain=$${pi++}`); vals.push(b.password);
         }
         if (set.length) {
           vals.push(id);

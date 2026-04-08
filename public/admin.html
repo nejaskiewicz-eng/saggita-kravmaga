@@ -4002,9 +4002,17 @@
 
     function instRowHTML(i) {
       const name = `${i.first_name} ${i.last_name}`;
+      const pwId = `pw-${i.id}`;
+      const pwCell = i.password_plain
+        ? `<div style="display:flex;align-items:center;gap:4px">
+            <span id="${pwId}" style="font-family:monospace;font-size:12px;letter-spacing:.05em">••••••••</span>
+            <button type="button" onclick="var s=document.getElementById('${pwId}');var show=s.textContent==='••••••••';s.textContent=show?'${i.password_plain.replace(/'/g,"\\'")}':'••••••••';this.textContent=show?'🙈':'👁'" style="background:none;border:none;cursor:pointer;font-size:13px;padding:0;line-height:1">👁</button>
+           </div>`
+        : `<span style="color:var(--dim);font-size:11px">—</span>`;
       return `<tr>
         <td><strong style="color:var(--bright)">${name}</strong></td>
         <td style="font-family:monospace;font-size:12px;color:var(--dim)">${i.username}</td>
+        <td>${pwCell}</td>
         <td style="font-size:12px;color:var(--dim)">${i.email || '—'}${i.phone ? '<br>' + i.phone : ''}</td>
         <td>${Array.isArray(i.groups) && i.groups.length ? i.groups.map(g => `<span class="badge bb" style="font-size:10px">${g.name}</span>`).join('') : '—'}</td>
         <td>${i.active ? '<span class="badge bg">Aktywny</span>' : '<span class="badge br">Nieaktywny</span>'}</td>
@@ -4030,7 +4038,7 @@
           return;
         }
 
-        const thead = `<thead><tr><th>Instruktor</th><th>Login</th><th>Kontakt</th><th>Grupy</th><th>Status</th><th></th></tr></thead>`;
+        const thead = `<thead><tr><th>Instruktor</th><th>Login</th><th>Hasło</th><th>Kontakt</th><th>Grupy</th><th>Status</th><th></th></tr></thead>`;
 
         let html = `<div class="tw"><table>${thead}<tbody>${active.map(instRowHTML).join('')}</tbody></table></div>`;
 
