@@ -140,6 +140,10 @@
       "destination": "/api/saggita?_module=students&id=:id&_route=reg-payment"
     },
     {
+      "source": "/api/admin-api/students/:id/paid-until",
+      "destination": "/api/saggita?_module=students&id=:id&_route=paid-until"
+    },
+    {
       "source": "/api/admin-api/students/:id",
       "destination": "/api/saggita?_module=students&id=:id"
     },

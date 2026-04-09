@@ -1691,6 +1691,12 @@
     function sb(s) { const m = { confirmed: 'bg', new: 'bo', cancelled: 'br', completed: 'bx' }; return `<span class="badge ${m[s] || 'bx'}">${RS[s] || s || '—'}</span>`; }
     function capB(r, m) { const p = m ? Math.min(100, Math.round(r / m * 100)) : 0; const c = p >= 100 ? 'f' : p >= 80 ? 'w' : ''; return `<span class="cb"><span class="cf ${c}" style="width:${p}%"></span></span><span class="ct">${r}/${m || '?'}</span>`; }
     function initials(fn, ln) { return ((fn || '?')[0] + (ln || '?')[0]).toUpperCase(); }
+    function todayISO() { return new Date().toISOString().slice(0, 10); }
+    function endOfMonthPlus(months) {
+      const d = new Date();
+      d.setMonth(d.getMonth() + months + 1, 0);
+      return d.toISOString().slice(0, 10);
+    }
 
     async function aF(path, opts = {}) {
       const h = { 'Content-Type': 'application/json' };
@@ -3368,6 +3374,7 @@
             : (r.legacy_paid > 0 ? `<span class="badge bg">${Number(r.legacy_paid).toFixed(0)} zł</span>` : '<span class="badge br">brak</span>');
 
           // Ostatnia wpłata z kolorowaniem
+          const today = todayISO();
           let lastPayHtml = '—';
           if (r.last_payment_date) {
             const days = r.days_since_payment;
@@ -3377,12 +3384,25 @@
           } else if (r.legacy_paid == 0 && !r.payment_status) {
             lastPayHtml = '<span style="color:var(--red-l);font-size:11px">🔴 nigdy</span>';
           }
+          // Pokaż "do: DATE" jeśli jest paid_until
+          if (r.max_paid_until) {
+            const puColor = r.max_paid_until >= today ? 'var(--green)' : 'var(--red-l)';
+            lastPayHtml += `<br><span style="font-size:10px;color:${puColor}">do: ${fd(r.max_paid_until)}</span>`;
+          }
 
           const inactive = !r.is_active ? ' <span class="badge br">Nieaktywny</span>' : '';
           // Wyróżnienie wiersza zaległości
           const rowStyle = US.overdue ? 'background:rgba(220,50,30,0.05)' : '';
 
-          const isPaid = r.payment_status === 'paid' || (r.last_payment_date && r.days_since_payment <= 35);
+          // Kolorowanie: paid_until ma priorytet nad days_since_payment
+          let isPaid;
+          if (r.max_paid_until) {
+            isPaid = r.max_paid_until >= today;
+          } else if (r.payment_status === 'paid') {
+            isPaid = true;
+          } else {
+            isPaid = r.last_payment_date && r.days_since_payment <= 35;
+          }
           const nameColor = isPaid ? 'var(--bright)' : 'var(--red-l)';
 
           return `<tr style="${rowStyle}">
@@ -3440,6 +3460,12 @@
       const attRows = attendance.rows || [];
       const present = attRows.filter(a => a.present).length;
       const pct = attRows.length ? Math.round(present / attRows.length * 100) : 0;
+
+      // Opłacony do — max paid_until z aktywnych grup
+      const activeGrps = (s.groups || []).filter(g => g.active);
+      const puDates = activeGrps.filter(g => g.paid_until).map(g => String(g.paid_until).slice(0, 10)).sort();
+      const maxPaidUntil = puDates.length ? puDates[puDates.length - 1] : null;
+      const todayStr = todayISO();
 
       const body = `
     <div class="kart-header">
@@ -3501,9 +3527,15 @@
           ? (s.groups || []).filter(g => g.active).map(g => `
             <span style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;font-size:12px">
               ${g.name}
+              ${g.paid_until ? `<span style="font-size:10px;color:${String(g.paid_until).slice(0,10) >= todayStr ? 'var(--green)' : 'var(--red-l)'};font-weight:600">do ${fd(g.paid_until)}</span>` : ''}
               <button onclick="removeStudentFromGroup(${id},${g.id},'${(g.name||'').replace(/'/g,"\\'")}',this)" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;line-height:1;padding:0;margin-left:2px" title="Usuń z grupy">×</button>
             </span>`).join('')
           : '<span style="color:var(--muted);font-size:12px">Brak przypisanych grup</span>'}
+      </div>
+      <div style="border-top:1px solid var(--border);padding-top:8px;margin-top:4px;display:flex;align-items:center;gap:10px">
+        <span style="font-size:12px;color:var(--dim)">Opłacony do:</span>
+        <strong style="font-size:13px;color:${maxPaidUntil ? (maxPaidUntil >= todayStr ? 'var(--green)' : 'var(--red-l)') : 'var(--muted)'}">${maxPaidUntil ? fd(maxPaidUntil) : '—'}</strong>
+        <button class="bi btn-sm" onclick="openPaidUntilModal(${id},'${maxPaidUntil || ''}')">Zmień</button>
       </div>
     </div>
 
@@ -3717,9 +3749,18 @@
       showModal('Nowa płatność', `
     <div class="fg">
       <div class="ff"><label>Kwota (zł) *</label><input id="pm-amt" type="number" step="0.01" placeholder="120.00"></div>
-      <div class="ff"><label>Data</label><input id="pm-dt" type="date" value="${new Date().toISOString().slice(0, 10)}"></div>
+      <div class="ff"><label>Data wpłaty</label><input id="pm-dt" type="date" value="${new Date().toISOString().slice(0, 10)}"></div>
     </div>
     <div class="ff"><label>Notatka</label><input id="pm-note" placeholder="np. przelew, gotówka…"></div>
+    <div style="border-top:1px solid var(--border);margin:12px 0 8px;padding-top:12px">
+      <div class="ff" style="margin-bottom:8px"><label>Opłacony do (opcjonalnie)</label><input type="date" id="pm-paid-until"></div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="bi btn-sm" type="button" onclick="document.getElementById('pm-paid-until').value='${endOfMonthPlus(3)}'">+3 mies.</button>
+        <button class="bi btn-sm" type="button" onclick="document.getElementById('pm-paid-until').value='${endOfMonthPlus(6)}'">+6 mies.</button>
+        <button class="bi btn-sm" type="button" onclick="document.getElementById('pm-paid-until').value='${endOfMonthPlus(12)}'">+12 mies.</button>
+        <button class="bi btn-sm" type="button" onclick="document.getElementById('pm-paid-until').value=''">Wyczyść</button>
+      </div>
+    </div>
     <div id="pm-err" style="color:var(--red-l);font-size:12px;margin-top:8px;display:none"></div>`,
         `<button class="btn btn-secondary" onclick="openStudentKartoteka(${studentId})">Anuluj</button>
      <button class="btn btn-primary" onclick="submitStudentPayment()">Zapisz płatność</button>`);
@@ -3742,6 +3783,7 @@
       const amount = parseFloat(document.getElementById('pm-amt')?.value);
       const date = document.getElementById('pm-dt')?.value;
       const note = document.getElementById('pm-note')?.value || null;
+      const paidUntil = document.getElementById('pm-paid-until')?.value || null;
       const errEl = document.getElementById('pm-err');
       if (!amount) { errEl.textContent = 'Podaj kwotę.'; errEl.style.display = 'block'; return; }
       try {
@@ -3750,7 +3792,11 @@
         } else {
           await aF(`/students/${_payStudentId}/payments`, { method: 'POST', body: JSON.stringify({ amount, date, note }) });
         }
-        toast('Płatność zapisana');
+        // Jeśli ustawiono "opłacony do" — zaktualizuj student_groups (wszystkie aktywne grupy)
+        if (paidUntil) {
+          await aF(`/students/${_payStudentId}/paid-until`, { method: 'PATCH', body: JSON.stringify({ paid_until: paidUntil }) });
+        }
+        toast('Płatność zapisana' + (paidUntil ? ` · opłacony do ${fd(paidUntil)}` : ''));
         openStudentKartoteka(_payStudentId);
         if (CV === 'unified-students') fetchUS();
       } catch (e) { errEl.textContent = e.message; errEl.style.display = 'block'; }
@@ -3764,6 +3810,37 @@
         openStudentKartoteka(studentId);
         if (CV === 'unified-students') fetchUS();
       } catch (e) { toast('Błąd: ' + e.message, 'error'); }
+    }
+
+    // ── Modal: zmiana daty "opłacony do" ──────────────────────────
+    function openPaidUntilModal(studentId, currentPaidUntil) {
+      _payStudentId = studentId;
+      showModal('Opłacony do', `
+    <div style="font-size:12px;color:var(--dim);margin-bottom:12px">Ustaw do kiedy kursant jest opłacony (dotyczy wszystkich aktywnych grup).</div>
+    <div class="ff" style="margin-bottom:8px">
+      <label>Data ważności</label>
+      <input type="date" id="pu-admin-date" value="${currentPaidUntil || ''}">
+    </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
+      <button class="bi btn-sm" type="button" onclick="document.getElementById('pu-admin-date').value='${endOfMonthPlus(3)}'">+3 mies.</button>
+      <button class="bi btn-sm" type="button" onclick="document.getElementById('pu-admin-date').value='${endOfMonthPlus(6)}'">+6 mies.</button>
+      <button class="bi btn-sm" type="button" onclick="document.getElementById('pu-admin-date').value='${endOfMonthPlus(12)}'">+12 mies.</button>
+      <button class="bi btn-sm" type="button" onclick="document.getElementById('pu-admin-date').value=''">Wyczyść</button>
+    </div>
+    <div id="pu-admin-err" style="color:var(--red-l);font-size:12px;margin-top:8px;display:none"></div>`,
+        `<button class="btn btn-secondary" onclick="openStudentKartoteka(${studentId})">Anuluj</button>
+     <button class="btn btn-primary" onclick="submitPaidUntil(${studentId})">Zapisz</button>`);
+    }
+
+    async function submitPaidUntil(studentId) {
+      const paidUntil = document.getElementById('pu-admin-date')?.value || null;
+      const errEl = document.getElementById('pu-admin-err');
+      try {
+        await aF(`/students/${studentId}/paid-until`, { method: 'PATCH', body: JSON.stringify({ paid_until: paidUntil }) });
+        toast(paidUntil ? `Opłacony do ${fd(paidUntil)}` : 'Data "opłacony do" wyczyszczona');
+        openStudentKartoteka(studentId);
+        if (CV === 'unified-students') fetchUS();
+      } catch (e) { errEl.textContent = e.message; errEl.style.display = 'block'; }
     }
 
     // ══════════════════════════════════════════════════════════════════

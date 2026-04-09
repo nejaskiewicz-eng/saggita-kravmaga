@@ -135,6 +135,29 @@ module.exports = async (req, res) => {
     }
   }
 
+  // ── SUB-ROUTE: paid-until ─────────────────────────────────────
+  if (id && _route === 'paid-until') {
+    if (req.method === 'PATCH') {
+      const { group_id, paid_until } = req.body || {};
+      try {
+        if (group_id) {
+          await pool.query(
+            `UPDATE student_groups SET paid_until=$1 WHERE student_id=$2 AND group_id=$3`,
+            [paid_until || null, id, group_id]
+          );
+        } else {
+          // Bez group_id — aktualizuj wszystkie aktywne grupy
+          await pool.query(
+            `UPDATE student_groups SET paid_until=$1 WHERE student_id=$2 AND active=true`,
+            [paid_until || null, id]
+          );
+        }
+        return res.status(200).json({ success: true });
+      } catch (e) { return res.status(500).json({ error: e.message }); }
+    }
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
   // ── SUB-ROUTE: grupy kursanta ─────────────────────────────────
   if (id && _route === 'groups') {
     if (req.method === 'PATCH') {
@@ -169,7 +192,7 @@ module.exports = async (req, res) => {
 
           -- grupy
           COALESCE((
-            SELECT json_agg(jsonb_build_object('id', g.id, 'name', g.name, 'active', sg.active) ORDER BY g.name)
+            SELECT json_agg(jsonb_build_object('id', g.id, 'name', g.name, 'active', sg.active, 'paid_until', sg.paid_until) ORDER BY g.name)
             FROM student_groups sg
             JOIN groups g ON g.id=sg.group_id
             WHERE sg.student_id=s.id
@@ -389,13 +412,16 @@ module.exports = async (req, res) => {
             LIMIT 1
           ) AS city,
 
-          -- grupy (aktywnie przypisane)
+          -- grupy (aktywnie przypisane) + paid_until per group
           COALESCE((
-            SELECT json_agg(jsonb_build_object('id', g.id, 'name', g.name) ORDER BY g.name)
+            SELECT json_agg(jsonb_build_object('id', g.id, 'name', g.name, 'paid_until', sg.paid_until) ORDER BY g.name)
             FROM student_groups sg
             JOIN groups g ON g.id=sg.group_id
             WHERE sg.student_id=s.id AND sg.active=true
           ), '[]'::json) AS groups,
+
+          -- max paid_until z aktywnych grup (dla kolorowania w liście)
+          (SELECT MAX(sg2.paid_until) FROM student_groups sg2 WHERE sg2.student_id=s.id AND sg2.active=true) AS max_paid_until,
 
           -- treningi/obecności od 2025-09-01
           COALESCE((
