@@ -506,7 +506,7 @@ module.exports = async (req, res) => {
 
     // GET sesje dla grupy
     if (route === 'sessions' && req.method === 'GET') {
-      const { group_id, from, to } = req.query;
+      const { group_id, from, to, instructor_id } = req.query;
       if (!group_id) return res.status(400).json({ error: 'group_id wymagane.' });
       try {
         const params = [group_id];
@@ -521,6 +521,7 @@ module.exports = async (req, res) => {
           WHERE ts.group_id=$1`;
         if (from) { params.push(from); q += ` AND ts.session_date>=$${params.length}`; }
         if (to)   { params.push(to);   q += ` AND ts.session_date<=$${params.length}`; }
+        if (instructor_id) { params.push(instructor_id); q += ` AND ts.instructor_id=$${params.length}`; }
         q += ` GROUP BY ts.id ORDER BY ts.session_date`;
         const { rows } = await pool.query(q, params);
         return res.status(200).json({ rows });
@@ -529,14 +530,14 @@ module.exports = async (req, res) => {
 
     // POST utwórz sesję
     if (route === 'sessions' && req.method === 'POST') {
-      const { group_id: gid, session_date } = req.body || {};
+      const { group_id: gid, session_date, instructor_id } = req.body || {};
       if (!gid || !session_date) return res.status(400).json({ error: 'group_id i session_date wymagane.' });
       try {
         const { rows: [x] } = await pool.query(
-          `INSERT INTO training_sessions (group_id, session_date)
-           VALUES ($1,$2)
-           ON CONFLICT (group_id, session_date) DO UPDATE SET session_date=EXCLUDED.session_date
-           RETURNING id`, [gid, session_date]);
+          `INSERT INTO training_sessions (group_id, session_date, instructor_id)
+           VALUES ($1,$2,$3)
+           ON CONFLICT (group_id, session_date, COALESCE(instructor_id, 0)) DO UPDATE SET session_date=EXCLUDED.session_date
+           RETURNING id`, [gid, session_date, instructor_id || null]);
         return res.status(200).json({ id: x.id });
       } catch(e) { return res.status(500).json({ error: e.message }); }
     }

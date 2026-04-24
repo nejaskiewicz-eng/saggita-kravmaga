@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, viewport-fit=cover">
   <title>Panel Instruktora — Krav Maga Saggita</title>
   <style>
     *,
@@ -2098,7 +2098,7 @@
           return `<tr>
             <td><strong>${esc(s.last_name)}, ${esc(s.first_name)}</strong>${!s.is_active ? '<span class="bx bx-d" style="margin-left:6px">nieaktywny</span>' : ''}</td>
             ${S.perms.can_see_paid_status ? `<td>${puDate ? `<span class="${payClass}">${fd(puDate)}</span>` : '—'}</td>` : ''}
-            ${S.perms.can_accept_payment ? `<td><button class="btn btn-xs" style="padding:3px 10px;font-size:11px;background:rgba(46,204,113,.15);border:1px solid rgba(46,204,113,.4);color:#2ecc71" onclick="moAcceptPayment(${s.id},'${esc(s.first_name)} ${esc(s.last_name)}')">+ Wpłata</button></td>` : ''}
+            ${S.perms.can_accept_payment ? `<td><button class="btn btn-xs" style="padding:3px 10px;font-size:11px;background:rgba(46,204,113,.15);border:1px solid rgba(46,204,113,.4);color:#2ecc71" onclick="moAcceptPayment(${s.id},'${esc(s.first_name)} ${esc(s.last_name)}',${S.grpId||'null'},'${s.paid_until||''}')">+ Wpłata</button></td>` : ''}
           </tr>`;
         }).join('')}</tbody>
       </table></div>`;
@@ -2591,7 +2591,7 @@
 
           const profBtn = `<button class="btn btn-o" onclick="event.stopPropagation();openStud(${s.student_id})" style="padding:6px 10px;font-size:10px;flex:1;max-width:100px;text-align:center;">Kartoteka</button>`;
 
-          const addPayBtn = S.perms.can_accept_payment ? `<button class="btn" style="padding:6px 10px;font-size:10px;background:rgba(46,204,113,.15);border:1px solid rgba(46,204,113,.4);color:#2ecc71;flex:1;max-width:100px;text-align:center;" onclick="event.stopPropagation();moAcceptPayment(${s.student_id},'${esc(s.first_name)} ${esc(s.last_name)}',${sess.group_id})">+ Wpłata</button>` : '';
+          const addPayBtn = S.perms.can_accept_payment ? `<button class="btn" style="padding:6px 10px;font-size:10px;background:rgba(46,204,113,.15);border:1px solid rgba(46,204,113,.4);color:#2ecc71;flex:1;max-width:100px;text-align:center;" onclick="event.stopPropagation();moAcceptPayment(${s.student_id},'${esc(s.first_name)} ${esc(s.last_name)}',${sess.group_id},'${s.paid_until||''}')">+ Wpłata</button>` : '';
 
           const isPaid = paid === true;
           const nameColor = isPaid ? 'var(--text)' : (paid === false ? 'var(--accent)' : 'var(--dim)');
@@ -2780,6 +2780,7 @@
           <button class="btn btn-o btn-sm" onclick="smNav(-1)">◀</button>
           <span id="sm-month-lbl" style="font-size:13px;font-weight:700;min-width:130px;text-align:center">${MONTHS[SM.m]} ${SM.y}</span>
           <button class="btn btn-o btn-sm" onclick="smNav(1)">▶</button>
+          <button class="btn btn-o btn-sm" onclick="SM.y=new Date().getFullYear();SM.m=new Date().getMonth();const l=document.getElementById('sm-month-lbl');if(l)l.textContent=MONTHS[SM.m]+' '+SM.y;smLoadCal()">Dziś</button>
         </div>
       </div>
       <div id="sm-cal">${SM.gid ? '' : '<div class="empty">Wybierz instruktora i grupę aby zobaczyć kalendarz sesji.</div>'}</div>`;
@@ -2807,7 +2808,7 @@
       const lastD = new Date(y, m+1, 0).getDate();
       const to = `${y}-${String(m+1).padStart(2,'0')}-${String(lastD).padStart(2,'0')}`;
       try {
-        const d = await api(`/api/instructor/session-mgmt/sessions?group_id=${gid}&from=${from}&to=${to}`);
+        const d = await api(`/api/instructor/session-mgmt/sessions?group_id=${gid}&from=${from}&to=${to}${SM.instId ? '&instructor_id='+SM.instId : ''}`);
         smRenderCal(y, m, gid, d.rows || []);
       } catch(e) { cal.innerHTML = `<div class="empty">Błąd: ${esc(e.message)}</div>`; }
     }
@@ -2852,7 +2853,11 @@
     async function smCreateSess(date, gid) {
       if (!confirm(`Dodać sesję treningową na ${date}?`)) return;
       try {
-        await api('/api/instructor/session-mgmt/sessions', 'POST', { group_id: parseInt(gid), session_date: date });
+        await api('/api/instructor/session-mgmt/sessions', 'POST', {
+          group_id: parseInt(gid),
+          session_date: date,
+          instructor_id: SM.instId ? parseInt(SM.instId) : null
+        });
         await smLoadCal();
       } catch(e) { alert('Błąd: ' + e.message); }
     }
@@ -2875,17 +2880,30 @@
     }
 
     // ── PRZYJMIJ PŁATNOŚĆ (instruktor) ────────────────────────────
-    function moAcceptPayment(studentId, studentName, groupId) {
+    function moAcceptPayment(studentId, studentName, groupId, currentPaidUntil) {
+      const puVal = currentPaidUntil ? String(currentPaidUntil).substring(0, 10) : '';
       showMo('💰 Przyjmij wpłatę', `
         <div style="font-size:13px;color:var(--dim);margin-bottom:16px">Kursant: <strong style="color:var(--text)">${studentName}</strong></div>
         <div class="ff" style="margin-bottom:12px">
           <label>Kwota (zł) *</label>
-          <input id="pay-amount" type="number" min="1" max="9999" step="1" placeholder="100">
+          <input id="pay-amount" type="number" min="1" max="9999" step="1" placeholder="100" style="font-size:16px">
         </div>
-        <div class="ff">
+        <div class="ff" style="margin-bottom:12px">
           <label>Notatka (opcjonalnie)</label>
-          <input id="pay-note" placeholder="np. gotówka">
+          <input id="pay-note" placeholder="np. gotówka" style="font-size:16px">
         </div>
+        ${groupId ? `<div style="border-top:1px solid var(--line);margin-top:4px;padding-top:12px">
+          <div style="font-size:11px;font-weight:700;color:var(--dim);letter-spacing:0.05em;margin-bottom:8px">OPŁACONY DO</div>
+          <div class="ff" style="margin-bottom:8px">
+            <input type="date" id="pay-paid-until" value="${puVal}" style="font-size:16px">
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px">
+            <button type="button" class="btn btn-o btn-sm" onclick="document.getElementById('pay-paid-until').value='${endOfMonthPlus(3)}'">+3 mies.</button>
+            <button type="button" class="btn btn-o btn-sm" onclick="document.getElementById('pay-paid-until').value='${endOfMonthPlus(6)}'">+6 mies.</button>
+            <button type="button" class="btn btn-o btn-sm" onclick="document.getElementById('pay-paid-until').value='${endOfMonthPlus(12)}'">+12 mies.</button>
+            <button type="button" class="btn btn-o btn-sm" onclick="document.getElementById('pay-paid-until').value=''">Wyczyść</button>
+          </div>
+        </div>` : ''}
         <div id="pay-err" class="lerr" style="display:none"></div>`,
         `<button class="btn btn-o" onclick="closeMo()">Anuluj</button>
          <button class="btn btn-g" onclick="doAcceptPayment(${studentId},${groupId || 'null'})">Zapisz wpłatę</button>`);
@@ -2895,14 +2913,19 @@
     async function doAcceptPayment(studentId, groupId) {
       const amount = parseFloat(document.getElementById('pay-amount')?.value);
       const note = document.getElementById('pay-note')?.value?.trim();
+      const paidUntil = document.getElementById('pay-paid-until')?.value || null;
       const errEl = document.getElementById('pay-err');
       if (!amount || amount <= 0) { errEl.textContent = 'Podaj prawidłową kwotę.'; errEl.style.display = 'block'; return; }
       try {
         await api('/api/instructor/accept-payment', 'POST', { student_id: studentId, amount, note: note || null, group_id: groupId || null });
+        if (paidUntil && groupId) {
+          await api('/api/instructor/student-groups/paid-until', 'PATCH',
+            { student_id: studentId, group_id: groupId, paid_until: paidUntil });
+        }
         closeMo();
         if (S.sessId) renderAtt();
         else openStud(studentId);
-      } catch (e) { errEl.textContent = e.message; errEl.classList.add('show'); }
+      } catch (e) { errEl.textContent = e.message; errEl.style.display = 'block'; }
     }
 
     // ── PRZYPISZ INSTRUKTORA DO SESJI ────────────────────────────
