@@ -2220,7 +2220,7 @@
       <button class="btn btn-ghost btn-sm" onclick="doDelStud(${s.id})">Usuń kursanta</button>
     </div>
     ${S.perms.can_see_payments ? `
-    <div class="section-hd">PŁATNOŚCI ${S.perms.can_accept_payment ? `<button class="btn btn-g btn-xs" onclick="moAddPay(${s.id})">+ Dodaj wpłatę</button>` : ''}</div>
+    <div class="section-hd">PŁATNOŚCI ${S.perms.can_accept_payment ? `<button class="btn btn-g btn-xs" onclick="moAddPay(${s.id},${S.grpId||'null'},'${(s.groups||[]).find(x=>x.id==S.grpId)?.paid_until||''}')">+ Dodaj wpłatę</button>` : ''}</div>
     <div style="margin-bottom:18px">
       ${pays.length === 0 ? '<div class="empty" style="padding:16px">Brak wpłat.</div>' :
           pays.map(p => `<div class="prow">
@@ -2231,7 +2231,7 @@
         </div>`).join('')}
     </div>` : (S.perms.can_accept_payment ? `
     <div class="section-hd">WPŁATY</div>
-    <div style="margin-bottom:18px"><button class="btn btn-g btn-xs" onclick="moAddPay(${s.id})">+ Dodaj wpłatę</button></div>` : '')}
+    <div style="margin-bottom:18px"><button class="btn btn-g btn-xs" onclick="moAddPay(${s.id},${S.grpId||'null'},'${(s.groups||[]).find(x=>x.id==S.grpId)?.paid_until||''}')">+ Dodaj wpłatę</button></div>` : '')}
     <div class="section-hd">HISTORIA OBECNOŚCI</div>
     ${att.length === 0 ? '<div class="empty" style="padding:16px">Brak zapisanych obecności.</div>' : `
     <div class="tw"><table>
@@ -2881,29 +2881,16 @@
 
     // ── PRZYJMIJ PŁATNOŚĆ (instruktor) ────────────────────────────
     function moAcceptPayment(studentId, studentName, groupId, currentPaidUntil) {
-      const puVal = currentPaidUntil ? String(currentPaidUntil).substring(0, 10) : '';
       showMo('💰 Przyjmij wpłatę', `
         <div style="font-size:13px;color:var(--dim);margin-bottom:16px">Kursant: <strong style="color:var(--text)">${studentName}</strong></div>
         <div class="ff" style="margin-bottom:12px">
           <label>Kwota (zł) *</label>
           <input id="pay-amount" type="number" min="1" max="9999" step="1" placeholder="100" style="font-size:16px">
         </div>
-        <div class="ff" style="margin-bottom:12px">
+        <div class="ff">
           <label>Notatka (opcjonalnie)</label>
           <input id="pay-note" placeholder="np. gotówka" style="font-size:16px">
         </div>
-        ${groupId ? `<div style="border-top:1px solid var(--line);margin-top:4px;padding-top:12px">
-          <div style="font-size:11px;font-weight:700;color:var(--dim);letter-spacing:0.05em;margin-bottom:8px">OPŁACONY DO</div>
-          <div class="ff" style="margin-bottom:8px">
-            <input type="date" id="pay-paid-until" value="${puVal}" style="font-size:16px">
-          </div>
-          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px">
-            <button type="button" class="btn btn-o btn-sm" onclick="document.getElementById('pay-paid-until').value='${endOfMonthPlus(3)}'">+3 mies.</button>
-            <button type="button" class="btn btn-o btn-sm" onclick="document.getElementById('pay-paid-until').value='${endOfMonthPlus(6)}'">+6 mies.</button>
-            <button type="button" class="btn btn-o btn-sm" onclick="document.getElementById('pay-paid-until').value='${endOfMonthPlus(12)}'">+12 mies.</button>
-            <button type="button" class="btn btn-o btn-sm" onclick="document.getElementById('pay-paid-until').value=''">Wyczyść</button>
-          </div>
-        </div>` : ''}
         <div id="pay-err" class="lerr" style="display:none"></div>`,
         `<button class="btn btn-o" onclick="closeMo()">Anuluj</button>
          <button class="btn btn-g" onclick="doAcceptPayment(${studentId},${groupId || 'null'})">Zapisz wpłatę</button>`);
@@ -2913,15 +2900,10 @@
     async function doAcceptPayment(studentId, groupId) {
       const amount = parseFloat(document.getElementById('pay-amount')?.value);
       const note = document.getElementById('pay-note')?.value?.trim();
-      const paidUntil = document.getElementById('pay-paid-until')?.value || null;
       const errEl = document.getElementById('pay-err');
       if (!amount || amount <= 0) { errEl.textContent = 'Podaj prawidłową kwotę.'; errEl.style.display = 'block'; return; }
       try {
         await api('/api/instructor/accept-payment', 'POST', { student_id: studentId, amount, note: note || null, group_id: groupId || null });
-        if (paidUntil && groupId) {
-          await api('/api/instructor/student-groups/paid-until', 'PATCH',
-            { student_id: studentId, group_id: groupId, paid_until: paidUntil });
-        }
         closeMo();
         if (S.sessId) renderAtt();
         else openStud(studentId);
@@ -3134,23 +3116,39 @@
       } catch (e) { alert('Błąd: ' + e.message); }
     }
 
-    function moAddPay(sid) {
+    function moAddPay(sid, gid, currentPaidUntil) {
+      const puVal = currentPaidUntil ? String(currentPaidUntil).substring(0, 10) : '';
       showMo('DODAJ WPŁATĘ', `
     <div class="ff2">
-      <div class="ff"><label>Kwota (zł) *</label><input id="p-am" type="number" min="1" placeholder="np. 220"></div>
-      <div class="ff"><label>Data</label><input id="p-dt" type="date" value="${todayISO()}"></div>
+      <div class="ff"><label>Kwota (zł) *</label><input id="p-am" type="number" min="1" placeholder="np. 220" style="font-size:16px"></div>
+      <div class="ff"><label>Data</label><input id="p-dt" type="date" value="${todayISO()}" style="font-size:16px"></div>
     </div>
-    <div class="ff"><label>Uwaga</label><input id="p-nt" placeholder="opcjonalnie"></div>`,
+    <div class="ff" style="margin-bottom:12px"><label>Uwaga</label><input id="p-nt" placeholder="opcjonalnie" style="font-size:16px"></div>
+    ${gid ? `<div style="border-top:1px solid var(--line);padding-top:12px">
+      <div style="font-size:11px;font-weight:700;color:var(--dim);letter-spacing:0.05em;margin-bottom:8px">OPŁACONY DO</div>
+      <div class="ff" style="margin-bottom:8px"><input type="date" id="p-pu" value="${puVal}" style="font-size:16px"></div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button type="button" class="btn btn-o btn-sm" onclick="document.getElementById('p-pu').value='${endOfMonthPlus(3)}'">+3 mies.</button>
+        <button type="button" class="btn btn-o btn-sm" onclick="document.getElementById('p-pu').value='${endOfMonthPlus(6)}'">+6 mies.</button>
+        <button type="button" class="btn btn-o btn-sm" onclick="document.getElementById('p-pu').value='${endOfMonthPlus(12)}'">+12 mies.</button>
+        <button type="button" class="btn btn-o btn-sm" onclick="document.getElementById('p-pu').value=''">Wyczyść</button>
+      </div>
+    </div>` : ''}`,
         `<button class="btn btn-o" onclick="closeMo()">Anuluj</button>
-     <button class="btn btn-g" onclick="doAddPay(${sid})">Zapisz wpłatę</button>`);
+     <button class="btn btn-g" onclick="doAddPay(${sid},${gid||'null'})">Zapisz wpłatę</button>`);
     }
-    async function doAddPay(sid) {
+    async function doAddPay(sid, gid) {
       const amt = $('p-am').value;
       if (!amt) { alert('Podaj kwotę.'); return; }
+      const paidUntil = document.getElementById('p-pu')?.value || null;
       try {
         await api(`/api/instructor/students/${sid}/payments`, 'POST', {
           amount: parseFloat(amt), date: $('p-dt').value, note: $('p-nt').value.trim() || null
         });
+        if (paidUntil && gid) {
+          await api('/api/instructor/student-groups/paid-until', 'PATCH',
+            { student_id: sid, group_id: gid, paid_until: paidUntil });
+        }
         closeMo();
         openStud(sid);
       } catch (e) { alert('Błąd: ' + e.message); }
