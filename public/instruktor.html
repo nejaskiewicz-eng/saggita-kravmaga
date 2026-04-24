@@ -2015,12 +2015,14 @@
       // Przycisk "Kursanci" — tylko jeśli ma pełny dostęp LUB dzisiaj ma zajęcia
       const canOpenStudents = S.perms.can_see_groups || hasClassToday;
 
-      // Akcja "Sprawdź obecność": jeśli sesja już istnieje → otwórz bezpośrednio, inaczej quickSess (utwórz)
-      const attendanceBtn = todaySessId
-        ? `<button class="btn btn-r btn-sm" onclick="event.stopPropagation();openSessFromCal(${todaySessId},${g.id},'${todayISO()}',${JSON.stringify(g.name)})" style="font-weight:800;border:none;box-shadow:0 3px 10px rgba(196,32,0,0.3)">Sprawdź obecność</button>`
-        : `<button class="btn btn-r btn-sm" onclick="event.stopPropagation();quickSess(${g.id})" style="font-weight:800;border:none;box-shadow:0 3px 10px rgba(196,32,0,0.3)">Sprawdź obecność</button>`;
+      // Klik karty: jeśli dziś zajęcia → otwórz obecności; inaczej → otwórz grupę
+      const cardClick = hasClassToday
+        ? (todaySessId
+          ? `openSessFromCal(${todaySessId},${g.id},'${todayISO()}',${JSON.stringify(g.name)})`
+          : `quickSess(${g.id})`)
+        : (canOpenStudents ? `openGrp(${g.id})` : '');
 
-      return `<div class="gc" onclick="${canOpenStudents ? `openGrp(${g.id})` : ''}">
+      return `<div class="gc" onclick="${cardClick}" style="${hasClassToday ? 'cursor:pointer' : ''}">
     <div class="gc-city">${esc(g.location_city || '')} / ${esc(g.location_name || '')}</div>
     <div class="gc-name">${esc(g.name)}</div>
     <div class="gc-meta">
@@ -2030,7 +2032,7 @@
     <div class="gc-sched">${sch || '<span style="color:var(--dim2)">Brak grafiku</span>'}</div>
     <div class="gc-foot">
       ${hasClassToday
-          ? attendanceBtn
+          ? `<button class="btn btn-r btn-sm" onclick="event.stopPropagation();${cardClick}" style="font-weight:800;border:none;box-shadow:0 3px 10px rgba(196,32,0,0.3)">Sprawdź obecność</button>`
           : (canOpenStudents
             ? `<button class="btn btn-r btn-sm" onclick="event.stopPropagation();openGrp(${g.id})">Kursanci</button>`
             : `<span style="font-size:11px;color:var(--dim2);padding:4px 0">Dostępne w dniu zajęć</span>`)
