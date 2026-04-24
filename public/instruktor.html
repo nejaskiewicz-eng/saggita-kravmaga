@@ -2016,9 +2016,10 @@
       const canOpenStudents = S.perms.can_see_groups || hasClassToday;
 
       // Klik karty: jeśli dziś zajęcia → otwórz obecności; inaczej → otwórz grupę
+      const _gname = String(g.name || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
       const cardClick = hasClassToday
         ? (todaySessId
-          ? `openSessFromCal(${todaySessId},${g.id},'${todayISO()}',${JSON.stringify(g.name)})`
+          ? `openSessFromCal(${todaySessId},${g.id},'${todayISO()}','${_gname}')`
           : `quickSess(${g.id})`)
         : (canOpenStudents ? `openGrp(${g.id})` : '');
 
