@@ -2580,14 +2580,8 @@
       <div class="att-list" id="attlist">
         ${st.map(s => {
           const paid = paidStatus(s.paid_until, s.last_payment);
-          const puDate = calcPaidUntil(s.paid_until, s.last_payment);
 
-          // Widoczna, uwypuklona data opłaty
-          const payBadge = S.perms.can_see_paid_status ? `
-            <div style="font-size:10px;font-weight:700;letter-spacing:0.02em;color:var(--dim);margin-top:2px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
-              Opłacony do: <span class="badge ${paid === false ? 'br' : paid === true ? 'bg' : ''}" style="padding:4px 8px;border-radius:6px;font-size:12px;font-weight:900;${paid === false ? 'box-shadow:0 2px 8px rgba(196,32,0,0.3)' : paid === true ? 'box-shadow:0 2px 8px rgba(46,204,113,0.2)' : 'color:var(--dim)'}">${puDate ? fd(puDate) : 'Brak danych'}</span>
-              ${S.perms.can_accept_payment ? `<button class="btn btn-xs" style="padding:2px 7px;font-size:10px;border:1px solid var(--line2);color:var(--dim);background:var(--panel2)" onclick="event.stopPropagation();moPaidUntil(${s.student_id},${sess.group_id},'${s.paid_until || ''}')">✎</button>` : ''}
-            </div>` : '';
+          const paidDot = S.perms.can_see_paid_status ? `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${paid === true ? '#3dd68c' : paid === false ? 'var(--accent)' : 'var(--dim)'};margin-left:6px;vertical-align:middle;"></span>` : '';
 
           const profBtn = `<button class="btn btn-o" onclick="event.stopPropagation();openStud(${s.student_id})" style="padding:6px 10px;font-size:10px;flex:1;max-width:100px;text-align:center;">Kartoteka</button>`;
 
@@ -2600,8 +2594,7 @@
           <div class="att-row ${s.present ? 'present' : 'absent'}" id="atr-${s.student_id}" onclick="toggleAttRow(event, ${sess.session_id}, ${s.student_id})" style="padding:10px 12px;margin-bottom:8px">
             <div class="att-chk ${s.present ? 'on' : ''}" id="chk-${s.student_id}">${s.present ? '✓' : ''}</div>
             <div style="display:flex;flex-direction:column;justify-content:center;">
-              <div class="att-name" style="font-weight:800;font-size:14px;line-height:1.2;margin-bottom:4px;color:${nameColor}">${esc(s.last_name)}, ${esc(s.first_name)}</div>
-              ${payBadge}
+              <div class="att-name" style="font-weight:800;font-size:14px;line-height:1.2;color:${nameColor}">${esc(s.last_name)}, ${esc(s.first_name)}${paidDot}</div>
             </div>
             <div style="grid-column:1/-1;display:flex;gap:12px;margin-top:6px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.08);justify-content:flex-end;">
               ${profBtn}
@@ -2881,15 +2874,24 @@
 
     // ── PRZYJMIJ PŁATNOŚĆ (instruktor) ────────────────────────────
     function moAcceptPayment(studentId, studentName, groupId, currentPaidUntil) {
+      const puVal = currentPaidUntil ? String(currentPaidUntil).substring(0, 10) : '';
       showMo('💰 Przyjmij wpłatę', `
         <div style="font-size:13px;color:var(--dim);margin-bottom:16px">Kursant: <strong style="color:var(--text)">${studentName}</strong></div>
         <div class="ff" style="margin-bottom:12px">
           <label>Kwota (zł) *</label>
           <input id="pay-amount" type="number" min="1" max="9999" step="1" placeholder="100" style="font-size:16px">
         </div>
-        <div class="ff">
-          <label>Notatka (opcjonalnie)</label>
-          <input id="pay-note" placeholder="np. gotówka" style="font-size:16px">
+        <div style="border-top:1px solid var(--line);padding-top:12px;margin-bottom:4px">
+          <div style="font-size:11px;font-weight:700;color:var(--dim);letter-spacing:0.05em;margin-bottom:8px">OPŁACONY DO</div>
+          <div class="ff" style="margin-bottom:8px">
+            <input type="date" id="pay-paid-until" value="${puVal}" style="font-size:16px">
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
+            <button type="button" class="btn btn-o btn-sm" onclick="document.getElementById('pay-paid-until').value='${endOfMonthPlus(1)}'">+1 mies.</button>
+            <button type="button" class="btn btn-o btn-sm" onclick="document.getElementById('pay-paid-until').value='${endOfMonthPlus(3)}'">+3 mies.</button>
+            <button type="button" class="btn btn-o btn-sm" onclick="document.getElementById('pay-paid-until').value='${endOfMonthPlus(6)}'">+6 mies.</button>
+            <button type="button" class="btn btn-o btn-sm" onclick="document.getElementById('pay-paid-until').value=''">Wyczyść</button>
+          </div>
         </div>
         <div id="pay-err" class="lerr" style="display:none"></div>`,
         `<button class="btn btn-o" onclick="closeMo()">Anuluj</button>
@@ -2899,11 +2901,15 @@
 
     async function doAcceptPayment(studentId, groupId) {
       const amount = parseFloat(document.getElementById('pay-amount')?.value);
-      const note = document.getElementById('pay-note')?.value?.trim();
+      const paidUntil = document.getElementById('pay-paid-until')?.value || null;
       const errEl = document.getElementById('pay-err');
       if (!amount || amount <= 0) { errEl.textContent = 'Podaj prawidłową kwotę.'; errEl.style.display = 'block'; return; }
       try {
-        await api('/api/instructor/accept-payment', 'POST', { student_id: studentId, amount, note: note || null, group_id: groupId || null });
+        await api('/api/instructor/accept-payment', 'POST', { student_id: studentId, amount, group_id: groupId || null });
+        if (paidUntil && groupId) {
+          await api('/api/instructor/student-groups/paid-until', 'PATCH',
+            { student_id: studentId, group_id: groupId, paid_until: paidUntil });
+        }
         closeMo();
         if (S.sessId) renderAtt();
         else openStud(studentId);
